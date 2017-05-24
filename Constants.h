@@ -22,6 +22,12 @@
 #define M_Debug(x) 
 #endif 
 
+#ifdef ELEMENT_DEBUG
+#define E_Debug(x) std::cout << x
+#else
+#define E_Debug(x) 
+#endif 
+
 #ifdef DTOKS_DEBUG
 #define D_Debug(x) std::cout << x
 #else

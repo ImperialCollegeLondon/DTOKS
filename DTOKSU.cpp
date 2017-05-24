@@ -4,6 +4,7 @@
 
 // Default Constructor, no arguments
 DTOKSU::DTOKSU(){
+
 }
 
 
@@ -32,4 +33,24 @@ void DTOKSU::Print(){
 int DTOKSU::Run(){
 	return 0;
 }
+
+
 // ************************************* \\
+
+const double DTOKSU::DeltaTherm(double DustTemperature)const{
+//	D_Debug("\n\nIn HeatingModel::DeltaTherm():");
+	return (Richardson*pow(DustTemperature,2)*exp(-(Sample->get_workfunction()*echarge)/(Kb*DustTemperature)))
+		/echarge;
+}
+
+const double DTOKSU::DeltaSec()const{
+//	D_Debug("\n\nIn HeatingModel::DeltaSec():");
+	return sec(Pdata.ElectronTemp/1.16e5,Sample->get_elem()); 	// Convert from K to ev
+}
+
+const double DTOKSU::DeltaTot(double DustTemperature)const{
+//	D_Debug("\n\nIn HeatingModel::DeltaTot():");
+	return (DeltaSec() + DeltaTherm(DustTemperature));
+}
+
+

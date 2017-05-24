@@ -4,24 +4,40 @@
 #ifndef __GRAINSTRUCTS_H_INCLUDED__   // if Matter.h hasn't been included yet...
 #define __GRAINSTRUCTS_H_INCLUDED__
 
+#include "threevector.h"
+
 // Data that varies with time and is generally a result of the simulation
 struct GrainData{
 	// Define if the material is a liquid or a gas
 	bool Liquid, Gas;
 
-	// Do vary with Temperature
-	double SuperBoilingTemp;	// Kelvin, Super heated boiling temperature
+	// ******************************** Do vary with Temperature  ******************************** \\
+	// Geometric Data
 	double UnheatedRadius;		// metres
 	double Mass; 			// Kilogrammes,
 	double Radius;			// metres
 	double SurfaceArea;		// metres^2
 	double Volume;			// metres^3
 	double Density;			// Kilogrammes / (metre^3)
+
+	// Thermal Data
+	double SuperBoilingTemp;	// Kelvin, Super heated boiling temperature
 	double Temperature; 		// Kelvin
 	double VapourPressure; 		// N/m^2 or Pa, Pascals
 	double Emissivity;		// Arb, deviation of EM radiation from black body spectrum
 	double LinearExpansion; 	// Units of m K^-1
 	double HeatCapacity;		// kJ/(kg·K)	(Constant Pressure!)
+
+	// Charging Data
+	double DeltaSec;		// Secondary Electron Emission Yield (Arb)
+	double DeltaTherm;		// Thermionic Electron Emission Yield (Arb)
+	double Potential;		// Normalised Grain potential (Arb)
+	bool Positive;			// Defines the sign of the grain charge.
+
+	// Force/Motion Data
+	threevector DustPosition;	// Dust position (m)
+	threevector DustVelocity;	// Dust velocity (I guess this should be normalised to Cs, but for now: (m/s) )
+
 	// Latent Heat
 	double FusionEnergy;		// kJ, Energy put into the material to break bonds of solid
 	double VapourEnergy;		// kJ, Energy put into the material to break bond of liquid

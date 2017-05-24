@@ -1,4 +1,4 @@
-#ifndef __CHARGINGMODEL_H_INCLUDED__   // if Matter.h hasn't been included yet...
+#ifndef __CHARGINGMODEL_H_INCLUDED__   // if ChargingModel.h hasn't been included yet...
 #define __CHARGINGMODEL_H_INCLUDED__
 
 #include "PlasmaData.h"
@@ -14,10 +14,11 @@ class ChargingModel{
 		Matter *Sample;				// Tungsten, Beryllium, Iron or Graphite
 		PlasmaData Pdata;
 		
-		std::array<bool,9> UseModel; 		// Charging Models turned on of possibly 9
+		std::array<bool,1> UseModel; 		// Charging Models turned on of possibly 9
 		std::ofstream ChargingFile;		// Output data file
 
-		void Print();				// Write to output data file
+		void Print();			// Write to output data file
+		double solveOML(double a, double guess);
 
 	public:
 		// Constructors
@@ -30,6 +31,10 @@ class ChargingModel{
 		
 		// Functions which generate and save data from heating the Sample.
 		void CreateFile(std::string filename);
+
+		void Charge();
+
+
 };
 
 #endif

@@ -18,6 +18,8 @@ class DTOKSU{
 		PlasmaData Pdata;
 		
 		std::array<bool,9> HeatingSwitch; 	// Heating Models turned on of possibly 9
+		std::array<bool,9> ForceSwitch; 	// Force Models turned on of possibly N
+		std::array<bool,9> ChargingSwitch; 	// Charging Models turned on of possibly N
 		std::ofstream MyFile;			// Output data file
 
 		void CheckTimeStep();			// Verify time step
@@ -33,6 +35,11 @@ class DTOKSU{
 		
 		int Run();
 		// Functions which generate and save data from heating the Sample.
+
+		const double DeltaTherm(double DustTemperature)const;	
+		const double DeltaSec()const;
+		const double DeltaTot(double DustTemperature)const;
+
 
 };
 

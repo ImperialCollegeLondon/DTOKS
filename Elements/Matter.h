@@ -4,6 +4,7 @@
 #include "GrainStructs.h"// Contains the structure element for storing properties of material
 #include "Constants.h"	// Contains general physical constants
 #include "Functions.h"  // sec(Te,'f') function used by HeatingModel.cpp
+#include "threevector.h"
 
 #include <iostream>	// I/O operations and debugging
 #include <fstream> 	// Open emissivity filestream
@@ -54,30 +55,42 @@ class Matter{
 		// Takes argument of amount of energy lost in Kilo Joules and changes temperature in Degrees
 		void update_temperature(double EnergyIn);
 
-		// Getter methods
-		char get_elem			()const{ return Ec.Elem;		};
-		double get_meltingtemp		()const{ return Ec.MeltingTemp;		};
-		double get_boilingtemp		()const{ return Ec.BoilingTemp;		};
-		double get_bondenergy		()const{ return Ec.BondEnergy;		};
-		double get_workfunction		()const{ return Ec.WorkFunction;	};
-		double get_heattransair		()const{ return Ec.HeatTransAir;	};
-		double get_atomicmass		()const{ return Ec.AtomicMass;		};
+		void update_motion(threevector &changeinposition, threevector &changeinvelocity);
+		void update_charge(double potential);
 
-		bool is_gas			()const{ return St.Gas;			};
-		bool is_liquid			()const{ return St.Liquid;		};
-		double get_superboilingtemp	()const{ return St.SuperBoilingTemp;	};
-		double get_mass			()const{ return St.Mass;		};
-		double get_density		()const{ return St.Density;		};
-		double get_heatcapacity		()const{ return St.HeatCapacity;	};
-		double get_temperature		()const{ return St.Temperature; 	};
-		double get_fusionenergy		()const{ return St.FusionEnergy;	};
-                double get_vapourenergy         ()const{ return St.VapourEnergy;	};
-		double get_latentvapour		()const{ return Ec.LatentVapour;	};
-		double get_latentfusion		()const{ return Ec.LatentFusion;	};
-		double get_emissivity		()const{ return St.Emissivity; 		};
-		double get_surfacearea		()const{ return St.SurfaceArea;		};
-		double get_vapourpressure	()const{ return St.VapourPressure;	};
-		double get_linearexpansion	()const{ return St.LinearExpansion;	};
+		// Getter methods
+		char get_elem			()const{ return Ec.Elem;			};
+		double get_meltingtemp		()const{ return Ec.MeltingTemp;			};
+		double get_boilingtemp		()const{ return Ec.BoilingTemp;			};
+		double get_bondenergy		()const{ return Ec.BondEnergy;			};
+		double get_workfunction		()const{ return Ec.WorkFunction;		};
+		double get_heattransair		()const{ return Ec.HeatTransAir;		};
+		double get_atomicmass		()const{ return Ec.AtomicMass;			};
+
+		bool is_gas			()const{ return St.Gas;				};
+		bool is_liquid			()const{ return St.Liquid;			};
+		bool is_positive		()const{ return St.Positive;			};
+		double get_superboilingtemp	()const{ return St.SuperBoilingTemp;		};
+		double get_mass			()const{ return St.Mass;			};
+		double get_density		()const{ return St.Density;			};
+		double get_radius		()const{ return St.Radius;			};
+		double get_heatcapacity		()const{ return St.HeatCapacity;		};
+		double get_temperature		()const{ return St.Temperature; 		};
+		double get_fusionenergy		()const{ return St.FusionEnergy;		};
+                double get_vapourenergy         ()const{ return St.VapourEnergy;		};
+		double get_latentvapour		()const{ return Ec.LatentVapour;		};
+		double get_latentfusion		()const{ return Ec.LatentFusion;		};
+		double get_emissivity		()const{ return St.Emissivity; 			};
+		double get_surfacearea		()const{ return St.SurfaceArea;			};
+		double get_vapourpressure	()const{ return St.VapourPressure;		};
+		double get_linearexpansion	()const{ return St.LinearExpansion;		};
+		double get_deltasec		()const{ return St.DeltaSec;			};
+		double get_deltatherm		()const{ return St.DeltaTherm;			};
+		double get_deltatot		()const{ return (St.DeltaTherm + St.DeltaSec);	};
+		double get_potential		()const{ return St.Potential;			};
+		threevector get_dustvelocity	()const{ return St.DustVelocity;		};
+		threevector get_dustposition	()const{ return St.DustPosition;		};
+
 };
 
 #endif

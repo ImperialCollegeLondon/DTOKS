@@ -2,6 +2,7 @@
 #include <cmath>	// pow
 #include <assert.h>	// Assertion errors
 #include <ctime>	// Time program
+
 // Empirical fit to secondary electron emission equation as in Stangeby
 double sec(double Te, char material)
 {

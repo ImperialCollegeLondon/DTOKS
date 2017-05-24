@@ -408,30 +408,30 @@ const double HeatingModel::NeutralRecombination(double DustTemperature)const{
 
 const double HeatingModel::SEE(double DustTemperature)const{
 //	H_Debug("\n\nIn HeatingModel::SEE():");
-//	H_Debug("\neFlux*DeltaSec()*(3*echarge+Sample->get_bondenergy())\n");
-//	H_Debug("\neFlux=" << eFlux << "\nDeltaSec() = " << DeltaSec() 
+//	H_Debug("\neFlux*Sample->get_deltasec()*(3*echarge+Sample->get_bondenergy())\n");
+//	H_Debug("\neFlux=" << eFlux << "\nSample->get_deltasec() = " << Sample->get_deltasec() 
 //			<< "\nSample->get_bondenergy() = " << Sample->get_bondenergy());
-//	H_Debug("\nReturn = " << eFlux*DeltaSec()*(3*echarge+Sample->get_bondenergy()));
+//	H_Debug("\nReturn = " << eFlux*Sample->get_deltasec()*(3*echarge+Sample->get_bondenergy()));
 	double SEE=0;
-	if(ForceNegative || DeltaTot(DustTemperature) <= 1 )
-		SEE = Sample->get_surfacearea()*ElectronFlux(DustTemperature)*DeltaSec()*echarge*
+	if(ForceNegative || Sample->get_deltatot() <= 1 )
+		SEE = Sample->get_surfacearea()*ElectronFlux(DustTemperature)*Sample->get_deltasec()*echarge*
                                         (3+Sample->get_workfunction())/1000; // Convert
-	else if( DeltaTot(DustTemperature) > 1 ) 	SEE = 0; // Electrons captured by positive grain
+	else if( Sample->get_deltatot() > 1 ) 	SEE = 0; // Electrons captured by positive grain
 	return SEE;
 }
 
 const double HeatingModel::TEE(double DustTemperature)const{
 //	H_Debug("\n\nIn HeatingModel::TEE():");
-//	H_Debug("\neFlux*DeltaTherm()*(2*Kb*DustTemperature+Sample->get_bondenergy())\n");
-//	H_Debug("\neFlux=" << eFlux << "\nDeltaTherm() = " << DeltaTherm() << "\n2*Kb*DustTemperature = "
+//	H_Debug("\neFlux*Sample->get_deltatherm()*(2*Kb*DustTemperature+Sample->get_bondenergy())\n");
+//	H_Debug("\neFlux=" << eFlux << "\nSample->get_deltatherm() = " << Sample->get_deltatherm() << "\n2*Kb*DustTemperature = "
 //			<< 2*Kb*DustTemperature << "\nSample->get_bondenergy() = " << Sample->get_bondenergy());
-//	H_Debug("\nReturn = " << eFlux*DeltaTherm()*(2*Kb*DustTemperature+Sample->get_bondenergy()));
+//	H_Debug("\nReturn = " << eFlux*Sample->get_deltatherm()*(2*Kb*DustTemperature+Sample->get_bondenergy()));
 	double TEE=0;
 
-	if( ForceNegative || DeltaTot(DustTemperature) <= 1 )
-		TEE = Sample->get_surfacearea()*DeltaTherm(DustTemperature)*
+	if( ForceNegative || Sample->get_deltatot() <= 1 )
+		TEE = Sample->get_surfacearea()*Sample->get_deltatherm()*
 			(2*Kb*DustTemperature+echarge*Sample->get_workfunction())/1000; // Convert to kJ
-	else if( DeltaTot(DustTemperature) > 1 ) 	TEE = 0; // Electrons captured by positive grain
+	else if( Sample->get_deltatot() > 1 ) 	TEE = 0; // Electrons captured by positive grain
 	return TEE;
 }
 
@@ -465,14 +465,14 @@ const double HeatingModel::NeutralHeatFlux()const{
 
 const double HeatingModel::IonFlux(double DustTemperature)const{
 //	H_Debug("\n\nIn HeatingModel::IonFlux():");
-//	H_Debug("\nElectronFlux()*(1-DeltaTherm()-DeltaSec())\n");
-//	H_Debug("\nElectronFlux() =" << ElectronFlux() << "\nDeltaTherm() = " << DeltaTherm() 
-//			<< "\nDeltaSec() = " << DeltaSec());
-//	H_Debug("\nReturn = " << ElectronFlux()*(1-DeltaTherm()-DeltaSec()));
+//	H_Debug("\nElectronFlux()*(1-Sample->get_deltatherm()-Sample->get_deltasec())\n");
+//	H_Debug("\nElectronFlux() =" << ElectronFlux() << "\nSample->get_deltatherm() = " << Sample->get_deltatherm() 
+//			<< "\nSample->get_deltasec() = " << Sample->get_deltasec());
+//	H_Debug("\nReturn = " << ElectronFlux()*(1-Sample->get_deltatherm()-Sample->get_deltasec()));
 	double IonFlux=0;
 
-	if(ForceNegative || DeltaTot(DustTemperature) > 1 )IonFlux = ElectronFlux(DustTemperature); //Positive grain, DeltaTot() > 1
-	else	IonFlux = ElectronFlux(DustTemperature)*(1-DeltaTherm(DustTemperature)-DeltaSec());
+	if(ForceNegative || Sample->get_deltatot() > 1 )IonFlux = ElectronFlux(DustTemperature); //Positive grain, DeltaTot() > 1
+	else	IonFlux = ElectronFlux(DustTemperature)*(1-Sample->get_deltatot());
 	return IonFlux;
 }
 
@@ -493,24 +493,6 @@ const double HeatingModel::NeutralFlux()const{
 //	H_Debug("(2*PI*Mi) = " << (2*PI*Mi) << "\nsqrt(Kb*Pdata.NeutralTemp/(2*PI*Mi)) = "<< sqrt(Kb*Pdata.NeutralTemp/(2*PI*Mi)));
 //	H_Debug("\nReturn = " << 2*Pdata.NeutralTemp*Pdata.NeutralDensity*sqrt(Kb*Pdata.NeutralTemp/(2*PI*Mi)));
 	return Pdata.NeutralDensity*sqrt(Kb*Pdata.NeutralTemp/(2*PI*Mi));
-}
-const double HeatingModel::DeltaTherm(double DustTemperature)const{
-//	H_Debug("\n\nIn HeatingModel::DeltaTherm():");
-//	H_Debug("\n(Kb*DustTemperature+Sample->get_bondenergy())*Richardson*pow(DustTemperature,2)*exp(-(Sample->get_bondenergy())/(Kb*DustTemperature))\n");
-//	H_Debug("\nDeltaTherm = " << (Richardson*pow(DustTemperature,2)*exp(-(Sample->get_workfunction()*echarge)/(Kb*DustTemperature)))/(echarge);
-	return (Richardson*pow(DustTemperature,2)*exp(-(Sample->get_workfunction()*echarge)/(Kb*DustTemperature)))
-		/echarge;
-}
-
-const double HeatingModel::DeltaSec()const{
-//	H_Debug("\n\nIn HeatingModel::DeltaSec():");
-//	H_Debug("\nPdata.ElectronTemp = " << Pdata.ElectronTemp);
-//	H_Debug("\nDeltaSec = " << sec(10,Element));
-	return sec(Pdata.ElectronTemp/1.16e5,Sample->get_elem()); 	// Convert from K to ev
-}
-
-const double HeatingModel::DeltaTot(double DustTemperature)const{
-	return (DeltaSec() + DeltaTherm(DustTemperature));
 }
 
 // ************************************* \\

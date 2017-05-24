@@ -299,3 +299,18 @@ void Matter::update_temperature(double EnergyIn){
 	M_Debug("\nSt.Temperature = " << St.Temperature);
 	if(!St.Gas)	assert(St.Temperature <= St.SuperBoilingTemp);
 };
+
+void Matter::update_motion(threevector &ChangeInPosition,threevector &ChangeInVelocity){
+	// Calculate new position
+	St.DustPosition += ChangeInPosition;
+	St.DustVelocity += ChangeInVelocity;
+};
+
+void Matter::update_charge(double potential){
+	St.Potential = potential;
+	if ( (St.DeltaSec + St.DeltaTherm) >= 1.0 || St.Potential < 0.0 ){ // If the grain is in fact positive ...
+		St.Positive = true;
+	}else{
+		St.Positive = false;
+	}
+}

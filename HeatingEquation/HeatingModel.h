@@ -67,9 +67,6 @@ class HeatingModel{
 
 		// Fluxes of particles and coefficients
 		const double EvaporationFlux		(double DustTemperature)	const;
-		const double DeltaTherm			(double DustTemperature)	const;
-		const double DeltaSec			()				const;
-		const double DeltaTot			(double DustTemperature)	const;
 		const double IonFlux			(double DustTemperature)	const;
 		const double ElectronFlux		(double DustTemperature)	const;
 		const double NeutralFlux		()				const;
