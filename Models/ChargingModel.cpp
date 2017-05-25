@@ -1,38 +1,46 @@
 //#define PAUSE
-//#define CHARGING_DEBUG
+#define CHARGING_DEBUG
 
 #include "ChargingModel.h"
 
-// Default Constructor, no arguments
 ChargingModel::ChargingModel(){
+	C_Debug("\n\nIn ChargingModel::ChargingModel()");
 	CreateFile("Default_Charging_Filename.txt");
 }
 
+ChargingModel::ChargingModel(std::string filename){
+	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename)");
+	CreateFile(filename);
+}
+
 void ChargingModel::CreateFile(std::string filename){
+	C_Debug("\n\nIn ChargingModel::CreateFile(std::string filename)");
+	ModelDataFile.open(filename);
+	if( UseModel[0] ) ModelDataFile << "Positive\tPotential";
 
-	ChargingFile.open(filename);
-	if( UseModel[0] ) ChargingFile << "Positive\tPotential";
 
-
-	ChargingFile << "\n";
+	ModelDataFile << "\n";
 }
 
 void ChargingModel::Print(){
-	C_Debug("\n\nIn ChargingModel::Print(double TotPower, std::array<char,4> &ConstModels)");
+	C_Debug("\n\nIn ChargingModel::Print()");
 
-	if( Sample->is_positive() )  ChargingFile << "Pos\t";
-	if( !Sample->is_positive() ) ChargingFile << "Neg\t";
-	if( UseModel[0] ) ChargingFile << Sample->get_potential();
-	ChargingFile << "\n";
+	if( Sample->is_positive() )  ModelDataFile << "Pos\t";
+	if( !Sample->is_positive() ) ModelDataFile << "Neg\t";
+	if( UseModel[0] ) ModelDataFile << Sample->get_potential();
+	ModelDataFile << "\n";
 }
 
 void ChargingModel::Charge(){
+	C_Debug("\n\nIn ChargingModel::Charge()");
+/*
 	// Assume the grain is negative and calculate potential
 	double Potential = solveOML(Sample->get_deltatot(),Sample->get_potential());
 	if( Sample->get_deltatot() >= 1.0 || Potential < 0.0 ){ // If the grain is in fact positive ...
 		Potential = solveOML(0.0,Sample->get_potential())-Kb*Sample->get_temperature()/(echarge*Pdata.ElectronTemp);
 	}
 	Sample->update_charge(Potential);
+*/
 	Print();
 }
 

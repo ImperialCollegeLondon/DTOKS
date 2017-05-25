@@ -1,16 +1,22 @@
 //#define PAUSE
-//#define FORCE_DEBUG
+#define FORCE_DEBUG
 
 #include "ForceModel.h"
 #include "MathHeader.h" // This is weird
 
 // Default Constructor, no arguments
 ForceModel::ForceModel(){
-	CreateFile("Default_Force_Filename.txt");
+	F_Debug("\n\nIn ForceModel::ForceModel()");
+	CreateFile("Default_Force_filename.txt");
+}
+
+ForceModel::ForceModel(std::string filename){
+	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename)");
+	CreateFile(filename);
 }
 
 void ForceModel::CreateFile(std::string filename){
-
+	F_Debug("\n\nIn ForceModel::CreateFile(std::string filename)");
 	ForceFile.open(filename);
 	ForceFile << "Position\tVelocity";
 	if( UseModel[0] ) ForceFile << "\tGravity";
@@ -34,7 +40,8 @@ void ForceModel::Print(){
 
 // Move the dust grain by calculating the forces acting on it
 void ForceModel::Force(){
-
+	F_Debug("\n\nIn ForceModel::Force()");
+/*
 	// Forces: Lorentz + ion drag + gravity
 	threevector Fid = DTOKSIonDrag();
 	// Calculations for ion drag: Mach number, shielding length with fitting function and thermal scattering parameter
@@ -58,6 +65,7 @@ void ForceModel::Force(){
 	//vd += centrifugal*TimeStep;
 
 	Sample->update_motion(ChangeInPosition,ChangeInVelocity);
+*/
 	Print();
 }
 

@@ -1,15 +1,15 @@
 //#define PAUSE
-//#define DTOKSU_DEBUG
+#define DTOKSU_DEBUG
 #include "DTOKSU.h"
 
 // Default Constructor, no arguments
 DTOKSU::DTOKSU(){
-
+	D_Debug("\n\nIn DTOKSU::DTOKSU()");
 }
 
 
 void DTOKSU::CreateFile(std::string filename){
-
+	D_Debug("\n\nIn DTOKSU::CreateFile(std::string filename)");
 	MyFile.open(filename);
 	MyFile << "Yo";
 	MyFile << "\n";
@@ -31,6 +31,7 @@ void DTOKSU::Print(){
 }
 
 int DTOKSU::Run(){
+	D_Debug("\n\nIn DTOKSU::Run()");
 	return 0;
 }
 

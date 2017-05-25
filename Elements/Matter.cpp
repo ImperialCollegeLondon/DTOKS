@@ -1,5 +1,5 @@
 //#define PAUSE
-//#define MATTER_DEBUG
+#define MATTER_DEBUG
 
 #include "Matter.h"
 
@@ -14,7 +14,7 @@ Matter::Matter(double rad, const ElementConsts *elementconsts):Ec(*elementconsts
 	St.Radius = rad;			// m
 	St.UnheatedRadius = St.Radius;		// m
 	assert(St.Radius > 0 && St.UnheatedRadius > 0);
-	M_Debug("\nSt.Radius = " << St.Radius << "\nSt.Mass = " << St.Mass);
+//	M_Debug("\nSt.Radius = " << St.Radius << "\nSt.Mass = " << St.Mass);
 };
 
 Matter::Matter(double rad, double temp, const ElementConsts *elementconsts):Ec(*elementconsts){
@@ -25,11 +25,12 @@ Matter::Matter(double rad, double temp, const ElementConsts *elementconsts):Ec(*
 	St.Temperature = temp;					// K
 	assert(St.Radius > 0 && St.UnheatedRadius > 0 && St.Temperature > 0);
 
-	M_Debug("\nSt.Radius = " << St.Radius << "\nSt.Mass = " << St.Mass << "\nSt.Temperature = " << St.Temperature);
-	M_Debug("\nEc.LatentVapour = " << Ec.LatentVapour << "\nEc.AtomicMass = " << Ec.AtomicMass);
+//	M_Debug("\nSt.Radius = " << St.Radius << "\nSt.Mass = " << St.Mass << "\nSt.Temperature = " << St.Temperature);
+//	M_Debug("\nEc.LatentVapour = " << Ec.LatentVapour << "\nEc.AtomicMass = " << Ec.AtomicMass);
 };
 
 void Matter::set_defaults(){
+	M_Debug("\n\nIn Matter::set_defaults()");
 	St.Radius = 1e-6;			// m
 	St.UnheatedRadius = St.Radius;		// m
 	St.LinearExpansion = 1;			// (%)

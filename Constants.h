@@ -28,7 +28,7 @@
 #define E_Debug(x) 
 #endif 
 
-#ifdef DTOKS_DEBUG
+#ifdef DTOKSU_DEBUG
 #define D_Debug(x) std::cout << x
 #else
 #define D_Debug(x) 
