@@ -1,5 +1,5 @@
-//#define BERYLLIUM_DEBUG
-
+//#define ELEMENT_DEBUG
+//#define ELEMENT_DEEP_DEBUG
 #include "Beryllium.h"
 #include "Constants.h"
 

@@ -11,7 +11,7 @@ class DTOKSU{
 		double TimeStep;			// Seconds, the length of a particular time step
 		double TotalTime;			// Seconds, total time taken to perform simulation
 
-		Matter *Sample;				// Tungsten, Beryllium, Iron or Graphite
+		std::shared_ptr <Matter> Sample;	// Tungsten, Beryllium, Iron or Graphite
 		HeatingModel HM;
 		ForceModel FM;
 		ChargingModel CM;
@@ -28,9 +28,10 @@ class DTOKSU{
 
 	public:
 		DTOKSU();
+		DTOKSU( double timestep, std::shared_ptr<Matter> const& sample, PlasmaData const &pdata,
+				std::array<bool,9> &heatmodels, std::array<bool,3> &forcemodels, std::array<bool,1> &chargemodels);
 
 		~DTOKSU(){
-			delete Sample;
 		};
 		
 		int Run();

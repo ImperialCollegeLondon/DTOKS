@@ -1,15 +1,16 @@
 //#define PAUSE
+//#define MATTER_DEEP_DEBUG
 #define MATTER_DEBUG
 
 #include "Matter.h"
 
 // Constructors
 Matter::Matter(const ElementConsts *elementconsts):Ec(*elementconsts){
-	M_Debug("\n\nIn Matter::Matter()");
+	M_Debug("\n\nIn Matter::Matter(const ElementConsts *elementconsts):Ec(*elementconsts)\n\n");
 	set_defaults();
 };
 Matter::Matter(double rad, const ElementConsts *elementconsts):Ec(*elementconsts){
-	M_Debug("\n\nIn Matter::Matter(double rad)");
+	M_Debug("\n\nIn Matter::Matter(double rad, const ElementConsts *elementconsts):Ec(*elementconsts)\n\n");
         set_defaults();
 	St.Radius = rad;			// m
 	St.UnheatedRadius = St.Radius;		// m
@@ -18,8 +19,21 @@ Matter::Matter(double rad, const ElementConsts *elementconsts):Ec(*elementconsts
 };
 
 Matter::Matter(double rad, double temp, const ElementConsts *elementconsts):Ec(*elementconsts){
-	M_Debug("\n\nIn Matter::Matter(double rad, double temp)");
+	M_Debug("\n\nIn Matter::Matter(double rad, double temp, const ElementConsts *elementconsts):Ec(*elementconsts)\n\n");
         set_defaults();
+	ConstModels = {'c','c','c','y'};
+	St.Radius = rad;					// m
+	St.UnheatedRadius = St.Radius;				// m
+	St.Temperature = temp;					// K
+	assert(St.Radius > 0 && St.UnheatedRadius > 0 && St.Temperature > 0);
+
+//	M_Debug("\nSt.Radius = " << St.Radius << "\nSt.Mass = " << St.Mass << "\nSt.Temperature = " << St.Temperature);
+//	M_Debug("\nEc.LatentVapour = " << Ec.LatentVapour << "\nEc.AtomicMass = " << Ec.AtomicMass);
+};
+Matter::Matter(double rad, double temp, const ElementConsts *elementconsts, std::array<char,4> &constmodels):Ec(*elementconsts){
+	M_Debug("\n\nIn Matter::Matter(double rad, double temp, const ElementConsts *elementconsts, std::array<char,4> &constmodels):Ec(*elementconsts)\n\n");
+        set_defaults();
+	ConstModels = constmodels;
 	St.Radius = rad;					// m
 	St.UnheatedRadius = St.Radius;				// m
 	St.Temperature = temp;					// K
@@ -30,7 +44,8 @@ Matter::Matter(double rad, double temp, const ElementConsts *elementconsts):Ec(*
 };
 
 void Matter::set_defaults(){
-	M_Debug("\n\nIn Matter::set_defaults()");
+	M_Debug("\tIn Matter::set_defaults()\n\n");
+	ConstModels = {'c','c','c','c'};
 	St.Radius = 1e-6;			// m
 	St.UnheatedRadius = St.Radius;		// m
 	St.LinearExpansion = 1;			// (%)
@@ -42,7 +57,7 @@ void Matter::set_defaults(){
 // Update geometric properties of matter:
 // Volume, Surface area and Density. Also initialises mass
 void Matter::update_dim(){ // Assuming spherical particle.		
-	M_Debug("\n\nIn Matter::update_dim():");
+	M_Debug("\tIn Matter::update_dim():\n\n");
 
 	if(ConstModels[1] == 'v' || ConstModels[1] == 'V'){
 		update_radius();
@@ -73,14 +88,14 @@ void Matter::update_dim(){ // Assuming spherical particle.
 //	assert( abs((St.Density - St.Mass/St.Volume)/St.Density) < 0.000001 ); // Sanity Check, this may be an issue
 	St.Mass = St.Density*St.Volume;
 
-	M_Debug("\nSt.Mass = " << St.Mass << "\nSt.Volume = " << St.Volume << "\nSt.Density = " << St.Density
+	M2_Debug("\nSt.Mass = " << St.Mass << "\nSt.Volume = " << St.Volume << "\nSt.Density = " << St.Density
 			<< "\nSt.Mass/St.Volume = " << St.Mass/St.Volume);
 
 	assert(St.Mass > 10e-25 );
 }
 
 void Matter::update_emissivity(){
-	M_Debug("\n\nIn Matter::update_emissivity()");
+	M_Debug("\tIn Matter::update_emissivity()\n\n");
 	if( ConstModels[0] == 'c' || ConstModels[0] == 'C' ){ // Assume constant emissivity
 		St.Emissivity = St.Emissivity;
 	}else if( ConstModels[0] == 'f' || ConstModels[0] == 'F' ){ // Get emissivity from file
@@ -130,11 +145,11 @@ void Matter::update_emissivity(){
 }
 
 void Matter::update_boilingtemp(){
-	M_Debug("\n\nIn Matter::update_boilingtemp()");
+	M_Debug("\tIn Matter::update_boilingtemp()\n\n");
 	// Conver LatentVapour from kJ to J for the Gas constant
 //	St.CapillaryPressure = exp((St.LatentVapour*St.AtomicMass)/(1000*R)*(1/St.Temperature() - 1/(St.MeltingTemp)));
 	double CapillaryPressure = Ec.SurfaceTension*2/(St.Radius*101325);
-	M_Debug("\n\nCapillaryPressure = " << CapillaryPressure << "atmospheres.");
+	M2_Debug("\n\nCapillaryPressure = " << CapillaryPressure << "atmospheres.");
 	if( ConstModels[3] == 's' || ConstModels[3] == 'S' ){ // For super boiling
 		assert(Ec.Elem != 'g' && Ec.Elem != 'G'); // We can't do Graphite, it has no vapour pressure
 		St.SuperBoilingTemp = 1/(1/Ec.BoilingTemp 
@@ -159,13 +174,13 @@ void Matter::update_boilingtemp(){
 				<< "Invalid input '" << ConstModels[3] << "' for Emissivity Model.";
 		assert( strchr("yYnNsStT",ConstModels[1]) );
 	}
-	M_Debug("\nR*log(CapillaryPressure)/(1000*Ec.LatentVapour*Ec.AtomicMass) = " 
+	M2_Debug("\nR*log(CapillaryPressure)/(1000*Ec.LatentVapour*Ec.AtomicMass) = " 
 		<< R*log(CapillaryPressure)/(1000*Ec.LatentVapour*Ec.AtomicMass) << "\nSt.SuperBoilingTemp = " 
 		<< St.SuperBoilingTemp);
 }
 
 void Matter::update_state(double EnergyIn){
-	M_Debug("\n\nIn Matter::update_state(double EnergyIn)");
+	M_Debug("\tIn Matter::update_state(double EnergyIn)\n\n");
 
 	if( St.Temperature < St.SuperBoilingTemp && St.Temperature >= Ec.MeltingTemp){ // Melting or Liquid
 		if( St.Temperature > Ec.BoilingTemp){
@@ -173,7 +188,7 @@ void Matter::update_state(double EnergyIn){
 			WarnOnce(runOnce,"Substance is superheated! Temperature > BoilingTemp");
 		}
 		if( St.FusionEnergy < Ec.LatentFusion*St.Mass ){ // Must be melting
-			M_Debug("\n*Liquid is melting*, T = " << St.Temperature
+			M2_Debug("\n*Liquid is melting*, T = " << St.Temperature
 				<< "\nFusionEnergy is < LatentFusion*Mass : " << St.FusionEnergy << " < " 
 					<< Ec.LatentFusion*St.Mass);
 			// Add energy to Latent heat and set Temperature to Melting Temperature
@@ -193,7 +208,7 @@ void Matter::update_state(double EnergyIn){
 
 			St.VapourEnergy += EnergyIn; 
 			St.Temperature = St.SuperBoilingTemp;
-			M_Debug("\n*Liquid is boiling*, T = " << St.Temperature 
+			M2_Debug("\n*Liquid is boiling*, T = " << St.Temperature 
 				<< " K\nVapourEnergy is < St.LatentVapour*Mass : " << St.VapourEnergy 
 				<< " < " << Ec.LatentVapour*St.Mass);
 
@@ -205,7 +220,7 @@ void Matter::update_state(double EnergyIn){
 			}
 		}else{	St.Liquid = false; St.Gas = true; } // Else it has vapourised!
 	}
-	M_Debug("\nSt.Temperature = " << St.Temperature);
+	M2_Debug("\nSt.Temperature = " << St.Temperature);
 	if( St.Mass < 10e-24 ){ // Lower limit for mass of dust
 		std::cout << "\nSt.Mass = " << St.Mass << " < 10e-24, vaporisation assumed.";
 		St.Gas = true;
@@ -215,8 +230,9 @@ void Matter::update_state(double EnergyIn){
 // Change geometric and variable properties of matter; 
 // volume, surface area, density, heat capacity, emissivity and vapour pressure
 void Matter::update(){
+	M_Debug("\tIn Matter::update()\n\n");
 	// ORDER DEPENDENT UPDATES:
-	update_dim();
+	M_Debug("\t"); update_dim();
 	
 	// ORDER INDEPENDENT UPDATES:
 	if( ConstModels[2] == 'v'|| ConstModels[2] == 'V') 	update_heatcapacity();
@@ -228,39 +244,41 @@ void Matter::update(){
                 assert( strchr("vVcCsS",ConstModels[1]) );	
 	}
 
-	update_emissivity();
-	update_vapourpressure();
-	update_boilingtemp();
+	M_Debug("\t"); update_emissivity();
+	M_Debug("\t"); update_vapourpressure();
+	M_Debug("\t"); update_boilingtemp();
 };
 
 // Change geometric and variable properties of matter; 
 // volume, surface area, density, heat capacity, emissivity and vapour pressure
 
 void Matter::update_models(char emissivmodel, char linexpanmodel, char heatcapacitymodel, char boilingmodel){
+        M_Debug("\tIn Matter::update_models(char emissivmodel, char linexpanmodel, char heatcapacitymodel, char boilingmodel)\n\n");
 	ConstModels[0] = emissivmodel;
 	ConstModels[1] = linexpanmodel;
 	ConstModels[2] = heatcapacitymodel;
 	ConstModels[3] = boilingmodel;
-	update();
+	M_Debug("\t"); update();
 };
 
 void Matter::update_models(std::array<char,4> &constmodels){
+	M_Debug("\tIn Matter::update_mass(double LostMass)\n\n");
 //	update(constmodels[0],constmodels[1],constmodels[2],constmodels[3],);
 	ConstModels = constmodels;
-	update();
+	M_Debug("\t"); update();
 }
 
 // Mass lost in Kilogrammes
 void Matter::update_mass(double LostMass){ 
-	M_Debug("\n\nIn Matter::update_mass(double LostMass)");
-	M_Debug("\nMassLoss = " << LostMass  << "\nSt.Mass = " << St.Mass << "\nRadius = " << St.Radius 
+	M_Debug("\tIn Matter::update_mass(double LostMass)\n\n");
+	M2_Debug("\nMassLoss = " << LostMass  << "\nSt.Mass = " << St.Mass << "\nRadius = " << St.Radius 
 			<< "\nDensity = " << St.Density);
 	St.Mass -= LostMass;
 		
-	M_Debug("\nUnheatedRadius was = " << St.UnheatedRadius);
+	M2_Debug("\nUnheatedRadius was = " << St.UnheatedRadius);
 	// Change the radius according to the amount of mass lost
 	St.UnheatedRadius = St.UnheatedRadius*(pow((3*St.Mass)/(4*PI*St.Density),1./3.)/St.Radius);
-	M_Debug("\nUnheatedRadius now = " << St.UnheatedRadius);
+	M2_Debug("\nUnheatedRadius now = " << St.UnheatedRadius);
 	//Pause();
 	if(St.Mass < 0){ 
 		std::cout << "\n\nSt.Mass = " << St.Mass << "\nSample mass is Negative! Evaporation assumed\n\n";
@@ -274,14 +292,14 @@ void Matter::update_mass(double LostMass){
 // Takes argument of amount of energy lost in Kilo Joules and changes temperature in Degrees
 void Matter::update_temperature(double EnergyIn){
 
-	M_Debug("\n\nIn Matter::update_temperature(double EnergyIn = " << EnergyIn 
+	M_Debug("\tIn Matter::update_temperature(double EnergyIn = " << EnergyIn 
 		<< " kJ) ...\nTemp = " << St.Temperature << "K \nHeatCapacity = " << St.HeatCapacity 
 		<< " kJ/(kg K)\nFusionEnergy = " << St.FusionEnergy << " kJ\nVapourEnergy = " 
-		<< St.VapourEnergy << " kJ");
+		<< St.VapourEnergy << " kJ\n\n");
 
 	// Assert temperature changes smaller than 10% of current temperature
 	if( abs(EnergyIn/(St.Mass*St.HeatCapacity)) > St.Temperature*0.1 ){
-		M_Debug("\n\nSt.Temperature = " << St.Temperature << "\nSt.Mass = " << St.Mass << "\nSt.HeatCapacity = " 
+		M2_Debug("\n\nSt.Temperature = " << St.Temperature << "\nSt.Mass = " << St.Mass << "\nSt.HeatCapacity = " 
 			<< St.HeatCapacity << "\nEnergyIn = " << EnergyIn);
 	}
 
@@ -292,22 +310,24 @@ void Matter::update_temperature(double EnergyIn){
 	assert(abs(EnergyIn/(St.Mass*St.HeatCapacity)) < St.Temperature*0.1); // Assert temperature change is less than 10%
 
 	St.Temperature += EnergyIn/(St.Mass*St.HeatCapacity); // HeatCapacity in Units of kJ/(kg K)
-	M_Debug( "\n**** Temp change = " << EnergyIn/(St.Mass*St.HeatCapacity) << "\n**** Ein = " << EnergyIn 
+	M2_Debug( "\n**** Temp change = " << EnergyIn/(St.Mass*St.HeatCapacity) << "\n**** Ein = " << EnergyIn 
 			<< "\n**** Mass = " << St.Mass);
 
 	assert(St.Temperature > 0);
-	update_state(EnergyIn);
-	M_Debug("\nSt.Temperature = " << St.Temperature);
+	M_Debug("\t"); update_state(EnergyIn);
+	M2_Debug("\nSt.Temperature = " << St.Temperature);
 	if(!St.Gas)	assert(St.Temperature <= St.SuperBoilingTemp);
 };
 
 void Matter::update_motion(threevector &ChangeInPosition,threevector &ChangeInVelocity){
+	M_Debug("\tIn Matter::update_motion(threevector &ChangeInPosition,threevector &ChangeInVelocity)\n\n");
 	// Calculate new position
 	St.DustPosition += ChangeInPosition;
 	St.DustVelocity += ChangeInVelocity;
 };
 
 void Matter::update_charge(double potential){
+	M_Debug("\tIn Matter::update_charge(double potential)\n\n");
 	St.Potential = potential;
 	if ( (St.DeltaSec + St.DeltaTherm) >= 1.0 || St.Potential < 0.0 ){ // If the grain is in fact positive ...
 		St.Positive = true;

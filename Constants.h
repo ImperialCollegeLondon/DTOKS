@@ -1,3 +1,9 @@
+#ifdef MODEL_DEBUG
+#define Mo_Debug(x) std::cout << x
+#else
+#define Mo_Debug(x) 
+#endif 
+
 #ifdef CHARGING_DEBUG
 #define C_Debug(x) std::cout << x
 #else
@@ -20,6 +26,18 @@
 #define M_Debug(x) std::cout << x
 #else
 #define M_Debug(x) 
+#endif 
+
+#ifdef MATTER_DEEP_DEBUG
+#define M2_Debug(x) std::cout << x
+#else
+#define M2_Debug(x) 
+#endif 
+
+#ifdef ELEMENT_DEEP_DEBUG
+#define E1_Debug(x) std::cout << x
+#else
+#define E1_Debug(x) 
 #endif 
 
 #ifdef ELEMENT_DEBUG

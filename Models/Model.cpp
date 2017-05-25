@@ -1,5 +1,5 @@
 //#define PAUSE
-//#define MODEL_DEBUG
+#define MODEL_DEBUG
 
 #include "Model.h"
 /*
@@ -11,7 +11,7 @@
 	Pdata.NeutralTemp = 100*1.16e5; 	// K, Neutral Temperature, convert from eV
 */
 
-const struct PlasmaData ModelDefaults = {
+const struct PlasmaData PlasmaDefaults = {
 	1e20,		// m^-3, Neutral Density
 	1e20,		// m^-3, Electron Density
 	1e20,		// m^-3, Electron Density
@@ -26,10 +26,12 @@ const struct PlasmaData ModelDefaults = {
 
 };
 
-Model::Model():Pdata(ModelDefaults){
+Model::Model():Sample(new Tungsten),Pdata(PlasmaDefaults){
+	Mo_Debug("\n\nIn Model::Model():Pdata(PlasmaDefaults)");
 }
 
 Model::Model( std::shared_ptr <Matter> const& sample, PlasmaData const& pdata ):Sample(sample),Pdata(pdata){
+	Mo_Debug("\n\nIn Model::Model( std::shared_ptr <Matter> const& sample, PlasmaData const& pdata ):Sample(sample),Pdata(pdata)");
 }
 
 /*void Model::Reset_Data( std::shared_ptr <Matter> const& sample, PlasmaData const& pdata ){

@@ -17,17 +17,15 @@ class HeatingModel : public Model{
 		bool ForceNegative;			// If we want to force the dust grain to be negative
 
 		std::array<bool,9> UseModel; 		// Heating Models turned on of possibly 9
-		std::array<char,4> ConstModels;		// Constant Models turned on of possibly 3
 		void CheckTimeStep(double TotalEnergy,char TimeStepType);	// Verify time step
 		void Print();				// Write to output data file
 
 	public:
 		// Constructors
 		HeatingModel();
-		HeatingModel(std::string filename);
-		HeatingModel(std::string name, char element, double power, std::array<bool,9> &models, 
-				std::array<char,4> &constmodels, double timestep, std::shared_ptr<Matter> const& sample, 
-				PlasmaData const& pdata);
+		HeatingModel( std::string filename, double timestep, std::array<bool,9> &models, 
+				std::shared_ptr<Matter> const& sample, PlasmaData const& pdata);
+
 		// Destructor
 		~HeatingModel(){
 		};

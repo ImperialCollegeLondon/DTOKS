@@ -3,18 +3,21 @@
 
 #include "ChargingModel.h"
 
-ChargingModel::ChargingModel(){
-	C_Debug("\n\nIn ChargingModel::ChargingModel()");
+ChargingModel::ChargingModel():Model(){
+	C_Debug("\n\nIn ChargingModel::ChargingModel():Model()\n\n");
 	CreateFile("Default_Charging_Filename.txt");
+	UseModel[0] = true;				// Charging Models turned on of possibly 9
 }
 
-ChargingModel::ChargingModel(std::string filename){
-	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename)");
+ChargingModel::ChargingModel(std::string filename,std::array<bool,1> models,
+				std::shared_ptr <Matter> const& sample, PlasmaData const& pdata) : Model(sample,pdata){
+	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename,std::array<bool,1> models,std::shared_ptr <Matter> const& sample, PlasmaData const& pdata) : Model(sample,pdata)\n\n");
 	CreateFile(filename);
+	UseModel = models;
 }
 
 void ChargingModel::CreateFile(std::string filename){
-	C_Debug("\n\nIn ChargingModel::CreateFile(std::string filename)");
+	C_Debug("\tIn ChargingModel::CreateFile(std::string filename)\n\n");
 	ModelDataFile.open(filename);
 	if( UseModel[0] ) ModelDataFile << "Positive\tPotential";
 
@@ -23,7 +26,7 @@ void ChargingModel::CreateFile(std::string filename){
 }
 
 void ChargingModel::Print(){
-	C_Debug("\n\nIn ChargingModel::Print()");
+	C_Debug("\tIn ChargingModel::Print()\n\n");
 
 	if( Sample->is_positive() )  ModelDataFile << "Pos\t";
 	if( !Sample->is_positive() ) ModelDataFile << "Neg\t";
@@ -32,7 +35,7 @@ void ChargingModel::Print(){
 }
 
 void ChargingModel::Charge(){
-	C_Debug("\n\nIn ChargingModel::Charge()");
+	C_Debug("\tIn ChargingModel::Charge()\n\n");
 /*
 	// Assume the grain is negative and calculate potential
 	double Potential = solveOML(Sample->get_deltatot(),Sample->get_potential());
@@ -41,10 +44,11 @@ void ChargingModel::Charge(){
 	}
 	Sample->update_charge(Potential);
 */
-	Print();
+	C_Debug("\t"); Print();
 }
 
 double ChargingModel::solveOML(double a, double guess){
+        C_Debug("\tIn ChargingModel::solveOML(double a, double guess)\n\n");
 	double b = Pdata.IonTemp/Pdata.ElectronTemp;
 	double C = Me/Mi;
 	

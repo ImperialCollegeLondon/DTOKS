@@ -5,18 +5,21 @@
 #include "MathHeader.h" // This is weird
 
 // Default Constructor, no arguments
-ForceModel::ForceModel(){
-	F_Debug("\n\nIn ForceModel::ForceModel()");
+ForceModel::ForceModel():Model(){
+	F_Debug("\n\nIn ForceModel::ForceModel():Model()\n\n");
 	CreateFile("Default_Force_filename.txt");
+	UseModel = {false,false,false};
 }
 
-ForceModel::ForceModel(std::string filename){
-	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename)");
+ForceModel::ForceModel(std::string filename, std::array<bool,3> models, 
+			std::shared_ptr <Matter> const& sample, PlasmaData const& pdata) : Model(sample,pdata){
+	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, std::array<bool,3> models, std::shared_ptr <Matter> const& sample, PlasmaData const& pdata) : Model(sample,pdata)\n\n");
 	CreateFile(filename);
+	UseModel = models;
 }
 
 void ForceModel::CreateFile(std::string filename){
-	F_Debug("\n\nIn ForceModel::CreateFile(std::string filename)");
+	F_Debug("\tIn ForceModel::CreateFile(std::string filename)\n\n");
 	ForceFile.open(filename);
 	ForceFile << "Position\tVelocity";
 	if( UseModel[0] ) ForceFile << "\tGravity";
@@ -28,7 +31,7 @@ void ForceModel::CreateFile(std::string filename){
 }
 
 void ForceModel::Print(){
-	F_Debug("\n\nIn ForceModel::Print(double TotPower, std::array<char,4> &ConstModels)");
+	F_Debug("\tIn ForceModel::Print()\n\n");
 	ForceFile << Sample->get_dustposition() << "\t" << Sample->get_dustvelocity();
 	if( UseModel[0] ) ForceFile << "\t(0.0,0.0,-9.81)"; // Maybe this should be coded better...
 	if( UseModel[1] ) ForceFile << "\t" << Centrifugal();
@@ -40,7 +43,7 @@ void ForceModel::Print(){
 
 // Move the dust grain by calculating the forces acting on it
 void ForceModel::Force(){
-	F_Debug("\n\nIn ForceModel::Force()");
+	F_Debug("\tIn ForceModel::Force()\n\n");
 /*
 	// Forces: Lorentz + ion drag + gravity
 	threevector Fid = DTOKSIonDrag();
@@ -53,23 +56,25 @@ void ForceModel::Force(){
 
 	threevector g(0.0,0.0,-9.81);
 	// Centrifugal terms. MAKE SURE TO CHECK THESE TWO LINES AT SOME POINT
-	threevector centrifugal = Centrifugal();
+	F_Debug("\t"); threevector centrifugal = Centrifugal();
 
 	threevector ChangeInPosition(
 			Sample->get_dustposition().getx()+Sample->get_dustvelocity().getx()*TimeStep,
 			Sample->get_dustposition().gety()+(Sample->get_dustvelocity().gety()*TimeStep)/(Sample->get_dustposition().getx()),
 			Sample->get_dustposition().getz()+Sample->get_dustvelocity().getz()*TimeStep);
-	threevector ChangeInVelocity = (LorentzForce() + Fid + g + centrifugal)*TimeStep;
+	F_Debug("\t"); threevector LorentzForce = LorentzForce();
+	threevector ChangeInVelocity = (LorentzForce + Fid + g + centrifugal)*TimeStep;
 	//vd += (LorentzForce() + Fid + g)*TimeStep;
 	
 	//vd += centrifugal*TimeStep;
 
 	Sample->update_motion(ChangeInPosition,ChangeInVelocity);
 */
-	Print();
+	F_Debug("\t"); Print();
 }
 
 threevector ForceModel::DTOKSIonDrag()const{
+	F_Debug("\tIn ForceModel::DTOKSIonDrag()\n\n");
 	threevector Fid;
 
 	threevector Mt = (Pdata.PlasmaVel-Sample->get_dustvelocity());//*sqrt(Mi/echarge/Pdata.IonTemp); // FIND OUT WHAT THIS OPERATION MEANS!
@@ -98,6 +103,7 @@ threevector ForceModel::DTOKSIonDrag()const{
 }
 
 threevector ForceModel::LorentzForce()const{
+	F_Debug("\tIn ForceModel::LorentzForce()\n\n");
 	// Dust grain charge to mass ratio
 	double qtom(0);
 	// Estimate charge from potential difference
@@ -113,6 +119,7 @@ threevector ForceModel::LorentzForce()const{
 }
 
 threevector ForceModel::Centrifugal()const{
+	F_Debug("\tIn ForceModel::Centrifugal()\n\n");
 	threevector returnval(
 		Sample->get_dustvelocity().gety()*Sample->get_dustvelocity().gety()/Sample->get_dustposition().getx(),
 		-Sample->get_dustvelocity().getx()*Sample->get_dustvelocity().gety()/Sample->get_dustposition().getx(),

@@ -23,10 +23,11 @@ class Matter{
 		Matter(const ElementConsts *elementconsts);
 		Matter(double rad, const ElementConsts *elementconsts);
 		Matter(double rad, double temp, const ElementConsts *elementconsts);
+		Matter(double rad, double temp, const ElementConsts *elementconsts, std::array <char,4> &constmodels);
  
 		struct GrainData 	St;
-		struct ElementConsts	Ec;
-		std::array<char,4> ConstModels;
+		const struct ElementConsts	Ec;
+		std::array<char,4> ConstModels;		// Constant Models variation with Temperature turned on of possibly 4
 
 		// Functions called by Matter::update(). These are element dependant and must be defined in the child class.
 		virtual void update_radius		()=0;
@@ -70,6 +71,7 @@ class Matter{
 		bool is_gas			()const{ return St.Gas;				};
 		bool is_liquid			()const{ return St.Liquid;			};
 		bool is_positive		()const{ return St.Positive;			};
+		bool get_c		   (int i)const{ assert(i < 4); return ConstModels[i];	};
 		double get_superboilingtemp	()const{ return St.SuperBoilingTemp;		};
 		double get_mass			()const{ return St.Mass;			};
 		double get_density		()const{ return St.Density;			};

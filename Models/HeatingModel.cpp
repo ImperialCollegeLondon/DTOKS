@@ -6,33 +6,28 @@
 #include "Checks.h"
 #include "Functions.h"
 
-HeatingModel::HeatingModel():Type("constant"){
-	H_Debug("\n\nIn HeatingModel::HeatingModel()");
+HeatingModel::HeatingModel():Type("constant"),Model(){
+	H_Debug("\n\nIn HeatingModel::HeatingModel():Type(constant),Model()\n\n");
 	CreateFile("Default_Heating_filename.txt",false);
-}
-
-HeatingModel::HeatingModel(std::string filename):Type("constant"){
-	H_Debug("\n\nIn HeatingModel::HeatingModel(std::string filename)");
-	CreateFile(filename,false);
-}
-
-// Constructor which specifies dust radius, element and ConstModels vector by passing a pointer to a Matter reference.
-HeatingModel::HeatingModel(std::string name, char element, double power, std::array<bool,9> &models, 
-				std::array<char,4> &constmodels, double timestep, std::shared_ptr<Matter> const& sample, 
-				PlasmaData const &pdata) : Type(name),Model(sample,pdata){
-	H_Debug("\n\nIn HeatingModel::HeatingModel(std::string name, char element, double power, std::array<bool,9> &models, std::array<char,4> &constmodels, double timestep, std::shared_ptr<Matter> const& sample, PlasmaData const &pdata) : Type(name),Model(sample,pdata)");
 	Defaults();
+}
+
+
+// Constructor which specifies dust radius, by passing a pointer to a Matter reference.
+HeatingModel::HeatingModel(std::string filename, double timestep, std::array<bool,9> &models,
+				std::shared_ptr<Matter> const& sample, PlasmaData const &pdata) : Model(sample,pdata){
+	H_Debug("\n\nIn HeatingModel::HeatingModel(std::string filename, double timestep, std::array<bool,9> &models, std::shared_ptr<Matter> const& sample, PlasmaData const &pdata) : Model(sample,pdata)\n\n");
+	Defaults();
+	CreateFile(filename,false);
 	CheckPos(timestep,"Time Step");
 	UseModel 	= models;
-	ConstModels	= constmodels;
-	PowerIncident 	= power; 		// kJ, Power incident
+	PowerIncident 	= 0; 			// kJ, Power incident
 	TimeStep 	= timestep;		// s,
 }
 
 void HeatingModel::Defaults(){
-	H_Debug("\n\nIn HeatingModel::Defaults()");
+	H_Debug("\tIn HeatingModel::Defaults()\n\n");
 	UseModel = {true,false,false,false,false,false,false};
-	ConstModels = {'c','c','c','c'};
 	PowerIncident = 0.5;
 	OldTemp = Sample->get_temperature(); 	// Same sign as temperature 
 	TimeStep = 0.1;
@@ -43,7 +38,7 @@ void HeatingModel::Defaults(){
 
 void HeatingModel::Reset(std::string filename, double radius, double temp, double timestep){
 			//, std::shared_ptr<Matter> const& sample, PlasmaData const &pdata ){
-	H_Debug("\n\nIn HeatingModel::Reset(std::string filename, double radius, double temp, double timestep)");
+	H_Debug("\tIn HeatingModel::Reset(std::string filename, double radius, double temp, double timestep)\n\n");
 	ModelDataFile.close();
 	CreateFile(filename,false);
 	//Reset_Data(sample,pdata);
@@ -54,29 +49,30 @@ void HeatingModel::Reset(std::string filename, double radius, double temp, doubl
 }
 
 void HeatingModel::CreateFile(std::string filename, bool PrintPhaseData){
-	H_Debug("\n\nIn HeatingModel::CreateFile(std::string filename, bool PrintPhaseData)");
+	H_Debug("\tIn HeatingModel::CreateFile(std::string filename, bool PrintPhaseData)\n\n");
 	ModelDataFile.open(filename);
 	ModelDataFile << "Time\tTemp\tMass\tDensity\tEnergyIn";
-	if( PrintPhaseData ) 					ModelDataFile << "\tFusionE\tVapourE";
-	if( ConstModels[0] == 'v' && ConstModels[0] == 'V' ) 	ModelDataFile << "\tCv";
-	if( ConstModels[1] == 'v' && ConstModels[1] == 'V' ) 	ModelDataFile << "\tVapourP";
-	if( ConstModels[2] == 'v' && ConstModels[2] == 'V' ) 	ModelDataFile << "\tLinearExpansion";
-       	if( UseModel[0] )       				ModelDataFile << "\tEmissLoss\tEmissiv";
-       	if( UseModel[1] )       				ModelDataFile << "\tEvapRate\tEvapLoss\tEvapMassLoss";
-       	if( UseModel[2] )       				ModelDataFile << "\tNewton";
-       	if( UseModel[3] )       				ModelDataFile << "\tIonFlux\tIonHeatFlux";
-       	if( UseModel[4] )       				ModelDataFile << "\tElectronFlux\tElectronHeatFlux";
-       	if( UseModel[5] )       				ModelDataFile << "\tNeutronFlux\tNeutronHeatFlux";
-       	if( UseModel[6] )       				ModelDataFile << "\tNeutralRecomb";
-       	if( UseModel[7] )       				ModelDataFile << "\tSEE";
-       	if( UseModel[8] )       				ModelDataFile << "\tTEE";
+	if( PrintPhaseData ) 						ModelDataFile << "\tFusionE\tVapourE";
+	if( Sample->get_c(0) == 'v' || Sample->get_c(0) == 'V' ) 	ModelDataFile << "\tCv";
+	if( Sample->get_c(1) == 'v' || Sample->get_c(1) == 'V' ) 	ModelDataFile << "\tVapourP";
+	if( Sample->get_c(2) == 'v' || Sample->get_c(2) == 'V' ) 	ModelDataFile << "\tLinearExpansion";
+       	if( UseModel[0] )       					ModelDataFile << "\tEmissLoss";
+       	if( UseModel[0] && Sample->get_c(3) == 'v' )   			ModelDataFile << "\tEmissiv";
+       	if( UseModel[1] )       					ModelDataFile << "\tEvapRate\tEvapLoss\tEvapMassLoss";
+       	if( UseModel[2] )       					ModelDataFile << "\tNewton";
+       	if( UseModel[3] )       					ModelDataFile << "\tIonFlux\tIonHeatFlux";
+       	if( UseModel[4] )       					ModelDataFile << "\tElectronFlux\tElectronHeatFlux";
+       	if( UseModel[5] )       					ModelDataFile << "\tNeutronFlux\tNeutronHeatFlux";
+       	if( UseModel[6] )       					ModelDataFile << "\tNeutralRecomb";
+       	if( UseModel[7] )       					ModelDataFile << "\tSEE";
+       	if( UseModel[8] )       					ModelDataFile << "\tTEE";
 	ModelDataFile << "\n";
 }
 
 const int HeatingModel::Vapourise(char TimeStepType){
-	H_Debug("\n\nIn HeatingModel::Vapourise(char EmissivModel, char TimeStepType)");
+	H_Debug("\tIn HeatingModel::Vapourise(char EmissivModel, char TimeStepType)\n\n");
 	
-	Sample->update_models(ConstModels);			// Update density, dimensions, Cp and emissivity
+//	Sample->update_models(ConstModels);			// Update density, dimensions, Cp and emissivity
 	while( !Sample->is_gas() && !ThermalEquilibrium ){ // If the sample is gaseous or in TE, the model ends.
 		Heat(TimeStepType);
 	}
@@ -98,7 +94,7 @@ const int HeatingModel::Vapourise(char TimeStepType){
 }
 
 void HeatingModel::Heat(char TimeStepType){
-	H_Debug("\n\nIn HeatingModel::Heat(char TimeStepType)");
+	H_Debug("\tIn HeatingModel::Heat(char TimeStepType)\n\n");
 /*
 	assert( Sample->get_mass() > 0 );
 
@@ -116,12 +112,12 @@ void HeatingModel::Heat(char TimeStepType){
 	TotalPower = TotalEnergy/TimeStep;
 */
 
-  	Print();		// Print data to file
+  	H_Debug("\t"); Print();		// Print data to file
 
 }
 
 double HeatingModel::CalculatePower(double DustTemperature)const{
-	H_Debug( "\n\nIn HeatingModel::CalculatePower(double DustTemperature)" );
+	H_Debug( "\tIn HeatingModel::CalculatePower(double DustTemperature)\n\n");
 	double TotalPower = PowerIncident;
 
 	if( UseModel[0] )				TotalPower -= EmissivityModel		(DustTemperature);
@@ -148,6 +144,7 @@ double HeatingModel::CalculatePower(double DustTemperature)const{
 }
 
 double HeatingModel::RungeKutta4(){
+	H_Debug( "\tIn HeatingModel::RungeKutta4()\n\n");
 	double k1 = CalculatePower(Sample->get_temperature()); 
 	if(k1<0 && fabs(k1/2) > Sample->get_temperature()){
 		ThermalEquilibrium = true;
@@ -241,7 +238,7 @@ void HeatingModel::CheckTimeStep(double TotalPower, char TimeStepType){
 }
 
 void HeatingModel::Print(){
-	H_Debug("\n\nIn HeatingModel::Print()");
+	H_Debug("\tIn HeatingModel::Print()\n\n");
 
 	ModelDataFile 	<< TotalTime << "\t" << Sample->get_temperature() << "\t" << Sample->get_mass() << "\t" << Sample->get_density()
 		<< "\t" << TotalPower;
@@ -249,12 +246,13 @@ void HeatingModel::Print(){
 	bool PrintPhaseData = false;
 	if( PrintPhaseData )	ModelDataFile 	<< "\t" << Sample->get_fusionenergy() << "\t" << Sample->get_vapourenergy();
 
-	if( ConstModels[0] == 'v' && ConstModels[0] == 'V' ) ModelDataFile << "\t" << Sample->get_heatcapacity();
-	if( ConstModels[1] == 'v' && ConstModels[1] == 'V' ) ModelDataFile << "\t" << Sample->get_vapourpressure();
-	if( ConstModels[2] == 'v' && ConstModels[2] == 'V' ) ModelDataFile << "\t" << Sample->get_linearexpansion();
+	if( Sample->get_c(0) == 'v' || Sample->get_c(0) == 'V' ) 	ModelDataFile << "\tCv";
+	if( Sample->get_c(1) == 'v' || Sample->get_c(1) == 'V' ) 	ModelDataFile << "\tVapourP";
+	if( Sample->get_c(2) == 'v' || Sample->get_c(2) == 'V' ) 	ModelDataFile << "\tLinearExpansion";
 
-
-	if( UseModel[0] ) 	ModelDataFile 	<< "\t" << EmissivityModel(Sample->get_temperature()) << "\t" << Sample->get_emissivity();
+	if( UseModel[0] ) 	ModelDataFile 	<< "\t" << EmissivityModel(Sample->get_temperature());
+	if( UseModel[0] && Sample->get_c(3) ) 	
+				ModelDataFile 	<< "\t" << Sample->get_emissivity();
 	if( UseModel[1] && Sample->is_liquid() )	
 				ModelDataFile 	<< "\t" << EvaporationFlux(Sample->get_temperature()) 
 					<< "\t" << EvaporationModel(Sample->get_temperature()) 

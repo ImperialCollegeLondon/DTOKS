@@ -16,7 +16,8 @@ class ChargingModel : public Model{
 	public:
 		// Constructors
 		ChargingModel();
-		ChargingModel(std::string filename);
+		ChargingModel(std::string filename, std::array<bool,1> models, std::shared_ptr <Matter> const& sample, 
+				PlasmaData const& pdata);
 
 		// Destructor
 		~ChargingModel(){

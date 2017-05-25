@@ -1,4 +1,5 @@
-//#define TUNGSTEN_DEBUG
+#define ELEMENT_DEBUG
+#define ELEMENT_DEEP_DEBUG
 
 #include "Tungsten.h"
 #include "Constants.h"
@@ -21,36 +22,37 @@ const struct ElementConsts Tungsten::TungstenConsts = {
 };
 
 Tungsten::Tungsten():Matter(&TungstenConsts){
+	E_Debug("\n\nIn Tungsten::Tungsten():Matter(&TungstenConsts)\n\n");
 	tungsten_defaults();
 }
 
 Tungsten::Tungsten(double radius):Matter(radius,&TungstenConsts){
+	E_Debug("\n\nIn Tungsten::Tungsten(double radius):Matter(radius,&TungstenConsts)\n\n");
 	tungsten_defaults();
 }
 
 Tungsten::Tungsten(double radius, double tempin):Matter(radius,tempin,&TungstenConsts){
-	E_Debug("\n\nIn Tungsten::Tungsten(double radius, double tempin)");
+	E_Debug("\n\nIn Tungsten::Tungsten(double radius, double tempin):Matter(radius,tempin,&TungstenConsts)\n\n");
 	tungsten_defaults();
 
-
-	update_state(0.0);		// Temperature dependant
-	update_models('c','c','c','y');
-	E_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius << "\nSt.Density = " << St.Density 
+	E_Debug("\t"); update_state(0.0);		// Temperature dependant
+	E_Debug("\t"); update_models('c','c','c','y');
+	E1_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius << "\nSt.Density = " << St.Density 
 			<< "\nSt.Volume = " << St.Volume);
 }
 
 Tungsten::Tungsten(double radius, double tempin, std::array<char,4> &constmodels):Matter(radius,tempin,&TungstenConsts){
-	E_Debug("\n\nIn Tungsten::Tungsten(double radius, double tempin)");
+	E_Debug("\n\nIn Tungsten::Tungsten(double radius, double tempin, std::array<char,4> &constmodels):Matter(radius,tempin,&TungstenConsts)\n\n\t");
 	tungsten_defaults();
 
 	update_state(0.0);		// Temperature dependant
 	update_models(constmodels);
-	E_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius << "\nSt.Density = " << St.Density 
+	E1_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius << "\nSt.Density = " << St.Density 
 			<< "\nSt.Volume = " << St.Volume);
 }
 
 void Tungsten::tungsten_defaults(){
-	E_Debug("\n\nIn Tungsten::tungsten_defaults()");
+	E_Debug("\tIn Tungsten::tungsten_defaults()\n\n");
 
 	// http://www.engineersedge.com/materials/specific_heat_capacity_of_metals_13259.html
         St.HeatCapacity = 0.13398; 		// kJ/(kg-K)         
@@ -65,7 +67,7 @@ void Tungsten::tungsten_defaults(){
 /// ************************************************************************************************* \\\
 
 void Tungsten::update_heatcapacity(){ // Calculates the heat capacity in units of J mol^-1 K^-2
-	E_Debug("\n\nIn Tungsten::update_heatcapacity()");
+	E_Debug("\tIn Tungsten::update_heatcapacity()\n\n");
 
 	if( St.Temperature < 300 ){ 
 
@@ -84,13 +86,13 @@ void Tungsten::update_heatcapacity(){ // Calculates the heat capacity in units o
                 St.HeatCapacity = 35.56404 -1.551741e-7*t + 2.915253e-8*pow(t,2) -1.891725e-9*pow(t,3)-4.107702e-7*pow(t,-2);
 	}
 
-	E_Debug("\n\nTemperature is : " << St.Temperature << "\nSt.Gas = " << St.Gas << "\nSt.Liquid = " << St.Liquid 
+	E1_Debug("\n\nTemperature is : " << St.Temperature << "\nSt.Gas = " << St.Gas << "\nSt.Liquid = " << St.Liquid 
 				<< "\nCv of Solid: " << St.HeatCapacity/Ec.AtomicMass << "[kJ/(kg K)]"; );
 	St.HeatCapacity = (St.HeatCapacity /(1000 * Ec.AtomicMass)); // Conversion kJ/(mol K) to kJ/( kg K ), AtomicMass [kg mol^-1]
 }
 
 void Tungsten::update_radius(){
-	E_Debug("\n\nIn Tungsten::update_radius():");
+	E_Debug("\tIn Tungsten::update_radius()\n\n");
 	if( St.Temperature > 173 && St.Temperature <= 1500 ){
 		static bool runOnce = true;
 		WarnOnce(runOnce,
@@ -108,12 +110,13 @@ void Tungsten::update_radius(){
 		St.LinearExpansion = pow(1.18+6.20*1e-5*(St.Temperature-3680)+3.23*1e-8*pow((St.Temperature-3680),2),(1./3.));
 	}
 	St.Radius=St.UnheatedRadius*St.LinearExpansion;
-	E_Debug("\nTemperature = " << St.Temperature << "\n\nSt.LinearExpansion = " << St.LinearExpansion
+	E1_Debug("\nTemperature = " << St.Temperature << "\n\nSt.LinearExpansion = " << St.LinearExpansion
 			<< "\nSt.Radius = " << St.Radius);
 	assert(St.Radius>0); // Assert radius is positive	
 }
 
 void Tungsten::update_vapourpressure(){
+	E_Debug("\tIn Tungsten::update_vapourpressure()\n\n");
 //	double AmbientPressure = 0;
 	St.VapourPressure = 101325*pow(10,2.945 - 44094/St.Temperature + 1.3677*log10(St.Temperature)); // http://mmrc.caltech.edu/PVD/manuals/Metals%20Vapor%20pressure.pdf
 	

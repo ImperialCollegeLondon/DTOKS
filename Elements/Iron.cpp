@@ -1,3 +1,4 @@
+//#define ELEMENT_DEEP_DEBUG
 //#define ELEMENT_DEBUG
 #include "Iron.h"
 #include "Constants.h"
@@ -38,7 +39,7 @@ Iron::Iron(double radius, double tempin):Matter(radius,tempin,&IronConsts){
 			<< "\nSt.Volume = " << St.Volume);
 }
 
-Iron::Iron(double radius, double tempin, std::array<char,4> &constmodels):Matter(radius,tempin,&IronConsts){
+Iron::Iron(double radius, double tempin, std::array<char,4> &constmodels):Matter(radius,tempin,&IronConsts,constmodels){
 
 	E_Debug("\n\nIn Iron::Iron(double radius, double tempin, std::array<char,4> &constmodels)");
 

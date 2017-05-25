@@ -1,5 +1,5 @@
-//#define GRAPHITE_DEBUG
-
+//#define ELEMENT_DEBUG
+//#define ELEMENT_DEEP_DEBUG
 #include "Graphite.h"
 #include "Constants.h"
 
