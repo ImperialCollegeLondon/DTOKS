@@ -2,6 +2,8 @@
 #define DTOKSU_DEBUG
 #include "DTOKSU.h"
 
+// CONSIDER DEFINING A DEFAULT SAMPLE
+
 // Default Constructor, no arguments
 DTOKSU::DTOKSU(){
 	D_Debug("\n\nIn DTOKSU::DTOKSU()\n\n");

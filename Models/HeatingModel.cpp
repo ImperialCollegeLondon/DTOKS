@@ -27,7 +27,7 @@ HeatingModel::HeatingModel(std::string filename, double timestep, std::array<boo
 
 void HeatingModel::Defaults(){
 	H_Debug("\tIn HeatingModel::Defaults()\n\n");
-	UseModel = {true,false,false,false,false,false,false};
+	UseModel = {false,false,false,false,false,false,false};
 	PowerIncident = 0.5;
 	OldTemp = Sample->get_temperature(); 	// Same sign as temperature 
 	TimeStep = 0.1;

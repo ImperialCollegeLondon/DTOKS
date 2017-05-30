@@ -18,6 +18,19 @@ static void show_usage(std::string name){
 	<< std::endl;
 }
 
+template<typename T> int InputFunction(int &argc, char* argv[], int &i, std::stringstream &ss0, T &Temp){
+	if (i + 1 < argc) { // Make sure we aren't at the end of argv!
+		i+=1;
+		ss0 << argv[i]; // Increment 'i' so we don't get the argument as the next argv[i].
+		ss0 >> Temp;
+		ss0.clear(); ss0.str("");
+		return 0;
+	}else{ // Uh-oh, there was no argument to the destination option.
+		std::cerr << "\noption requires argument." << std::endl;
+		return 1;
+	}
+
+}
 
 int main(int argc, char* argv[]){
 	std::cout << "\n\n************************************* BEGIN SETUP (1) ************************************* \n\n";
@@ -48,7 +61,7 @@ int main(int argc, char* argv[]){
 	double Size=1e-6; 		// m
 	double Temp=350;		// K
 	double TimeStep=1e-5;		// s
-	std::shared_ptr<Matter> &Sample;	// Define the sample matter type
+	std::shared_ptr<Matter> Sample;	// Define the sample matter type
 
 	// ------------------- HEATING MODELS ------------------- //
 	// Set to true all heating models that are wanted
@@ -109,24 +122,23 @@ int main(int argc, char* argv[]){
 	std::array<bool, 9> HeatModels = 
 		{RadiativeCooling, EvaporativeCooling, NewtonCooling, IonHeatFlux, ElectronHeatFlux, NeutralHeatFlux, 
 		NeutralRecomb, SEE, TEE };
-
-	std::array<bool,3> &ForceModels = {Gravity,Lorentz,IonDrag};
-	std::array<bool,1> &ChargeModels = {DTOKSOML};
+	std::array<bool,3> ForceModels = {Gravity,Lorentz,IonDrag};
+	std::array<bool,1> ChargeModels = {DTOKSOML};
 	std::array<char, 4> ConstModels =
 		{ EmissivityModel,ExpansionModel,HeatCapacityModel,BoilingModel};
 
-	if	(Element == 'W') Sample = new Tungsten(Size,Temp,ConstModels);
-	else if (Element == 'B') Sample = new Beryllium(Size,Temp,ConstModels);
-	else if (Element == 'F') Sample = new Iron(Size,Temp,ConstModels);
-	else if (Element == 'G') Sample = new Graphite(Size,Temp,ConstModels);
+	if 	(Element == 'W') Sample = std::make_shared<Tungsten>();
+	else if (Element == 'B') Sample = std::make_shared<Beryllium>();
+	else if (Element == 'F') Sample = std::make_shared<Iron>();
+	else if (Element == 'G') Sample = std::make_shared<Graphite>();
 	else{ 
 		std::cerr << "\nInvalid Option entered";
 		return -1;
 	}
 
-	DTOKSU MyDtoks(TimeStep, Sample, Pdata, HeatModels, ForceModels, ChargeModels);
+	DTOKSU MyDtoks2(TimeStep, Sample, Pdata, HeatModels, ForceModels, ChargeModels);
 	
-	int errcode = MyDtoks.Run();
+	int errcode2 = MyDtoks2.Run();
 
 	std::cout << "\n\n * MAIN SCRIPT COMPLETE * \n\n";
 	return 0;
