@@ -12,18 +12,16 @@ class HeatingModel : public Model{
 		double TotalPower;			// Kilo-Watts,
 		double TimeStep;			// Seconds, the length of a particular time step
 		double TotalTime;			// Seconds, total time taken to perform simulation
-		double OldTemp;				// K, Temperature last step
-		bool ThermalEquilibrium;		// If the sample is in thermal equilibrium, this variable is true
 		bool ForceNegative;			// If we want to force the dust grain to be negative
 
 		std::array<bool,9> UseModel; 		// Heating Models turned on of possibly 9
-		void CheckTimeStep(double TotalEnergy,char TimeStepType);	// Verify time step
+
 		void Print();				// Write to output data file
 
 	public:
 		// Constructors
 		HeatingModel();
-		HeatingModel( std::string filename, double timestep, std::array<bool,9> &models, 
+		HeatingModel( std::string filename, double timestep, double accuracy, std::array<bool,9> &models, 
 				std::shared_ptr<Matter> const& sample, PlasmaData const& pdata);
 
 		// Destructor
@@ -33,31 +31,32 @@ class HeatingModel : public Model{
 		void Defaults(); // Sets default settings
 
 		// Functions which generate and save data from heating the Sample.
-		const int Vapourise(char TimeStepType);
-		void Heat(char TimeStepType);
-		void Reset( std::string filename, double radius, double temp, double timestep);
-			//	std::shared_ptr<Matter> const& sample, PlasmaData const &pdata);
+		const int Vapourise();
+		void Heat();
 
 		void CreateFile(std::string filename, bool PrintPhaseData);
 		double CalculatePower(double DustTemperature)const;
 		double RungeKutta4();
 
+
+		double CheckTimeStep();	// Verify time step
+
 		// Heating Models
-		const double EmissivityModel		(double DustTemperature)	const;
-		const double EvaporationModel		(double DustTemperature)	const;
-		const double NewtonCooling		(double DustTemperature)	const;
-		const double SEE			(double DustTemperature)	const;
-		const double TEE			(double DustTemperature)	const;
-		const double NeutralRecombination	(double DustTemperature)	const;
-		const double IonHeatFlux		(double DustTemperature)	const;
-		const double ElectronHeatFlux		(double DustTemperature)	const;
-		const double NeutralHeatFlux		()				const;
+		const double EmissivityModel		(double DustTemperature)const;
+		const double EvaporationModel		(double DustTemperature)const;
+		const double NewtonCooling		(double DustTemperature)const;
+		const double SEE			(double DustTemperature)const;
+		const double TEE			(double DustTemperature)const;
+		const double NeutralRecombination	(double DustTemperature)const;
+		const double IonHeatFlux		(double DustTemperature)const;
+		const double ElectronHeatFlux		(double DustTemperature)const;
+		const double NeutralHeatFlux		()			const;
 
 		// Fluxes of particles and coefficients
-		const double EvaporationFlux		(double DustTemperature)	const;
-		const double IonFlux			(double DustTemperature)	const;
-		const double ElectronFlux		(double DustTemperature)	const;
-		const double NeutralFlux		()				const;
+		const double EvaporationFlux		(double DustTemperature)const;
+		const double IonFlux			(double DustTemperature)const;
+		const double ElectronFlux		(double DustTemperature)const;
+		const double NeutralFlux		()			const;
 
 		double get_totaltime			()const{ return TotalTime;	};
 };

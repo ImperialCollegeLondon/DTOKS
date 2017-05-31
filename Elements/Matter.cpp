@@ -52,6 +52,9 @@ void Matter::set_defaults(){
 	St.Temperature = 273;			// K
 	St.Liquid = false; St.Gas = false;
 	St.FusionEnergy = 0; St.VapourEnergy = 0;
+	St.DeltaSec = 0;		// Secondary Electron Emission Yield (Arb)
+	St.DeltaTherm = 0;		// Thermionic Electron Emission Yield (Arb)
+
 }
 
 // Update geometric properties of matter:
@@ -292,10 +295,10 @@ void Matter::update_mass(double LostMass){
 // Takes argument of amount of energy lost in Kilo Joules and changes temperature in Degrees
 void Matter::update_temperature(double EnergyIn){
 
-	M_Debug("\tIn Matter::update_temperature(double EnergyIn = " << EnergyIn 
-		<< " kJ) ...\nTemp = " << St.Temperature << "K \nHeatCapacity = " << St.HeatCapacity 
-		<< " kJ/(kg K)\nFusionEnergy = " << St.FusionEnergy << " kJ\nVapourEnergy = " 
-		<< St.VapourEnergy << " kJ\n\n");
+	M_Debug("\tIn Matter::update_temperature(double EnergyIn = " << EnergyIn << " kJ)\n\n");
+//	M_Debug("\n...\nTemp = " << St.Temperature << "K \nHeatCapacity = " << St.HeatCapacity 
+//		<< " kJ/(kg K)\nFusionEnergy = " << St.FusionEnergy << " kJ\nVapourEnergy = " 
+//		<< St.VapourEnergy << " kJ\n\n");
 
 	// Assert temperature changes smaller than 10% of current temperature
 	if( abs(EnergyIn/(St.Mass*St.HeatCapacity)) > St.Temperature*0.1 ){

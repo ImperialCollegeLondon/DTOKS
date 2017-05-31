@@ -7,7 +7,9 @@ class ChargingModel : public Model{
 
 	private:
 		// Parameters defining the Heating equation
-				
+		double TotalTime;				
+		double TimeStep;
+
 		std::array<bool,1> UseModel; 		// Charging Models turned on of possibly 9
 
 		void Print();			// Write to output data file
@@ -16,16 +18,17 @@ class ChargingModel : public Model{
 	public:
 		// Constructors
 		ChargingModel();
-		ChargingModel(std::string filename, std::array<bool,1> models, std::shared_ptr <Matter> const& sample, 
-				PlasmaData const& pdata);
+		ChargingModel(std::string filename, double accuracy, std::array<bool,1> models, 
+				std::shared_ptr <Matter> const& sample, PlasmaData const& pdata);
 
 		// Destructor
 		~ChargingModel(){
 		};
 		
+		double CheckTimeStep();
 		// Functions which generate and save data from heating the Sample.
 		void CreateFile(std::string filename);
-
+		
 		void Charge();
 
 

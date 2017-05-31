@@ -9,13 +9,17 @@ ForceModel::ForceModel():Model(){
 	F_Debug("\n\nIn ForceModel::ForceModel():Model()\n\n");
 	CreateFile("Default_Force_filename.txt");
 	UseModel = {false,false,false};
+	TimeStep = 0;
+	TotalTime = 0;
 }
 
-ForceModel::ForceModel(std::string filename, std::array<bool,3> models, 
-			std::shared_ptr <Matter> const& sample, PlasmaData const& pdata) : Model(sample,pdata){
+ForceModel::ForceModel(std::string filename, double accuracy, std::array<bool,4> models, 
+			std::shared_ptr <Matter> const& sample, PlasmaData const& pdata) : Model(sample,pdata,accuracy){
 	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, std::array<bool,3> models, std::shared_ptr <Matter> const& sample, PlasmaData const& pdata) : Model(sample,pdata)\n\n");
 	CreateFile(filename);
 	UseModel = models;
+	TimeStep = 0;
+	TotalTime = 0;
 }
 
 void ForceModel::CreateFile(std::string filename){
@@ -40,6 +44,19 @@ void ForceModel::Print(){
 	ForceFile << "\n";
 }
 
+double ForceModel::CheckTimeStep(){
+	F_Debug( "\tIn ForceModel::CheckTimeStep()\n\n" );
+	// Deal with case where power/time step causes large temperature change.
+/*
+	// Take Eularian step to get initial time step
+	H_Debug("\t"); double TotalPower = CalculatePower(Sample->get_temperature());
+	// This model forces the time step to be the value which produces a change in temperature or 1*accuracy degree
+	TimeStep = fabs((Sample->get_mass()*Sample->get_heatcapacity())/(TotalPower*accuracy));
+
+	assert(TimeStep > 0);
+*/
+	TotalTime += TimeStep;
+}
 
 // Move the dust grain by calculating the forces acting on it
 void ForceModel::Force(){

@@ -1,5 +1,6 @@
 //#define PAUSE
 #define HEATING_DEBUG
+//#define HEATING_DEEP_DEBUG
 
 #include "HeatingModel.h"
 #include "Constants.h"
@@ -14,38 +15,23 @@ HeatingModel::HeatingModel():Type("constant"),Model(){
 
 
 // Constructor which specifies dust radius, by passing a pointer to a Matter reference.
-HeatingModel::HeatingModel(std::string filename, double timestep, std::array<bool,9> &models,
-				std::shared_ptr<Matter> const& sample, PlasmaData const &pdata) : Model(sample,pdata){
+HeatingModel::HeatingModel(std::string filename, double timestep, double accuracy, std::array<bool,9> &models,
+				std::shared_ptr<Matter> const& sample, PlasmaData const &pdata) : Model(sample,pdata,accuracy){
 	H_Debug("\n\nIn HeatingModel::HeatingModel(std::string filename, double timestep, std::array<bool,9> &models, std::shared_ptr<Matter> const& sample, PlasmaData const &pdata) : Model(sample,pdata)\n\n");
 	Defaults();
 	CreateFile(filename,false);
 	CheckPos(timestep,"Time Step");
 	UseModel 	= models;
-	PowerIncident 	= 0; 			// kJ, Power incident
 	TimeStep 	= timestep;		// s,
 }
 
 void HeatingModel::Defaults(){
 	H_Debug("\tIn HeatingModel::Defaults()\n\n");
 	UseModel = {false,false,false,false,false,false,false};
-	PowerIncident = 0.5;
-	OldTemp = Sample->get_temperature(); 	// Same sign as temperature 
-	TimeStep = 0.1;
-	TotalTime = 0;
-	ThermalEquilibrium = false;
-	ForceNegative = true;
-}
-
-void HeatingModel::Reset(std::string filename, double radius, double temp, double timestep){
-			//, std::shared_ptr<Matter> const& sample, PlasmaData const &pdata ){
-	H_Debug("\tIn HeatingModel::Reset(std::string filename, double radius, double temp, double timestep)\n\n");
-	ModelDataFile.close();
-	CreateFile(filename,false);
-	//Reset_Data(sample,pdata);
-	ThermalEquilibrium = false;
-	OldTemp = 0;
-	TimeStep = timestep;
-	TotalTime = 0;
+	PowerIncident = 0;			// kW, Power Incident
+	TimeStep = 0.1;				// s, Time step
+	TotalTime = 0;				// s, Total Time
+	ForceNegative = true;			// Force the sample to behave as negatively charged
 }
 
 void HeatingModel::CreateFile(std::string filename, bool PrintPhaseData){
@@ -69,12 +55,11 @@ void HeatingModel::CreateFile(std::string filename, bool PrintPhaseData){
 	ModelDataFile << "\n";
 }
 
-const int HeatingModel::Vapourise(char TimeStepType){
-	H_Debug("\tIn HeatingModel::Vapourise(char EmissivModel, char TimeStepType)\n\n");
+const int HeatingModel::Vapourise(){
+	H_Debug("\tIn HeatingModel::Vapourise()\n\n");
 	
-//	Sample->update_models(ConstModels);			// Update density, dimensions, Cp and emissivity
-	while( !Sample->is_gas() && !ThermalEquilibrium ){ // If the sample is gaseous or in TE, the model ends.
-		Heat(TimeStepType);
+	while( !Sample->is_gas() ){ // && !ThermalEquilibrium ){ // If the sample is gaseous or in TE, the model ends.
+		Heat();
 	}
 
 	int rValue(0);
@@ -84,36 +69,34 @@ const int HeatingModel::Vapourise(char TimeStepType){
 	}else if( Sample->is_gas() && Sample->get_superboilingtemp() > Sample->get_temperature() ){
 		std::cout << "\n\nSample has Evaporated ";
 		rValue = 2;
-	}else if( ThermalEquilibrium ){
+	}
+	/*else if( ThermalEquilibrium ){
 		std::cout << "\n\nSample has reached Thermal Equilibrium ";
 		rValue = 3;
-	}
+	}*/
 	std::cout << "at T = " << Sample->get_temperature() << "K in " << TotalTime << "s!\n\n*********\n\n";
 	ModelDataFile.close();
 	return rValue; // 0, running normally. 1; Sample boiled. 2; Sample Evaporated. 3; Thermal equilibrium.
 }
 
-void HeatingModel::Heat(char TimeStepType){
-	H_Debug("\tIn HeatingModel::Heat(char TimeStepType)\n\n");
-/*
+void HeatingModel::Heat(){
+	H_Debug("\tIn HeatingModel::Heat()\n\n");
+	std::cout << "\n(1)VapPressure = " << Sample->get_vapourpressure() << "Cv = " << Sample->get_heatcapacity();
+
+	std::cout << "\n(2)VapPressure = " << Sample->get_vapourpressure() << "Cv = " << Sample->get_heatcapacity();
 	assert( Sample->get_mass() > 0 );
 
-	double TotalPower = CalculatePower(Sample->get_temperature());	// Take Eularian step to get initial time step
-	CheckTimeStep(TotalPower,TimeStepType);				// Check Time step length is appropriate
-
-	double TotalEnergy = RungeKutta4();			// Calculate total energy through RungeKutta4 method
-
+	double TotalEnergy = RungeKutta4();                     // Calculate total energy through RungeKutta4 method
+	std::cout << "\nTimeStep = " << TimeStep;
+        Sample->update_temperature(TotalEnergy);                // Update Temperature
 	// Account for evaporative mass loss
 	if( UseModel[1] && Sample->is_liquid() )
 		Sample->update_mass( (TimeStep*EvaporationFlux(Sample->get_temperature())*Sample->get_atomicmass())/AvNo );
 
-	Sample->update();					// Update the values of constants
-  	Sample->update_temperature(TotalEnergy);		// Update Temperature
-	TotalPower = TotalEnergy/TimeStep;
-*/
 
-  	H_Debug("\t"); Print();		// Print data to file
+        H_Debug("\t"); Print();                // Print data to file
 
+	TotalTime += TimeStep;
 }
 
 double HeatingModel::CalculatePower(double DustTemperature)const{
@@ -130,16 +113,17 @@ double HeatingModel::CalculatePower(double DustTemperature)const{
 	if( UseModel[7] )				TotalPower -= SEE			(DustTemperature);
 	if( UseModel[8] )				TotalPower -= TEE			(DustTemperature);	
 
-	H_Debug("\n\nTotalPower = \t" 		<< TotalPower 				<< "kW");
-	H_Debug("\nEmissivityModel() = \t" 	<< -EmissivityModel(DustTemperature) 	<< "kW");
-	H_Debug("\nEvaporationModel() = \t" 	<< -EvaporationModel(DustTemperature) 	<< "kW");
-	H_Debug("\nNewtonCooling() = \t" 	<< -NewtonCooling(DustTemperature) 	<< "kW");
-	H_Debug("\nIonHeatFlux() = \t" 		<< IonHeatFlux(DustTemperature) 	<< "kW");
-	H_Debug("\nElectronHeatFlux() = \t" 	<< ElectronHeatFlux(DustTemperature) 	<< "kW");
-	H_Debug("\nNeutralHeatFlux() = \t" 	<< NeutralHeatFlux() 			<< "kW");
-	H_Debug("\nNeutralRecombination() = \t"	<< NeutralRecombination(DustTemperature)<< "kW");
-	H_Debug("\nSEE() = \t" 			<< -SEE(DustTemperature) 		<< "kW");
-	H_Debug("\nTEE() = \t" 			<< -TEE(DustTemperature) 		<< "kW\n");
+	H1_Debug("\n\nPowerIncident = \t" 	<< PowerIncident			<< "kW");
+	H1_Debug("\nEmissivityModel() = \t" 	<< -EmissivityModel(DustTemperature) 	<< "kW");
+	H1_Debug("\nEvaporationModel() = \t" 	<< -EvaporationModel(DustTemperature) 	<< "kW");
+	H1_Debug("\nNewtonCooling() = \t" 	<< -NewtonCooling(DustTemperature) 	<< "kW");
+	H1_Debug("\nIonHeatFlux() = \t" 	<< IonHeatFlux(DustTemperature) 	<< "kW");
+	H1_Debug("\nElectronHeatFlux() = \t" 	<< ElectronHeatFlux(DustTemperature) 	<< "kW");
+	H1_Debug("\nNeutralHeatFlux() = \t" 	<< NeutralHeatFlux() 			<< "kW");
+	H1_Debug("\nNeutralRecombination() = \t"<< NeutralRecombination(DustTemperature)<< "kW");
+	H1_Debug("\nSEE() = \t" 		<< -SEE(DustTemperature) 		<< "kW");
+	H1_Debug("\nTEE() = \t" 		<< -TEE(DustTemperature) 		<< "kW\n");
+	H1_Debug("\nTotalPower = \t" 		<< TotalPower 				<< "kW\n");
 	return TotalPower;
 }
 
@@ -147,101 +131,48 @@ double HeatingModel::RungeKutta4(){
 	H_Debug( "\tIn HeatingModel::RungeKutta4()\n\n");
 	double k1 = CalculatePower(Sample->get_temperature()); 
 	if(k1<0 && fabs(k1/2) > Sample->get_temperature()){
-		ThermalEquilibrium = true;
 		std::cout << "\n\nThermal Equilibrium reached on condition (3): k1 step negative and larger than Td!";
 		return 0;
 	}
 	double k2 = CalculatePower(Sample->get_temperature()+k1/2); 
 	if( k2<0 && fabs(k2/2) > Sample->get_temperature() ){
-		ThermalEquilibrium = true;
 		std::cout << "\n\nThermal Equilibrium reached on condition (3): k2 step negative and larger than Td!";
 		return (TimeStep/6)*k1;
 	}
 	double k3 = CalculatePower(Sample->get_temperature()+k2/2);
 	if( k3<0 && fabs(k3) > Sample->get_temperature() ){
-		ThermalEquilibrium = true;
 		std::cout << "\n\nThermal Equilibrium reached on condition (3): k3 step negative and larger than Td!";
 		return (TimeStep/6)*(k1+2*k2);
 	}
 	double k4 = CalculatePower(Sample->get_temperature()+k3);
 	if( k4<0 && fabs(k4/2) > Sample->get_temperature() ){
-		ThermalEquilibrium = true;
 		std::cout << "\n\nThermal Equilibrium reached on condition (3): k4 step negative and larger than Td!";
 		return (TimeStep/6)*(k1+2*k2+2*k3);
 	}
+	H1_Debug( "\nTimeStep = " << TimeStep << "\nk1 = " << k1 << "\nk2 =" << k2 << "\nk3 = " << k3 << "\nk4 = " << k4);
 	return (TimeStep/6)*(k1+2*k2+2*k3+k4);
 };
 
-void HeatingModel::CheckTimeStep(double TotalPower, char TimeStepType){
-	H_Debug( "\n\nIn HeatingModel::CheckTimeStep(double TotalPower, char TimeStepType)" );
+double HeatingModel::CheckTimeStep(){
+	H_Debug( "\tIn HeatingModel::CheckTimeStep(double accuracy)\n\n" );
 	// Deal with case where power/time step causes large temperature change.
-	assert(TimeStep > 0);
-	double DeltaTempTest = TotalPower*TimeStep/(Sample->get_mass()*Sample->get_heatcapacity());
-	H_Debug( "\nTotalPower = " << TotalPower << "\nTimeStep " << TimeStep << "\nSample->get_mass() = " << Sample->get_mass()
-			<< "\nSample->get_heatcapacity() = " << Sample->get_heatcapacity());
 
-	// This model allows custom time steps but will set the time step such that it is AT LEAST
-	// small enough to only change the temperature by 1 degree.
-	if(TimeStepType == 's' || TimeStepType == 'S'){
-		if( fabs(DeltaTempTest) > 1 ){
-			std::cout << "\n\nWarning! Large temperature change = " << DeltaTempTest << " K";
-			std::cout << "\nChanging Time step\nFrom dt = " << TimeStep << " s ..."; 
-			while( fabs(DeltaTempTest) > 0.1 && DeltaTempTest!=0){
-				TimeStep = TimeStep/10;
-				DeltaTempTest = TotalPower*TimeStep/(Sample->get_mass()*Sample->get_heatcapacity());
-			}
-			std::cout << "\nto dt = " << TimeStep << " s";
-		}
-	}else if(TimeStepType == 'o' || TimeStepType == 'O'){
-		// This model forces the time step to be the value which produces a change in temperature or 1 degree
-		TimeStep = fabs((Sample->get_mass()*Sample->get_heatcapacity())/TotalPower);
-	}else if(TimeStepType == 't' || TimeStepType == 'T'){
-		// This model forces the time step to be the value which produces a change in temperature or 0.01 degree
-		TimeStep = fabs((Sample->get_mass()*Sample->get_heatcapacity())/(TotalPower*100));
-	}else if(TimeStepType == 'f' || TimeStepType == 'F'){
-		if(DeltaTempTest>2){
-			static bool runOnce = true;
-			WarnOnce(runOnce,"For fixed time step, DeltaTempTest > 2!"); // Check temperature change isn't too large
-			std::cout << "\n\nTemp = " << Sample->get_temperature();
-			std::cout << "\nDeltaTemp = " << DeltaTempTest;
-		}
-		
-	}
-	assert(TimeStep > 0 && TotalTime/TimeStep < 1e10);
 
-	if( TotalTime/TimeStep > 1e9 ){
-		static bool runOnce = true;
-		std::cout << "\n\nThermal Equilibrium reached on condition (4):";
-		WarnOnce(runOnce,"At least 10^8 steps taken, Thermal Equilibrium assumed.");
-		ThermalEquilibrium = true;
-	}
 
-	if( (Sample->get_temperature()-OldTemp > 0 && DeltaTempTest < 0) // If temperature change sign changed between last step
-		|| (Sample->get_temperature()-OldTemp < 0 && DeltaTempTest > 0) ){
-		if( Sample->get_temperature() != Sample->get_superboilingtemp() ){
-			std::cout << "\n\nThermal Equilibrium reached on condition (1): Sign change of Temperature change!";
-			ThermalEquilibrium = true;
-			TimeStep = 0;
-		}
-	}if(  fabs(DeltaTempTest/TimeStep) < 0.01 ){ // If Temperature gradient is less than 1%
-		if( Sample->get_temperature() != Sample->get_superboilingtemp() ){
-			std::cout << "\n\nThermal Equilibrium reached on condition (2): Temperature Gradient < 0.01!";
-			ThermalEquilibrium = true;
-			TimeStep = 0;
-		}
-	}
+	// Take Eularian step to get initial time step
+	H_Debug("\t"); double TotalPower = CalculatePower(Sample->get_temperature());
+	// This model forces the time step to be the value which produces a change in temperature or 1*accuracy degree
 
-	OldTemp = Sample->get_temperature();
-
-	H_Debug( "\nTimeStep = " << TimeStep );
-	TotalTime += TimeStep;
+	if( TotalPower != 0 )
+		TimeStep = fabs((Sample->get_mass()*Sample->get_heatcapacity())/(TotalPower*Accuracy));
+	assert(TimeStep > 0 && TimeStep != INFINITY);
 }
 
 void HeatingModel::Print(){
 	H_Debug("\tIn HeatingModel::Print()\n\n");
 
-	ModelDataFile 	<< TotalTime << "\t" << Sample->get_temperature() << "\t" << Sample->get_mass() << "\t" << Sample->get_density()
-		<< "\t" << TotalPower;
+	ModelDataFile 	<< TotalTime << "\t" << Sample->get_temperature() << "\t" << Sample->get_mass() 
+		<< "\t" << Sample->get_density() << "\t" << TotalPower;
 
 	bool PrintPhaseData = false;
 	if( PrintPhaseData )	ModelDataFile 	<< "\t" << Sample->get_fusionenergy() << "\t" << Sample->get_vapourenergy();
@@ -279,7 +210,7 @@ void HeatingModel::Print(){
 // MASS LOSS EQUATION 
 // http://www.leb.eei.uni-erlangen.de/winterakademie/2006/result/content/course01/pdf/0102.pdf
 const double HeatingModel::EvaporationModel(double DustTemperature)const{
-	H_Debug("\n\nIn HeatingModel::EvaporationModel():");
+	H_Debug("\tIn HeatingModel::EvaporationModel():\n\n");
 
 	// Approximate emitted energy as mean maxwell
 	// This used to be multiplied by 1000 which is why it was significant.
@@ -292,18 +223,18 @@ const double HeatingModel::EvaporationModel(double DustTemperature)const{
 		std::cout << "\n\nError! EvapFlux = " << EvapFlux << "\n";
 		throw std::exception(); 
 	}
-	H_Debug("\n\nIn HeatingModel::EvaporationModel()\nMaxwellEnergy = " << MaxwellEnergy << " kJ" << "\nEvapFlux = " 
-		<< EvapFlux << " s^-1\nBondEnergy = " << Sample->get_bondenergy()/AvNo << " kJ\nreturn = " 
-		<< EvapFlux*(MaxwellEnergy+Sample->get_bondenergy()/AvNo) << "\nDustTemperature = " << DustTemperature 
-		<<  "\nSample->get_surfacearea() = " << Sample->get_surfacearea()
-		<< "\nSample->get_vapourpressure() = " << Sample->get_vapourpressure());
+//	H1_Debug("\n\nIn HeatingModel::EvaporationModel()\nMaxwellEnergy = " << MaxwellEnergy << " kJ" << "\nEvapFlux = " 
+//		<< EvapFlux << " s^-1\nBondEnergy = " << Sample->get_bondenergy()/AvNo << " kJ\nreturn = " 
+//		<< EvapFlux*(MaxwellEnergy+Sample->get_bondenergy()/AvNo) << "\nDustTemperature = " << DustTemperature 
+//		<<  "\nSample->get_surfacearea() = " << Sample->get_surfacearea()
+//		<< "\nSample->get_vapourpressure() = " << Sample->get_vapourpressure());
 	
 	// See ElementData.h for more info on 'bondenergy'. Added to account for energy lost by breaking bonds.
 	return EvapFlux*(MaxwellEnergy+Sample->get_bondenergy()/AvNo); 
 }
 
 const double HeatingModel::EvaporationFlux(double DustTemperature)const{
-//	H_Debug("\n\nIn HeatingModel::EvaporationFlux():");
+	H_Debug("\tIn HeatingModel::EvaporationFlux():\n\n");
 	double AmbientPressure = 0;
 	double StickCoeff = 1.0;
 	return (StickCoeff*Sample->get_surfacearea()*AvNo*(Sample->get_vapourpressure()-AmbientPressure))/
@@ -312,8 +243,8 @@ const double HeatingModel::EvaporationFlux(double DustTemperature)const{
 
 // Using Stefan-Boltzmann Law, returns Energy lost per second in Kila Joules
 const double HeatingModel::EmissivityModel(double DustTemperature)const{
-//	H_Debug("\n\nIn HeatingModel::EmissivityModel():");
-//	H_Debug("\nSample->get_surfacearea() = " << Sample->get_surfacearea() << "\nSigma = " << Sigma 
+//	H1_Debug("\n\nIn HeatingModel::EmissivityModel():");
+//	H1_Debug("\nSample->get_surfacearea() = " << Sample->get_surfacearea() << "\nSigma = " << Sigma 
 //		<< "\nDustTemperature = " << DustTemperature);
 	// Energy emitted from a sample converted to kJ
 	return Sample->get_emissivity()*Sample->get_surfacearea()*Sigma*(pow(DustTemperature,4)-pow(Pdata.AmbientTemp,4))/1000;
@@ -322,7 +253,7 @@ const double HeatingModel::EmissivityModel(double DustTemperature)const{
 // VERY APPROXIMATE MODEL: Atmosphere assumed to be 300 degrees always, rough heat transfer coefficient is use
 // https://en.wikipedia.org/wiki/Newton%27s_law_of_cooling
 const double HeatingModel::NewtonCooling(double DustTemperature)const{
-//	H_Debug("\n\nIn HeatingModel::NewtonCooling():");
+	H_Debug("\tIn HeatingModel::NewtonCooling():\n\n");
 	static bool runOnce = true;
 	WarnOnce(runOnce,"In HeatingModel::NewtonCooling():\nHeatTransair Coefficient wrong for Tungsten, Beryllium and Graphite.");
 
@@ -331,13 +262,13 @@ const double HeatingModel::NewtonCooling(double DustTemperature)const{
 
 // Neutral Recombination assuming Rn=0; fraction of backscattered ions/neutrals is zero.
 const double HeatingModel::NeutralRecombination(double DustTemperature)const{
-//	H_Debug("\n\nIn HeatingModel::NeutralRecombination():");
-//	H_Debug("\n14.7*echarge - 2*Kb*DustTemperature*NeutralFlux()\n");
-//	H_Debug("\nIonFlux = " << IonFlux());
-//	H_Debug("\nReturn = " << (14.7*echarge*IonFlux()));
+	H_Debug("\tIn HeatingModel::NeutralRecombination():\n\n");
+//	H1_Debug("\n14.7*echarge - 2*Kb*DustTemperature*NeutralFlux()\n");
+//	H1_Debug("\nIonFlux = " << IonFlux());
+//	H1_Debug("\nReturn = " << (14.7*echarge*IonFlux()));
 	double RN(0), RE(0);
 //	backscatter(Pdata.ElectronTemp,Pdata.IonTemp,Mi,Pdata.Potential,Element,RE,RN);
-	H_Debug( "\nRN = " << RN );
+//	H1_Debug( "\nRN = " << RN );
 	if( RN > 0.1 ){
 		static bool runOnce = true;
 		WarnOnce(runOnce,"In HeatingModel::NeutralRecombination(double DustTemperature)\nRN > 0.1. Neutral Recombination affected by backscattering by more than 10%!");
@@ -348,11 +279,11 @@ const double HeatingModel::NeutralRecombination(double DustTemperature)const{
 }
 
 const double HeatingModel::SEE(double DustTemperature)const{
-//	H_Debug("\n\nIn HeatingModel::SEE():");
-//	H_Debug("\neFlux*Sample->get_deltasec()*(3*echarge+Sample->get_bondenergy())\n");
-//	H_Debug("\neFlux=" << eFlux << "\nSample->get_deltasec() = " << Sample->get_deltasec() 
+	H_Debug("\tIn HeatingModel::SEE():\n\n");
+//	H1_Debug("\neFlux*Sample->get_deltasec()*(3*echarge+Sample->get_bondenergy())\n");
+//	H1_Debug("\neFlux=" << eFlux << "\nSample->get_deltasec() = " << Sample->get_deltasec() 
 //			<< "\nSample->get_bondenergy() = " << Sample->get_bondenergy());
-//	H_Debug("\nReturn = " << eFlux*Sample->get_deltasec()*(3*echarge+Sample->get_bondenergy()));
+//	H1_Debug("\nReturn = " << eFlux*Sample->get_deltasec()*(3*echarge+Sample->get_bondenergy()));
 	double SEE=0;
 	if(ForceNegative || Sample->get_deltatot() <= 1 )
 		SEE = Sample->get_surfacearea()*ElectronFlux(DustTemperature)*Sample->get_deltasec()*echarge*
@@ -362,11 +293,11 @@ const double HeatingModel::SEE(double DustTemperature)const{
 }
 
 const double HeatingModel::TEE(double DustTemperature)const{
-//	H_Debug("\n\nIn HeatingModel::TEE():");
-//	H_Debug("\neFlux*Sample->get_deltatherm()*(2*Kb*DustTemperature+Sample->get_bondenergy())\n");
-//	H_Debug("\neFlux=" << eFlux << "\nSample->get_deltatherm() = " << Sample->get_deltatherm() << "\n2*Kb*DustTemperature = "
+	H_Debug("\tIn HeatingModel::TEE():\n\n");
+//	H1_Debug("\neFlux*Sample->get_deltatherm()*(2*Kb*DustTemperature+Sample->get_bondenergy())\n");
+//	H1_Debug("\neFlux=" << eFlux << "\nSample->get_deltatherm() = " << Sample->get_deltatherm() << "\n2*Kb*DustTemperature = "
 //			<< 2*Kb*DustTemperature << "\nSample->get_bondenergy() = " << Sample->get_bondenergy());
-//	H_Debug("\nReturn = " << eFlux*Sample->get_deltatherm()*(2*Kb*DustTemperature+Sample->get_bondenergy()));
+//	H1_Debug("\nReturn = " << eFlux*Sample->get_deltatherm()*(2*Kb*DustTemperature+Sample->get_bondenergy()));
 	double TEE=0;
 
 	if( ForceNegative || Sample->get_deltatot() <= 1 )
@@ -377,39 +308,40 @@ const double HeatingModel::TEE(double DustTemperature)const{
 }
 
 const double HeatingModel::IonHeatFlux(double DustTemperature)const{ // Assuming Re = 0
-	H_Debug("\n\nIn HeatingModel::IonHeatFlux():");
-	H_Debug("\nIonFlux() = " << IonFlux(DustTemperature) << "\nPdata.Potential = " << Pdata.Potential);
+	H_Debug("\tIn HeatingModel::IonHeatFlux(double DustTemperature):\n\n");
+//	H1_Debug("\nIonFlux() = " << IonFlux(DustTemperature) << "\nPdata.Potential = " << Pdata.Potential);
 
 	double RN(0), RE(0);
 //	backscatter(Pdata.ElectronTemp,Pdata.IonTemp,Mi,Pdata.Potential,Element,RE,RN);
-	H_Debug( "\nRE = " << RE );
+	H1_Debug( "\nRE = " << RE );
 	if( RE > 0.1 ){
 		static bool runOnce = true;
 		WarnOnce(runOnce,"In HeatingModel::IonHeatFlux(double DustTemperature)\nRE > 0.1. Ion Heat Flux affected by backscattering by more than 10%!");
 	}
+//	H1_Debug("\nPdata.IonTemp = " << Pdata.IonTemp << "\nPdata.Potential = " << Pdata.Potential << "\nPdata.ElectronTemp = " << Pdata.ElectronTemp << "\n\n");
 	return (Sample->get_surfacearea()*(1-RE)*IonFlux(DustTemperature)*Pdata.IonTemp*Kb/1000) // Convert from Joules to KJ
 	*(2+2*Pdata.Potential*(Pdata.ElectronTemp/Pdata.IonTemp)+pow(Pdata.Potential*(Pdata.ElectronTemp/Pdata.IonTemp),2))/(1+Pdata.Potential*(Pdata.ElectronTemp/Pdata.IonTemp)); 
 
 }
 
 const double HeatingModel::ElectronHeatFlux(double DustTemperature)const{ // Only for a negative grain
-//	H_Debug("\n\nIn HeatingModel::ElectronHeatFlux():");
-//	H_Debug("\nSample->get_surfacearea()*2*ElectronFlux()*Pdata.ElectronTemp*Kb/1000\n");
+	H_Debug("\tIn HeatingModel::ElectronHeatFlux():\n\n");
+//	H1_Debug("\nSample->get_surfacearea()*2*ElectronFlux()*Pdata.ElectronTemp*Kb/1000\n");
 	return Sample->get_surfacearea()*2*ElectronFlux(DustTemperature)*Pdata.ElectronTemp*Kb/1000; // Convert from Joules to KJ
 }
 
 const double HeatingModel::NeutralHeatFlux()const{
-//	H_Debug("\n\nIn HeatingModel::NeutralHeatFlux():");
-//	H_Debug("\nNeutralFlux()*Pdata.NeutralTemp*Kb*2\n");
+	H_Debug("\tIn HeatingModel::NeutralHeatFlux():\n\n");
+//	H1_Debug("\nNeutralFlux()*Pdata.NeutralTemp*Kb*2\n");
 	return Sample->get_surfacearea()*2*NeutralFlux()*Pdata.NeutralTemp*Kb/1000; // Convert from Joules to KJ
 }
 
 const double HeatingModel::IonFlux(double DustTemperature)const{
 //	H_Debug("\n\nIn HeatingModel::IonFlux():");
-//	H_Debug("\nElectronFlux()*(1-Sample->get_deltatherm()-Sample->get_deltasec())\n");
-//	H_Debug("\nElectronFlux() =" << ElectronFlux() << "\nSample->get_deltatherm() = " << Sample->get_deltatherm() 
+//	H1_Debug("\nElectronFlux()*(1-Sample->get_deltatherm()-Sample->get_deltasec())\n");
+//	H1_Debug("\nElectronFlux() =" << ElectronFlux() << "\nSample->get_deltatherm() = " << Sample->get_deltatherm() 
 //			<< "\nSample->get_deltasec() = " << Sample->get_deltasec());
-//	H_Debug("\nReturn = " << ElectronFlux()*(1-Sample->get_deltatherm()-Sample->get_deltasec()));
+//	H1_Debug("\nReturn = " << ElectronFlux()*(1-Sample->get_deltatherm()-Sample->get_deltasec()));
 	double IonFlux=0;
 
 	if(ForceNegative || Sample->get_deltatot() > 1 )IonFlux = ElectronFlux(DustTemperature); //Positive grain, DeltaTot() > 1
@@ -418,22 +350,22 @@ const double HeatingModel::IonFlux(double DustTemperature)const{
 }
 
 const double HeatingModel::ElectronFlux(double DustTemperature)const{
-//	H_Debug("\n\nIn HeatingModel::ElectronFlux():");
-//	H_Debug("\nPdata.NeutralDensity*exp(-Pdata.Potential)*sqrt(Kb*DustTemperature/(2*PI*Me))\n");
-//	H_Debug("\nexp(-Pdata.Potential) = " << exp(-Pdata.Potential)
+	H_Debug("\tIn HeatingModel::ElectronFlux():\n\n");
+//	H1_Debug("\nPdata.NeutralDensity*exp(-Pdata.Potential)*sqrt(Kb*DustTemperature/(2*PI*Me))\n");
+//	H1_Debug("\nexp(-Pdata.Potential) = " << exp(-Pdata.Potential)
 //			<< "\n(2*PI*Me) = " << (2*PI*Me) << "sqrt(Kb*DustTemperature/(2*PI*Me)) = " 
 //			<< sqrt(Kb*DustTemperature/(2*PI*Me)));
-//	H_Debug("\nReturn = " << Pdata.NeutralDensity*exp(-Pdata.Potential)*sqrt(Kb*DustTemperature/(2*PI*Me)));
+//	H1_Debug("\nReturn = " << Pdata.NeutralDensity*exp(-Pdata.Potential)*sqrt(Kb*DustTemperature/(2*PI*Me)));
 //	std::cout << "\neFlux = " << Pdata.ElectronDensity*exp(-Pdata.Potential)*sqrt(Kb*Pdata.ElectronTemp/(2*PI*Me)); std::cin.get();
 	return Pdata.ElectronDensity*exp(-Pdata.Potential)*sqrt(Kb*Pdata.ElectronTemp/(2*PI*Me));
 }
 
 const double HeatingModel::NeutralFlux()const{
-//	H_Debug("\n\nIn HeatingModel::NeutralFlux():");
-//	H_Debug("\nPdata.NeutralTemp*sqrt(Kb*Pdata.NeutralTemp/(2*PI*Mi))/4\n");
-//	H_Debug("(2*PI*Mi) = " << (2*PI*Mi) << "\nsqrt(Kb*Pdata.NeutralTemp/(2*PI*Mi)) = "<< sqrt(Kb*Pdata.NeutralTemp/(2*PI*Mi)));
-//	H_Debug("\nReturn = " << 2*Pdata.NeutralTemp*Pdata.NeutralDensity*sqrt(Kb*Pdata.NeutralTemp/(2*PI*Mi)));
+	H_Debug("\tIn HeatingModel::NeutralFlux():\n\n");
+//	H1_Debug("\nPdata.NeutralTemp*sqrt(Kb*Pdata.NeutralTemp/(2*PI*Mi))/4\n");
+//	H1_Debug("(2*PI*Mi) = " << (2*PI*Mi) << "\nsqrt(Kb*Pdata.NeutralTemp/(2*PI*Mi)) = "<< sqrt(Kb*Pdata.NeutralTemp/(2*PI*Mi)));
+//	H1_Debug("\nReturn = " << 2*Pdata.NeutralTemp*Pdata.NeutralDensity*sqrt(Kb*Pdata.NeutralTemp/(2*PI*Mi)));
 	return Pdata.NeutralDensity*sqrt(Kb*Pdata.NeutralTemp/(2*PI*Mi));
 }
 
-// ************************************* \\
+// ************************************* //

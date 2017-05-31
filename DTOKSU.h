@@ -8,28 +8,32 @@
 class DTOKSU{
 
 	private:
+		// Private member data
 		double TimeStep;			// Seconds, the length of a particular time step
 		double TotalTime;			// Seconds, total time taken to perform simulation
 
 		std::shared_ptr <Matter> Sample;	// Tungsten, Beryllium, Iron or Graphite
+		PlasmaData Pdata;
 		HeatingModel HM;
 		ForceModel FM;
 		ChargingModel CM;
-		PlasmaData Pdata;
+
 		
 		std::array<bool,9> HeatingSwitch; 	// Heating Models turned on of possibly 9
-		std::array<bool,9> ForceSwitch; 	// Force Models turned on of possibly N
-		std::array<bool,9> ChargingSwitch; 	// Charging Models turned on of possibly N
+		std::array<bool,4> ForceSwitch; 	// Force Models turned on of possibly 3
+		std::array<bool,1> ChargingSwitch; 	// Charging Models turned on of possibly 1
 		std::ofstream MyFile;			// Output data file
-
+	
+		// Private Functions
 		void CheckTimeStep();			// Verify time step
 		void Print();				// Write to output data file
+		void UpdatePData();			// Update the background plasma data
 		void CreateFile(std::string filename);
 
 	public:
 		DTOKSU();
-		DTOKSU( double timestep, std::shared_ptr<Matter> const& sample, PlasmaData const &pdata,
-				std::array<bool,9> &heatmodels, std::array<bool,3> &forcemodels, std::array<bool,1> &chargemodels);
+		DTOKSU( double timestep, std::array<double,3> alvls, std::shared_ptr<Matter> const& sample, PlasmaData const &pdata,
+				std::array<bool,9> &heatmodels, std::array<bool,4> &forcemodels, std::array<bool,1> &chargemodels);
 
 		~DTOKSU(){
 		};

@@ -34,6 +34,7 @@ template<typename T> int InputFunction(int &argc, char* argv[], int &i, std::str
 
 int main(int argc, char* argv[]){
 	std::cout << "\n\n************************************* BEGIN SETUP (1) ************************************* \n\n";
+
 	DTOKSU MyDtoks;
 	int errcode = MyDtoks.Run();
 
@@ -68,13 +69,13 @@ int main(int argc, char* argv[]){
 	bool RadiativeCooling = false;
 	bool EvaporativeCooling = false;
 	bool NewtonCooling = false;		// This model is equivalent to Electron and Ion heat flux terms
-	bool NeutralHeatFlux = false; 		// Plasma heating terms
-	bool ElectronHeatFlux = false;
-	bool IonHeatFlux = false;
+	bool NeutralHeatFlux = true; 		// Plasma heating terms
+	bool ElectronHeatFlux = true;
+	bool IonHeatFlux = true;
 	bool NeutralRecomb = false;
 	bool TEE = false;			// Electron Emission terms
 	bool SEE = false;
-	bool PlasmaHeating = false; 		// If we want plasma heating terms turned off
+	bool PlasmaHeating = true; 		// If we want plasma heating terms turned off
 	if( !PlasmaHeating ){
 		NeutralHeatFlux = false;
 		ElectronHeatFlux = false;
@@ -84,6 +85,7 @@ int main(int argc, char* argv[]){
 
 	// ------------------- FORCING MODELS ------------------- //
         bool Gravity = false;
+        bool Centrifugal = false;
         bool Lorentz = false;
         bool IonDrag = false;	
 
@@ -122,10 +124,11 @@ int main(int argc, char* argv[]){
 	std::array<bool, 9> HeatModels = 
 		{RadiativeCooling, EvaporativeCooling, NewtonCooling, IonHeatFlux, ElectronHeatFlux, NeutralHeatFlux, 
 		NeutralRecomb, SEE, TEE };
-	std::array<bool,3> ForceModels = {Gravity,Lorentz,IonDrag};
+	std::array<bool,4> ForceModels  = {Gravity,Centrifugal,Lorentz,IonDrag};
 	std::array<bool,1> ChargeModels = {DTOKSOML};
-	std::array<char, 4> ConstModels =
-		{ EmissivityModel,ExpansionModel,HeatCapacityModel,BoilingModel};
+	std::array<char,4> ConstModels  = {EmissivityModel,ExpansionModel,HeatCapacityModel,BoilingModel};
+
+	std::array<double,3> AccuracyLevels = {1.0,1.0,1.0};
 
 	if 	(Element == 'W') Sample = std::make_shared<Tungsten>();
 	else if (Element == 'B') Sample = std::make_shared<Beryllium>();
@@ -136,7 +139,7 @@ int main(int argc, char* argv[]){
 		return -1;
 	}
 
-	DTOKSU MyDtoks2(TimeStep, Sample, Pdata, HeatModels, ForceModels, ChargeModels);
+	DTOKSU MyDtoks2(TimeStep, AccuracyLevels, Sample, Pdata, HeatModels, ForceModels, ChargeModels);
 	
 	int errcode2 = MyDtoks2.Run();
 

@@ -16,6 +16,12 @@
 #define H_Debug(x) 
 #endif 
 
+#ifdef HEATING_DEEP_DEBUG
+#define H1_Debug(x) std::cout << x
+#else
+#define H1_Debug(x) 
+#endif 
+
 #ifdef FORCE_DEBUG
 #define F_Debug(x) std::cout << x
 #else
