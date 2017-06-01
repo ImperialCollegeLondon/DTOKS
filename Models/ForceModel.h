@@ -23,7 +23,7 @@ class ForceModel : public Model {
 		// Constructors
 		ForceModel();
 		ForceModel(std::string filename, double accuracy, std::array<bool,4> models, 
-				std::shared_ptr <Matter> const& sample, PlasmaData const& pdata);
+				Matter *& sample, PlasmaData const& pdata);
 
 		// Destructor
 		~ForceModel(){

@@ -25,7 +25,7 @@ class Matter{
 		Matter(double rad, double temp, const ElementConsts *elementconsts);
 		Matter(double rad, double temp, const ElementConsts *elementconsts, std::array <char,4> &constmodels);
  
-		struct GrainData 	St;
+		struct GrainData 		St;
 		const struct ElementConsts	Ec;
 		std::array<char,4> ConstModels;		// Constant Models variation with Temperature turned on of possibly 4
 
@@ -90,8 +90,8 @@ class Matter{
 		double get_deltatherm		()const{ return St.DeltaTherm;			};
 		double get_deltatot		()const{ return (St.DeltaTherm + St.DeltaSec);	};
 		double get_potential		()const{ return St.Potential;			};
-		threevector get_dustvelocity	()const{ return St.DustVelocity;		};
-		threevector get_dustposition	()const{ return St.DustPosition;		};
+		threevector get_velocity	()const{ return St.DustVelocity;		};
+		threevector get_position	()const{ return St.DustPosition;		};
 
 };
 

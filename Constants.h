@@ -68,7 +68,7 @@
 #define R 8.3144598 			// https://en.wikipedia.org/wiki/Gas_constant 
 #define echarge 1.60217662e-19 		// C 
 #define Me 9.11e-31			// kg, mass of electron
-#define Mi 1.66054e-27			// kg, mass of ion (And Neutrons)
+#define Mp 1.66054e-27			// kg, mass of ion (And Neutrons)
 #define AvNo 6.0221409e+23 		// mol^-1
 #define PI 3.14159265359
 #define AMU 1.660539040e-27	 	// kg, Atomic Mass unit

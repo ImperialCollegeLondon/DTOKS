@@ -11,8 +11,8 @@ ChargingModel::ChargingModel():Model(){
 }
 
 ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<bool,1> models,
-				std::shared_ptr <Matter> const& sample, PlasmaData const& pdata) : Model(sample,pdata,accuracy){
-	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename,std::array<bool,1> models,std::shared_ptr <Matter> const& sample, PlasmaData const& pdata) : Model(sample,pdata)\n\n");
+				Matter *& sample, PlasmaData const& pdata) : Model(sample,pdata,accuracy){
+	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename,std::array<bool,1> models,Matter *& sample, PlasmaData const& pdata) : Model(sample,pdata)\n\n");
 	CreateFile(filename);
 	UseModel = models;
 	TimeStep = 0;
@@ -39,19 +39,25 @@ void ChargingModel::Print(){
 double ChargingModel::CheckTimeStep(){
 	C_Debug( "\tIn ChargingModel::CheckTimeStep()\n\n" );
 	// Deal with case where power/time step causes large temperature change.
-/*
-	// Take Eularian step to get initial time step
-	C_Debug("\t"); double TotalPower = CalculatePower(Sample->get_temperature());
-	// This model forces the time step to be the value which produces a change in temperature or 1*accuracy degree
-	TimeStep = fabs((Sample->get_mass()*Sample->get_heatcapacity())/(TotalPower*accuracy));
+	
+	
+	double DebyeLength=sqrt((epsilon0*Kb*Pdata.ElectronTemp)/(Pdata.ElectronDensity*pow(echarge,2)));
+	double PlasmaFreq = sqrt((Pdata.ElectronDensity*pow(echarge,2))/(epsilon0*Me));
+	TimeStep = sqrt(2*PI) * ((DebyeLength)/Sample->get_radius()) 
+			* (1/(PlasmaFreq*(1+Pdata.ElectronTemp/Pdata.IonTemp+Sample->get_potential())));
+//	std::cout << "\n\t\tDebyeLength = " << DebyeLength;
+//	std::cout << "\n\t\tPlasmaFreq = " << PlasmaFreq;
+//	std::cout << "\n\t\tTimeStep = " << TimeStep << "\n\n";
 
 	assert(TimeStep > 0);
-*/
+
 	TotalTime += TimeStep;
 }
 
 void ChargingModel::Charge(){
 	C_Debug("\tIn ChargingModel::Charge()\n\n");
+
+	std::cout << "\n(4)Temp = " << Sample->get_temperature() << "\nVapPressure = " << Sample->get_vapourpressure() << "\nCv = " << Sample->get_heatcapacity() << "\n";
 /*
 	// Assume the grain is negative and calculate potential
 	double Potential = solveOML(Sample->get_deltatot(),Sample->get_potential());
@@ -66,8 +72,8 @@ void ChargingModel::Charge(){
 double ChargingModel::solveOML(double a, double guess){
         C_Debug("\tIn ChargingModel::solveOML(double a, double guess)\n\n");
 	double b = Pdata.IonTemp/Pdata.ElectronTemp;
-	double C = Me/Mi;
-	
+	double C = Me/Mp;
+
 	double x1 = guess - ( (( 1-a)*exp(-guess) - sqrt(b*C)*(1+guess/b))/((a-1)*exp(-guess) - sqrt(C/b) ) );
 
 	while(fabs(guess-x1)>1e-2){

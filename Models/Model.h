@@ -13,7 +13,6 @@ const struct PlasmaData PlasmaDefaults = {
 	1e20,		// m^-3, Neutral Density
 	1e20,		// m^-3, Electron Density
 	1e20,		// m^-3, Electron Density
-	0,		// arb, Normalised potential
 	116045.25,	// K, Ion Temperature
 	116045.25,	// K, Electron Temperature
 	116045.25,	// K, Neutral Temperature
@@ -29,9 +28,9 @@ class Model{
 // 	This requires changing access methods in derived classes
 	protected:
 		// Parameters defining the Heating equation
-		//Matter *Sample;				// Tungsten, Beryllium, Iron or Graphite
-		std::shared_ptr <Matter> Sample;		// Tungsten, Beryllium, Iron or Graphite
-		PlasmaData const &Pdata;			// Reference to Plasma Data structure
+		Matter *Sample;				// Tungsten, Beryllium, Iron or Graphite
+//		std::shared_ptr <Matter> Sample;	// Tungsten, Beryllium, Iron or Graphite
+		PlasmaData const &Pdata;		// Reference to Plasma Data structure
 		
 		std::ofstream ModelDataFile;		// Output data file
 
@@ -45,12 +44,14 @@ class Model{
 	public:
 		// Constructors
 		Model();
-		Model(std::shared_ptr <Matter> const& sample, PlasmaData const& pdata, double accuracy);
+		Model(Matter *& sample, PlasmaData const& pdata, double accuracy);
 
 		// Destructor
 		virtual ~Model(){};
 
-		std::shared_ptr<Matter> get_sample() 	{ return Sample;	}
+//		std::shared_ptr<Matter> get_sample() 	{ return Sample;	}
+		Matter * get_sample() 			{ return Sample;	}
+
 };
 
 #endif

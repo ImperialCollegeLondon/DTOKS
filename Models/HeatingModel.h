@@ -22,7 +22,7 @@ class HeatingModel : public Model{
 		// Constructors
 		HeatingModel();
 		HeatingModel( std::string filename, double timestep, double accuracy, std::array<bool,9> &models, 
-				std::shared_ptr<Matter> const& sample, PlasmaData const& pdata);
+				Matter *& sample, PlasmaData const& pdata);
 
 		// Destructor
 		~HeatingModel(){

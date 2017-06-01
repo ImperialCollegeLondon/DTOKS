@@ -9,7 +9,6 @@ struct PlasmaData{
 	double NeutralDensity;		// m^-3, Neutral Density
 	double ElectronDensity;		// m^-3, Electron Density
 	double IonDensity;		// m^-3, Electron Density
-	double Potential;		// arb, Normalised potential
 	double IonTemp;			// K, Ion Temperature
 	double ElectronTemp;		// K, Electron Temperature
 	double NeutralTemp;		// K, Neutral Temperature

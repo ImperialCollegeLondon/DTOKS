@@ -19,7 +19,7 @@ class ChargingModel : public Model{
 		// Constructors
 		ChargingModel();
 		ChargingModel(std::string filename, double accuracy, std::array<bool,1> models, 
-				std::shared_ptr <Matter> const& sample, PlasmaData const& pdata);
+				Matter *& sample, PlasmaData const& pdata);
 
 		// Destructor
 		~ChargingModel(){

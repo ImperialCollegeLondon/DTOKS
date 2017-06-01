@@ -31,16 +31,20 @@ template<typename T> int InputFunction(int &argc, char* argv[], int &i, std::str
 	}
 
 }
-
-int main(int argc, char* argv[]){
+/*
 	std::cout << "\n\n************************************* BEGIN SETUP (1) ************************************* \n\n";
 
 	DTOKSU MyDtoks;
 	int errcode = MyDtoks.Run();
 
 	std::cout << "\n\n************************************* BEGIN SETUP (2) ************************************* \n\n";
+*/
+int main(int argc, char* argv[]){
 
 
+	// ***************************************** INITIALISE PLASMA ***************************************** //
+	char machine='m';	// Initialise plasma grid
+	plasmagrid *Background = new plasmagrid('h',machine,0.01);	
 
 	// ********************************************************** //
 	// FIRST, define program default behaviour
@@ -62,7 +66,8 @@ int main(int argc, char* argv[]){
 	double Size=1e-6; 		// m
 	double Temp=350;		// K
 	double TimeStep=1e-5;		// s
-	std::shared_ptr<Matter> Sample;	// Define the sample matter type
+//	std::shared_ptr<Matter> Sample;	// Define the sample matter type
+	Matter * Sample;		// Define the sample matter type
 
 	// ------------------- HEATING MODELS ------------------- //
 	// Set to true all heating models that are wanted
@@ -94,9 +99,8 @@ int main(int argc, char* argv[]){
 
 	// Plasma Data
 	PlasmaData Pdata;
-	Pdata.NeutralDensity =  1e19;//10e17;	// m^-3, Neutral density
-	Pdata.ElectronDensity = 1e19;//10e18; 	// m^-3, Electron density
-	Pdata.Potential = 1;			// arb, assumed negative, potential normalised to dust temperature, (-e*phi)/(Kb*Td)
+	Pdata.NeutralDensity =  10e19;//10e17;	// m^-3, Neutral density
+	Pdata.ElectronDensity = 10e19;//10e18; 	// m^-3, Electron density
 	double NumOfev = 10;
 	Pdata.IonTemp = NumOfev*1.16e5;	 	// K, Ion Temperature
 	Pdata.ElectronTemp = NumOfev*1.16e5; 	// K, Electron Temperature, convert from eV
@@ -130,16 +134,17 @@ int main(int argc, char* argv[]){
 
 	std::array<double,3> AccuracyLevels = {1.0,1.0,1.0};
 
-	if 	(Element == 'W') Sample = std::make_shared<Tungsten>();
-	else if (Element == 'B') Sample = std::make_shared<Beryllium>();
-	else if (Element == 'F') Sample = std::make_shared<Iron>();
-	else if (Element == 'G') Sample = std::make_shared<Graphite>();
+	if 	(Element == 'W') Sample = new Tungsten(Size,Temp,ConstModels);
+	else if (Element == 'B') Sample = new Beryllium(Size,Temp,ConstModels);
+	else if (Element == 'F') Sample = new Iron(Size,Temp,ConstModels);
+	else if (Element == 'G') Sample = new Graphite(Size,Temp,ConstModels);
 	else{ 
 		std::cerr << "\nInvalid Option entered";
 		return -1;
 	}
 
-	DTOKSU MyDtoks2(TimeStep, AccuracyLevels, Sample, Pdata, HeatModels, ForceModels, ChargeModels);
+//	DTOKSU MyDtoks2(TimeStep, AccuracyLevels, Sample, Pdata, HeatModels, ForceModels, ChargeModels);
+	DTOKSU MyDtoks2(TimeStep, AccuracyLevels, Sample, Background, HeatModels, ForceModels, ChargeModels);
 	
 	int errcode2 = MyDtoks2.Run();
 

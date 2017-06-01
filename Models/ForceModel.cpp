@@ -14,8 +14,8 @@ ForceModel::ForceModel():Model(){
 }
 
 ForceModel::ForceModel(std::string filename, double accuracy, std::array<bool,4> models, 
-			std::shared_ptr <Matter> const& sample, PlasmaData const& pdata) : Model(sample,pdata,accuracy){
-	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, std::array<bool,3> models, std::shared_ptr <Matter> const& sample, PlasmaData const& pdata) : Model(sample,pdata)\n\n");
+			Matter *& sample, PlasmaData const& pdata) : Model(sample,pdata,accuracy){
+	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, std::array<bool,3> models, Matter *& sample, PlasmaData const& pdata) : Model(sample,pdata)\n\n");
 	CreateFile(filename);
 	UseModel = models;
 	TimeStep = 0;
@@ -36,7 +36,7 @@ void ForceModel::CreateFile(std::string filename){
 
 void ForceModel::Print(){
 	F_Debug("\tIn ForceModel::Print()\n\n");
-	ForceFile << Sample->get_dustposition() << "\t" << Sample->get_dustvelocity();
+	ForceFile << Sample->get_position() << "\t" << Sample->get_velocity();
 	if( UseModel[0] ) ForceFile << "\t(0.0,0.0,-9.81)"; // Maybe this should be coded better...
 	if( UseModel[1] ) ForceFile << "\t" << Centrifugal();
 	if( UseModel[2] ) ForceFile << "\t" << LorentzForce();
@@ -47,20 +47,16 @@ void ForceModel::Print(){
 double ForceModel::CheckTimeStep(){
 	F_Debug( "\tIn ForceModel::CheckTimeStep()\n\n" );
 	// Deal with case where power/time step causes large temperature change.
-/*
-	// Take Eularian step to get initial time step
-	H_Debug("\t"); double TotalPower = CalculatePower(Sample->get_temperature());
-	// This model forces the time step to be the value which produces a change in temperature or 1*accuracy degree
-	TimeStep = fabs((Sample->get_mass()*Sample->get_heatcapacity())/(TotalPower*accuracy));
-
+	
 	assert(TimeStep > 0);
-*/
 	TotalTime += TimeStep;
 }
 
 // Move the dust grain by calculating the forces acting on it
 void ForceModel::Force(){
 	F_Debug("\tIn ForceModel::Force()\n\n");
+
+//	std::cout << "\n(3)Temp = " << Sample->get_temperature() << "\nVapPressure = " << Sample->get_vapourpressure() << "\nCv = " << Sample->get_heatcapacity() << "\n";
 /*
 	// Forces: Lorentz + ion drag + gravity
 	threevector Fid = DTOKSIonDrag();
@@ -76,9 +72,9 @@ void ForceModel::Force(){
 	F_Debug("\t"); threevector centrifugal = Centrifugal();
 
 	threevector ChangeInPosition(
-			Sample->get_dustposition().getx()+Sample->get_dustvelocity().getx()*TimeStep,
-			Sample->get_dustposition().gety()+(Sample->get_dustvelocity().gety()*TimeStep)/(Sample->get_dustposition().getx()),
-			Sample->get_dustposition().getz()+Sample->get_dustvelocity().getz()*TimeStep);
+			Sample->get_position().getx()+Sample->get_velocity().getx()*TimeStep,
+			Sample->get_position().gety()+(Sample->get_velocity().gety()*TimeStep)/(Sample->get_position().getx()),
+			Sample->get_position().getz()+Sample->get_velocity().getz()*TimeStep);
 	F_Debug("\t"); threevector LorentzForce = LorentzForce();
 	threevector ChangeInVelocity = (LorentzForce + Fid + g + centrifugal)*TimeStep;
 	//vd += (LorentzForce() + Fid + g)*TimeStep;
@@ -94,7 +90,7 @@ threevector ForceModel::DTOKSIonDrag()const{
 	F_Debug("\tIn ForceModel::DTOKSIonDrag()\n\n");
 	threevector Fid;
 
-	threevector Mt = (Pdata.PlasmaVel-Sample->get_dustvelocity());//*sqrt(Mi/echarge/Pdata.IonTemp); // FIND OUT WHAT THIS OPERATION MEANS!
+	threevector Mt = (Pdata.PlasmaVel-Sample->get_velocity());//*sqrt(Mp/echarge/Pdata.IonTemp); // FIND OUT WHAT THIS OPERATION MEANS!
 	double lambda = sqrt(epsilon0/(Pdata.IonDensity*echarge))/sqrt(exp(-Mt.mag3()*Mt.mag3()/2)/Pdata.IonTemp+1.0/Pdata.ElectronTemp);
 	double beta = Pdata.ElectronTemp*Sample->get_radius()*fabs(Sample->get_potential())/(lambda*Pdata.IonTemp);
 	if(beta>13.0) std::cout << "nonlinear drag parameter" << std::endl;
@@ -102,7 +98,7 @@ threevector ForceModel::DTOKSIonDrag()const{
 		double Lambda = -exp(beta/2.0)*Exponential_Integral_Ei(-beta/2.0); 
 		threevector FidC,FidS;
 		FidS = Mt*(sqrt(32*PI)/3.0*epsilon0*pow(Pdata.IonTemp,2)*Lambda*pow(beta,2));
-		FidC =(Pdata.PlasmaVel-Sample->get_dustvelocity())*4.0*PI*pow(Sample->get_radius(),2)*Pdata.IonDensity*Mi
+		FidC =(Pdata.PlasmaVel-Sample->get_velocity())*4.0*PI*pow(Sample->get_radius(),2)*Pdata.IonDensity*Mp
 			*sqrt(echarge*Pdata.ElectronTemp/2.0/PI/Me)*exp(-Sample->get_potential()); 
 		//for John's ion drag... I assume here and in other places in the 
 		//calculation that the given potential is normalised to kTe/e
@@ -132,14 +128,14 @@ threevector ForceModel::LorentzForce()const{
 	// Google Translate: Here I had changed it to all the brides in After 28_Feb so they have to be done again
 
 
-	return ((Pdata.ElectricField+(Sample->get_dustvelocity()^Pdata.MagneticField))*qtom);
+	return ((Pdata.ElectricField+(Sample->get_velocity()^Pdata.MagneticField))*qtom);
 }
 
 threevector ForceModel::Centrifugal()const{
 	F_Debug("\tIn ForceModel::Centrifugal()\n\n");
 	threevector returnval(
-		Sample->get_dustvelocity().gety()*Sample->get_dustvelocity().gety()/Sample->get_dustposition().getx(),
-		-Sample->get_dustvelocity().getx()*Sample->get_dustvelocity().gety()/Sample->get_dustposition().getx(),
+		Sample->get_velocity().gety()*Sample->get_velocity().gety()/Sample->get_position().getx(),
+		-Sample->get_velocity().getx()*Sample->get_velocity().gety()/Sample->get_position().getx(),
 		0.0);
 	return returnval;
 }

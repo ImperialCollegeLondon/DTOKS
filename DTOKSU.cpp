@@ -7,10 +7,15 @@ std::array<bool, 9> DefaultHeatModels = {false,false,false,false,false,false, fa
 std::array<bool,4> DefaultForceModels = {false,false,false,false};
 std::array<bool,1> DefaultChargeModels = {false};
 std::array<char,4> DefaultConstModels = { 'c','c','c','c'};
-std::shared_ptr<Matter>	DefaultSample = std::make_shared<Tungsten>();
+Matter *DefaultSample = new Tungsten();
+plasmagrid *DefaultGrid = new plasmagrid('h','m',0.01);
+
+//std::shared_ptr<Matter>	DefaultSample = std::make_shared<Tungsten>();
+
 
 // Default Constructor, no arguments
 DTOKSU::DTOKSU():
+			Pgrid(*DefaultGrid),
 			CM("cf.txt",1.0,DefaultChargeModels,DefaultSample,PlasmaDefaults),
 			HM("hf.txt",1e-9,1.0,DefaultHeatModels,DefaultSample,PlasmaDefaults),
 			FM("ff.txt",1.0,DefaultForceModels,DefaultSample,PlasmaDefaults){
@@ -18,21 +23,33 @@ DTOKSU::DTOKSU():
 	D_Debug("\n\n************************************* SETUP FINISHED ************************************* \n\n");
 	TimeStep = 0;
 	TotalTime = 0;
-	Pdata = PlasmaDefaults;
-	Sample = DefaultSample;
+
 }
 
-DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, std::shared_ptr<Matter> const& sample, PlasmaData const &pdata,
+DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample, PlasmaData const &pdata,
 				std::array<bool,9> &heatmodels, std::array<bool,4> &forcemodels, std::array<bool,1> &chargemodels)
-				:CM("cf.txt",acclvls[0],chargemodels,sample,pdata),
-				 HM("hf.txt",acclvls[1],timestep,heatmodels,sample,pdata),
-				 FM("ff.txt",acclvls[2],forcemodels,sample,pdata){
+				: Pgrid(*DefaultGrid),
+				CM("cf.txt",acclvls[0],chargemodels,sample,pdata),
+				HM("hf.txt",timestep,acclvls[1],heatmodels,sample,pdata),
+				FM("ff.txt",acclvls[2],forcemodels,sample,pdata){
         D_Debug("\n\nIn DTOKSU::DTOKSU( ... )\n\n");
         D_Debug("\n\n************************************* SETUP FINISHED ************************************* \n\n");
+//	std::cout << "\nacclvls[0] = " << acclvls[0];
 	TimeStep = 0;
 	TotalTime = 0;
-	Pdata = PlasmaDefaults;
-	Sample = DefaultSample;
+}
+
+DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample, plasmagrid *& pgrid,
+				std::array<bool,9> &heatmodels, std::array<bool,4> &forcemodels, std::array<bool,1> &chargemodels)
+				: Pgrid(*pgrid),
+				CM("cf.txt",acclvls[0],chargemodels,sample,pgrid->get_plasmadata(sample->get_position())),
+				HM("hf.txt",timestep,acclvls[1],heatmodels,sample,pgrid->get_plasmadata(sample->get_position())),
+				FM("ff.txt",acclvls[2],forcemodels,sample,pgrid->get_plasmadata(sample->get_position())){
+        D_Debug("\n\nIn DTOKSU::DTOKSU( ... )\n\n");
+        D_Debug("\n\n************************************* SETUP FINISHED ************************************* \n\n");
+//	std::cout << "\nacclvls[0] = " << acclvls[0];
+	TimeStep = 0;
+	TotalTime = 0;
 }
 
 void DTOKSU::CreateFile( std::string filename ){
@@ -44,7 +61,9 @@ void DTOKSU::CreateFile( std::string filename ){
 
 void DTOKSU::CheckTimeStep(){
 	D_Debug( "\tIn DTOKSU::CheckTimeStep()\n\n");
+	
 	assert(TimeStep > 0);
+
 	D_Debug( "\nTimeStep = " << TimeStep );
 	TotalTime += TimeStep;
 }
@@ -64,17 +83,25 @@ void DTOKSU::UpdatePData(){
 int DTOKSU::Run(){
 	D_Debug("- In DTOKSU::Run()\n\n");
 
-	CM.CheckTimeStep();		// Check Time step length is appropriate
-	CM.Charge();
+	int i(0), k(0);
+	for(int i = 0; i < 5; i ++){
+		double ChargeTime = CM.CheckTimeStep();		// Check Time step length is appropriate
+		double ForceTime = FM.CheckTimeStep();		// Check Time step length is appropriate
+		double HeatTime = HM.CheckTimeStep();		// Check Time step length is appropriate
 
-	FM.CheckTimeStep();		// Check Time step length is appropriate
-	FM.Force();
-
-	for(int i = 0; i < 5; i ++){	
-		HM.CheckTimeStep();		// Check Time step length is appropriate
+		CM.Charge();
+		FM.Force();
 		HM.Heat();
-		std::cout << "\n(1)VapPressure = " << Sample->get_vapourpressure() << "Cv = " << Sample->get_heatcapacity();
-//		Sample->update();               // CHECK THAT UPDATING HERE UPDATES EVERYWHERE!
+
+//		HM.update();
+
+		Pgrid.readdata();	// Read data
+//		Pgrid.locate(i, k, Sample.get_position() ); // Locate the grid point nearest the dust
+		Pgrid.setfields(i,k); // Calculate fields
+
+		std::cout << "\nChargeTime = " << ChargeTime << "\nForceTime = " << ForceTime << "\nHeatTime = " <<HeatTime;
+//		std::cout << "\n(1)Temp = " << Sample->get_temperature() << "\nVapPressure = " << Sample->get_vapourpressure() << "\nCv = " << Sample->get_heatcapacity() << "\n";
+		//Sample->update();               // CHECK THAT UPDATING HERE UPDATES EVERYWHERE!
 
 //		std::cout << "\n(2)VapPressure = " << Sample->get_vapourpressure() << "Cv = " << Sample->get_heatcapacity();
 

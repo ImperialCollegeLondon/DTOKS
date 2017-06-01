@@ -1,5 +1,5 @@
-#define ELEMENT_DEBUG
-#define ELEMENT_DEEP_DEBUG
+//#define ELEMENT_DEBUG
+//#define ELEMENT_DEEP_DEBUG
 
 #include "Tungsten.h"
 #include "Constants.h"
@@ -86,8 +86,8 @@ void Tungsten::update_heatcapacity(){ // Calculates the heat capacity in units o
                 St.HeatCapacity = 35.56404 -1.551741e-7*t + 2.915253e-8*pow(t,2) -1.891725e-9*pow(t,3)-4.107702e-7*pow(t,-2);
 	}
 
-	E1_Debug("\n\nTemperature is : " << St.Temperature << "\nSt.Gas = " << St.Gas << "\nSt.Liquid = " << St.Liquid 
-				<< "\nCv of Solid: " << St.HeatCapacity/Ec.AtomicMass << "[kJ/(kg K)]"; );
+//	E1_Debug("\n\nTemperature is : " << St.Temperature << "\nSt.Gas = " << St.Gas << "\nSt.Liquid = " << St.Liquid 
+//				<< "\nCv of Solid: " << St.HeatCapacity/Ec.AtomicMass << "[kJ/(kg K)]"; );
 	St.HeatCapacity = (St.HeatCapacity /(1000 * Ec.AtomicMass)); // Conversion kJ/(mol K) to kJ/( kg K ), AtomicMass [kg mol^-1]
 }
 

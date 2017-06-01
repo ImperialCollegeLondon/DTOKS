@@ -46,6 +46,7 @@ Matter::Matter(double rad, double temp, const ElementConsts *elementconsts, std:
 void Matter::set_defaults(){
 	M_Debug("\tIn Matter::set_defaults()\n\n");
 	ConstModels = {'c','c','c','c'};
+	St.Potential = 0;
 	St.Radius = 1e-6;			// m
 	St.UnheatedRadius = St.Radius;		// m
 	St.LinearExpansion = 1;			// (%)
@@ -307,6 +308,7 @@ void Matter::update_temperature(double EnergyIn){
 	}
 
 	if(abs(EnergyIn/(St.Mass*St.HeatCapacity)) > St.Temperature*0.1){
+		std::cout << "\nEnergyIn = " << EnergyIn << "\nSt.Mass = " << St.Mass << "\nSt.HeatCapacity = " << St.HeatCapacity;
 		std::cout << "\nError, EnergyIn/(St.Mass*St.HeatCapacity) = " << EnergyIn/(St.Mass*St.HeatCapacity); // Assert temperature change is less than 10%
 		std::cout << "\nTemperature = " << St.Temperature;
 	}
