@@ -1,4 +1,4 @@
-//#define ELEMENT_DEBUG
+#define ELEMENT_DEBUG
 //#define ELEMENT_DEEP_DEBUG
 
 #include "Tungsten.h"
@@ -24,19 +24,21 @@ const struct ElementConsts Tungsten::TungstenConsts = {
 Tungsten::Tungsten():Matter(&TungstenConsts){
 	E_Debug("\n\nIn Tungsten::Tungsten():Matter(&TungstenConsts)\n\n");
 	tungsten_defaults();
+	update();
 }
 
 Tungsten::Tungsten(double radius):Matter(radius,&TungstenConsts){
 	E_Debug("\n\nIn Tungsten::Tungsten(double radius):Matter(radius,&TungstenConsts)\n\n");
 	tungsten_defaults();
+	update();
 }
 
 Tungsten::Tungsten(double radius, double tempin):Matter(radius,tempin,&TungstenConsts){
 	E_Debug("\n\nIn Tungsten::Tungsten(double radius, double tempin):Matter(radius,tempin,&TungstenConsts)\n\n");
 	tungsten_defaults();
-
-	E_Debug("\t"); update_state(0.0);		// Temperature dependant
-	E_Debug("\t"); update_models('c','c','c','y');
+	update_state(0.0);		// Temperature dependant
+	update_models('c','c','c','y');
+	update();
 	E1_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius << "\nSt.Density = " << St.Density 
 			<< "\nSt.Volume = " << St.Volume);
 }
@@ -47,6 +49,7 @@ Tungsten::Tungsten(double radius, double tempin, std::array<char,4> &constmodels
 
 	update_state(0.0);		// Temperature dependant
 	update_models(constmodels);
+	update();
 	E1_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius << "\nSt.Density = " << St.Density 
 			<< "\nSt.Volume = " << St.Volume);
 }
@@ -58,8 +61,8 @@ void Tungsten::tungsten_defaults(){
         St.HeatCapacity = 0.13398; 		// kJ/(kg-K)         
 	St.Emissivity = 0.04; 			// Arb, http://www.engineeringtoolbox.com/emissivity-coefficients-d_447.html
         St.SuperBoilingTemp = Ec.BoilingTemp; 	// K, At any pressure
-	St.Density = 19600; 			// (kg/m^3)
 	update_models('c','c','c','y');
+	
 
 //	St.ThermConduct = 0.163;		// kW/m K at 20 degrees celsius
 }

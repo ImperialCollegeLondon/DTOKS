@@ -15,6 +15,7 @@ class ForceModel : public Model {
 		void Print();			// Write to output data file
 		
 		// Different Force terms
+		threevector CalculateAcceleration()const;	// Sum of Force terms
 		threevector DTOKSIonDrag()const;
 		threevector LorentzForce()const;
 		threevector Centrifugal()const;

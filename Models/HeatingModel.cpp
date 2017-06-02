@@ -168,7 +168,8 @@ double HeatingModel::CheckTimeStep(){
 
 	if( TotalPower != 0 )
 		TimeStep = fabs((Sample->get_mass()*Sample->get_heatcapacity())/(TotalPower*Accuracy));
-	//std::cout << "\nSample->get_mass() = " << Sample->get_mass() << "\nSample->get_heatcapacity() = " << Sample->get_heatcapacity() << "\nTotalPower = " << TotalPower << "\nAccuracy = " << Accuracy;
+
+	std::cout << "\nSample->get_mass() = " << Sample->get_mass() << "\nSample->get_heatcapacity() = " << Sample->get_heatcapacity() << "\nTotalPower = " << TotalPower << "\nAccuracy = " << Accuracy;
 	assert(TimeStep > 0 && TimeStep != INFINITY);
 }
 

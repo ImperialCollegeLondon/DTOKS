@@ -31,10 +31,10 @@ class DTOKSU{
 		void CreateFile(std::string filename);
 
 	public:
-		DTOKSU();
+//		DTOKSU();
 		DTOKSU( double timestep, std::array<double,3> alvls, Matter *& sample, PlasmaData const &pdata,
 				std::array<bool,9> &heatmodels, std::array<bool,4> &forcemodels, std::array<bool,1> &chargemodels);
-		DTOKSU( double timestep, std::array<double,3> alvls, Matter *& sample, plasmagrid *& pgrid,
+		DTOKSU( double timestep, std::array<double,3> alvls, Matter *& sample, char plasma, char machine, double spacing,
 				std::array<bool,9> &heatmodels, std::array<bool,4> &forcemodels, std::array<bool,1> &chargemodels);
 
 		~DTOKSU(){

@@ -7,15 +7,13 @@ std::array<bool, 9> DefaultHeatModels = {false,false,false,false,false,false, fa
 std::array<bool,4> DefaultForceModels = {false,false,false,false};
 std::array<bool,1> DefaultChargeModels = {false};
 std::array<char,4> DefaultConstModels = { 'c','c','c','c'};
+
+
+// Default Constructor, no arguments. This is not a well defined constructor so has been commented out
+/*
 Matter *DefaultSample = new Tungsten();
-plasmagrid *DefaultGrid = new plasmagrid('h','m',0.01);
-
-//std::shared_ptr<Matter>	DefaultSample = std::make_shared<Tungsten>();
-
-
-// Default Constructor, no arguments
 DTOKSU::DTOKSU():
-			Pgrid(*DefaultGrid),
+			Pgrid('h','m',0.01),	// Default configuration for MAST
 			CM("cf.txt",1.0,DefaultChargeModels,DefaultSample,PlasmaDefaults),
 			HM("hf.txt",1e-9,1.0,DefaultHeatModels,DefaultSample,PlasmaDefaults),
 			FM("ff.txt",1.0,DefaultForceModels,DefaultSample,PlasmaDefaults){
@@ -25,10 +23,10 @@ DTOKSU::DTOKSU():
 	TotalTime = 0;
 
 }
-
+*/
 DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample, PlasmaData const &pdata,
 				std::array<bool,9> &heatmodels, std::array<bool,4> &forcemodels, std::array<bool,1> &chargemodels)
-				: Pgrid(*DefaultGrid),
+				: Pgrid('h','m',0.01),
 				CM("cf.txt",acclvls[0],chargemodels,sample,pdata),
 				HM("hf.txt",timestep,acclvls[1],heatmodels,sample,pdata),
 				FM("ff.txt",acclvls[2],forcemodels,sample,pdata){
@@ -37,19 +35,25 @@ DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample,
 //	std::cout << "\nacclvls[0] = " << acclvls[0];
 	TimeStep = 0;
 	TotalTime = 0;
+	int p(0), k(0);
+	Pgrid.locate(p,k,sample->get_position()); // This will cause an assertion to be raised if default position is (0,0,0)
+	Pgrid.setfields(p,k);
 }
 
-DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample, plasmagrid *& pgrid,
+DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample, char plasma, char machine, double spacing,
 				std::array<bool,9> &heatmodels, std::array<bool,4> &forcemodels, std::array<bool,1> &chargemodels)
-				: Pgrid(*pgrid),
-				CM("cf.txt",acclvls[0],chargemodels,sample,pgrid->get_plasmadata(sample->get_position())),
-				HM("hf.txt",timestep,acclvls[1],heatmodels,sample,pgrid->get_plasmadata(sample->get_position())),
-				FM("ff.txt",acclvls[2],forcemodels,sample,pgrid->get_plasmadata(sample->get_position())){
+				: Pgrid(plasma,machine,spacing),
+				CM("cf.txt",acclvls[0],chargemodels,sample,Pgrid.get_plasmadata(sample->get_position())),
+				HM("hf.txt",timestep,acclvls[1],heatmodels,sample,Pgrid.get_plasmadata(sample->get_position())),
+				FM("ff.txt",acclvls[2],forcemodels,sample,Pgrid.get_plasmadata(sample->get_position())){
         D_Debug("\n\nIn DTOKSU::DTOKSU( ... )\n\n");
         D_Debug("\n\n************************************* SETUP FINISHED ************************************* \n\n");
 //	std::cout << "\nacclvls[0] = " << acclvls[0];
 	TimeStep = 0;
 	TotalTime = 0;
+	int p(0), k(0);
+	Pgrid.locate(p,k,sample->get_position());
+	Pgrid.setfields(p,k);
 }
 
 void DTOKSU::CreateFile( std::string filename ){
@@ -85,6 +89,9 @@ int DTOKSU::Run(){
 
 	int i(0), k(0);
 	for(int i = 0; i < 5; i ++){
+		
+		// if time step is larger than this, it will cross a cell in one time step
+//		double dt = 0.5*Pgrid.getdl()/((dust.getvd()).mag3()); 
 		double ChargeTime = CM.CheckTimeStep();		// Check Time step length is appropriate
 		double ForceTime = FM.CheckTimeStep();		// Check Time step length is appropriate
 		double HeatTime = HM.CheckTimeStep();		// Check Time step length is appropriate
@@ -95,9 +102,9 @@ int DTOKSU::Run(){
 
 //		HM.update();
 
-		Pgrid.readdata();	// Read data
+//		Pgrid.readdata();	// Read data
 //		Pgrid.locate(i, k, Sample.get_position() ); // Locate the grid point nearest the dust
-		Pgrid.setfields(i,k); // Calculate fields
+//		Pgrid.setfields(i,k); // Calculate fields
 
 		std::cout << "\nChargeTime = " << ChargeTime << "\nForceTime = " << ForceTime << "\nHeatTime = " <<HeatTime;
 //		std::cout << "\n(1)Temp = " << Sample->get_temperature() << "\nVapPressure = " << Sample->get_vapourpressure() << "\nCv = " << Sample->get_heatcapacity() << "\n";

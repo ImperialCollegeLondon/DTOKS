@@ -3,24 +3,46 @@
 #define MATTER_DEBUG
 
 #include "Matter.h"
+struct GrainData MatterDefaults = {
+	false,		// Is Liquid,		fine
+	false,		// Is Gas,		fine
+	1e-6,		// Unheated Radius,	should be updated
+	8.21e-14,	// Mass,		should be updated
+	1e-6,		// Radius,		fine
+	1.26e-11,	// Surface Area		should be updated
+	4.189e-18,	// Volume		should be updated
+	19600,		// Density		should be updated
+	3000,		// SuperBoilingTemp	should be updated
+	270,		// Temperature		fine
+	1e5,		// Vapour Pressure	should be updated
+	1.0,		// Emissivity		should be updated
+	1.0,		// Linear Expansion	should be updated
+	0.5,		// Heat Capacity	should be updated
+	0,		// DeltaSec		should be updated
+	0,		// DeltaTherm		should be updated
+	0,		// Potential		should be updated
+	false,		// Is Positive		should be updated
+	{0,0,0},	// Dust position	case dependant
+	{0,0,0},	// Dust Velocity	case dependant
+	0,		// FusionEnergy		fine
+	0		// VapourEnergy		fine
+};
+
 
 // Constructors
-Matter::Matter(const ElementConsts *elementconsts):Ec(*elementconsts){
-	M_Debug("\n\nIn Matter::Matter(const ElementConsts *elementconsts):Ec(*elementconsts)\n\n");
-	set_defaults();
+Matter::Matter(const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults){
+	M_Debug("\n\nIn Matter::Matter(const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults)\n\n");
 };
-Matter::Matter(double rad, const ElementConsts *elementconsts):Ec(*elementconsts){
-	M_Debug("\n\nIn Matter::Matter(double rad, const ElementConsts *elementconsts):Ec(*elementconsts)\n\n");
-        set_defaults();
+Matter::Matter(double rad, const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults){
+	M_Debug("\n\nIn Matter::Matter(double rad, const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults)\n\n");
 	St.Radius = rad;			// m
 	St.UnheatedRadius = St.Radius;		// m
 	assert(St.Radius > 0 && St.UnheatedRadius > 0);
 //	M_Debug("\nSt.Radius = " << St.Radius << "\nSt.Mass = " << St.Mass);
 };
 
-Matter::Matter(double rad, double temp, const ElementConsts *elementconsts):Ec(*elementconsts){
-	M_Debug("\n\nIn Matter::Matter(double rad, double temp, const ElementConsts *elementconsts):Ec(*elementconsts)\n\n");
-        set_defaults();
+Matter::Matter(double rad, double temp, const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults){
+	M_Debug("\n\nIn Matter::Matter(double rad, double temp, const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults)\n\n");
 	ConstModels = {'c','c','c','y'};
 	St.Radius = rad;					// m
 	St.UnheatedRadius = St.Radius;				// m
@@ -30,9 +52,8 @@ Matter::Matter(double rad, double temp, const ElementConsts *elementconsts):Ec(*
 //	M_Debug("\nSt.Radius = " << St.Radius << "\nSt.Mass = " << St.Mass << "\nSt.Temperature = " << St.Temperature);
 //	M_Debug("\nEc.LatentVapour = " << Ec.LatentVapour << "\nEc.AtomicMass = " << Ec.AtomicMass);
 };
-Matter::Matter(double rad, double temp, const ElementConsts *elementconsts, std::array<char,4> &constmodels):Ec(*elementconsts){
-	M_Debug("\n\nIn Matter::Matter(double rad, double temp, const ElementConsts *elementconsts, std::array<char,4> &constmodels):Ec(*elementconsts)\n\n");
-        set_defaults();
+Matter::Matter(double rad, double temp, const ElementConsts *elementconsts, std::array<char,4> &constmodels):Ec(*elementconsts),St(MatterDefaults){
+	M_Debug("\n\nIn Matter::Matter(double rad, double temp, const ElementConsts *elementconsts, std::array<char,4> &constmodels):Ec(*elementconsts),St(MatterDefaults)\n\n");
 	ConstModels = constmodels;
 	St.Radius = rad;					// m
 	St.UnheatedRadius = St.Radius;				// m
@@ -42,21 +63,6 @@ Matter::Matter(double rad, double temp, const ElementConsts *elementconsts, std:
 //	M_Debug("\nSt.Radius = " << St.Radius << "\nSt.Mass = " << St.Mass << "\nSt.Temperature = " << St.Temperature);
 //	M_Debug("\nEc.LatentVapour = " << Ec.LatentVapour << "\nEc.AtomicMass = " << Ec.AtomicMass);
 };
-
-void Matter::set_defaults(){
-	M_Debug("\tIn Matter::set_defaults()\n\n");
-	ConstModels = {'c','c','c','c'};
-	St.Potential = 0;
-	St.Radius = 1e-6;			// m
-	St.UnheatedRadius = St.Radius;		// m
-	St.LinearExpansion = 1;			// (%)
-	St.Temperature = 273;			// K
-	St.Liquid = false; St.Gas = false;
-	St.FusionEnergy = 0; St.VapourEnergy = 0;
-	St.DeltaSec = 0;		// Secondary Electron Emission Yield (Arb)
-	St.DeltaTherm = 0;		// Thermionic Electron Emission Yield (Arb)
-
-}
 
 // Update geometric properties of matter:
 // Volume, Surface area and Density. Also initialises mass
@@ -262,14 +268,12 @@ void Matter::update_models(char emissivmodel, char linexpanmodel, char heatcapac
 	ConstModels[1] = linexpanmodel;
 	ConstModels[2] = heatcapacitymodel;
 	ConstModels[3] = boilingmodel;
-	M_Debug("\t"); update();
 };
 
 void Matter::update_models(std::array<char,4> &constmodels){
 	M_Debug("\tIn Matter::update_mass(double LostMass)\n\n");
 //	update(constmodels[0],constmodels[1],constmodels[2],constmodels[3],);
 	ConstModels = constmodels;
-	M_Debug("\t"); update();
 }
 
 // Mass lost in Kilogrammes

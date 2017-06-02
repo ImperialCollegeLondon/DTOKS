@@ -41,10 +41,13 @@ template<typename T> int InputFunction(int &argc, char* argv[], int &i, std::str
 */
 int main(int argc, char* argv[]){
 
+	std::array<char,4> ConstModels  = {'c','c','c','y'};
+//	Matter *Sample1 = new Tungsten(1e-6,300,ConstModels);
 
 	// ***************************************** INITIALISE PLASMA ***************************************** //
-	char machine='m';	// Initialise plasma grid
-	plasmagrid *Background = new plasmagrid('h',machine,0.01);	
+	char Plasma='h';
+	char Machine='m';	// Initialise plasma grid
+	double Spacing =0.01;
 
 	// ********************************************************** //
 	// FIRST, define program default behaviour
@@ -67,7 +70,9 @@ int main(int argc, char* argv[]){
 	double Temp=350;		// K
 	double TimeStep=1e-5;		// s
 //	std::shared_ptr<Matter> Sample;	// Define the sample matter type
+
 	Matter * Sample;		// Define the sample matter type
+
 
 	// ------------------- HEATING MODELS ------------------- //
 	// Set to true all heating models that are wanted
@@ -130,9 +135,12 @@ int main(int argc, char* argv[]){
 		NeutralRecomb, SEE, TEE };
 	std::array<bool,4> ForceModels  = {Gravity,Centrifugal,Lorentz,IonDrag};
 	std::array<bool,1> ChargeModels = {DTOKSOML};
-	std::array<char,4> ConstModels  = {EmissivityModel,ExpansionModel,HeatCapacityModel,BoilingModel};
+	ConstModels  = {EmissivityModel,ExpansionModel,HeatCapacityModel,BoilingModel};
 
 	std::array<double,3> AccuracyLevels = {1.0,1.0,1.0};
+
+
+
 
 	if 	(Element == 'W') Sample = new Tungsten(Size,Temp,ConstModels);
 	else if (Element == 'B') Sample = new Beryllium(Size,Temp,ConstModels);
@@ -143,9 +151,15 @@ int main(int argc, char* argv[]){
 		return -1;
 	}
 
-//	DTOKSU MyDtoks2(TimeStep, AccuracyLevels, Sample, Pdata, HeatModels, ForceModels, ChargeModels);
-	DTOKSU MyDtoks2(TimeStep, AccuracyLevels, Sample, Background, HeatModels, ForceModels, ChargeModels);
+	threevector xinit(1.15,0.0,-1.99);// default injection right hand side
+	threevector vinit(0.0,0.0,100.0);
+	Sample->update_motion(xinit,vinit);
+
+	std::cout << "\n\n * GENERATE DTOKS * \n\n";
+//	DTOKSU MyDtoks1(TimeStep, AccuracyLevels, Sample, Pdata, HeatModels, ForceModels, ChargeModels);
+	DTOKSU MyDtoks2(TimeStep, AccuracyLevels, Sample, Plasma, Machine, Spacing, HeatModels, ForceModels, ChargeModels);
 	
+	std::cout << "\n\n * RUN DTOKS * \n\n";
 	int errcode2 = MyDtoks2.Run();
 
 	std::cout << "\n\n * MAIN SCRIPT COMPLETE * \n\n";

@@ -1,5 +1,5 @@
 //#define PAUSE
-#define CHARGING_DEBUG
+//#define CHARGING_DEBUG
 
 #include "ChargingModel.h"
 
@@ -29,7 +29,6 @@ void ChargingModel::CreateFile(std::string filename){
 
 void ChargingModel::Print(){
 	C_Debug("\tIn ChargingModel::Print()\n\n");
-
 	if( Sample->is_positive() )  ModelDataFile << "Pos\t";
 	if( !Sample->is_positive() ) ModelDataFile << "Neg\t";
 	if( UseModel[0] ) ModelDataFile << Sample->get_potential();
@@ -40,11 +39,16 @@ double ChargingModel::CheckTimeStep(){
 	C_Debug( "\tIn ChargingModel::CheckTimeStep()\n\n" );
 	// Deal with case where power/time step causes large temperature change.
 	
+//	std::cout << "\nPdata.ElectronTemp = " << Pdata.ElectronTemp;
+//	std::cout << "\nPdata.ElectronDensity = " << Pdata.ElectronDensity;
 	
 	double DebyeLength=sqrt((epsilon0*Kb*Pdata.ElectronTemp)/(Pdata.ElectronDensity*pow(echarge,2)));
 	double PlasmaFreq = sqrt((Pdata.ElectronDensity*pow(echarge,2))/(epsilon0*Me));
 	TimeStep = sqrt(2*PI) * ((DebyeLength)/Sample->get_radius()) 
 			* (1/(PlasmaFreq*(1+Pdata.ElectronTemp/Pdata.IonTemp+Sample->get_potential())));
+
+	if(TimeStep != TimeStep)
+		TimeStep = 1e-8;	// (s), An estimate for regions of low plasma density
 //	std::cout << "\n\t\tDebyeLength = " << DebyeLength;
 //	std::cout << "\n\t\tPlasmaFreq = " << PlasmaFreq;
 //	std::cout << "\n\t\tTimeStep = " << TimeStep << "\n\n";
@@ -57,7 +61,7 @@ double ChargingModel::CheckTimeStep(){
 void ChargingModel::Charge(){
 	C_Debug("\tIn ChargingModel::Charge()\n\n");
 
-	std::cout << "\n(4)Temp = " << Sample->get_temperature() << "\nVapPressure = " << Sample->get_vapourpressure() << "\nCv = " << Sample->get_heatcapacity() << "\n";
+//	std::cout << "\n(4)Temp = " << Sample->get_temperature() << "\nVapPressure = " << Sample->get_vapourpressure() << "\nCv = " << Sample->get_heatcapacity() << "\n";
 /*
 	// Assume the grain is negative and calculate potential
 	double Potential = solveOML(Sample->get_deltatot(),Sample->get_potential());

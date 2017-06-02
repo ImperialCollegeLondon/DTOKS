@@ -26,10 +26,12 @@ const struct ElementConsts Graphite::GraphiteConsts = {
 
 Graphite::Graphite():Matter(&GraphiteConsts){
 	set_defaults();
+	update();
 }
 
 Graphite::Graphite(double radius):Matter(radius,&GraphiteConsts){
 	set_defaults();
+	update();
 }
 
 Graphite::Graphite(double radius, double tempin):Matter(radius,tempin,&GraphiteConsts){
@@ -38,6 +40,7 @@ Graphite::Graphite(double radius, double tempin):Matter(radius,tempin,&GraphiteC
 
 	update_state(0.0);		// Temperature dependent
 	update_models('c','c','c','y');
+	update();
 	E_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius << "\nSt.Density = " << St.Density 
 			<< "\nSt.Volume = " << St.Volume);
 }
@@ -48,6 +51,7 @@ Graphite::Graphite(double radius, double tempin, std::array<char,4> &constmodels
 
 	update_state(0.0);		// Temperature dependent
 	update_models(constmodels);
+	update();
 
 	E_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius << "\nSt.Density = " << St.Density 
 			<< "\nSt.Volume = " << St.Volume);

@@ -34,7 +34,6 @@ class Matter{
 		virtual void update_heatcapacity 	()=0;
 		virtual void update_vapourpressure	()=0;
 
-		void set_defaults();
 		// Update geometric properties of matter:
 		// Volume, Surface area and Density. Also initialises mass
 		void update_dim();

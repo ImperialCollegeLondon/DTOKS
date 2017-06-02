@@ -74,6 +74,7 @@ plasmagrid::plasmagrid(char element, char machine, double spacing)
 		gridflag[i] = new int[gridz];
 	}
 	//impurity.open("output///impurity///impurity.vtk");
+	readdata();	// Read data
 }
 
 // Destructor - frees up the memory
@@ -319,12 +320,17 @@ void plasmagrid::setfields(int i, int k)
 }
 
 // Locate dust particle in the plasma grid
-void plasmagrid::locate(int &i, int &k, threevector xd)
+void plasmagrid::locate(int &i, int &k, const threevector xd)const
 {
+
+	std::cout << "\tIn plasmagrid::locate(int &" << i << ", int &" << k << ", " << xd << ")\n\n";
 	// Adding 0.5 makes the rounding work properly
 	i = int(0.5+(xd.getx()-gridxmin)/dl);
 	k = int(0.5+(xd.getz()-gridzmin)/dl);
+	checkingrid(i,k);
+//	std::cout << "\ni = " << i << "\nk = " << k;
 }
+
 bool plasmagrid::withingrid(int i, int k)
 {
 	bool result;
@@ -333,7 +339,8 @@ bool plasmagrid::withingrid(int i, int k)
 	return result;
 }
 
-PlasmaData plasmagrid::get_plasmadata(threevector pos){
+PlasmaData plasmagrid::get_plasmadata(threevector pos)const{
+	std::cout << "\tIn plasmagrid::get_plasmadata(" << pos << ")\n\n";
 	PlasmaData ReturnPdata;
 	int i(0), k(0);
 	locate(i,k,pos);
@@ -345,8 +352,13 @@ PlasmaData plasmagrid::get_plasmadata(threevector pos){
 	ReturnPdata.NeutralTemp 	= getTi(i,k); // NEUTRAL TEMP EQUAL TO ION TEMP
 	ReturnPdata.AmbientTemp 	= 300; // NOTE THIS IS HARD CODED OHMEINGOD
 	ReturnPdata.PlasmaVel	 	= vp; 
-	ReturnPdata.ElectricField 	= E; 
-	ReturnPdata.MagneticField 	= B; 
+	ReturnPdata.ElectricField 	= E;
+	ReturnPdata.MagneticField 	= B;
 	return ReturnPdata;
 }
 
+void plasmagrid::checkingrid(const int i, const int k)const{
+//	std::cout << "\tIn plasmagrid::checkingrid(int " << i << ", int " << k  << ")\n\n";
+	assert( i < gridx && i > 0);
+	assert( k < gridz && k > 0);
+}

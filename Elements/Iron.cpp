@@ -23,11 +23,14 @@ const struct ElementConsts Iron::IronConsts = {
 
 Iron::Iron():Matter(&IronConsts){
 	set_defaults();
+	update();
 }
 
 Iron::Iron(double radius):Matter(radius,&IronConsts){
 	set_defaults();
+	update();
 }
+
 
 Iron::Iron(double radius, double tempin):Matter(radius,tempin,&IronConsts){
 	E_Debug("\n\nIn Iron::Iron(double radius, double tempin)");
@@ -35,6 +38,7 @@ Iron::Iron(double radius, double tempin):Matter(radius,tempin,&IronConsts){
 
 	update_state(0.0);		// Temperature dependant
 	update_models('c','c','c','y');
+	update();
 	E_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius << "\nSt.Density = " << St.Density 
 			<< "\nSt.Volume = " << St.Volume);
 }
@@ -46,6 +50,7 @@ Iron::Iron(double radius, double tempin, std::array<char,4> &constmodels):Matter
 	set_defaults();
 	update_state(0.0);		// Temperature dependant
 	update_models(constmodels);
+	update();
 	E_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius << "\nSt.Density = " << St.Density 
 			<< "\nSt.Volume = " << St.Volume);
 }
@@ -58,7 +63,7 @@ void Iron::set_defaults(){
         St.SuperBoilingTemp =  Ec.BoilingTemp; 	// K, At any pressure
 	St.Density = 7874;			// kg/m^3 From wikipedia
 	update_models('c','c','c','y');
-
+	update();
 
 //	St.FractionalExpansion = 0.348; 	// Units of kg m^-3 K^-1: Calculated ROUGLY by measuring the gradient of Figure 1 found at https://aaltodoc.aalto.fi/bitstream/handle/123456789/14194/D4_tesfaye_fiseha_2010.pdf?sequence=1. See also https://www.jstage.jst.go.jp/article/matertrans1960/14/2/14_2_120/_pdf.  https://en.wikipedia.org/wiki/Iron#Mechanical_properties
 //	Ec.BondEnergy = Ec.LatentFusion; 	// Units of kJ/mol, from http://ac.els-cdn.com/0009261490871992/1-s2.0-0009261490871992-main.pdf?_tid=15d8855a-d42a-11e6-bda3-00000aacb360&acdnat=1483718970_aad5e56f1c3219f79aec68fc1725b992, taken from figure 1b, TMBE-2000, then divided by AvNo

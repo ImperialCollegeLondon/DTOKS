@@ -24,10 +24,12 @@ const struct ElementConsts Beryllium::BerylliumConsts = {
 
 Beryllium::Beryllium():Matter(&BerylliumConsts){
 	set_defaults();
+	update();
 }
 
 Beryllium::Beryllium(double radius):Matter(radius,&BerylliumConsts){
 	set_defaults();
+	update();
 }
 
 Beryllium::Beryllium(double radius, double tempin):Matter(radius,tempin,&BerylliumConsts){
@@ -36,6 +38,7 @@ Beryllium::Beryllium(double radius, double tempin):Matter(radius,tempin,&Berylli
 
 	update_state(0.0);		// Temperature dependant
 	update_models('c','c','c','y');
+	update();
 
 	E_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius << "\nSt.Density = " << St.Density 
 			<< "\nSt.Volume = " << St.Volume);
@@ -47,6 +50,7 @@ Beryllium::Beryllium(double radius, double tempin, std::array<char,4> &constmode
 
 	update_state(0.0);		// Temperature dependant
 	update_models(constmodels);
+	update();
 
 	E_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius << "\nSt.Density = " << St.Density 
 			<< "\nSt.Volume = " << St.Volume);
