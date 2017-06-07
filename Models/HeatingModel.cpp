@@ -1,6 +1,6 @@
 //#define PAUSE
 //#define HEATING_DEBUG
-//#define HEATING_DEEP_DEBUG
+#define HEATING_DEEP_DEBUG
 
 #include "HeatingModel.h"
 #include "Constants.h"
@@ -15,24 +15,27 @@ HeatingModel::HeatingModel():Type("constant"),Model(){
 
 
 // Constructor which specifies dust radius, by passing a pointer to a Matter reference.
-HeatingModel::HeatingModel(std::string filename, double timestep, double accuracy, std::array<bool,9> &models,
-				Matter *& sample, PlasmaData const &pdata) : Model(sample,pdata,accuracy){
-	H_Debug("\n\nIn HeatingModel::HeatingModel(std::string filename, double timestep, std::array<bool,9> &models, Matter *& sample, PlasmaData const &pdata) : Model(sample,pdata)\n\n");
-//	std::cout << "\naccuracy = " << accuracy;
-//	std::cout << "\nAccuracy = " << Accuracy;
-
+HeatingModel::HeatingModel(std::string filename, double accuracy, std::array<bool,9> &models,
+				Matter *& sample, PlasmaData &pdata) : Model(sample,pdata,accuracy){
+	H_Debug("\n\nIn HeatingModel::HeatingModel(std::string filename, double accuracy, std::array<bool,9> &models, Matter *& sample, PlasmaData const &pdata) : Model(sample,pdata,accuracy)\n\n");
 	Defaults();
 	CreateFile(filename,false);
-	CheckPos(timestep,"Time Step");
+	UseModel 		= models;
+}
+
+HeatingModel::HeatingModel(std::string filename, double accuracy, std::array<bool,9> &models,
+				Matter *& sample, PlasmaGrid &pgrid) : Model(sample,pgrid,accuracy){
+	H_Debug("\n\nIn HeatingModel::HeatingModel(std::string filename,double accuracy, std::array<bool,9> &models, Matter *& sample, PlasmaGrid const &pgrid) : Model(sample,pgrid,accuracy)\n\n");
+	Defaults();
+	CreateFile(filename,false);
 	UseModel 	= models;
-	TimeStep 	= timestep;		// s,
 }
 
 void HeatingModel::Defaults(){
 	H_Debug("\tIn HeatingModel::Defaults()\n\n");
 	UseModel = {false,false,false,false,false,false,false};
 	PowerIncident = 0;			// kW, Power Incident
-	TimeStep = 0.1;				// s, Time step
+	TimeStep = 0;				// s, Time step
 	TotalTime = 0;				// s, Total Time
 	ForceNegative = true;			// Force the sample to behave as negatively charged
 }
@@ -60,9 +63,11 @@ void HeatingModel::CreateFile(std::string filename, bool PrintPhaseData){
 
 const int HeatingModel::Vapourise(){
 	H_Debug("\tIn HeatingModel::Vapourise()\n\n");
-	
-	while( !Sample->is_gas() ){ // && !ThermalEquilibrium ){ // If the sample is gaseous or in TE, the model ends.
+	// If the sample is gaseous or in TE (Given that the plasma is continuous), the model ends.
+	while( !Sample->is_gas() ){ 
 		Heat();
+		if( ContinuousPlasma && ThermalEquilibrium )
+			break;
 	}
 
 	int rValue(0);
@@ -72,11 +77,10 @@ const int HeatingModel::Vapourise(){
 	}else if( Sample->is_gas() && Sample->get_superboilingtemp() > Sample->get_temperature() ){
 		std::cout << "\n\nSample has Evaporated ";
 		rValue = 2;
-	}
-	/*else if( ThermalEquilibrium ){
-		std::cout << "\n\nSample has reached Thermal Equilibrium ";
+	}else if( ThermalEquilibrium && ContinuousPlasma ){
+		std::cout << "\n\nSample has reached Thermal Equilibrium in Continuous Plasma.";
 		rValue = 3;
-	}*/
+	}
 	std::cout << "at T = " << Sample->get_temperature() << "K in " << TotalTime << "s!\n\n*********\n\n";
 	ModelDataFile.close();
 	return rValue; // 0, running normally. 1; Sample boiled. 2; Sample Evaporated. 3; Thermal equilibrium.
@@ -84,12 +88,14 @@ const int HeatingModel::Vapourise(){
 
 void HeatingModel::Heat(){
 	H_Debug("\tIn HeatingModel::Heat()\n\n");
-//	std::cout << "\n(2)Temp = " << Sample->get_temperature() << "\nVapPressure = " << Sample->get_vapourpressure() << "\nCv = " << Sample->get_heatcapacity() << "\n";
 	
-//	std::cout << "\n(2)VapPressure = " << Sample->get_vapourpressure() << "Cv = " << Sample->get_heatcapacity();
+
+	std::cout << "\n(2)Temperature = " << Sample->get_temperature() << "\nVapPressure = " << Sample->get_vapourpressure() 
+			<< "\nCv = " << Sample->get_heatcapacity() << "\n";
 	assert( Sample->get_mass() > 0 );
 
 	double TotalEnergy = RungeKutta4();                     // Calculate total energy through RungeKutta4 method
+	std::cout << "\nTotalEnergy = " << TotalEnergy << "\n";
 	//std::cout << "\nTimeStep = " << TimeStep;
         Sample->update_temperature(TotalEnergy);                // Update Temperature
 	// Account for evaporative mass loss
@@ -117,16 +123,17 @@ double HeatingModel::CalculatePower(double DustTemperature)const{
 	if( UseModel[8] )				TotalPower -= TEE			(DustTemperature);	
 
 	H1_Debug("\n\nPowerIncident = \t" 	<< PowerIncident			<< "kW");
-	H1_Debug("\nEmissivityModel() = \t" 	<< -EmissivityModel(DustTemperature) 	<< "kW");
-	H1_Debug("\nEvaporationModel() = \t" 	<< -EvaporationModel(DustTemperature) 	<< "kW");
-	H1_Debug("\nNewtonCooling() = \t" 	<< -NewtonCooling(DustTemperature) 	<< "kW");
-	H1_Debug("\nIonHeatFlux() = \t" 	<< IonHeatFlux(DustTemperature) 	<< "kW");
-	H1_Debug("\nElectronHeatFlux() = \t" 	<< ElectronHeatFlux(DustTemperature) 	<< "kW");
-	H1_Debug("\nNeutralHeatFlux() = \t" 	<< NeutralHeatFlux() 			<< "kW");
-	H1_Debug("\nNeutralRecombination() = \t"<< NeutralRecombination(DustTemperature)<< "kW");
-	H1_Debug("\nSEE() = \t" 		<< -SEE(DustTemperature) 		<< "kW");
-	H1_Debug("\nTEE() = \t" 		<< -TEE(DustTemperature) 		<< "kW\n");
-	H1_Debug("\nTotalPower = \t" 		<< TotalPower 				<< "kW\n");
+	if( UseModel[0] )	H1_Debug("\nEmissivityModel() = \t" 	<< -EmissivityModel(DustTemperature) 	<< "kW");
+	if( UseModel[1] && Sample->is_liquid() )	
+				H1_Debug("\nEvaporationModel() = \t" 	<< -EvaporationModel(DustTemperature) 	<< "kW");
+	if( UseModel[2] )	H1_Debug("\nNewtonCooling() = \t" 	<< -NewtonCooling(DustTemperature) 	<< "kW");
+	if( UseModel[3] )	H1_Debug("\nIonHeatFlux() = \t" 	<< IonHeatFlux(DustTemperature) 	<< "kW");
+	if( UseModel[4] )	H1_Debug("\nElectronHeatFlux() = \t" 	<< ElectronHeatFlux(DustTemperature) 	<< "kW");
+	if( UseModel[5] )	H1_Debug("\nNeutralHeatFlux() = \t" 	<< NeutralHeatFlux() 			<< "kW");
+	if( UseModel[6] )	H1_Debug("\nNeutralRecombination() = \t"<< NeutralRecombination(DustTemperature)<< "kW");
+	if( UseModel[7] )	H1_Debug("\nSEE() = \t" 		<< -SEE(DustTemperature) 		<< "kW");
+	if( UseModel[8] )	H1_Debug("\nTEE() = \t" 		<< -TEE(DustTemperature) 		<< "kW\n");
+
 	return TotalPower;
 }
 
@@ -160,16 +167,20 @@ double HeatingModel::CheckTimeStep(){
 	H_Debug( "\tIn HeatingModel::CheckTimeStep()\n\n" );
 	// Deal with case where power/time step causes large temperature change.
 
-
-
 	// Take Eularian step to get initial time step
 	H_Debug("\t"); double TotalPower = CalculatePower(Sample->get_temperature());
 	// This model forces the time step to be the value which produces a change in temperature or 1*accuracy degree
 
-	if( TotalPower != 0 )
+	if( TotalPower != 0 ){
 		TimeStep = fabs((Sample->get_mass()*Sample->get_heatcapacity())/(TotalPower*Accuracy));
-
-	std::cout << "\nSample->get_mass() = " << Sample->get_mass() << "\nSample->get_heatcapacity() = " << Sample->get_heatcapacity() << "\nTotalPower = " << TotalPower << "\nAccuracy = " << Accuracy;
+	}else{
+		static bool runOnce = true;
+		WarnOnce(runOnce,"\nWarning! TotalPower = 0\nThermalEquilibrium Assumed, TimeStep being set to unity.");
+		ThermalEquilibrium = true;
+		TimeStep = 1;
+	}
+	std::cout << "\nSample->get_mass() = " << Sample->get_mass() << "\nSample->get_heatcapacity() = " << 
+		Sample->get_heatcapacity() << "\nTotalPower = " << TotalPower << "\nAccuracy = " << Accuracy;
 	assert(TimeStep > 0 && TimeStep != INFINITY);
 }
 

@@ -49,6 +49,8 @@ int main(int argc, char* argv[]){
 	char Machine='m';	// Initialise plasma grid
 	double Spacing =0.01;
 
+	PlasmaGrid Pgrid(Plasma,Machine,Spacing);
+
 	// ********************************************************** //
 	// FIRST, define program default behaviour
 
@@ -76,15 +78,15 @@ int main(int argc, char* argv[]){
 
 	// ------------------- HEATING MODELS ------------------- //
 	// Set to true all heating models that are wanted
-	bool RadiativeCooling = false;
-	bool EvaporativeCooling = false;
+	bool RadiativeCooling = true;
+	bool EvaporativeCooling = true;
 	bool NewtonCooling = false;		// This model is equivalent to Electron and Ion heat flux terms
 	bool NeutralHeatFlux = true; 		// Plasma heating terms
 	bool ElectronHeatFlux = true;
 	bool IonHeatFlux = true;
-	bool NeutralRecomb = false;
-	bool TEE = false;			// Electron Emission terms
-	bool SEE = false;
+	bool NeutralRecomb = true;
+	bool TEE = true;			// Electron Emission terms
+	bool SEE = true;
 	bool PlasmaHeating = true; 		// If we want plasma heating terms turned off
 	if( !PlasmaHeating ){
 		NeutralHeatFlux = false;
@@ -105,6 +107,7 @@ int main(int argc, char* argv[]){
 	// Plasma Data
 	PlasmaData Pdata;
 	Pdata.NeutralDensity =  10e19;//10e17;	// m^-3, Neutral density
+	Pdata.IonDensity =  10e19;//10e17;	// m^-3, Ion density
 	Pdata.ElectronDensity = 10e19;//10e18; 	// m^-3, Electron density
 	double NumOfev = 10;
 	Pdata.IonTemp = NumOfev*1.16e5;	 	// K, Ion Temperature
@@ -156,11 +159,12 @@ int main(int argc, char* argv[]){
 	Sample->update_motion(xinit,vinit);
 
 	std::cout << "\n\n * GENERATE DTOKS * \n\n";
-//	DTOKSU MyDtoks1(TimeStep, AccuracyLevels, Sample, Pdata, HeatModels, ForceModels, ChargeModels);
-	DTOKSU MyDtoks2(TimeStep, AccuracyLevels, Sample, Plasma, Machine, Spacing, HeatModels, ForceModels, ChargeModels);
+	DTOKSU MyDtoks1(TimeStep, AccuracyLevels, Sample, Pdata, HeatModels, ForceModels, ChargeModels);
+//	DTOKSU MyDtoks2(TimeStep, AccuracyLevels, Sample, Pgrid, HeatModels, ForceModels, ChargeModels);
 	
 	std::cout << "\n\n * RUN DTOKS * \n\n";
-	int errcode2 = MyDtoks2.Run();
+	int errcode1 = MyDtoks1.Run();
+//	int errcode2 = MyDtoks2.Run();
 
 	std::cout << "\n\n * MAIN SCRIPT COMPLETE * \n\n";
 	return 0;

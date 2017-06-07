@@ -13,6 +13,7 @@ class HeatingModel : public Model{
 		double TimeStep;			// Seconds, the length of a particular time step
 		double TotalTime;			// Seconds, total time taken to perform simulation
 		bool ForceNegative;			// If we want to force the dust grain to be negative
+		bool ThermalEquilibrium;		// If the Dust grain is in Thermal Equilibrium (Constant Plasma only)
 
 		std::array<bool,9> UseModel; 		// Heating Models turned on of possibly 9
 
@@ -21,8 +22,10 @@ class HeatingModel : public Model{
 	public:
 		// Constructors
 		HeatingModel();
-		HeatingModel( std::string filename, double timestep, double accuracy, std::array<bool,9> &models, 
-				Matter *& sample, PlasmaData const& pdata);
+		HeatingModel( std::string filename, double accuracy, std::array<bool,9> &models, 
+				Matter *& sample, PlasmaData & pdata);
+		HeatingModel( std::string filename, double accuracy, std::array<bool,9> &models, 
+				Matter *& sample, PlasmaGrid & pgrid);
 
 		// Destructor
 		~HeatingModel(){

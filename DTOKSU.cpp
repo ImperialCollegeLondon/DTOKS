@@ -8,15 +8,29 @@ std::array<bool,4> DefaultForceModels = {false,false,false,false};
 std::array<bool,1> DefaultChargeModels = {false};
 std::array<char,4> DefaultConstModels = { 'c','c','c','c'};
 
+/*
+struct PlasmaData PlasmaDefaults1 = {
+	1e20,		// m^-3, Neutral Density
+	1e20,		// m^-3, Electron Density
+	1e20,		// m^-3, Electron Density
+	116045.25,	// K, Ion Temperature
+	116045.25,	// K, Electron Temperature
+	116045.25,	// K, Neutral Temperature
+	300,		// K, Ambient Temperature
+	threevector(),	// m s^-1, Plasma Velocity (Should eventually be normalised to sound speed cs)
+	threevector(),	// m s^-2, Acceleration due to gravity
+	threevector(),	// V m^-1, Electric field at dust location (Normalised later) 
+	threevector(),	// T, Magnetic field at dust location (Normalised later)
+};
 
 // Default Constructor, no arguments. This is not a well defined constructor so has been commented out
-/*
+
 Matter *DefaultSample = new Tungsten();
 DTOKSU::DTOKSU():
 			Pgrid('h','m',0.01),	// Default configuration for MAST
-			CM("cf.txt",1.0,DefaultChargeModels,DefaultSample,PlasmaDefaults),
-			HM("hf.txt",1e-9,1.0,DefaultHeatModels,DefaultSample,PlasmaDefaults),
-			FM("ff.txt",1.0,DefaultForceModels,DefaultSample,PlasmaDefaults){
+			CM("cf.txt",1.0,DefaultChargeModels,DefaultSample,PlasmaDefaults1),
+			HM("hf.txt",1e-9,1.0,DefaultHeatModels,DefaultSample,PlasmaDefaults1),
+			FM("ff.txt",1.0,DefaultForceModels,DefaultSample,PlasmaDefaults1){
 	D_Debug("\n\nIn DTOKSU::DTOKSU()\n\n");
 	D_Debug("\n\n************************************* SETUP FINISHED ************************************* \n\n");
 	TimeStep = 0;
@@ -24,40 +38,35 @@ DTOKSU::DTOKSU():
 
 }
 */
-DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample, PlasmaData const &pdata,
+DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample, PlasmaData &pdata,
 				std::array<bool,9> &heatmodels, std::array<bool,4> &forcemodels, std::array<bool,1> &chargemodels)
-				: Pgrid('h','m',0.01),
+				: Sample(sample),
 				CM("cf.txt",acclvls[0],chargemodels,sample,pdata),
-				HM("hf.txt",timestep,acclvls[1],heatmodels,sample,pdata),
+				HM("hf.txt",acclvls[1],heatmodels,sample,pdata),
 				FM("ff.txt",acclvls[2],forcemodels,sample,pdata){
         D_Debug("\n\nIn DTOKSU::DTOKSU( ... )\n\n");
         D_Debug("\n\n************************************* SETUP FINISHED ************************************* \n\n");
 //	std::cout << "\nacclvls[0] = " << acclvls[0];
-	TimeStep = 0;
+	TimeStep = timestep;
 	TotalTime = 0;
-	int p(0), k(0);
-	Pgrid.locate(p,k,sample->get_position()); // This will cause an assertion to be raised if default position is (0,0,0)
-	Pgrid.setfields(p,k);
 }
 
-DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample, char plasma, char machine, double spacing,
+DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample, PlasmaGrid &pgrid,
 				std::array<bool,9> &heatmodels, std::array<bool,4> &forcemodels, std::array<bool,1> &chargemodels)
-				: Pgrid(plasma,machine,spacing),
-				CM("cf.txt",acclvls[0],chargemodels,sample,Pgrid.get_plasmadata(sample->get_position())),
-				HM("hf.txt",timestep,acclvls[1],heatmodels,sample,Pgrid.get_plasmadata(sample->get_position())),
-				FM("ff.txt",acclvls[2],forcemodels,sample,Pgrid.get_plasmadata(sample->get_position())){
+				: Sample(sample),
+				CM("cf.txt",acclvls[0],chargemodels,sample,pgrid),
+				HM("hf.txt",acclvls[1],heatmodels,sample,pgrid),
+				FM("ff.txt",acclvls[2],forcemodels,sample,pgrid){
         D_Debug("\n\nIn DTOKSU::DTOKSU( ... )\n\n");
         D_Debug("\n\n************************************* SETUP FINISHED ************************************* \n\n");
+
+//	D_Debug("\nHeatModels = " << heatmodels[0]);
 //	std::cout << "\nacclvls[0] = " << acclvls[0];
-	TimeStep = 0;
+	TimeStep = timestep;
 	TotalTime = 0;
-	int p(0), k(0);
-	Pgrid.locate(p,k,sample->get_position());
-	Pgrid.setfields(p,k);
 }
 
 void DTOKSU::CreateFile( std::string filename ){
-
 	D_Debug("\n\nIn DTOKSU::CreateFile(std::string filename)\n\n");
 	MyFile.open(filename);
 	MyFile << "\n";
@@ -87,30 +96,28 @@ void DTOKSU::UpdatePData(){
 int DTOKSU::Run(){
 	D_Debug("- In DTOKSU::Run()\n\n");
 
-	int i(0), k(0);
 	for(int i = 0; i < 5; i ++){
-		
-		// if time step is larger than this, it will cross a cell in one time step
-//		double dt = 0.5*Pgrid.getdl()/((dust.getvd()).mag3()); 
+
 		double ChargeTime = CM.CheckTimeStep();		// Check Time step length is appropriate
 		double ForceTime = FM.CheckTimeStep();		// Check Time step length is appropriate
 		double HeatTime = HM.CheckTimeStep();		// Check Time step length is appropriate
 
-		CM.Charge();
-		FM.Force();
+		TimeStep = std::max(ChargeTime,std::max(ForceTime,HeatTime));
+
+//		CM.Charge();
+//		FM.Force();
 		HM.Heat();
 
 //		HM.update();
 
 //		Pgrid.readdata();	// Read data
-//		Pgrid.locate(i, k, Sample.get_position() ); // Locate the grid point nearest the dust
-//		Pgrid.setfields(i,k); // Calculate fields
 
-		std::cout << "\nChargeTime = " << ChargeTime << "\nForceTime = " << ForceTime << "\nHeatTime = " <<HeatTime;
-//		std::cout << "\n(1)Temp = " << Sample->get_temperature() << "\nVapPressure = " << Sample->get_vapourpressure() << "\nCv = " << Sample->get_heatcapacity() << "\n";
-		//Sample->update();               // CHECK THAT UPDATING HERE UPDATES EVERYWHERE!
+//		std::cout << "\nChargeTime = " << ChargeTime << "\nForceTime = " << ForceTime << "\nHeatTime = " <<HeatTime;
 
-//		std::cout << "\n(2)VapPressure = " << Sample->get_vapourpressure() << "Cv = " << Sample->get_heatcapacity();
+		Sample->update();               // CHECK THAT UPDATING HERE UPDATES EVERYWHERE!
+
+		std::cout << "\n(1)Temperature = " << Sample->get_temperature() << "\nVapPressure = " << Sample->get_vapourpressure() << "\nCv = " << Sample->get_heatcapacity() << "\n\n";
+
 
 	}
 

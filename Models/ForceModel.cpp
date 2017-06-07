@@ -14,13 +14,23 @@ ForceModel::ForceModel():Model(){
 }
 
 ForceModel::ForceModel(std::string filename, double accuracy, std::array<bool,4> models, 
-			Matter *& sample, PlasmaData const& pdata) : Model(sample,pdata,accuracy){
-	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, std::array<bool,3> models, Matter *& sample, PlasmaData const& pdata) : Model(sample,pdata)\n\n");
+			Matter *& sample, PlasmaData & pdata) : Model(sample,pdata,accuracy){
+	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, std::array<bool,3> models, Matter *& sample, PlasmaData const& pdata) : Model(sample,pdata,accuracy)\n\n");
 	CreateFile(filename);
 	UseModel = models;
 	TimeStep = 0;
 	TotalTime = 0;
 }
+
+ForceModel::ForceModel(std::string filename, double accuracy, std::array<bool,4> models, 
+			Matter *& sample, PlasmaGrid & pgrid) : Model(sample,pgrid,accuracy){
+	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, std::array<bool,3> models, Matter *& sample, PlasmaGrid const& pgrid) : Model(sample,pgrid,accuracy)\n\n");
+	CreateFile(filename);
+	UseModel = models;
+	TimeStep = 0;
+	TotalTime = 0;
+}
+
 
 void ForceModel::CreateFile(std::string filename){
 	F_Debug("\tIn ForceModel::CreateFile(std::string filename)\n\n");
@@ -51,9 +61,11 @@ double ForceModel::CheckTimeStep(){
 	threevector Acceleration = CalculateAcceleration();
 
 	// For Accuracy = 1.0, requires change in velocity less than 0.01m or 10cm/s
-	if( Acceleration.mag3() == 0 )
-		TimeStep = 1;
-	else
+	if( Acceleration.mag3() == 0 ){
+		static bool runOnce = true;
+		WarnOnce(runOnce,"Warning! Zero Acceleration!\nTimeStep being set to unity");
+		TimeStep = 1;	// Set arbitarily large time step (Should this be float max?)
+	}else
 		TimeStep = (0.01*Accuracy)*(1.0/Acceleration.mag3());
 
 	std::cout << "\nAcceleration = " << Acceleration;	
@@ -108,6 +120,10 @@ threevector ForceModel::DTOKSIonDrag()const{
 
 	threevector Mt = (Pdata.PlasmaVel-Sample->get_velocity());//*sqrt(Mp/echarge/Pdata.IonTemp); // FIND OUT WHAT THIS OPERATION MEANS!
         if( Pdata.IonDensity == 0 || Pdata.IonTemp == 0 || Pdata.ElectronTemp == 0 || Mt.mag3() == 0 ){
+		std::cout << "\nPdata.IonDensity = " << Pdata.IonDensity;
+		std::cout << "\nPdata.IonTemp = " << Pdata.IonTemp;
+		std::cout << "\nPdata.ElectronTemp = " << Pdata.ElectronTemp;
+		std::cout << "\nMt.mag3() = " << Mt.mag3();
                 std::cout << "\nError! IonDensity = " << Pdata.IonDensity << "!\nThis blows up calculations! Setting Fid=0";
                 Fid = threevector(0.0,0.0,0.0);
         }else{

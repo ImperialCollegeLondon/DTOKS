@@ -19,7 +19,9 @@ class ChargingModel : public Model{
 		// Constructors
 		ChargingModel();
 		ChargingModel(std::string filename, double accuracy, std::array<bool,1> models, 
-				Matter *& sample, PlasmaData const& pdata);
+				Matter *& sample, PlasmaData & pdata);
+		ChargingModel(std::string filename, double accuracy, std::array<bool,1> models, 
+				Matter *& sample, PlasmaGrid & pgrid);
 
 		// Destructor
 		~ChargingModel(){

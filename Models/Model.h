@@ -3,55 +3,50 @@
 
 #include <memory>
 
-#include "PlasmaData.h"
+#include "PlasmaGrid.h"
 #include "Iron.h"
 #include "Tungsten.h"
 #include "Graphite.h"
 #include "Beryllium.h"
 
-const struct PlasmaData PlasmaDefaults = {
-	1e20,		// m^-3, Neutral Density
-	1e20,		// m^-3, Electron Density
-	1e20,		// m^-3, Electron Density
-	116045.25,	// K, Ion Temperature
-	116045.25,	// K, Electron Temperature
-	116045.25,	// K, Neutral Temperature
-	300,		// K, Ambient Temperature
-	threevector(),	// m s^-1, Plasma Velocity (Should eventually be normalised to sound speed cs)
-	threevector(),	// V m^-1, Electric field at dust location (Normalised later) 
-	threevector(),	// T, Magnetic field at dust location (Normalised later)
-};
-
 class Model{
 //	Could also be
-// 	Private:
-// 	This requires changing access methods in derived classes
+ 	private:
+		// Feasably this could actually be const
+		PlasmaGrid *Pgrid;		// Holds constant information about what the background plasma
+
+// 	This next section could also be private but this requires changing access methods in derived classes.
+//	This should be done at some later stage to ensure security in protection of Matter* Sample and Pdata.
 	protected:
 		// Parameters defining the Heating equation
+		// It would be nice to have these as const pointers but this is not possible as this requires all function calls
+		// Be const ones that do not modify member data. The other option is to capture by reference using Lambda functions.
+		// Hah, good luck with that.
 		Matter *Sample;				// Tungsten, Beryllium, Iron or Graphite
-//		std::shared_ptr <Matter> Sample;	// Tungsten, Beryllium, Iron or Graphite
-		PlasmaData const &Pdata;		// Reference to Plasma Data structure
-		
+		PlasmaData Pdata;			// Const Plasma Data structure
 		std::ofstream ModelDataFile;		// Output data file
+		const double Accuracy;			// Accuracy of model, normalised to one.
+		const bool ContinuousPlasma;		// Is the plasma background is constant in space.
 
 	protected:
-		
-		double Accuracy;			// Accuracy of model
 		virtual void Print()=0;			// Write to output data file
 		virtual double CheckTimeStep()=0;	// Check Time Scale of development, returns the time step
-//		void Reset_Data( std::shared_ptr <Matter> const& sample, PlasmaData const& pdata);
 
 	public:
 		// Constructors
 		Model();
-		Model(Matter *& sample, PlasmaData const& pdata, double accuracy);
+		Model(Matter *& sample, PlasmaData &pdata, double accuracy);
+		Model(Matter *& sample, PlasmaGrid &pgrid, double accuracy);
 
 		// Destructor
 		virtual ~Model(){};
 
-//		std::shared_ptr<Matter> get_sample() 	{ return Sample;	}
-		Matter * get_sample() 			{ return Sample;	}
+		const Matter *get_sample		()const{ return Sample;	}
+		const PlasmaData &get_plasmadata	()const{ return Pdata; };
 
+		void update_plasmadata(PlasmaData &pdata);
+		void update_plasmadata(threevector pos);
+		void update_fields(int i, int k);
 };
 
 #endif

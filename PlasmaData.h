@@ -14,6 +14,7 @@ struct PlasmaData{
 	double NeutralTemp;		// K, Neutral Temperature
 	double AmbientTemp;		// K, Ambient Temperature
 	threevector PlasmaVel;		// m s^-1, Plasma Velocity (Should eventually be normalised to sound speed cs)
+	threevector Gravity;		// m s^-2, Acceleration due to gravity 
 	threevector ElectricField;	// V m^-1, Electric field at dust location (Normalised later) 
 	threevector MagneticField;	// T, Magnetic field at dust location (Normalised later)
 };

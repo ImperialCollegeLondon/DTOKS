@@ -1,10 +1,12 @@
 #ifndef __DTOKSU_H_INCLUDED__   // if Matter.h hasn't been included yet...
 #define __DTOKSU_H_INCLUDED__
 
-#include "plasmagrid.h"
+#include "PlasmaGrid.h"
 #include "HeatingModel.h"
 #include "ForceModel.h"
 #include "ChargingModel.h"
+
+#include <algorithm>
 
 class DTOKSU{
 
@@ -13,7 +15,11 @@ class DTOKSU{
 		double TimeStep;			// Seconds, the length of a particular time step
 		double TotalTime;			// Seconds, total time taken to perform simulation
 
-		plasmagrid Pgrid;
+
+//		Matter const *Sample;			// The problem with this is it is passed to update which isn't const...
+		Matter *Sample;				// Matter sample can be either Tungsten, Beryllium, Graphite or Iron
+
+//		plasmagrid Pgrid;
 		HeatingModel HM;			// Heating Model 
 		ForceModel FM;				// Force Model 
 		ChargingModel CM;			// Charge Model
@@ -32,9 +38,9 @@ class DTOKSU{
 
 	public:
 //		DTOKSU();
-		DTOKSU( double timestep, std::array<double,3> alvls, Matter *& sample, PlasmaData const &pdata,
+		DTOKSU( double timestep, std::array<double,3> alvls, Matter *& sample, PlasmaData &pdata,
 				std::array<bool,9> &heatmodels, std::array<bool,4> &forcemodels, std::array<bool,1> &chargemodels);
-		DTOKSU( double timestep, std::array<double,3> alvls, Matter *& sample, char plasma, char machine, double spacing,
+		DTOKSU( double timestep, std::array<double,3> alvls, Matter *& sample, PlasmaGrid &pgrid,
 				std::array<bool,9> &heatmodels, std::array<bool,4> &forcemodels, std::array<bool,1> &chargemodels);
 
 		~DTOKSU(){

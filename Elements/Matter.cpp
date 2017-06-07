@@ -271,7 +271,7 @@ void Matter::update_models(char emissivmodel, char linexpanmodel, char heatcapac
 };
 
 void Matter::update_models(std::array<char,4> &constmodels){
-	M_Debug("\tIn Matter::update_mass(double LostMass)\n\n");
+	M_Debug("\tIn Matter::update_models(std::array<char,4> &constmodels)\n\n");
 //	update(constmodels[0],constmodels[1],constmodels[2],constmodels[3],);
 	ConstModels = constmodels;
 }

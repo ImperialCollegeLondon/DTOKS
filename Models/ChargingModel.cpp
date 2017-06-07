@@ -11,8 +11,16 @@ ChargingModel::ChargingModel():Model(){
 }
 
 ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<bool,1> models,
-				Matter *& sample, PlasmaData const& pdata) : Model(sample,pdata,accuracy){
-	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename,std::array<bool,1> models,Matter *& sample, PlasmaData const& pdata) : Model(sample,pdata)\n\n");
+				Matter *& sample, PlasmaData &pdata) : Model(sample,pdata,accuracy){
+	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename,double accuracy,std::array<bool,1> models,Matter *& sample, PlasmaData const& pdata) : Model(sample,pdata,accuracy)\n\n");
+	CreateFile(filename);
+	UseModel = models;
+	TimeStep = 0;
+}
+
+ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<bool,1> models,
+				Matter *& sample, PlasmaGrid &pgrid) : Model(sample,pgrid,accuracy){
+	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename,double accuracy,std::array<bool,1> models,Matter *& sample, PlasmaGrid const& pgrid) : Model(sample,pgrid,accuracy)\n\n");
 	CreateFile(filename);
 	UseModel = models;
 	TimeStep = 0;
@@ -39,20 +47,21 @@ double ChargingModel::CheckTimeStep(){
 	C_Debug( "\tIn ChargingModel::CheckTimeStep()\n\n" );
 	// Deal with case where power/time step causes large temperature change.
 	
-//	std::cout << "\nPdata.ElectronTemp = " << Pdata.ElectronTemp;
-//	std::cout << "\nPdata.ElectronDensity = " << Pdata.ElectronDensity;
+	std::cout << "\nPdata.ElectronTemp = " << Pdata.ElectronTemp;
+	std::cout << "\nPdata.ElectronDensity = " << Pdata.ElectronDensity;
 	
 	double DebyeLength=sqrt((epsilon0*Kb*Pdata.ElectronTemp)/(Pdata.ElectronDensity*pow(echarge,2)));
 	double PlasmaFreq = sqrt((Pdata.ElectronDensity*pow(echarge,2))/(epsilon0*Me));
 	TimeStep = sqrt(2*PI) * ((DebyeLength)/Sample->get_radius()) 
 			* (1/(PlasmaFreq*(1+Pdata.ElectronTemp/Pdata.IonTemp+Sample->get_potential())));
 
-	if(TimeStep != TimeStep)
-		TimeStep = 1e-8;	// (s), An estimate for regions of low plasma density
-//	std::cout << "\n\t\tDebyeLength = " << DebyeLength;
-//	std::cout << "\n\t\tPlasmaFreq = " << PlasmaFreq;
-//	std::cout << "\n\t\tTimeStep = " << TimeStep << "\n\n";
+//	if(TimeStep != TimeStep)
+//		TimeStep = 1e-8;	// (s), An estimate for regions of low plasma density
+	std::cout << "\n\t\tDebyeLength = " << DebyeLength;
+	std::cout << "\n\t\tPlasmaFreq = " << PlasmaFreq;
+	std::cout << "\n\t\tTimeStep = " << TimeStep << "\n\n";
 
+	assert(TimeStep == TimeStep);
 	assert(TimeStep > 0);
 
 	TotalTime += TimeStep;
