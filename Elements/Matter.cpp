@@ -1,6 +1,6 @@
 //#define PAUSE
 //#define MATTER_DEEP_DEBUG
-#define MATTER_DEBUG
+//#define MATTER_DEBUG
 
 #include "Matter.h"
 struct GrainData MatterDefaults = {
@@ -69,14 +69,18 @@ Matter::Matter(double rad, double temp, const ElementConsts *elementconsts, std:
 void Matter::update_dim(){ // Assuming spherical particle.		
 	M_Debug("\tIn Matter::update_dim():\n\n");
 
-	if(ConstModels[1] == 'v' || ConstModels[1] == 'V'){
+	if(ConstModels[1] == 'v' || ConstModels[1] == 'V'){ // THIS WHOLE PART NEEDS CHECKING...
 		update_radius();
 		St.Density = Ec.RTDensity / pow(St.LinearExpansion,3); // SHOULD THIS BE : pow(2*St.LinearExpansion,3) ???
+		M2_Debug("\nUnheatedRadius was = " << St.UnheatedRadius);
+		// Change the radius according to the amount of mass lost
+		St.UnheatedRadius = St.UnheatedRadius*(pow((3*St.Mass)/(4*PI*St.Density),1./3.)/St.Radius);
+		M2_Debug("\nUnheatedRadius now = " << St.UnheatedRadius);
+
 	}else if(ConstModels[1] == 'c' || ConstModels[1] == 'C'){
-		St.Radius = St.UnheatedRadius;
+//		St.Radius = St.UnheatedRadius; // THIS IS SO WRONG. RADIUS SHOULD DECREASE AS MASS IS LOST
 		St.Density = Ec.RTDensity;				// Density is RT density
 	}else if(ConstModels[1] == 's' || ConstModels[1] == 's'){
-		St.Radius = St.UnheatedRadius;
 		St.Density = Ec.RTDensity;				// Fix the density
 	}else{
 		std::cout << "\nError! In Matter::update_dim(char ConstModels[1])\n"
@@ -88,16 +92,18 @@ void Matter::update_dim(){ // Assuming spherical particle.
 	// This is a weird way of updating mass because:
 	// When mass is lost, it is removed from St.Mass, then the new 'St.UnheatedRadius' is calculated.
 	// This is then used to calculate the new smaller St.Volume. Finally the St.Mass is calculated again.
-	/*
 	static bool InitialiseMass = true;
 	if( InitialiseMass ){
 	        St.Mass = St.Density*St.Volume; 
 	        InitialiseMass = false;
-	}*/
+	}
 
 //	assert( abs((St.Density - St.Mass/St.Volume)/St.Density) < 0.000001 ); // Sanity Check, this may be an issue
-	St.Mass = St.Density*St.Volume;
-
+//	St.Mass = St.Density*St.Volume;
+	
+//	std::cout << "\n = " << St.Mass; 
+//	std::cout << "\nSt.Mass = " << St.Mass; std::cin.get();
+	
 	M2_Debug("\nSt.Mass = " << St.Mass << "\nSt.Volume = " << St.Volume << "\nSt.Density = " << St.Density
 			<< "\nSt.Mass/St.Volume = " << St.Mass/St.Volume);
 
@@ -207,28 +213,31 @@ void Matter::update_state(double EnergyIn){
 			if( St.FusionEnergy > Ec.LatentFusion*St.Mass ){ // if it melts fully
 				St.Liquid = true; St.Gas = false;
 				St.Temperature = Ec.MeltingTemp + 
-					(St.FusionEnergy-Ec.LatentFusion*St.Mass)/St.HeatCapacity;
+				        (St.FusionEnergy-Ec.LatentFusion*St.Mass)/St.HeatCapacity;
 			}
-		}else{ St.Liquid = true; St.Gas = false; } // Else it has melted!
-	}else if( St.Temperature >= St.SuperBoilingTemp ){ // Boiling or Gas
-		if( St.VapourEnergy < Ec.LatentVapour*St.Mass ){ // Must be boiling
-			// Add energy to Latent heat and set Temperature to Melting Temperature
-			// NOTE, this is a new model for the mass loss whilst boiling
-		//	update_mass(EnergyIn/Ec.LatentVapour);
 
+		}else{ St.Liquid = true; St.Gas = false; }  // Else it has melted!
+	}else if( St.Temperature >= St.SuperBoilingTemp ){ // Boiling or Gas
+		if( St.VapourEnergy < (Ec.LatentVapour*Ec.RTDensity*PI*pow(St.UnheatedRadius,3.0)*4.0)/3.0 ){ // Must be boiling
+			// Add energy to Latent heat and set Temperature to Melting Temperature
+//			M1_Debug( "\nEnergyIn = " << EnergyIn << "\nEnergyIn/Ec.LatentVapour = " << EnergyIn/Ec.LatentVapour << "\nMass = " << St.Mass << "\nEc.RTDensity*PI*pow(St.UnheatedRadius,3)*4/3 = "  <<  Ec.RTDensity*PI*pow(St.UnheatedRadius,3)*4/3 << "\nEv.LatentVapour = " << Ec.LatentVapour << "\nSt.VapourEnergy = " << St.VapourEnergy);
+			update_mass(EnergyIn/Ec.LatentVapour);
 			St.VapourEnergy += EnergyIn; 
 			St.Temperature = St.SuperBoilingTemp;
+
 			M2_Debug("\n*Liquid is boiling*, T = " << St.Temperature 
 				<< " K\nVapourEnergy is < St.LatentVapour*Mass : " << St.VapourEnergy 
 				<< " < " << Ec.LatentVapour*St.Mass);
-
-			if( St.VapourEnergy > Ec.LatentVapour*St.Mass ){ // If it vapourises fully?
-				St.Liquid = false; St.Gas = true;
-				St.Temperature = St.SuperBoilingTemp + 
-					(St.VapourEnergy-Ec.LatentVapour*St.Mass)/St.HeatCapacity;
-				std::cout << "\n\n***** Sample has Boiled! *****\n";
+			if( St.VapourEnergy > (Ec.LatentVapour*Ec.RTDensity*PI*pow(St.UnheatedRadius,3.0)*4.0)/3.0 ){
+				St.Liquid = false; St.Gas = true; 
+	                        St.Temperature = St.SuperBoilingTemp + 
+	                                (St.VapourEnergy-Ec.LatentVapour*St.Mass)/St.HeatCapacity;
+	                        std::cout << "\n\n***** Sample has Boiled THIS STEP! *****\n";
 			}
-		}else{	St.Liquid = false; St.Gas = true; } // Else it has vapourised!
+		}else{	// Else it has vapourised!
+			St.Liquid = false; St.Gas = true; 
+			std::cout << "\n\n***** WARNING! SAMPLE IS GASEOUS *****\n";
+		}
 	}
 	M2_Debug("\nSt.Temperature = " << St.Temperature);
 	if( St.Mass < 10e-24 ){ // Lower limit for mass of dust
@@ -283,10 +292,6 @@ void Matter::update_mass(double LostMass){
 			<< "\nDensity = " << St.Density);
 	St.Mass -= LostMass;
 		
-	M2_Debug("\nUnheatedRadius was = " << St.UnheatedRadius);
-	// Change the radius according to the amount of mass lost
-	St.UnheatedRadius = St.UnheatedRadius*(pow((3*St.Mass)/(4*PI*St.Density),1./3.)/St.Radius);
-	M2_Debug("\nUnheatedRadius now = " << St.UnheatedRadius);
 	//Pause();
 	if(St.Mass < 0){ 
 		std::cout << "\n\nSt.Mass = " << St.Mass << "\nSample mass is Negative! Evaporation assumed\n\n";
