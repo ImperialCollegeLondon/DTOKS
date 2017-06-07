@@ -28,6 +28,12 @@
 #define F_Debug(x) 
 #endif 
 
+#ifdef FORCE_DEEP_DEBUG
+#define F1_Debug(x) std::cout << x
+#else
+#define F1_Debug(x) 
+#endif 
+
 #ifdef MATTER_DEBUG
 #define M_Debug(x) std::cout << x
 #else

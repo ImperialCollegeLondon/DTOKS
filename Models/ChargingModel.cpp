@@ -5,24 +5,24 @@
 
 ChargingModel::ChargingModel():Model(){
 	C_Debug("\n\nIn ChargingModel::ChargingModel():Model()\n\n");
-	CreateFile("Default_Charging_Filename.txt");
 	UseModel[0] = true;				// Charging Models turned on of possibly 9
+	CreateFile("Default_Charging_Filename.txt");
 	TimeStep = 0;
 }
 
 ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<bool,1> models,
 				Matter *& sample, PlasmaData &pdata) : Model(sample,pdata,accuracy){
 	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename,double accuracy,std::array<bool,1> models,Matter *& sample, PlasmaData const& pdata) : Model(sample,pdata,accuracy)\n\n");
-	CreateFile(filename);
 	UseModel = models;
+	CreateFile(filename);
 	TimeStep = 0;
 }
 
 ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<bool,1> models,
 				Matter *& sample, PlasmaGrid &pgrid) : Model(sample,pgrid,accuracy){
 	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename,double accuracy,std::array<bool,1> models,Matter *& sample, PlasmaGrid const& pgrid) : Model(sample,pgrid,accuracy)\n\n");
-	CreateFile(filename);
 	UseModel = models;
+	CreateFile(filename);
 	TimeStep = 0;
 }
 
@@ -47,8 +47,7 @@ double ChargingModel::CheckTimeStep(){
 	C_Debug( "\tIn ChargingModel::CheckTimeStep()\n\n" );
 	// Deal with case where power/time step causes large temperature change.
 	
-	std::cout << "\nPdata.ElectronTemp = " << Pdata.ElectronTemp;
-	std::cout << "\nPdata.ElectronDensity = " << Pdata.ElectronDensity;
+	C_Debug("\nPdata.ElectronTemp = " << Pdata.ElectronTemp << "\nPdata.ElectronDensity = " << Pdata.ElectronDensity);
 	
 	double DebyeLength=sqrt((epsilon0*Kb*Pdata.ElectronTemp)/(Pdata.ElectronDensity*pow(echarge,2)));
 	double PlasmaFreq = sqrt((Pdata.ElectronDensity*pow(echarge,2))/(epsilon0*Me));
@@ -57,9 +56,8 @@ double ChargingModel::CheckTimeStep(){
 
 //	if(TimeStep != TimeStep)
 //		TimeStep = 1e-8;	// (s), An estimate for regions of low plasma density
-	std::cout << "\n\t\tDebyeLength = " << DebyeLength;
-	std::cout << "\n\t\tPlasmaFreq = " << PlasmaFreq;
-	std::cout << "\n\t\tTimeStep = " << TimeStep << "\n\n";
+	C_Debug("\n\t\tDebyeLength = " << DebyeLength << "\n\t\tPlasmaFreq = " << PlasmaFreq 
+			<< "\n\t\tTimeStep = " << TimeStep << "\n\n");
 
 	assert(TimeStep == TimeStep);
 	assert(TimeStep > 0);

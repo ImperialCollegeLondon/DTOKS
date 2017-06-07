@@ -96,7 +96,7 @@ void DTOKSU::UpdatePData(){
 int DTOKSU::Run(){
 	D_Debug("- In DTOKSU::Run()\n\n");
 
-	for(int i = 0; i < 5; i ++){
+	for(size_t i = 0; i < 10000000; i ++){
 
 		double ChargeTime = CM.CheckTimeStep();		// Check Time step length is appropriate
 		double ForceTime = FM.CheckTimeStep();		// Check Time step length is appropriate
@@ -112,11 +112,12 @@ int DTOKSU::Run(){
 
 //		Pgrid.readdata();	// Read data
 
-//		std::cout << "\nChargeTime = " << ChargeTime << "\nForceTime = " << ForceTime << "\nHeatTime = " <<HeatTime;
+//		std::cout << "\n\tTimeStep = " << TimeStep << "\n\tChargeTime = " << ChargeTime 
+//			<< "\n\tForceTime = " << ForceTime << "\n\tHeatTime = " <<HeatTime << "\n";
 
 		Sample->update();               // CHECK THAT UPDATING HERE UPDATES EVERYWHERE!
 
-		std::cout << "\n(1)Temperature = " << Sample->get_temperature() << "\nVapPressure = " << Sample->get_vapourpressure() << "\nCv = " << Sample->get_heatcapacity() << "\n\n";
+//		std::cout << "\n(1)Temperature = " << Sample->get_temperature();
 
 
 	}

@@ -1,5 +1,6 @@
 //#define PAUSE
 //#define FORCE_DEBUG
+//#define FORCE_DEEP_DEBUG
 
 #include "ForceModel.h"
 #include "MathHeader.h" // This is weird
@@ -7,28 +8,28 @@
 // Default Constructor, no arguments
 ForceModel::ForceModel():Model(){
 	F_Debug("\n\nIn ForceModel::ForceModel():Model()\n\n");
-	CreateFile("Default_Force_filename.txt");
 	UseModel = {false,false,false};
 	TimeStep = 0;
 	TotalTime = 0;
+	CreateFile("Default_Force_filename.txt");
 }
 
 ForceModel::ForceModel(std::string filename, double accuracy, std::array<bool,4> models, 
 			Matter *& sample, PlasmaData & pdata) : Model(sample,pdata,accuracy){
 	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, std::array<bool,3> models, Matter *& sample, PlasmaData const& pdata) : Model(sample,pdata,accuracy)\n\n");
-	CreateFile(filename);
 	UseModel = models;
 	TimeStep = 0;
 	TotalTime = 0;
+	CreateFile(filename);
 }
 
 ForceModel::ForceModel(std::string filename, double accuracy, std::array<bool,4> models, 
 			Matter *& sample, PlasmaGrid & pgrid) : Model(sample,pgrid,accuracy){
 	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, std::array<bool,3> models, Matter *& sample, PlasmaGrid const& pgrid) : Model(sample,pgrid,accuracy)\n\n");
-	CreateFile(filename);
 	UseModel = models;
 	TimeStep = 0;
 	TotalTime = 0;
+	CreateFile(filename);
 }
 
 
@@ -68,8 +69,7 @@ double ForceModel::CheckTimeStep(){
 	}else
 		TimeStep = (0.01*Accuracy)*(1.0/Acceleration.mag3());
 
-	std::cout << "\nAcceleration = " << Acceleration;	
-	std::cout << "\nTimeStep = " << TimeStep;
+	F1_Debug( "\t\tAcceleration = " << Acceleration << "\n\t\tTimeStep = " << TimeStep << "\n");
 	assert(TimeStep == TimeStep);	
 	assert(TimeStep > 0);
 	TotalTime += TimeStep;
@@ -107,10 +107,10 @@ threevector ForceModel::CalculateAcceleration()const{
         // Centrifugal terms. MAKE SURE TO CHECK THESE TWO LINES AT SOME POINT
         F_Debug("\t"); threevector centrifugal = Centrifugal();
         F_Debug("\t"); threevector lorentzforce = LorentzForce();
-	std::cout << "\nlorentzforce = " << lorentzforce;
-	std::cout << "\nFid = " << Fid;
-	std::cout << "\ng = " << g;
-	std::cout << "\ncentrifugal = " << centrifugal;
+	F1_Debug( "\nFid = " << Fid );
+	F1_Debug( "\ng = " << g );
+	F1_Debug( "\ncentrifugal = " << centrifugal );
+	F1_Debug( "\nlorentzforce = " << lorentzforce );
         return (lorentzforce + Fid + g + centrifugal);
 }
 
@@ -119,12 +119,10 @@ threevector ForceModel::DTOKSIonDrag()const{
 	threevector Fid;
 
 	threevector Mt = (Pdata.PlasmaVel-Sample->get_velocity());//*sqrt(Mp/echarge/Pdata.IonTemp); // FIND OUT WHAT THIS OPERATION MEANS!
-        if( Pdata.IonDensity == 0 || Pdata.IonTemp == 0 || Pdata.ElectronTemp == 0 || Mt.mag3() == 0 ){
-		std::cout << "\nPdata.IonDensity = " << Pdata.IonDensity;
-		std::cout << "\nPdata.IonTemp = " << Pdata.IonTemp;
-		std::cout << "\nPdata.ElectronTemp = " << Pdata.ElectronTemp;
-		std::cout << "\nMt.mag3() = " << Mt.mag3();
-                std::cout << "\nError! IonDensity = " << Pdata.IonDensity << "!\nThis blows up calculations! Setting Fid=0";
+        if( Pdata.IonDensity == 0 || Pdata.IonTemp == 0 || Pdata.ElectronTemp == 0 ){ // || Mt.mag3() == 0 ){
+		
+                std::cerr << "\nError! IonDensity = " << Pdata.IonDensity << "\nIonTemp = " << Pdata.IonTemp 
+			<< "\nElectronTemp = " << Pdata.ElectronTemp << "!\nThis blows up calculations! Setting Fid=0.";
                 Fid = threevector(0.0,0.0,0.0);
         }else{
 
@@ -165,9 +163,9 @@ threevector ForceModel::LorentzForce()const{
 	//else qtom = -1000.0*3.0*epsilon0*V/(a*a*rho);//why it had Te???????
 	//edo to eixa allaksei se ola ta runs sto After 28_Feb ara prepei na ksana ginoun
 	// Google Translate: Here I had changed it to all the brides in After 28_Feb so they have to be done again
-	std::cout << "\nPdata.ElectricField = " << Pdata.ElectricField;
-	std::cout << "\nPdata.MagneticField = " << Pdata.MagneticField;
-	std::cout << "\nqtom = " << qtom;	
+// 	std::cout << "\nPdata.ElectricField = " << Pdata.ElectricField;
+//	std::cout << "\nPdata.MagneticField = " << Pdata.MagneticField;
+//	std::cout << "\nqtom = " << qtom;	
 	threevector returnvec = (Pdata.ElectricField+(Sample->get_velocity()^Pdata.MagneticField))*qtom;
 	
 	

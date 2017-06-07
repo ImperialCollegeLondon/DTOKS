@@ -1,6 +1,6 @@
 //#define PAUSE
 //#define HEATING_DEBUG
-#define HEATING_DEEP_DEBUG
+//#define HEATING_DEEP_DEBUG
 
 #include "HeatingModel.h"
 #include "Constants.h"
@@ -9,8 +9,8 @@
 
 HeatingModel::HeatingModel():Type("constant"),Model(){
 	H_Debug("\n\nIn HeatingModel::HeatingModel():Type(constant),Model()\n\n");
-	CreateFile("Default_Heating_filename.txt",false);
 	Defaults();
+	CreateFile("Default_Heating_filename.txt",false);
 }
 
 
@@ -19,16 +19,16 @@ HeatingModel::HeatingModel(std::string filename, double accuracy, std::array<boo
 				Matter *& sample, PlasmaData &pdata) : Model(sample,pdata,accuracy){
 	H_Debug("\n\nIn HeatingModel::HeatingModel(std::string filename, double accuracy, std::array<bool,9> &models, Matter *& sample, PlasmaData const &pdata) : Model(sample,pdata,accuracy)\n\n");
 	Defaults();
-	CreateFile(filename,false);
 	UseModel 		= models;
+	CreateFile(filename,false);
 }
 
 HeatingModel::HeatingModel(std::string filename, double accuracy, std::array<bool,9> &models,
 				Matter *& sample, PlasmaGrid &pgrid) : Model(sample,pgrid,accuracy){
 	H_Debug("\n\nIn HeatingModel::HeatingModel(std::string filename,double accuracy, std::array<bool,9> &models, Matter *& sample, PlasmaGrid const &pgrid) : Model(sample,pgrid,accuracy)\n\n");
 	Defaults();
-	CreateFile(filename,false);
 	UseModel 	= models;
+	CreateFile(filename,false);
 }
 
 void HeatingModel::Defaults(){
@@ -43,7 +43,7 @@ void HeatingModel::Defaults(){
 void HeatingModel::CreateFile(std::string filename, bool PrintPhaseData){
 	H_Debug("\tIn HeatingModel::CreateFile(std::string filename, bool PrintPhaseData)\n\n");
 	ModelDataFile.open(filename);
-	ModelDataFile << "Time\tTemp\tMass\tDensity\tEnergyIn";
+	ModelDataFile << "Time\tTemp\tMass\tDensity";
 	if( PrintPhaseData ) 						ModelDataFile << "\tFusionE\tVapourE";
 	if( Sample->get_c(0) == 'v' || Sample->get_c(0) == 'V' ) 	ModelDataFile << "\tCv";
 	if( Sample->get_c(1) == 'v' || Sample->get_c(1) == 'V' ) 	ModelDataFile << "\tVapourP";
@@ -66,6 +66,7 @@ const int HeatingModel::Vapourise(){
 	// If the sample is gaseous or in TE (Given that the plasma is continuous), the model ends.
 	while( !Sample->is_gas() ){ 
 		Heat();
+		ThermalEquilibrium = false;
 		if( ContinuousPlasma && ThermalEquilibrium )
 			break;
 	}
@@ -81,7 +82,7 @@ const int HeatingModel::Vapourise(){
 		std::cout << "\n\nSample has reached Thermal Equilibrium in Continuous Plasma.";
 		rValue = 3;
 	}
-	std::cout << "at T = " << Sample->get_temperature() << "K in " << TotalTime << "s!\n\n*********\n\n";
+	std::cout << "\nat T = " << Sample->get_temperature() << "K in " << TotalTime << "s!\n\n*********\n\n";
 	ModelDataFile.close();
 	return rValue; // 0, running normally. 1; Sample boiled. 2; Sample Evaporated. 3; Thermal equilibrium.
 }
@@ -90,14 +91,14 @@ void HeatingModel::Heat(){
 	H_Debug("\tIn HeatingModel::Heat()\n\n");
 	
 
-	std::cout << "\n(2)Temperature = " << Sample->get_temperature() << "\nVapPressure = " << Sample->get_vapourpressure() 
-			<< "\nCv = " << Sample->get_heatcapacity() << "\n";
+//	std::cout << "\n(2)Temperature = " << Sample->get_temperature();
+
 	assert( Sample->get_mass() > 0 );
 
 	double TotalEnergy = RungeKutta4();                     // Calculate total energy through RungeKutta4 method
-	std::cout << "\nTotalEnergy = " << TotalEnergy << "\n";
-	//std::cout << "\nTimeStep = " << TimeStep;
+	H1_Debug( "\tTotalEnergy = " << TotalEnergy << "\n");
         Sample->update_temperature(TotalEnergy);                // Update Temperature
+
 	// Account for evaporative mass loss
 	if( UseModel[1] && Sample->is_liquid() )
 		Sample->update_mass( (TimeStep*EvaporationFlux(Sample->get_temperature())*Sample->get_atomicmass())/AvNo );
@@ -179,8 +180,8 @@ double HeatingModel::CheckTimeStep(){
 		ThermalEquilibrium = true;
 		TimeStep = 1;
 	}
-	std::cout << "\nSample->get_mass() = " << Sample->get_mass() << "\nSample->get_heatcapacity() = " << 
-		Sample->get_heatcapacity() << "\nTotalPower = " << TotalPower << "\nAccuracy = " << Accuracy;
+	H1_Debug("\nSample->get_mass() = " << Sample->get_mass() << "\nSample->get_heatcapacity() = " << 
+		Sample->get_heatcapacity() << "\nTotalPower = " << TotalPower << "\nAccuracy = " << Accuracy);
 	assert(TimeStep > 0 && TimeStep != INFINITY);
 }
 
@@ -188,7 +189,7 @@ void HeatingModel::Print(){
 	H_Debug("\tIn HeatingModel::Print()\n\n");
 
 	ModelDataFile 	<< TotalTime << "\t" << Sample->get_temperature() << "\t" << Sample->get_mass() 
-		<< "\t" << Sample->get_density() << "\t" << TotalPower;
+		<< "\t" << Sample->get_density();
 
 	bool PrintPhaseData = false;
 	if( PrintPhaseData )	ModelDataFile 	<< "\t" << Sample->get_fusionenergy() << "\t" << Sample->get_vapourenergy();
@@ -335,6 +336,9 @@ const double HeatingModel::IonHeatFlux(double DustTemperature)const{ // Assuming
 		WarnOnce(runOnce,"In HeatingModel::IonHeatFlux(double DustTemperature)\nRE > 0.1. Ion Heat Flux affected by backscattering by more than 10%!");
 	}
 //	H1_Debug("\nPdata.IonTemp = " << Pdata.IonTemp << "\nSample->get_potential() = " << Sample->get_potential() << "\nPdata.ElectronTemp = " << Pdata.ElectronTemp << "\n\n");
+//	std::cout << "\n\n***** Ions = " << (Sample->get_surfacearea()*(1-RE)*IonFlux(DustTemperature)*Pdata.IonTemp*Kb/1000)
+//	*(2+2*Sample->get_potential()*(Pdata.ElectronTemp/Pdata.IonTemp)+pow(Sample->get_potential()*(Pdata.ElectronTemp/Pdata.IonTemp),2))/(1+Sample->get_potential()*(Pdata.ElectronTemp/Pdata.IonTemp));
+
 	return (Sample->get_surfacearea()*(1-RE)*IonFlux(DustTemperature)*Pdata.IonTemp*Kb/1000) // Convert from Joules to KJ
 	*(2+2*Sample->get_potential()*(Pdata.ElectronTemp/Pdata.IonTemp)+pow(Sample->get_potential()*(Pdata.ElectronTemp/Pdata.IonTemp),2))/(1+Sample->get_potential()*(Pdata.ElectronTemp/Pdata.IonTemp)); 
 
@@ -343,6 +347,8 @@ const double HeatingModel::IonHeatFlux(double DustTemperature)const{ // Assuming
 const double HeatingModel::ElectronHeatFlux(double DustTemperature)const{ // Only for a negative grain
 	H_Debug("\tIn HeatingModel::ElectronHeatFlux():\n\n");
 //	H1_Debug("\nSample->get_surfacearea()*2*ElectronFlux()*Pdata.ElectronTemp*Kb/1000\n");
+//	std::cout << "\n\n***** Electrons = " 
+//		<< Sample->get_surfacearea()*2*ElectronFlux(DustTemperature)*Pdata.ElectronTemp*Kb/1000;
 	return Sample->get_surfacearea()*2*ElectronFlux(DustTemperature)*Pdata.ElectronTemp*Kb/1000; // Convert from Joules to KJ
 }
 

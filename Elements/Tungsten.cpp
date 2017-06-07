@@ -1,4 +1,4 @@
-#define ELEMENT_DEBUG
+//#define ELEMENT_DEBUG
 //#define ELEMENT_DEEP_DEBUG
 
 #include "Tungsten.h"
