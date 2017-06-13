@@ -218,9 +218,14 @@ void Matter::update_state(double EnergyIn){
 
 		}else{ St.Liquid = true; St.Gas = false; }  // Else it has melted!
 	}else if( St.Temperature >= St.SuperBoilingTemp ){ // Boiling or Gas
-		if( St.VapourEnergy < (Ec.LatentVapour*Ec.RTDensity*PI*pow(St.UnheatedRadius,3.0)*4.0)/3.0 ){ // Must be boiling
+		// CONSIDER MAKING A STATIC VARIABLE FOR THE MASS UPON REACHING THE BOILING TEMPERATURE.
+		// THIS CAN BE USED AS THE MASS FOR WHICH THE VAPOUR ENERGY MUST EXCEED
+		static double tempmass = St.Mass;
+		std::cout << "\ntempmass = " << tempmass; std::cin.get();
+		if( St.VapourEnergy < tempmass ){ // Must be boiling
 			// Add energy to Latent heat and set Temperature to Melting Temperature
 //			M1_Debug( "\nEnergyIn = " << EnergyIn << "\nEnergyIn/Ec.LatentVapour = " << EnergyIn/Ec.LatentVapour << "\nMass = " << St.Mass << "\nEc.RTDensity*PI*pow(St.UnheatedRadius,3)*4/3 = "  <<  Ec.RTDensity*PI*pow(St.UnheatedRadius,3)*4/3 << "\nEv.LatentVapour = " << Ec.LatentVapour << "\nSt.VapourEnergy = " << St.VapourEnergy);
+
 			update_mass(EnergyIn/Ec.LatentVapour);
 			St.VapourEnergy += EnergyIn; 
 			St.Temperature = St.SuperBoilingTemp;
