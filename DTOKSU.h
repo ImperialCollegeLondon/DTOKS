@@ -15,7 +15,6 @@ class DTOKSU{
 		double TimeStep;			// Seconds, the length of a particular time step
 		double TotalTime;			// Seconds, total time taken to perform simulation
 
-
 //		Matter const *Sample;			// The problem with this is it is passed to update which isn't const...
 		Matter *Sample;				// Matter sample can be either Tungsten, Beryllium, Graphite or Iron
 
@@ -33,7 +32,6 @@ class DTOKSU{
 		// Private Functions
 		void CheckTimeStep();			// Verify time step
 		void Print();				// Write to output data file
-		void UpdatePData();			// Update the background plasma data
 		void CreateFile(std::string filename);
 
 	public:

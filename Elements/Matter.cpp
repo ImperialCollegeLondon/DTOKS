@@ -340,12 +340,17 @@ void Matter::update_motion(threevector &ChangeInPosition,threevector &ChangeInVe
 	St.DustVelocity += ChangeInVelocity;
 };
 
-void Matter::update_charge(double potential){
+void Matter::update_charge(double potential, double deltat, double deltas){
 	M_Debug("\tIn Matter::update_charge(double potential)\n\n");
 	St.Potential = potential;
+	
+	St.DeltaTherm = deltat;
+	St.DeltaSec = deltas;
+
 	if ( (St.DeltaSec + St.DeltaTherm) >= 1.0 || St.Potential < 0.0 ){ // If the grain is in fact positive ...
 		St.Positive = true;
 	}else{
 		St.Positive = false;
 	}
 }
+

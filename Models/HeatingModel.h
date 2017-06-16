@@ -12,6 +12,7 @@ class HeatingModel : public Model{
 		double TotalPower;			// Kilo-Watts,
 		double TimeStep;			// Seconds, the length of a particular time step
 		double TotalTime;			// Seconds, total time taken to perform simulation
+		double OldTemp;				// Kelvin, temperature last step, used to determine TE
 		bool ForceNegative;			// If we want to force the dust grain to be negative
 		bool ThermalEquilibrium;		// If the Dust grain is in Thermal Equilibrium (Constant Plasma only)
 

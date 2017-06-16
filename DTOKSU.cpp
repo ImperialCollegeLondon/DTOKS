@@ -8,36 +8,6 @@ std::array<bool,4> DefaultForceModels = {false,false,false,false};
 std::array<bool,1> DefaultChargeModels = {false};
 std::array<char,4> DefaultConstModels = { 'c','c','c','c'};
 
-/*
-struct PlasmaData PlasmaDefaults1 = {
-	1e20,		// m^-3, Neutral Density
-	1e20,		// m^-3, Electron Density
-	1e20,		// m^-3, Electron Density
-	116045.25,	// K, Ion Temperature
-	116045.25,	// K, Electron Temperature
-	116045.25,	// K, Neutral Temperature
-	300,		// K, Ambient Temperature
-	threevector(),	// m s^-1, Plasma Velocity (Should eventually be normalised to sound speed cs)
-	threevector(),	// m s^-2, Acceleration due to gravity
-	threevector(),	// V m^-1, Electric field at dust location (Normalised later) 
-	threevector(),	// T, Magnetic field at dust location (Normalised later)
-};
-
-// Default Constructor, no arguments. This is not a well defined constructor so has been commented out
-
-Matter *DefaultSample = new Tungsten();
-DTOKSU::DTOKSU():
-			Pgrid('h','m',0.01),	// Default configuration for MAST
-			CM("cf.txt",1.0,DefaultChargeModels,DefaultSample,PlasmaDefaults1),
-			HM("hf.txt",1e-9,1.0,DefaultHeatModels,DefaultSample,PlasmaDefaults1),
-			FM("ff.txt",1.0,DefaultForceModels,DefaultSample,PlasmaDefaults1){
-	D_Debug("\n\nIn DTOKSU::DTOKSU()\n\n");
-	D_Debug("\n\n************************************* SETUP FINISHED ************************************* \n\n");
-	TimeStep = 0;
-	TotalTime = 0;
-
-}
-*/
 DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample, PlasmaData &pdata,
 				std::array<bool,9> &heatmodels, std::array<bool,4> &forcemodels, std::array<bool,1> &chargemodels)
 				: Sample(sample),
@@ -49,6 +19,7 @@ DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample,
 //	std::cout << "\nacclvls[0] = " << acclvls[0];
 	TimeStep = timestep;
 	TotalTime = 0;
+	CreateFile("df.txt");
 }
 
 DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample, PlasmaGrid &pgrid,
@@ -64,6 +35,7 @@ DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample,
 //	std::cout << "\nacclvls[0] = " << acclvls[0];
 	TimeStep = timestep;
 	TotalTime = 0;
+	CreateFile("df.txt");
 }
 
 void DTOKSU::CreateFile( std::string filename ){
@@ -89,60 +61,72 @@ void DTOKSU::Print(){
 	MyFile << "\n";
 }
 
-void DTOKSU::UpdatePData(){
-
-}
-
 int DTOKSU::Run(){
 	D_Debug("- In DTOKSU::Run()\n\n");
 
-	for(size_t i = 0; i < 10000000; i ++){
+	std::vector<double> Times(3,0);
+	double HeatTime(0),ForceTime(0),ChargeTime(0);
+	for(size_t i = 0; i < 100000; i ++){
 
-		double ChargeTime = CM.CheckTimeStep();		// Check Time step length is appropriate
-		double ForceTime = FM.CheckTimeStep();		// Check Time step length is appropriate
-		double HeatTime = HM.CheckTimeStep();		// Check Time step length is appropriate
+		CM.Charge();
+		Sample->update();			// Update data in GrainStructs
 
-		TimeStep = std::max(ChargeTime,std::max(ForceTime,HeatTime));
+		ChargeTime = CM.CheckTimeStep();		// Check Time step length is appropriate
+		ForceTime = FM.CheckTimeStep();			// Check Time step length is appropriate
+		HeatTime = HM.CheckTimeStep();			// Check Time step length is appropriate
+		if( HeatTime == 1) break;
 
-//		CM.Charge();
-//		FM.Force();
-		HM.Heat();
+		// We will assume Charging Time scale is much faster than either heating or moving.
+		double MaxTimeStep = std::max(ForceTime,HeatTime);
+		TimeStep = std::min(ForceTime,HeatTime);
 
-//		HM.update();
+		if( ChargeTime > TimeStep ){
+			static bool runOnce = true;
+			WarnOnce(runOnce,"*** WARNING! Charging Time scale is not the shortest timescale!! ***\n");
+		}
 
-//		Pgrid.readdata();	// Read data
+		for(double IntermediateStep(0); IntermediateStep < MaxTimeStep; IntermediateStep += TimeStep){
+			D_Debug( "\nIntermediateStep/MaxTimeStep = " << IntermediateStep << "/" << MaxTimeStep);
+			double TestHeatTime = HM.CheckTimeStep();
+			double TestForceTime = FM.CheckTimeStep();
+			if( TimeStep == HeatTime){
+				HM.Heat(); 
+				TotalTime += TimeStep;
+				if( TestForceTime < TimeStep || TestForceTime < HeatTime*0.1 ){
+					std::cout << "\nWARNING! Smallest time scale changeover! Heat -> Force";
+					TimeStep = TestForceTime;
+				}
+				D_Debug("\nHeat Step Taken.");
+			}else if( TimeStep == ForceTime){
+				FM.Force();
+				TotalTime += TimeStep;
+				if( TestHeatTime < TimeStep || TestHeatTime < HeatTime*0.1 ){
+					std::cout << "\nWARNING! Smallest time scale changeover! Force -> Heat";
+					TimeStep = TestHeatTime;
+				}
+				D_Debug("\nForce Step Taken.");
+			}
+			CM.Charge();
+			Sample->update();
+		}
+		
+		std::cout << "\ni : " << (int)i << "\nTemperature = " << Sample->get_temperature() << "\n\n"; std::cin.get();
+		
+		if( MaxTimeStep == HeatTime ){		HM.Heat(); D_Debug("\nHeat Step Taken."); }
+		else if( MaxTimeStep == ForceTime ){	FM.Force(); D_Debug("\nForce Step Taken."); }	
 
-//		std::cout << "\n\tTimeStep = " << TimeStep << "\n\tChargeTime = " << ChargeTime 
-//			<< "\n\tForceTime = " << ForceTime << "\n\tHeatTime = " <<HeatTime << "\n";
+		if( Sample->is_gas() && Sample->get_superboilingtemp() <= Sample->get_temperature() ){
+			std::cout << "\n\nSample has Boiled ";
+			break;
+		}else if( Sample->is_gas() && Sample->get_superboilingtemp() > Sample->get_temperature() ){
+			std::cout << "\n\nSample has Evaporated ";
+			break;
+		}
 
-		Sample->update();               // CHECK THAT UPDATING HERE UPDATES EVERYWHERE!
-
-//		std::cout << "\n(1)Temperature = " << Sample->get_temperature();
-
-
+//		std::cout << "\n\tTimeStep = " << TimeStep << "\n\tChargeTime = " << CM.CheckTimeStep()
+//			<< "\n\tForceTime = " << FM.CheckTimeStep() << "\n\tHeatTime = " << HM.CheckTimeStep() << "\n";
 	}
-
+	if( HeatTime == 1 ) std::cout << "\nThermal Equilibrium was achieved!\n\n";
+	std::cout << "\nScript Complete.";
 	return 0;
 }
-
-
-// ************************************* //
-
-/*
-const double DTOKSU::DeltaTherm(double DustTemperature)const{
-//	D_Debug("\n\nIn HeatingModel::DeltaTherm():");
-	return (Richardson*pow(DustTemperature,2)*exp(-(Sample->get_workfunction()*echarge)/(Kb*DustTemperature)))
-		/echarge;
-}
-
-const double DTOKSU::DeltaSec()const{
-//	D_Debug("\n\nIn HeatingModel::DeltaSec():");
-	return sec(Pdata.ElectronTemp/1.16e5,Sample->get_elem()); 	// Convert from K to ev
-}
-
-const double DTOKSU::DeltaTot(double DustTemperature)const{
-//	D_Debug("\n\nIn HeatingModel::DeltaTot():");
-	return (DeltaSec() + DeltaTherm(DustTemperature));
-}
-*/
-

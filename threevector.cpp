@@ -8,6 +8,15 @@ threevector operator*(double scalar, const threevector& y)
 	return v_new;
 }
 
+threevector operator*(const bool scalar, const threevector& y)
+{
+
+	threevector v_new(y.getx()*scalar,y.gety()*scalar,y.getz()*scalar);
+	return v_new;
+}
+
+
+
 // Default constructor
 threevector::threevector() 
 {

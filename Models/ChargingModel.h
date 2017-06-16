@@ -15,6 +15,8 @@ class ChargingModel : public Model{
 		void Print();			// Write to output data file
 		double solveOML(double a, double guess);
 
+		double DeltaTherm()const;
+		double DeltaSec()const;
 	public:
 		// Constructors
 		ChargingModel();

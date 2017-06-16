@@ -56,7 +56,7 @@ class Matter{
 		void update_temperature(double EnergyIn);
 
 		void update_motion(threevector &changeinposition, threevector &changeinvelocity);
-		void update_charge(double potential);
+		void update_charge(double potential, double deltas, double deltat);
 
 		// Getter methods
 		char get_elem			()const{ return Ec.Elem;			};

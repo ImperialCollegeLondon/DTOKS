@@ -90,7 +90,6 @@ const int HeatingModel::Vapourise(){
 void HeatingModel::Heat(){
 	H_Debug("\tIn HeatingModel::Heat()\n\n");
 	
-
 //	std::cout << "\n(2)Temperature = " << Sample->get_temperature();
 
 	assert( Sample->get_mass() > 0 );
@@ -105,7 +104,7 @@ void HeatingModel::Heat(){
 	
 	Sample->update();
         H_Debug("\t"); Print();                // Print data to file
-
+	std::cout << "\nTemperature = " << Sample->get_temperature();
 	TotalTime += TimeStep;
 }
 
@@ -135,6 +134,7 @@ double HeatingModel::CalculatePower(double DustTemperature)const{
 	if( UseModel[7] )	H1_Debug("\nSEE() = \t" 		<< -SEE(DustTemperature) 		<< "kW");
 	if( UseModel[8] )	H1_Debug("\nTEE() = \t" 		<< -TEE(DustTemperature) 		<< "kW\n");
 
+
 	return TotalPower;
 }
 
@@ -143,21 +143,25 @@ double HeatingModel::RungeKutta4(){
 	double k1 = CalculatePower(Sample->get_temperature()); 
 	if(k1<0 && fabs(k1/2) > Sample->get_temperature()){
 		std::cout << "\n\nThermal Equilibrium reached on condition (3): k1 step negative and larger than Td!";
+		ThermalEquilibrium = true;
 		return 0;
 	}
 	double k2 = CalculatePower(Sample->get_temperature()+k1/2); 
 	if( k2<0 && fabs(k2/2) > Sample->get_temperature() ){
 		std::cout << "\n\nThermal Equilibrium reached on condition (3): k2 step negative and larger than Td!";
+		ThermalEquilibrium = true;
 		return (TimeStep/6)*k1;
 	}
 	double k3 = CalculatePower(Sample->get_temperature()+k2/2);
 	if( k3<0 && fabs(k3) > Sample->get_temperature() ){
 		std::cout << "\n\nThermal Equilibrium reached on condition (3): k3 step negative and larger than Td!";
+		ThermalEquilibrium = true;
 		return (TimeStep/6)*(k1+2*k2);
 	}
 	double k4 = CalculatePower(Sample->get_temperature()+k3);
 	if( k4<0 && fabs(k4/2) > Sample->get_temperature() ){
 		std::cout << "\n\nThermal Equilibrium reached on condition (3): k4 step negative and larger than Td!";
+		ThermalEquilibrium = true;
 		return (TimeStep/6)*(k1+2*k2+2*k3);
 	}
 	H1_Debug( "\nTimeStep = " << TimeStep << "\nk1 = " << k1 << "\nk2 =" << k2 << "\nk3 = " << k3 << "\nk4 = " << k4);
@@ -172,17 +176,45 @@ double HeatingModel::CheckTimeStep(){
 	H_Debug("\t"); double TotalPower = CalculatePower(Sample->get_temperature());
 	// This model forces the time step to be the value which produces a change in temperature or 1*accuracy degree
 
-	if( TotalPower != 0 ){
+	if( TimeStep == 0 ) // Assume this is first time step
+	        TimeStep = fabs((Sample->get_mass()*Sample->get_heatcapacity())/(TotalPower*Accuracy));
+	
+	// If change in temp is greater than 1 degree, set time step to be equal to 1 degree step
+	if( fabs(TimeStep*TotalPower/(Sample->get_mass()*Sample->get_heatcapacity())) > 1 ) 
 		TimeStep = fabs((Sample->get_mass()*Sample->get_heatcapacity())/(TotalPower*Accuracy));
-	}else{
+
+
+	// Check Thermal Equilibrium hasn't been reached
+	double DeltaTempTest = TotalPower*TimeStep/(Sample->get_mass()*Sample->get_heatcapacity());
+
+	// May be that we could remove this condition now...
+	if( TotalPower == 0 ){	
 		static bool runOnce = true;
 		WarnOnce(runOnce,"\nWarning! TotalPower = 0\nThermalEquilibrium Assumed, TimeStep being set to unity.");
 		ThermalEquilibrium = true;
 		TimeStep = 1;
 	}
+
+	if( Sample->get_temperature() != Sample->get_superboilingtemp() ){
+		if( (Sample->get_temperature()-OldTemp > 0 && DeltaTempTest < 0) // If temperature changed sign changed this step
+			|| (Sample->get_temperature()-OldTemp < 0 && DeltaTempTest > 0) ){
+			std::cout << "\n\nThermal Equilibrium reached on condition (1): Sign change of Temperature change!";
+			ThermalEquilibrium = true;
+			TimeStep = 1;
+		}if(  fabs(DeltaTempTest/TimeStep) < 0.01 ){ // If Temperature gradient is less than 1%
+			std::cout << "\n\nThermal Equilibrium reached on condition (2): Temperature Gradient < 0.01!";
+			ThermalEquilibrium = true;
+			TimeStep = 1;
+		}
+	}
+
+	OldTemp = Sample->get_temperature();
+
 	H1_Debug("\nSample->get_mass() = " << Sample->get_mass() << "\nSample->get_heatcapacity() = " << 
 		Sample->get_heatcapacity() << "\nTotalPower = " << TotalPower << "\nAccuracy = " << Accuracy);
-	assert(TimeStep > 0 && TimeStep != INFINITY);
+	assert(TimeStep > 0 && TimeStep != INFINITY && TimeStep == TimeStep);
+
+	return TimeStep;
 }
 
 void HeatingModel::Print(){
@@ -316,11 +348,11 @@ const double HeatingModel::TEE(double DustTemperature)const{
 //			<< 2*Kb*DustTemperature << "\nSample->get_bondenergy() = " << Sample->get_bondenergy());
 //	H1_Debug("\nReturn = " << eFlux*Sample->get_deltatherm()*(2*Kb*DustTemperature+Sample->get_bondenergy()));
 	double TEE=0;
-
 	if( ForceNegative || Sample->get_deltatot() <= 1 )
 		TEE = Sample->get_surfacearea()*Sample->get_deltatherm()*
 			(2*Kb*DustTemperature+echarge*Sample->get_workfunction())/1000; // Convert to kJ
 	else if( Sample->get_deltatot() > 1 ) 	TEE = 0; // Electrons captured by positive grain
+
 	return TEE;
 }
 
