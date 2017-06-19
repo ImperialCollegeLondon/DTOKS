@@ -9,8 +9,8 @@ class ChargingModel : public Model{
 		// Parameters defining the Heating equation
 		double TotalTime;				
 		double TimeStep;
-
-		std::array<bool,1> UseModel; 		// Charging Models turned on of possibly 9
+		
+		std::array<bool,1> UseModel; 		// Charging Models turned on of possible 1
 
 		void Print();			// Write to output data file
 		double solveOML(double a, double guess);
@@ -29,13 +29,12 @@ class ChargingModel : public Model{
 		~ChargingModel(){
 		};
 		
-		double CheckTimeStep();
+		double UpdateTimeStep();
 		// Functions which generate and save data from heating the Sample.
 		void CreateFile(std::string filename);
 		
 		void Charge();
-
-
+		void Charge(double timestep);
 };
 
 #endif

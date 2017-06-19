@@ -37,13 +37,13 @@ class HeatingModel : public Model{
 		// Functions which generate and save data from heating the Sample.
 		const int Vapourise();
 		void Heat();
+		void Heat(double timestep);
 
 		void CreateFile(std::string filename, bool PrintPhaseData);
 		double CalculatePower(double DustTemperature)const;
 		double RungeKutta4();
 
-
-		double CheckTimeStep();	// Verify time step
+		double UpdateTimeStep();	// Verify time step
 
 		// Heating Models
 		const double EmissivityModel		(double DustTemperature)const;

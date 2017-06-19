@@ -32,12 +32,13 @@ class ForceModel : public Model {
 		~ForceModel(){
 		};
 		
-		double CheckTimeStep();	// Verify time step
+		double UpdateTimeStep();	// Verify time step
 
 		// Functions which generate and save data from heating the Sample.
 		void CreateFile(std::string filename);
 
 		void Force();
+		void Force(double timestep);
 };
 
 #endif

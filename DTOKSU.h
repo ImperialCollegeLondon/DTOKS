@@ -12,7 +12,7 @@ class DTOKSU{
 
 	private:
 		// Private member data
-		double TimeStep;			// Seconds, the length of a particular time step
+		double MinTimeStep;			// Seconds, the length of a particular time step
 		double TotalTime;			// Seconds, total time taken to perform simulation
 
 //		Matter const *Sample;			// The problem with this is it is passed to update which isn't const...

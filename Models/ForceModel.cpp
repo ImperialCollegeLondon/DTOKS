@@ -37,10 +37,11 @@ void ForceModel::CreateFile(std::string filename){
 	F_Debug("\tIn ForceModel::CreateFile(std::string filename)\n\n");
 	ForceFile.open(filename);
 	ForceFile << "Position\tVelocity";
-	if( UseModel[0] ) ForceFile << "\tGravity";
-       	if( UseModel[1] ) ForceFile << "\tCentrifugal";
-       	if( UseModel[2] ) ForceFile << "\tLorentz";
-       	if( UseModel[3] ) ForceFile << "\tIonDrag";
+	bool PrintGravity = false; // Lol
+	if( UseModel[0] && PrintGravity ) 	ForceFile << "\tGravity";
+       	if( UseModel[1] ) 			ForceFile << "\tCentrifugal";
+       	if( UseModel[2] ) 			ForceFile << "\tLorentz";
+       	if( UseModel[3] ) 			ForceFile << "\tIonDrag";
 
 	ForceFile << "\n";
 }
@@ -48,15 +49,16 @@ void ForceModel::CreateFile(std::string filename){
 void ForceModel::Print(){
 	F_Debug("\tIn ForceModel::Print()\n\n");
 	ForceFile << Sample->get_position() << "\t" << Sample->get_velocity();
-	if( UseModel[0] ) ForceFile << "\t(0.0,0.0,-9.81)"; // Maybe this should be coded better...
-	if( UseModel[1] ) ForceFile << "\t" << Centrifugal();
-	if( UseModel[2] ) ForceFile << "\t" << LorentzForce();
-	if( UseModel[3] ) ForceFile << "\t" << DTOKSIonDrag();
+	bool PrintGravity = false; // Lol
+	if( UseModel[0] && PrintGravity ) 	ForceFile << "\t(0.0,0.0,-9.81)"; // Maybe this should be coded better...
+	if( UseModel[1] ) 			ForceFile << "\t" << Centrifugal();
+	if( UseModel[2] ) 			ForceFile << "\t" << LorentzForce();
+	if( UseModel[3] ) 			ForceFile << "\t" << DTOKSIonDrag();
 	ForceFile << "\n";
 }
 
-double ForceModel::CheckTimeStep(){
-	F_Debug( "\tIn ForceModel::CheckTimeStep()\n\n" );
+double ForceModel::UpdateTimeStep(){
+	F_Debug( "\tIn ForceModel::UpdateTimeStep()\n\n" );
 	// Deal with case where power/time step causes large temperature change.
 	
 	threevector Acceleration = CalculateAcceleration();
@@ -74,6 +76,31 @@ double ForceModel::CheckTimeStep(){
 	assert(TimeStep > 0);
 	return TimeStep;
 }
+
+// Move the dust grain by calculating the forces acting on it
+void ForceModel::Force(double timestep){
+	F_Debug("\tIn ForceModel::Force()\n\n");
+
+	// Make sure timestep input time is valid. Shouldn't exceed the timescale of the process.
+	assert(timestep > 0 && timestep <= TimeStep );
+	TimeStep = timestep;
+	// Forces: Lorentz + ion drag + gravity
+	threevector Acceleration = CalculateAcceleration();
+
+	threevector ChangeInPosition(
+			Sample->get_velocity().getx()*TimeStep,
+			(Sample->get_velocity().gety()*TimeStep)/(Sample->get_position().getx()),
+			Sample->get_velocity().getz()*TimeStep);
+
+	threevector ChangeInVelocity = Acceleration*TimeStep;
+	
+	Sample->update_motion(ChangeInPosition,ChangeInVelocity);
+
+	F_Debug("\t"); 
+	Print();
+	TotalTime += TimeStep;
+}
+
 
 // Move the dust grain by calculating the forces acting on it
 void ForceModel::Force(){

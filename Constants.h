@@ -64,6 +64,12 @@
 #define D_Debug(x) 
 #endif 
 
+#ifdef DTOKSU_DEEP_DEBUG
+#define D1_Debug(x) std::cout << x
+#else
+#define D1_Debug(x) 
+#endif 
+
 #ifdef PAUSE
 #define Pause(); std::cin.get();
 #else

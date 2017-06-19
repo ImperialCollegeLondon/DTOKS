@@ -30,7 +30,7 @@ class Model{
 
 	protected:
 		virtual void Print()=0;			// Write to output data file
-		virtual double CheckTimeStep()=0;	// Check Time Scale of development, returns the time step
+		virtual double UpdateTimeStep()=0;	// Check Time Scale of development, returns the time step
 
 	public:
 		// Constructors

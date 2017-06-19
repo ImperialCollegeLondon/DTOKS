@@ -110,6 +110,7 @@ void Matter::update_dim(){ // Assuming spherical particle.
 	assert(St.Mass > 10e-25 );
 }
 
+// For variable emissivity: https://github.com/cfinch/Mie_scattering
 void Matter::update_emissivity(){
 	M_Debug("\tIn Matter::update_emissivity()\n\n");
 	if( ConstModels[0] == 'c' || ConstModels[0] == 'C' ){ // Assume constant emissivity
@@ -316,12 +317,9 @@ void Matter::update_temperature(double EnergyIn){
 //		<< St.VapourEnergy << " kJ\n\n");
 
 	// Assert temperature changes smaller than 10% of current temperature
-	if( abs(EnergyIn/(St.Mass*St.HeatCapacity)) > St.Temperature*0.1 ){
+	if(abs(EnergyIn/(St.Mass*St.HeatCapacity)) > St.Temperature*0.1){
 		M2_Debug("\n\nSt.Temperature = " << St.Temperature << "\nSt.Mass = " << St.Mass << "\nSt.HeatCapacity = " 
 			<< St.HeatCapacity << "\nEnergyIn = " << EnergyIn);
-	}
-
-	if(abs(EnergyIn/(St.Mass*St.HeatCapacity)) > St.Temperature*0.1){
 		std::cout << "\nEnergyIn = " << EnergyIn << "\nSt.Mass = " << St.Mass << "\nSt.HeatCapacity = " << St.HeatCapacity;
 		std::cout << "\nError, EnergyIn/(St.Mass*St.HeatCapacity) = " << EnergyIn/(St.Mass*St.HeatCapacity); // Assert temperature change is less than 10%
 		std::cout << "\nTemperature = " << St.Temperature;

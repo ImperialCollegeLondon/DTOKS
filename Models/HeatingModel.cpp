@@ -87,10 +87,32 @@ const int HeatingModel::Vapourise(){
 	return rValue; // 0, running normally. 1; Sample boiled. 2; Sample Evaporated. 3; Thermal equilibrium.
 }
 
+void HeatingModel::Heat(double timestep){
+	H_Debug("\tIn HeatingModel::Heat(double timestep)\n\n");
+	
+	// Make sure timestep input time is valid. Shouldn't exceed the timescale of the process.
+	assert(timestep > 0 && timestep <= TimeStep );
+	TimeStep = timestep;
+	std::cout << "\nTimeStep = " << TimeStep << "\n";
+	assert( Sample->get_mass() > 0 );
+
+	double TotalEnergy = RungeKutta4();                     // Calculate total energy through RungeKutta4 method
+	H1_Debug( "\tTotalEnergy = " << TotalEnergy << "\n");
+        Sample->update_temperature(TotalEnergy);                // Update Temperature
+
+	// Account for evaporative mass loss
+	if( UseModel[1] && Sample->is_liquid() )
+		Sample->update_mass( (TimeStep*EvaporationFlux(Sample->get_temperature())*Sample->get_atomicmass())/AvNo );
+	
+	Sample->update();
+        H_Debug("\t"); Print();                // Print data to file
+	std::cout << "\nTemperature = " << Sample->get_temperature();
+	TotalTime += TimeStep;
+}
+
 void HeatingModel::Heat(){
 	H_Debug("\tIn HeatingModel::Heat()\n\n");
 	
-//	std::cout << "\n(2)Temperature = " << Sample->get_temperature();
 
 	assert( Sample->get_mass() > 0 );
 
@@ -168,21 +190,19 @@ double HeatingModel::RungeKutta4(){
 	return (TimeStep/6)*(k1+2*k2+2*k3+k4);
 };
 
-double HeatingModel::CheckTimeStep(){
-	H_Debug( "\tIn HeatingModel::CheckTimeStep()\n\n" );
-	// Deal with case where power/time step causes large temperature change.
+
+// This model forces the time step to be the value which produces a change in temperature or 1*accuracy degree
+double HeatingModel::UpdateTimeStep(){
+	H_Debug( "\tIn HeatingModel::UpdateTimeStep()\n\n" );
 
 	// Take Eularian step to get initial time step
 	H_Debug("\t"); double TotalPower = CalculatePower(Sample->get_temperature());
-	// This model forces the time step to be the value which produces a change in temperature or 1*accuracy degree
 
-	if( TimeStep == 0 ) // Assume this is first time step
-	        TimeStep = fabs((Sample->get_mass()*Sample->get_heatcapacity())/(TotalPower*Accuracy));
-	
-	// If change in temp is greater than 1 degree, set time step to be equal to 1 degree step
-	if( fabs(TimeStep*TotalPower/(Sample->get_mass()*Sample->get_heatcapacity())) > 1 ) 
-		TimeStep = fabs((Sample->get_mass()*Sample->get_heatcapacity())/(TotalPower*Accuracy));
-
+	// COULD BE: If first time step or change in temp is greater than 1 degree, set time step to be equal to 1 degree step
+	// Note, if the time step changes conditionally, then the time scale of the process may vary independantly of the time step.
+	// This causes issues when deciding on the time ordering of processes.
+//	if( TimeStep == 0 || fabs(TimeStep*TotalPower/(Sample->get_mass()*Sample->get_heatcapacity())) > 1 ) 
+	TimeStep = fabs((Sample->get_mass()*Sample->get_heatcapacity())/(TotalPower*Accuracy));
 
 	// Check Thermal Equilibrium hasn't been reached
 	double DeltaTempTest = TotalPower*TimeStep/(Sample->get_mass()*Sample->get_heatcapacity());
@@ -200,7 +220,7 @@ double HeatingModel::CheckTimeStep(){
 			|| (Sample->get_temperature()-OldTemp < 0 && DeltaTempTest > 0) ){
 			std::cout << "\n\nThermal Equilibrium reached on condition (1): Sign change of Temperature change!";
 			ThermalEquilibrium = true;
-			TimeStep = 1;
+			TimeStep = 1; 
 		}if(  fabs(DeltaTempTest/TimeStep) < 0.01 ){ // If Temperature gradient is less than 1%
 			std::cout << "\n\nThermal Equilibrium reached on condition (2): Temperature Gradient < 0.01!";
 			ThermalEquilibrium = true;
@@ -223,7 +243,7 @@ void HeatingModel::Print(){
 	ModelDataFile 	<< TotalTime << "\t" << Sample->get_temperature() << "\t" << Sample->get_mass() 
 		<< "\t" << Sample->get_density();
 
-	bool PrintPhaseData = false;
+	bool PrintPhaseData = false; // Lol
 	if( PrintPhaseData )	ModelDataFile 	<< "\t" << Sample->get_fusionenergy() << "\t" << Sample->get_vapourenergy();
 
 	if( Sample->get_c(0) == 'v' || Sample->get_c(0) == 'V' ) 	ModelDataFile << "\tCv";

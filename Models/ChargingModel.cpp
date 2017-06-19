@@ -43,19 +43,15 @@ void ChargingModel::Print(){
 	ModelDataFile << "\n";
 }
 
-double ChargingModel::CheckTimeStep(){
-	C_Debug( "\tIn ChargingModel::CheckTimeStep()\n\n" );
-	// Deal with case where power/time step causes large temperature change.
+double ChargingModel::UpdateTimeStep(){
+	C_Debug( "\tIn ChargingModel::UpdateTimeStep()\n\n" );
 	
-	C_Debug("\nPdata.ElectronTemp = " << Pdata.ElectronTemp << "\nPdata.ElectronDensity = " << Pdata.ElectronDensity);
-	
+	// Calcualte the time scale of the behaviour from Krashinnenikovs equation	
 	double DebyeLength=sqrt((epsilon0*Kb*Pdata.ElectronTemp)/(Pdata.ElectronDensity*pow(echarge,2)));
 	double PlasmaFreq = sqrt((Pdata.ElectronDensity*pow(echarge,2))/(epsilon0*Me));
 	TimeStep = sqrt(2*PI) * ((DebyeLength)/Sample->get_radius()) 
-			* (1/(PlasmaFreq*(1+Pdata.ElectronTemp/Pdata.IonTemp+Sample->get_potential())));
+			* (1/(PlasmaFreq*(1+Pdata.ElectronTemp/Pdata.IonTemp+Sample->get_potential())));	
 
-//	if(TimeStep != TimeStep)
-//		TimeStep = 1e-8;	// (s), An estimate for regions of low plasma density
 	C_Debug("\n\t\tDebyeLength = " << DebyeLength << "\n\t\tPlasmaFreq = " << PlasmaFreq 
 			<< "\n\t\tTimeStep = " << TimeStep << "\n\n");
 
@@ -63,6 +59,35 @@ double ChargingModel::CheckTimeStep(){
 	assert(TimeStep > 0);
 
 	return TimeStep;
+}
+
+void ChargingModel::Charge(double timestep){
+	C_Debug("\tIn ChargingModel::Charge()\n\n");
+
+	// Make sure timestep input time is valid. Shouldn't exceed the timescale of the process.
+	assert(timestep > 0);// && timestep <= TimeStep );
+	TimeStep = timestep;
+
+	// Assume the grain is negative and calculate potential
+	if( UseModel[0] ){
+		double Potential;
+		if( Sample->get_deltatot() < 1.0 ){ // solveOML only defined for deltatot < 1.0
+			Potential = solveOML(Sample->get_deltatot(),Sample->get_potential()); 
+		}else{ // If the grain is in fact positive ...
+			Potential = solveOML(Sample->get_deltatot(),Sample->get_potential());
+			if( Potential < 0.0 ){
+				Potential = solveOML(0.0,Sample->get_potential())-Kb*Sample->get_temperature()
+						/(echarge*Pdata.ElectronTemp);
+			}
+		}
+		Sample->update_charge(Potential,DeltaSec(),DeltaTherm());
+//		std::cout << "\nPotential = " << Potential << "\nDeltaSec = " << Sample->get_deltasec() << "\nDeltatherm = " 
+//			<< Sample->get_deltatherm() << "\n"; std::cin.get();
+
+	}
+	TotalTime += TimeStep;
+
+	C_Debug("\t"); Print();
 }
 
 void ChargingModel::Charge(){
