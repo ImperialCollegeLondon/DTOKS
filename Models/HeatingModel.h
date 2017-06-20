@@ -63,6 +63,8 @@ class HeatingModel : public Model{
 		const double NeutralFlux		()			const;
 
 		double get_totaltime			()const{ return TotalTime;	};
+
+		void set_PowerIncident			(double powerincident){ PowerIncident = powerincident; }
 };
 
 #endif

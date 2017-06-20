@@ -1,4 +1,6 @@
 Models/EmissivityData/
 Models/PlasmaData/
+Tests/TemperatureVariationOfConstants
 main
 *.txt
+*.o

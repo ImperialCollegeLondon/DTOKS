@@ -1,5 +1,5 @@
 //#define PAUSE
-#define DTOKSU_DEBUG
+//#define DTOKSU_DEBUG
 //#define DTOKSU_DEEP_DEBUG
 #include "DTOKSU.h"
 
@@ -138,8 +138,8 @@ int DTOKSU::Run(){
 
 		TotalTime += MinTimeStep;
 	}
-	if( HeatTime == 1 ) std::cout << "\nThermal Equilibrium was achieved!\n\n";
-	std::cout << "\nScript Complete.";
+	if( HeatTime == 1 ) std::cout << "\nEnd of Run, exiting due to Thermal Equilibrium being reached!\n\n";
+	std::cout << "\nFinished DTOKS-U run.";
 	return 0;
 }
 

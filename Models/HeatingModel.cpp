@@ -93,7 +93,7 @@ void HeatingModel::Heat(double timestep){
 	// Make sure timestep input time is valid. Shouldn't exceed the timescale of the process.
 	assert(timestep > 0 && timestep <= TimeStep );
 	TimeStep = timestep;
-	std::cout << "\nTimeStep = " << TimeStep << "\n";
+
 	assert( Sample->get_mass() > 0 );
 
 	double TotalEnergy = RungeKutta4();                     // Calculate total energy through RungeKutta4 method
@@ -106,7 +106,6 @@ void HeatingModel::Heat(double timestep){
 	
 	Sample->update();
         H_Debug("\t"); Print();                // Print data to file
-	std::cout << "\nTemperature = " << Sample->get_temperature();
 	TotalTime += TimeStep;
 }
 
@@ -126,7 +125,6 @@ void HeatingModel::Heat(){
 	
 	Sample->update();
         H_Debug("\t"); Print();                // Print data to file
-	std::cout << "\nTemperature = " << Sample->get_temperature();
 	TotalTime += TimeStep;
 }
 
