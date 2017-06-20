@@ -69,16 +69,24 @@ int ConstantHeatingTest(char Element){
 		std::cerr << "\nInvalid Option entered";
 		return -1;
 	}
+	double Mass = Sample->get_mass();
 
 	HeatingModel MyModel("out_ConstantHeatingTest.txt",1.0,Models,Sample,Pdata);
 	MyModel.set_PowerIncident(Power);
 	MyModel.UpdateTimeStep();
+
 	MyModel.Vapourise();
 
 	double ModelTime = MyModel.get_totaltime();
+	std::cout << "\nElement = " << Element;
+	std::cout << "\nMass = " << Mass;
+	std::cout << "\nMass/Power = " << Mass/Power;
 	
-	double AnalyticTime = (Sample->get_mass()/Power)*((Sample->get_superboilingtemp()-Temp)*Sample->get_heatcapacity() 
-								+ Sample->get_latentfusion() + Sample->get_latentvapour());
+	double p1 = (Mass/Power)*((Sample->get_superboilingtemp()-Temp)*Sample->get_heatcapacity());
+	double p2 = (Mass*Sample->get_latentfusion())/Power;
+	double p3 = (Mass*Sample->get_latentvapour())/Power;
+//	std::cout << "\np1 = " << p1 << "\np2 = " << p2 << "\np3 = " << p3;
+	double AnalyticTime = p1 + p2 + p3;
 	
 	double ReturnVal = 0;
 

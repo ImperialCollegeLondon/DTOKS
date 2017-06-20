@@ -64,9 +64,9 @@ void HeatingModel::CreateFile(std::string filename, bool PrintPhaseData){
 const int HeatingModel::Vapourise(){
 	H_Debug("\tIn HeatingModel::Vapourise()\n\n");
 	// If the sample is gaseous or in TE (Given that the plasma is continuous), the model ends.
-	while( !Sample->is_gas() ){ 
+	while( !Sample->is_gas() ){
 		Heat();
-		ThermalEquilibrium = false;
+		UpdateTimeStep();
 		if( ContinuousPlasma && ThermalEquilibrium )
 			break;
 	}
@@ -90,6 +90,7 @@ const int HeatingModel::Vapourise(){
 void HeatingModel::Heat(double timestep){
 	H_Debug("\tIn HeatingModel::Heat(double timestep)\n\n");
 	
+
 	// Make sure timestep input time is valid. Shouldn't exceed the timescale of the process.
 	assert(timestep > 0 && timestep <= TimeStep );
 	TimeStep = timestep;
@@ -110,9 +111,9 @@ void HeatingModel::Heat(double timestep){
 }
 
 void HeatingModel::Heat(){
+
 	H_Debug("\tIn HeatingModel::Heat()\n\n");
 	
-
 	assert( Sample->get_mass() > 0 );
 
 	double TotalEnergy = RungeKutta4();                     // Calculate total energy through RungeKutta4 method

@@ -1,6 +1,6 @@
 //#define PAUSE
-//#define MATTER_DEEP_DEBUG
 //#define MATTER_DEBUG
+//#define MATTER_DEEP_DEBUG
 
 #include "Matter.h"
 struct GrainData MatterDefaults = {
@@ -216,16 +216,19 @@ void Matter::update_state(double EnergyIn){
 				St.Temperature = Ec.MeltingTemp + 
 				        (St.FusionEnergy-Ec.LatentFusion*St.Mass)/St.HeatCapacity;
 			}
-
 		}else{ St.Liquid = true; St.Gas = false; }  // Else it has melted!
 	}else if( St.Temperature >= St.SuperBoilingTemp ){ // Boiling or Gas
-		// CONSIDER MAKING A STATIC VARIABLE FOR THE MASS UPON REACHING THE BOILING TEMPERATURE.
-		// THIS CAN BE USED AS THE MASS FOR WHICH THE VAPOUR ENERGY MUST EXCEED
+		// WE NEED TO RETHINK HOW WE DO THIS.
+		// YOU CAN'T USE MASS IN PLACE OF tempmass BECAUSE THIS CHANGES EACH LOOP AND IT SHOULDN'T.
+		// HOWEVER USING A STATIC VARIABLE MEANS THAT ONCE THE BOILING TEMP IS REACHED, IT MUST BOIL FROM HERE ON OUT
 		static double tempmass = St.Mass;
-		std::cout << "\ntempmass = " << tempmass; std::cin.get();
-		if( St.VapourEnergy < tempmass ){ // Must be boiling
+		if( St.VapourEnergy < Ec.LatentVapour*tempmass ){ // Must be boiling
 			// Add energy to Latent heat and set Temperature to Melting Temperature
-//			M1_Debug( "\nEnergyIn = " << EnergyIn << "\nEnergyIn/Ec.LatentVapour = " << EnergyIn/Ec.LatentVapour << "\nMass = " << St.Mass << "\nEc.RTDensity*PI*pow(St.UnheatedRadius,3)*4/3 = "  <<  Ec.RTDensity*PI*pow(St.UnheatedRadius,3)*4/3 << "\nEv.LatentVapour = " << Ec.LatentVapour << "\nSt.VapourEnergy = " << St.VapourEnergy);
+			M2_Debug( "\nEnergyIn = " << EnergyIn << "\nSt.VapourEnergy = " << St.VapourEnergy << "\nEc.LatentVapour = " << Ec.LatentVapour << "\nEc.LatentVapour*tempmass = " << Ec.LatentVapour*tempmass << "\nMass = " << St.Mass 
+				<< "\ntempmass = "  << tempmass);
+//			std::cin.get();
+			static bool runOnce = true;
+			WarnOnce(runOnce,"Calculation assumes that mass boils after reaching boiling temperature. See 'static double tempmass = St.Mass;'");
 
 			update_mass(EnergyIn/Ec.LatentVapour);
 			St.VapourEnergy += EnergyIn; 
@@ -312,6 +315,7 @@ void Matter::update_mass(double LostMass){
 void Matter::update_temperature(double EnergyIn){
 
 	M_Debug("\tIn Matter::update_temperature(double EnergyIn = " << EnergyIn << " kJ)\n\n");
+
 //	M_Debug("\n...\nTemp = " << St.Temperature << "K \nHeatCapacity = " << St.HeatCapacity 
 //		<< " kJ/(kg K)\nFusionEnergy = " << St.FusionEnergy << " kJ\nVapourEnergy = " 
 //		<< St.VapourEnergy << " kJ\n\n");
@@ -328,7 +332,7 @@ void Matter::update_temperature(double EnergyIn){
 
 	St.Temperature += EnergyIn/(St.Mass*St.HeatCapacity); // HeatCapacity in Units of kJ/(kg K)
 	M2_Debug( "\n**** Temp change = " << EnergyIn/(St.Mass*St.HeatCapacity) << "\n**** Ein = " << EnergyIn 
-			<< "\n**** Mass = " << St.Mass);
+			<< "\n**** Mass = " << St.Mass << "\n**** Cv = " << St.HeatCapacity);
 
 	assert(St.Temperature > 0);
 	M_Debug("\t"); update_state(EnergyIn);
