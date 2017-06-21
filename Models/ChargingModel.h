@@ -6,9 +6,6 @@
 class ChargingModel : public Model{
 
 	private:
-		// Parameters defining the Heating equation
-		double TotalTime;				
-		double TimeStep;
 		
 		std::array<bool,1> UseModel; 		// Charging Models turned on of possible 1
 

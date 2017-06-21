@@ -92,6 +92,7 @@ class Matter{
 		threevector get_velocity	()const{ return St.DustVelocity;		};
 		threevector get_position	()const{ return St.DustPosition;		};
 
+		void set_potential		(double potential){ St.Potential = potential;	};
 };
 
 #endif

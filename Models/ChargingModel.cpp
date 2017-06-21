@@ -7,7 +7,6 @@ ChargingModel::ChargingModel():Model(){
 	C_Debug("\n\nIn ChargingModel::ChargingModel():Model()\n\n");
 	UseModel[0] = true;				// Charging Models turned on of possibly 9
 	CreateFile("Default_Charging_Filename.txt");
-	TimeStep = 0;
 }
 
 ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<bool,1> models,
@@ -15,7 +14,6 @@ ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<b
 	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename,double accuracy,std::array<bool,1> models,Matter *& sample, PlasmaData const& pdata) : Model(sample,pdata,accuracy)\n\n");
 	UseModel = models;
 	CreateFile(filename);
-	TimeStep = 0;
 }
 
 ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<bool,1> models,
@@ -23,7 +21,6 @@ ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<b
 	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename,double accuracy,std::array<bool,1> models,Matter *& sample, PlasmaGrid const& pgrid) : Model(sample,pgrid,accuracy)\n\n");
 	UseModel = models;
 	CreateFile(filename);
-	TimeStep = 0;
 }
 
 void ChargingModel::CreateFile(std::string filename){

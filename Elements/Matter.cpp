@@ -49,8 +49,8 @@ Matter::Matter(double rad, double temp, const ElementConsts *elementconsts):Ec(*
 	St.Temperature = temp;					// K
 	assert(St.Radius > 0 && St.UnheatedRadius > 0 && St.Temperature > 0);
 
-//	M_Debug("\nSt.Radius = " << St.Radius << "\nSt.Mass = " << St.Mass << "\nSt.Temperature = " << St.Temperature);
-//	M_Debug("\nEc.LatentVapour = " << Ec.LatentVapour << "\nEc.AtomicMass = " << Ec.AtomicMass);
+	M_Debug("\nSt.Radius = " << St.Radius << "\nSt.Mass = " << St.Mass << "\nSt.Temperature = " << St.Temperature);
+	M_Debug("\nEc.LatentVapour = " << Ec.LatentVapour << "\nEc.AtomicMass = " << Ec.AtomicMass);
 };
 Matter::Matter(double rad, double temp, const ElementConsts *elementconsts, std::array<char,4> &constmodels):Ec(*elementconsts),St(MatterDefaults){
 	M_Debug("\n\nIn Matter::Matter(double rad, double temp, const ElementConsts *elementconsts, std::array<char,4> &constmodels):Ec(*elementconsts),St(MatterDefaults)\n\n");
@@ -60,8 +60,8 @@ Matter::Matter(double rad, double temp, const ElementConsts *elementconsts, std:
 	St.Temperature = temp;					// K
 	assert(St.Radius > 0 && St.UnheatedRadius > 0 && St.Temperature > 0);
 
-//	M_Debug("\nSt.Radius = " << St.Radius << "\nSt.Mass = " << St.Mass << "\nSt.Temperature = " << St.Temperature);
-//	M_Debug("\nEc.LatentVapour = " << Ec.LatentVapour << "\nEc.AtomicMass = " << Ec.AtomicMass);
+	M_Debug("\nSt.Radius = " << St.Radius << "\nSt.Mass = " << St.Mass << "\nSt.Temperature = " << St.Temperature);
+	M_Debug("\nEc.LatentVapour = " << Ec.LatentVapour << "\nEc.AtomicMass = " << Ec.AtomicMass);
 };
 
 // Update geometric properties of matter:
@@ -69,17 +69,19 @@ Matter::Matter(double rad, double temp, const ElementConsts *elementconsts, std:
 void Matter::update_dim(){ // Assuming spherical particle.		
 	M_Debug("\tIn Matter::update_dim():\n\n");
 
+	// Determine radius and density
 	if(ConstModels[1] == 'v' || ConstModels[1] == 'V'){ // THIS WHOLE PART NEEDS CHECKING...
 		update_radius();
 		St.Density = Ec.RTDensity / pow(St.LinearExpansion,3); // SHOULD THIS BE : pow(2*St.LinearExpansion,3) ???
 		M2_Debug("\nUnheatedRadius was = " << St.UnheatedRadius);
 		// Change the radius according to the amount of mass lost
+		// This was Stefans logic, something to do with Differentials...
 		St.UnheatedRadius = St.UnheatedRadius*(pow((3*St.Mass)/(4*PI*St.Density),1./3.)/St.Radius);
 		M2_Debug("\nUnheatedRadius now = " << St.UnheatedRadius);
 
 	}else if(ConstModels[1] == 'c' || ConstModels[1] == 'C'){
-//		St.Radius = St.UnheatedRadius; // THIS IS SO WRONG. RADIUS SHOULD DECREASE AS MASS IS LOST
 		St.Density = Ec.RTDensity;				// Density is RT density
+	//	St.Radius = pow((3*St.Mass)/(4*PI*St.Density),1./3.);	// Set radius from Mass
 	}else if(ConstModels[1] == 's' || ConstModels[1] == 's'){
 		St.Density = Ec.RTDensity;				// Fix the density
 	}else{
@@ -89,14 +91,16 @@ void Matter::update_dim(){ // Assuming spherical particle.
 	}
 	St.Volume = (4*PI*pow(St.Radius,3))/3;
 	St.SurfaceArea = 4*PI*pow(St.Radius,2);
+        St.Mass = St.Density*St.Volume; 
 	// This is a weird way of updating mass because:
 	// When mass is lost, it is removed from St.Mass, then the new 'St.UnheatedRadius' is calculated.
 	// This is then used to calculate the new smaller St.Volume. Finally the St.Mass is calculated again.
-	static bool InitialiseMass = true;
-	if( InitialiseMass ){
-	        St.Mass = St.Density*St.Volume; 
-	        InitialiseMass = false;
-	}
+//	static bool InitialiseMass = true;
+//	if( InitialiseMass ){
+//	        St.Mass = St.Density*St.Volume; 
+//	        InitialiseMass = false;
+//	}
+
 
 //	assert( abs((St.Density - St.Mass/St.Volume)/St.Density) < 0.000001 ); // Sanity Check, this may be an issue
 //	St.Mass = St.Density*St.Volume;
@@ -343,8 +347,8 @@ void Matter::update_temperature(double EnergyIn){
 void Matter::update_motion(threevector &ChangeInPosition,threevector &ChangeInVelocity){
 	M_Debug("\tIn Matter::update_motion(threevector &ChangeInPosition,threevector &ChangeInVelocity)\n\n");
 	// Calculate new position
-	St.DustPosition += ChangeInPosition;
-	St.DustVelocity += ChangeInVelocity;
+	St.DustPosition = St.DustPosition + ChangeInPosition;
+	St.DustVelocity = St.DustVelocity + ChangeInVelocity;
 };
 
 void Matter::update_charge(double potential, double deltat, double deltas){
@@ -360,4 +364,3 @@ void Matter::update_charge(double potential, double deltat, double deltas){
 		St.Positive = false;
 	}
 }
-

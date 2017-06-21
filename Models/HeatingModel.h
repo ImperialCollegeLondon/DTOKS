@@ -7,11 +7,7 @@ class HeatingModel : public Model{
 
 	private:
 		// Parameters defining the Heating equation
-		const std::string Type;			// Type of Heating Model : 'constant'
 		double PowerIncident;			// Kilo-Watts, 
-		double TotalPower;			// Kilo-Watts,
-		double TimeStep;			// Seconds, the length of a particular time step
-		double TotalTime;			// Seconds, total time taken to perform simulation
 		double OldTemp;				// Kelvin, temperature last step, used to determine TE
 		bool ForceNegative;			// If we want to force the dust grain to be negative
 		bool ThermalEquilibrium;		// If the Dust grain is in Thermal Equilibrium (Constant Plasma only)
@@ -61,8 +57,6 @@ class HeatingModel : public Model{
 		const double IonFlux			(double DustTemperature)const;
 		const double ElectronFlux		(double DustTemperature)const;
 		const double NeutralFlux		()			const;
-
-		double get_totaltime			()const{ return TotalTime;	};
 
 		void set_PowerIncident			(double powerincident){ PowerIncident = powerincident; }
 };

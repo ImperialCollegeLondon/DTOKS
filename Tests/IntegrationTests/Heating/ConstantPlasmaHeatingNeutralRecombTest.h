@@ -40,9 +40,9 @@ int ConstantPlasmaHeatingNeutralRecombTest(char Element){
 	Pdata.NeutralDensity = 3e19;		// m^-3, Neutral density
 	Pdata.ElectronDensity = 8e17;	 	// m^-3, Electron density
 	double Potential = 1;			// arb, assumed negative, potential normalised to dust temperature, (-e*phi)/(Kb*Td)
-	Pdata.IonTemp = 100*1.16e5;	 	// K, Ion Temperature
-	Pdata.ElectronTemp = 100*1.16e5;	// K, Electron Temperature, convert from eV
-	Pdata.NeutralTemp = 100*1.16e5; 	// K, Neutral Temperature, convert from eV
+	Pdata.IonTemp = 100*1.16e4;	 	// K, Ion Temperature
+	Pdata.ElectronTemp = 100*1.16e4;	// K, Electron Temperature, convert from eV
+	Pdata.NeutralTemp = 100*1.16e4; 	// K, Neutral Temperature, convert from eV
 	Pdata.AmbientTemp = 0;
 
 	// Models and ConstModels are placed in an array in this order:
@@ -69,10 +69,10 @@ int ConstantPlasmaHeatingNeutralRecombTest(char Element){
 		return -1;
 	}
 
-
-//	MyModel.Vapourise(("out_ConstantHeatingTest_" + Element + ".txt").c_str(),ConstModels,TimeStepType);
-//	MyModel.Vapourise("out_ConstantHeatingTest.txt",ConstModels,TimeStepType);
+	Sample->set_potential(Potential);
 	HeatingModel MyModel("out_ConstantHeatingTest.txt",1.0,Models,Sample,Pdata);
+	MyModel.set_PowerIncident(Power);
+	MyModel.UpdateTimeStep();
 	MyModel.Vapourise();
 	double ModelTime = MyModel.get_totaltime();
 	

@@ -13,7 +13,7 @@ class Model{
 //	Could also be
  	private:
 		// Feasably this could actually be const
-		PlasmaGrid *Pgrid;		// Holds constant information about what the background plasma
+		PlasmaGrid *Pgrid;			// Holds information about what the current background plasma is.
 
 // 	This next section could also be private but this requires changing access methods in derived classes.
 //	This should be done at some later stage to ensure security in protection of Matter* Sample and Pdata.
@@ -27,6 +27,8 @@ class Model{
 		std::ofstream ModelDataFile;		// Output data file
 		const double Accuracy;			// Accuracy of model, normalised to one.
 		const bool ContinuousPlasma;		// Is the plasma background is constant in space.
+		double TimeStep;			// Current time step (s)
+		double TotalTime;			// Total Time taken by model (s)
 
 	protected:
 		virtual void Print()=0;			// Write to output data file
@@ -41,8 +43,10 @@ class Model{
 		// Destructor
 		virtual ~Model(){};
 
-		const Matter *get_sample		()const{ return Sample;	}
-		const PlasmaData &get_plasmadata	()const{ return Pdata; };
+		const Matter *get_sample		()const{ return Sample;		}
+		const PlasmaData &get_plasmadata	()const{ return Pdata; 		}
+		double get_totaltime			()const{ return TotalTime; 	}
+		double get_timestep			()const{ return TimeStep; 	}
 
 		void update_plasmadata(PlasmaData &pdata);
 		void update_plasmadata(threevector pos);

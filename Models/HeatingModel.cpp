@@ -7,8 +7,8 @@
 #include "Checks.h"
 #include "Functions.h"
 
-HeatingModel::HeatingModel():Type("constant"),Model(){
-	H_Debug("\n\nIn HeatingModel::HeatingModel():Type(constant),Model()\n\n");
+HeatingModel::HeatingModel():Model(){
+	H_Debug("\n\nIn HeatingModel::HeatingModel():Model()\n\n");
 	Defaults();
 	CreateFile("Default_Heating_filename.txt",false);
 }
@@ -35,9 +35,8 @@ void HeatingModel::Defaults(){
 	H_Debug("\tIn HeatingModel::Defaults()\n\n");
 	UseModel = {false,false,false,false,false,false,false};
 	PowerIncident = 0;			// kW, Power Incident
-	TimeStep = 0;				// s, Time step
-	TotalTime = 0;				// s, Total Time
 	ForceNegative = true;			// Force the sample to behave as negatively charged
+	ThermalEquilibrium = false;
 }
 
 void HeatingModel::CreateFile(std::string filename, bool PrintPhaseData){
@@ -127,6 +126,7 @@ void HeatingModel::Heat(){
 	Sample->update();
         H_Debug("\t"); Print();                // Print data to file
 	TotalTime += TimeStep;
+//	std::cout << "\nTotalTime : " << TotalTime; std::cin.get();
 }
 
 double HeatingModel::CalculatePower(double DustTemperature)const{
@@ -154,7 +154,6 @@ double HeatingModel::CalculatePower(double DustTemperature)const{
 	if( UseModel[6] )	H1_Debug("\nNeutralRecombination() = \t"<< NeutralRecombination(DustTemperature)<< "kW");
 	if( UseModel[7] )	H1_Debug("\nSEE() = \t" 		<< -SEE(DustTemperature) 		<< "kW");
 	if( UseModel[8] )	H1_Debug("\nTEE() = \t" 		<< -TEE(DustTemperature) 		<< "kW\n");
-
 
 	return TotalPower;
 }

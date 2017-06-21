@@ -7,8 +7,6 @@ class ForceModel : public Model {
 
 	private:
 		// Parameters defining the Force equation
-		double TimeStep;
-		double TotalTime;		
 		std::array<bool,4> UseModel; 		// Force Models turned on of possibly 4
 		std::ofstream ForceFile;		// Output data file
 

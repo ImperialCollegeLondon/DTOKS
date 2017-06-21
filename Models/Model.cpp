@@ -19,14 +19,14 @@ struct PlasmaData PlasmaDefaults = {
 PlasmaGrid *DefaultGrid = new PlasmaGrid('h','m',0.01);
 
 
-Model::Model():Sample(new Tungsten),Pgrid(DefaultGrid),Pdata(PlasmaDefaults),Accuracy(1.0),ContinuousPlasma(true){
+Model::Model():Sample(new Tungsten),Pgrid(DefaultGrid),Pdata(PlasmaDefaults),Accuracy(1.0),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
 	Mo_Debug("\n\nIn Model::Model():Sample(new Tungsten),Pgrid('h','m',0.01)Pdata(PlasmaDefaults),Accuracy(1.0),ContinuousPlasma(true)\n\n");
 	update_plasmadata(Sample->get_position());
 }
 
 // Constructor for Matter sample sitting in a constant plasma background given by PlasmaData (pdata) with a Default grid
 Model::Model( Matter *&sample, PlasmaData &pdata, double accuracy )
-		:Sample(sample),Pgrid(DefaultGrid),Pdata(pdata),Accuracy(accuracy),ContinuousPlasma(true){
+		:Sample(sample),Pgrid(DefaultGrid),Pdata(pdata),Accuracy(accuracy),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
 	Mo_Debug("\n\nIn Model::Model( Matter *& sample, PlasmaData &pdata, double accuracy ):Sample(sample),Pgrid(DefaultGrid),Pdata(pdata),Accuracy(accuracy),ContinuousPlasma(true)\n\n");
 	assert(Accuracy > 0);
 	update_plasmadata(pdata);
@@ -36,7 +36,7 @@ Model::Model( Matter *&sample, PlasmaData &pdata, double accuracy )
 // Constructor for Matter sample moving in a varying plasma background given by PlasmaGrid (pgrid) with the current information 
 // stored in pdata.
 Model::Model( Matter *&sample, PlasmaGrid &pgrid, double accuracy )
-		:Sample(sample),Pgrid(&pgrid),Pdata(PlasmaDefaults),Accuracy(accuracy),ContinuousPlasma(false){
+		:Sample(sample),Pgrid(&pgrid),Pdata(PlasmaDefaults),Accuracy(accuracy),ContinuousPlasma(false),TimeStep(0.0),TotalTime(0.0){
 	Mo_Debug("\n\nIn Model::Model( Matter *& sample, PlasmaGrid &pgrid, double accuracy ):Sample(sample),Pgrid(pgrid),Pdata(PlasmaDefaults),Accuracy(accuracy), ContinuousPlasma(false)\n\n");
 	assert(Accuracy > 0);
 	update_plasmadata(sample->get_position());

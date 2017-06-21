@@ -9,8 +9,6 @@
 ForceModel::ForceModel():Model(){
 	F_Debug("\n\nIn ForceModel::ForceModel():Model()\n\n");
 	UseModel = {false,false,false};
-	TimeStep = 0;
-	TotalTime = 0;
 	CreateFile("Default_Force_filename.txt");
 }
 
@@ -18,8 +16,6 @@ ForceModel::ForceModel(std::string filename, double accuracy, std::array<bool,4>
 			Matter *& sample, PlasmaData & pdata) : Model(sample,pdata,accuracy){
 	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, std::array<bool,3> models, Matter *& sample, PlasmaData const& pdata) : Model(sample,pdata,accuracy)\n\n");
 	UseModel = models;
-	TimeStep = 0;
-	TotalTime = 0;
 	CreateFile(filename);
 }
 
@@ -27,8 +23,6 @@ ForceModel::ForceModel(std::string filename, double accuracy, std::array<bool,4>
 			Matter *& sample, PlasmaGrid & pgrid) : Model(sample,pgrid,accuracy){
 	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, std::array<bool,3> models, Matter *& sample, PlasmaGrid const& pgrid) : Model(sample,pgrid,accuracy)\n\n");
 	UseModel = models;
-	TimeStep = 0;
-	TotalTime = 0;
 	CreateFile(filename);
 }
 
@@ -96,7 +90,7 @@ void ForceModel::Force(double timestep){
 	
 	Sample->update_motion(ChangeInPosition,ChangeInVelocity);
 
-	F_Debug("\t"); 
+	F_Debug("\t");
 	Print();
 	TotalTime += TimeStep;
 }
@@ -119,27 +113,24 @@ void ForceModel::Force(){
 	Sample->update_motion(ChangeInPosition,ChangeInVelocity);
 
 	F_Debug("\t"); 
+	F1_Debug( "ChangeInVelocity : " << ChangeInVelocity << "\nAcceleration : " << Acceleration << "\nTimeStep : " << TimeStep);
 	Print();
 	TotalTime += TimeStep;
 }
 
 threevector ForceModel::CalculateAcceleration()const{
-	F_Debug("\tIn ForceModel::CalculateAcceleration()\n\n");
+	F_Debug("\tIn ForceModel::CalculateAcceleration()const\n\n");
 	// Forces: Lorentz + ion drag + gravity
-
-	threevector g(0.0,0.0,-9.81);
-	F_Debug("\t"); threevector Fid = DTOKSIonDrag();
-        F_Debug("\t"); threevector centrifugal = Centrifugal(); // Centrifugal terms. CHECK THESE TWO LINES AT SOME POINT
-        F_Debug("\t"); threevector lorentzforce = LorentzForce();
-	g 		= g*UseModel[0];
-	Fid 		= Fid*UseModel[1];
-	centrifugal 	= centrifugal*UseModel[2];
-	lorentzforce 	= lorentzforce*UseModel[3];
-	F1_Debug( "\n\t\tFid = " << Fid );
-	F1_Debug( "\n\t\tg = " << g );
-	F1_Debug( "\n\t\tcentrifugal = " << centrifugal );
-	F1_Debug( "\n\t\tlorentzforce = " << lorentzforce << "\n\n" );
-        return (lorentzforce + Fid + g + centrifugal);
+	threevector Accel;
+	if( UseModel[0] ) Accel += threevector(0.0,0.0,-9.81);
+ 	if( UseModel[1] ) Accel += Centrifugal(); // Centrifugal terms. CHECK THESE TWO LINES AT SOME POINT
+ 	if( UseModel[2] ) Accel += LorentzForce();
+	if( UseModel[3] ) Accel += DTOKSIonDrag();
+	F1_Debug( "\n\t\tg = " << threevector(0.0,0.0,-9.81) );
+	F1_Debug( "\n\t\tcentrifugal = " << Centrifugal() );
+	F1_Debug( "\n\t\tlorentzforce = " << LorentzForce() << "\n\n" );
+	F1_Debug( "\n\t\tFid = " << DTOKSIonDrag() );
+        return Accel;
 }
 
 // Calculations for ion drag: Mach number, shielding length with fitting function and thermal scattering parameter

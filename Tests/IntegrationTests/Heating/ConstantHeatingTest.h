@@ -55,32 +55,26 @@ int ConstantHeatingTest(char Element){
 
 	if	(Element == 'W'){ 
 		Sample = new Tungsten(Size,Temp,ConstModels);
-		TimeStep=1e-10;
 	}else if (Element == 'B'){ 
 		Sample = new Beryllium(Size,Temp,ConstModels);
-		TimeStep=1e-10;
 	}else if (Element == 'F'){
 		Sample = new Iron(Size,Temp,ConstModels);
-		TimeStep=1e-12;
 	}else if (Element == 'G'){
 		Sample = new Graphite(Size,Temp,ConstModels);
-		TimeStep=1e-10;
 	}else{ 
 		std::cerr << "\nInvalid Option entered";
 		return -1;
 	}
-	double Mass = Sample->get_mass();
 
 	HeatingModel MyModel("out_ConstantHeatingTest.txt",1.0,Models,Sample,Pdata);
+
+	double Mass = Sample->get_mass();
 	MyModel.set_PowerIncident(Power);
 	MyModel.UpdateTimeStep();
 
 	MyModel.Vapourise();
 
 	double ModelTime = MyModel.get_totaltime();
-	std::cout << "\nElement = " << Element;
-	std::cout << "\nMass = " << Mass;
-	std::cout << "\nMass/Power = " << Mass/Power;
 	
 	double p1 = (Mass/Power)*((Sample->get_superboilingtemp()-Temp)*Sample->get_heatcapacity());
 	double p2 = (Mass*Sample->get_latentfusion())/Power;
@@ -100,6 +94,8 @@ int ConstantHeatingTest(char Element){
 	std::cout << "\n\n*****\n\nIntegrationTest 1 completed in " << elapsd_secs << "s\n";
 	std::cout << "\n\n*****\nModelTime = " << ModelTime << "s : AnalyticTime = " << AnalyticTime << "s";
 	std::cout << "\nPercentage Deviation = " << fabs(100-100*ModelTime/AnalyticTime) <<"%\n*****\n\n";
+
+	delete Sample;
 
 	return ReturnVal;
 }

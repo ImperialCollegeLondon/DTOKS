@@ -1,6 +1,6 @@
 #include "HeatingModel.h"
 
-int ConstantElectronPlasmaHeatingTest(char Element){
+int ConstantPlasmaHeatingTest(char Element){
 	clock_t begin = clock();
 	// ********************************************************** //
 	// FIRST, define program default behaviour
@@ -28,9 +28,9 @@ int ConstantElectronPlasmaHeatingTest(char Element){
 	bool EvaporativeCooling = false;
 	bool NewtonCooling = false;		// This model is equivalent to Electron and Ion heat flux terms
 	// Plasma heating terms
-	bool IonHeatFlux = false;
-	bool ElectronHeatFlux = true;
 	bool NeutralHeatFlux = true;
+	bool ElectronHeatFlux = true;
+	bool IonHeatFlux = true;
 	bool NeutralRecomb = false;
 	// Electron Emission terms
 	bool TEE = false;
@@ -40,9 +40,9 @@ int ConstantElectronPlasmaHeatingTest(char Element){
 	Pdata.NeutralDensity = 3e19;		// m^-3, Neutral density
 	Pdata.ElectronDensity = 8e17;	 	// m^-3, Electron density
 	double Potential = 1;			// arb, assumed negative, potential normalised to dust temperature, (-e*phi)/(Kb*Td)
-	Pdata.IonTemp = 100*1.16e5;	 	// K, Ion Temperature
-	Pdata.ElectronTemp = 100*1.16e5;	// K, Electron Temperature, convert from eV
-	Pdata.NeutralTemp = 100*1.16e5; 	// K, Neutral Temperature, convert from eV
+	Pdata.IonTemp = 100*1.16e4;	 	// K, Ion Temperature
+	Pdata.ElectronTemp = 100*1.16e4;	// K, Electron Temperature, convert from eV
+	Pdata.NeutralTemp = 100*1.16e4; 	// K, Neutral Temperature, convert from eV
 	Pdata.AmbientTemp = 0;
 
 	// Models and ConstModels are placed in an array in this order:
@@ -54,13 +54,13 @@ int ConstantElectronPlasmaHeatingTest(char Element){
 
 	if	(Element == 'W'){ 
 		Sample = new Tungsten(Size,Temp,ConstModels);
-		TimeStep=1e-11;
+		TimeStep=1e-12;
 	}else if (Element == 'B'){ 
 		Sample = new Beryllium(Size,Temp,ConstModels);
-		TimeStep=1e-10;
+		TimeStep=1e-11;
 	}else if (Element == 'F'){
 		Sample = new Iron(Size,Temp,ConstModels);
-		TimeStep=1e-11;
+		TimeStep=1e-13;
 	}else if (Element == 'G'){
 		Sample = new Graphite(Size,Temp,ConstModels);
 		TimeStep=1e-11;
@@ -68,10 +68,10 @@ int ConstantElectronPlasmaHeatingTest(char Element){
 		std::cerr << "\nInvalid Option entered";
 		return -1;
 	}
-
+	Sample->set_potential(Potential);
 	HeatingModel MyModel("out_ConstantHeatingTest.txt",1.0,Models,Sample,Pdata);
-//	MyModel.Vapourise(("out_ConstantHeatingTest_" + Element + ".txt").c_str(),ConstModels,TimeStepType);
-//	MyModel.Vapourise("out_ConstantHeatingTest.txt",ConstModels,TimeStepType);
+	MyModel.set_PowerIncident(Power);
+	MyModel.UpdateTimeStep();
 	MyModel.Vapourise();
 
 	double ModelTime = MyModel.get_totaltime();
@@ -81,17 +81,16 @@ int ConstantElectronPlasmaHeatingTest(char Element){
 
 	double ElectronFlux = Pdata.ElectronDensity*exp(-Potential)*sqrt(Kb*Pdata.ElectronTemp/(2*PI*Me));
 	double NeutralFlux = Pdata.NeutralDensity*sqrt(Kb*Pdata.NeutralTemp/(2*PI*Mp));
-	
+	double IonFlux = ElectronFlux;
+
 	double ElectronFluxPower = Sample->get_surfacearea()*2*ElectronFlux*Pdata.ElectronTemp*Kb/1000; // Convert from Joules to KJ
 	double NeutralFluxPower = Sample->get_surfacearea()*2*NeutralFlux*Pdata.NeutralTemp*Kb/1000; // Convert from Joules to KJ
+	double IonFluxPower = (Sample->get_surfacearea()*IonFlux*Pdata.IonTemp*Kb/1000) // Convert from Joules to KJ
+	*(2+2*Potential*(Pdata.ElectronTemp/Pdata.IonTemp)+pow(Potential*(Pdata.ElectronTemp/Pdata.IonTemp),2))/(1+Potential*(Pdata.ElectronTemp/Pdata.IonTemp));
 
+	double a = Power+ElectronFluxPower+NeutralFluxPower+IonFluxPower;
 
-
-	double a = Power+ElectronFluxPower+NeutralFluxPower;
-
-
-	std::cout << "\nPower = " << Power << "\nElectronFluxPower = " << ElectronFluxPower << "\nNeutralFluxPower " << NeutralFluxPower;
-
+//	std::cout << "Emiss = " << Sample->get_emissivity();
 	double b = Sample->get_emissivity()*Sample->get_surfacearea()*Sigma/1000;
 	double ti(0), tf(0), t1(0), t2(0), t3(0), t4(0);
 	double FinalTemp = pow(a/b,0.25)-0.000000001;
