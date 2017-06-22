@@ -166,12 +166,12 @@ int main(int argc, char* argv[]){
 	Sample->update_motion(xinit,vinit);
 
 	std::cout << "\n\n * GENERATE DTOKS * \n\n";
-	DTOKSU MyDtoks1(TimeStep, AccuracyLevels, Sample, Pdata, HeatModels, ForceModels, ChargeModels);
-//	DTOKSU MyDtoks2(TimeStep, AccuracyLevels, Sample, Pgrid, HeatModels, ForceModels, ChargeModels);
+//	DTOKSU MyDtoks1(TimeStep, AccuracyLevels, Sample, Pdata, HeatModels, ForceModels, ChargeModels);
+	DTOKSU MyDtoks2(TimeStep, AccuracyLevels, Sample, Pgrid, HeatModels, ForceModels, ChargeModels);
 	
 	std::cout << "\n\n * RUN DTOKS * \n\n";
-	int errcode1 = MyDtoks1.Run();
-//	int errcode2 = MyDtoks2.Run();
+//	int errcode1 = MyDtoks1.Run();
+	int errcode2 = MyDtoks2.Run();
 
 	std::cout << "\n\n * MAIN SCRIPT COMPLETE * \n\n";
 	return 0;

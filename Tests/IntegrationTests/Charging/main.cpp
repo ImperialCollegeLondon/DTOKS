@@ -1,6 +1,5 @@
 #include <ctime>			// Time program
-#include "ConstantForceTest.h"
-#include "ConstantLorentzForceTest.h"
+#include "ChargeTest.h"
 
 int main(){
 
@@ -12,20 +11,11 @@ int main(){
 
 		// Test bout 1,
 		// Integration test one for all materials
-		// Test if constant Lorentz force (Electric field with no magnetic field) and gravity
-		// Produce expected results over 100 or so steps
+		// Test if the charging model is producing the expected result
+		// Note, this test is very rudimentary and just checks that the charging model matches DTOKS's original format
 		std::cout << "\nRunning Test 1...\n";
-		out = ConstantForceTest(Element[i]);	
+		out = ChargeTest(Element[i]);	
 		std::cout << "\nFinished Running Test 1!\n";
-
-		// Test bout 2, THIS TEST DOESN'T WORK YET
-		// Integration test two for all materials
-		// Test if full Lorentz force (Electric field and magnetic field) and gravity
-		// Produce expected results over 100 or so steps
-//		std::cout << "\nRunning Test 2...\n";
-//		out = ConstantLorentzForceTest(Element[i]);	
-//		std::cout << "\nFinished Running Test 2!\n";
-
 
 		if( out == 1 ) std::cout << "\n# PASSED!";
 		if( out == 2 ) std::cout << "\n# WARNING! DEVIATION OF < 1%";

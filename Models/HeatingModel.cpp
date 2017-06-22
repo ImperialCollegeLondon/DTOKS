@@ -1,6 +1,6 @@
 //#define PAUSE
 //#define HEATING_DEBUG
-//#define HEATING_DEEP_DEBUG
+#define HEATING_DEEP_DEBUG
 
 #include "HeatingModel.h"
 #include "Constants.h"
@@ -205,6 +205,10 @@ double HeatingModel::UpdateTimeStep(){
 	// Check Thermal Equilibrium hasn't been reached
 	double DeltaTempTest = TotalPower*TimeStep/(Sample->get_mass()*Sample->get_heatcapacity());
 
+	if( Pdata.IonTemp == 0 ){ // Consider testing if other plasma values are zero
+		TimeStep = 10;
+		return TimeStep;
+	}
 	// May be that we could remove this condition now...
 	if( TotalPower == 0 ){	
 		static bool runOnce = true;
@@ -212,14 +216,14 @@ double HeatingModel::UpdateTimeStep(){
 		ThermalEquilibrium = true;
 		TimeStep = 1;
 	}
-
+	
 	if( Sample->get_temperature() != Sample->get_superboilingtemp() ){
-		if( (Sample->get_temperature()-OldTemp > 0 && DeltaTempTest < 0) // If temperature changed sign changed this step
-			|| (Sample->get_temperature()-OldTemp < 0 && DeltaTempTest > 0) ){
+		if( ((Sample->get_temperature()-OldTemp > 0 && DeltaTempTest < 0) // If temperature changed sign changed this step
+			|| (Sample->get_temperature()-OldTemp < 0 && DeltaTempTest > 0)) && ContinuousPlasma ){
 			std::cout << "\n\nThermal Equilibrium reached on condition (1): Sign change of Temperature change!";
 			ThermalEquilibrium = true;
 			TimeStep = 1; 
-		}if(  fabs(DeltaTempTest/TimeStep) < 0.01 ){ // If Temperature gradient is less than 1%
+		}if( (fabs(DeltaTempTest/TimeStep) < 0.01) && ContinuousPlasma ){ // If Temperature gradient is less than 1%
 			std::cout << "\n\nThermal Equilibrium reached on condition (2): Temperature Gradient < 0.01!";
 			ThermalEquilibrium = true;
 			TimeStep = 1;
@@ -342,7 +346,6 @@ const double HeatingModel::NeutralRecombination(double DustTemperature)const{
 	}
 
 	return Sample->get_surfacearea()*(1-RN)*(14.7*echarge*IonFlux(DustTemperature) - 2*Kb*DustTemperature*NeutralFlux())/1000; // Convert from J to kJ
-	return Sample->get_surfacearea()*(14.7*echarge*IonFlux(DustTemperature) - 2*Kb*DustTemperature*NeutralFlux())/1000; // Convert from J to kJ
 }
 
 const double HeatingModel::SEE(double DustTemperature)const{
@@ -370,8 +373,8 @@ const double HeatingModel::TEE(double DustTemperature)const{
 		TEE = Sample->get_surfacearea()*Sample->get_deltatherm()*
 			(2*Kb*DustTemperature+echarge*Sample->get_workfunction())/1000; // Convert to kJ
 	else if( Sample->get_deltatot() > 1 ) 	TEE = 0; // Electrons captured by positive grain
-
-	return TEE;
+	if( Sample->get_deltatherm() < 1e-10 ) 	return -0;
+	else 					return TEE;
 }
 
 const double HeatingModel::IonHeatFlux(double DustTemperature)const{ // Assuming Re = 0
@@ -389,9 +392,12 @@ const double HeatingModel::IonHeatFlux(double DustTemperature)const{ // Assuming
 //	std::cout << "\n\n***** Ions = " << (Sample->get_surfacearea()*(1-RE)*IonFlux(DustTemperature)*Pdata.IonTemp*Kb/1000)
 //	*(2+2*Sample->get_potential()*(Pdata.ElectronTemp/Pdata.IonTemp)+pow(Sample->get_potential()*(Pdata.ElectronTemp/Pdata.IonTemp),2))/(1+Sample->get_potential()*(Pdata.ElectronTemp/Pdata.IonTemp));
 
-	return (Sample->get_surfacearea()*(1-RE)*IonFlux(DustTemperature)*Pdata.IonTemp*Kb/1000) // Convert from Joules to KJ
-	*(2+2*Sample->get_potential()*(Pdata.ElectronTemp/Pdata.IonTemp)+pow(Sample->get_potential()*(Pdata.ElectronTemp/Pdata.IonTemp),2))/(1+Sample->get_potential()*(Pdata.ElectronTemp/Pdata.IonTemp)); 
-
+	if( Pdata.IonTemp == 0 )	return 0;	
+	else				return (Sample->get_surfacearea()*(1-RE)*IonFlux(DustTemperature)*Pdata.IonTemp*Kb/1000) 
+						*(2+2*Sample->get_potential()*(Pdata.ElectronTemp/Pdata.IonTemp)
+						+pow(Sample->get_potential()*(Pdata.ElectronTemp/Pdata.IonTemp),2))
+						/(1+Sample->get_potential()*(Pdata.ElectronTemp/Pdata.IonTemp)); 
+						// Convert from Joules to KJ
 }
 
 const double HeatingModel::ElectronHeatFlux(double DustTemperature)const{ // Only for a negative grain

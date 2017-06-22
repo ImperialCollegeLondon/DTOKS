@@ -353,6 +353,7 @@ void Matter::update_motion(threevector &ChangeInPosition,threevector &ChangeInVe
 
 void Matter::update_charge(double potential, double deltat, double deltas){
 	M_Debug("\tIn Matter::update_charge(double potential)\n\n");
+//	std::cout << "\npotential = " << potential << "\n"; std::cin.get();
 	St.Potential = potential;
 	
 	St.DeltaTherm = deltat;

@@ -146,9 +146,9 @@ threevector ForceModel::DTOKSIonDrag()const{
 
         if( Pdata.IonDensity == 0 || Pdata.IonTemp*ConvertKelvsToeV == 0 || Pdata.ElectronTemp*ConvertKelvsToeV == 0 ){ 
 		// || Mt.mag3() == 0 ){
-                std::cerr << "\nError! IonDensity = " << Pdata.IonDensity << "\nIonTemp*ConvertKelvsToeV = " 
+                F_Debug("\nWarning! IonDensity = " << Pdata.IonDensity << "\nIonTemp*ConvertKelvsToeV = " 
 			<< Pdata.IonTemp*ConvertKelvsToeV << "\nElectronTemp*ConvertKelvsToeV = " 
-			<< Pdata.ElectronTemp*ConvertKelvsToeV << "!\nThis blows up calculations! Setting Fid=0.";
+			<< Pdata.ElectronTemp*ConvertKelvsToeV << "!\nThis blows up calculations! Setting Fid=0.");
                 Fid = threevector(0.0,0.0,0.0);
         }else{
 		double lambda = sqrt(epsilon0/(Pdata.IonDensity*echarge*exp(-Mt.mag3()*Mt.mag3()/2)

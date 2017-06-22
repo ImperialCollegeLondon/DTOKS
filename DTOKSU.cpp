@@ -1,6 +1,6 @@
 //#define PAUSE
 //#define DTOKSU_DEBUG
-//#define DTOKSU_DEEP_DEBUG
+#define DTOKSU_DEEP_DEBUG
 #include "DTOKSU.h"
 
 // CONSIDER DEFINING A DEFAULT SAMPLE
@@ -66,7 +66,7 @@ int DTOKSU::Run(){
 	D_Debug("- In DTOKSU::Run()\n\n");
 
 	double HeatTime(0),ForceTime(0),ChargeTime(0);
-	for(size_t i = 0; i < 100000; i ++){
+	for(size_t i = 0; i < 100; i ++){
 
 		CM.Charge();
 		Sample->update();			// Update data in GrainStructs
@@ -74,6 +74,7 @@ int DTOKSU::Run(){
 		ChargeTime 	= CM.UpdateTimeStep();		// Check Time step length is appropriate
 		ForceTime 	= FM.UpdateTimeStep();			// Check Time step length is appropriate
 		HeatTime 	= HM.UpdateTimeStep();			// Check Time step length is appropriate
+		std::cout << "\nCT = " << ChargeTime << "\nFT = " << ForceTime << "\nHT = " << HeatTime;
 		if( HeatTime == 1) break;			// Thermal Equilibrium Reached
 
 		// We will assume Charging Time scale is much faster than either heating or moving, but check for the other case.
@@ -81,7 +82,7 @@ int DTOKSU::Run(){
 		MinTimeStep = std::min(ForceTime,HeatTime);
 
 		// Check Charging timescale isn't the fastest timescale.
-		if( ChargeTime > MinTimeStep ){
+		if( ChargeTime > MinTimeStep && ChargeTime != 1){
 			static bool runOnce = true;
 			WarnOnce(runOnce,"*** WARNING! Charging Time scale is not the shortest timescale!! ***\n");
 		}

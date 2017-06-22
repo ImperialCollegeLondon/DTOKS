@@ -43,11 +43,17 @@ void ChargingModel::Print(){
 double ChargingModel::UpdateTimeStep(){
 	C_Debug( "\tIn ChargingModel::UpdateTimeStep()\n\n" );
 	
-	// Calcualte the time scale of the behaviour from Krashinnenikovs equation	
-	double DebyeLength=sqrt((epsilon0*Kb*Pdata.ElectronTemp)/(Pdata.ElectronDensity*pow(echarge,2)));
-	double PlasmaFreq = sqrt((Pdata.ElectronDensity*pow(echarge,2))/(epsilon0*Me));
-	TimeStep = sqrt(2*PI) * ((DebyeLength)/Sample->get_radius()) 
-			* (1/(PlasmaFreq*(1+Pdata.ElectronTemp/Pdata.IonTemp+Sample->get_potential())));	
+
+	if( Pdata.ElectronDensity != 0 && Pdata.IonTemp != 0){
+		// Calcualte the time scale of the behaviour from Krashinnenikovs equation
+		double DebyeLength=sqrt((epsilon0*Kb*Pdata.ElectronTemp)/(Pdata.ElectronDensity*pow(echarge,2)));
+		double PlasmaFreq = sqrt((Pdata.ElectronDensity*pow(echarge,2))/(epsilon0*Me));
+		TimeStep = sqrt(2*PI) * ((DebyeLength)/Sample->get_radius()) 
+				* (1/(PlasmaFreq*(1+Pdata.ElectronTemp/Pdata.IonTemp+Sample->get_potential())));	
+	}else{	TimeStep = 1; } // In region of no plasma
+
+	C_Debug("\n\t\tDebyeLength = " << DebyeLength << "\n\t\tPlasmaFreq = " << PlasmaFreq 
+			<< "\n\t\tTimeStep = " << TimeStep << "\n\n");
 
 	C_Debug("\n\t\tDebyeLength = " << DebyeLength << "\n\t\tPlasmaFreq = " << PlasmaFreq 
 			<< "\n\t\tTimeStep = " << TimeStep << "\n\n");
@@ -64,20 +70,21 @@ void ChargingModel::Charge(double timestep){
 	// Make sure timestep input time is valid. Shouldn't exceed the timescale of the process.
 	assert(timestep > 0);// && timestep <= TimeStep );
 	TimeStep = timestep;
-
+	double DSec = DeltaSec();
+	double DTherm = DeltaTherm();
 	// Assume the grain is negative and calculate potential
 	if( UseModel[0] ){
 		double Potential;
-		if( Sample->get_deltatot() < 1.0 ){ // solveOML only defined for deltatot < 1.0
-			Potential = solveOML(Sample->get_deltatot(),Sample->get_potential()); 
+		if( (DSec + DTherm) < 1.0 ){ // solveOML only defined for deltatot < 1.0
+			Potential = solveOML( DSec + DTherm,Sample->get_potential()); 
 		}else{ // If the grain is in fact positive ...
-			Potential = solveOML(Sample->get_deltatot(),Sample->get_potential());
+			Potential = solveOML( DSec + DTherm,Sample->get_potential());
 			if( Potential < 0.0 ){
 				Potential = solveOML(0.0,Sample->get_potential())-Kb*Sample->get_temperature()
 						/(echarge*Pdata.ElectronTemp);
 			}
 		}
-		Sample->update_charge(Potential,DeltaSec(),DeltaTherm());
+		Sample->update_charge(Potential,DSec,DTherm);
 //		std::cout << "\nPotential = " << Potential << "\nDeltaSec = " << Sample->get_deltasec() << "\nDeltatherm = " 
 //			<< Sample->get_deltatherm() << "\n"; std::cin.get();
 
@@ -91,23 +98,23 @@ void ChargingModel::Charge(){
 	C_Debug("\tIn ChargingModel::Charge()\n\n");
 
 //	std::cout << "\n(4)Temp = " << Sample->get_temperature() << "\nVapPressure = " << Sample->get_vapourpressure() << "\nCv = " << Sample->get_heatcapacity() << "\n";
-
+	double DSec = DeltaSec();
+	double DTherm = DeltaTherm();
 	// Assume the grain is negative and calculate potential
 	if( UseModel[0] ){
 		double Potential;
-		if( Sample->get_deltatot() < 1.0 ){ // solveOML only defined for deltatot < 1.0
-			Potential = solveOML(Sample->get_deltatot(),Sample->get_potential()); 
+		if( DSec+DTherm < 1.0 ){ // solveOML only defined for deltatot < 1.0
+			Potential = solveOML(DSec+DTherm,Sample->get_potential()); 
 		}else{ // If the grain is in fact positive ...
-			Potential = solveOML(Sample->get_deltatot(),Sample->get_potential());
+			Potential = solveOML(DSec+DTherm,Sample->get_potential());
 			if( Potential < 0.0 ){
 				Potential = solveOML(0.0,Sample->get_potential())-Kb*Sample->get_temperature()
 						/(echarge*Pdata.ElectronTemp);
 			}
 		}
-		Sample->update_charge(Potential,DeltaSec(),DeltaTherm());
+		Sample->update_charge(Potential,DSec,DTherm);
 //		std::cout << "\nPotential = " << Potential << "\nDeltaSec = " << Sample->get_deltasec() << "\nDeltatherm = " 
 //			<< Sample->get_deltatherm() << "\n"; std::cin.get();
-
 	}
 	TotalTime += TimeStep;
 
@@ -132,7 +139,6 @@ double ChargingModel::solveOML(double a, double guess){
 	}
 	return guess;
 }
-
 
 double ChargingModel::DeltaSec()const{
 	C_Debug("\tIn ChargingModel::DeltaSec()\n\n");
