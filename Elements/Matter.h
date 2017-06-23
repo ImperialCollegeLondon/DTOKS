@@ -56,6 +56,7 @@ class Matter{
 		void update_temperature(double EnergyIn);
 
 		void update_motion(threevector &changeinposition, threevector &changeinvelocity);
+		// Resolve region of rapid charge variation
 		void update_charge(double potential, double deltas, double deltat);
 
 		// Getter methods

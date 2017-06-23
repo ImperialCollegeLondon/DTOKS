@@ -129,19 +129,21 @@ void PlasmaGrid::readdata(){
 // *************************************** MUTATION FUNCTIONS *************************************** //
 
 // Locate dust particle in the plasma grid
-void PlasmaGrid::locate(int &i, int &k, const threevector xd)const{
+bool PlasmaGrid::locate(int &i, int &k, const threevector xd)const{
 	std::cout << "\tIn PlasmaGrid::locate(int &" << i << ", int &" << k << ", " << xd << ")\n\n";
 	// Adding 0.5 makes the rounding work properly
 	i = int(0.5+(xd.getx()-gridxmin)/dl);
 	k = int(0.5+(xd.getz()-gridzmin)/dl);
-	checkingrid(i,k);
+	return checkingrid(i,k);
 //	std::cout << "\ni = " << i << "\nk = " << k;
 }
 
-void PlasmaGrid::checkingrid(const int i, const int k)const{
+bool PlasmaGrid::checkingrid(const int i, const int k)const{
 //	std::cout << "\tIn PlasmaGrid::checkingrid(int " << i << ", int " << k  << ")\n\n";
-	assert( i < gridx && i > 0);
-	assert( k < gridz && k > 0);
+	bool returnval(true);
+	if( i > gridx || i < 0) returnval = false;
+	if( k > gridz || k < 0) returnval = false;
+	return returnval;
 }
 
 // *************************************** PRINTING FUNCTIONS *************************************** //

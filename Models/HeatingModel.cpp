@@ -383,7 +383,7 @@ const double HeatingModel::IonHeatFlux(double DustTemperature)const{ // Assuming
 
 	double RN(0), RE(0);
 //	backscatter(Pdata.ElectronTemp,Pdata.IonTemp,Mp,Sample->get_potential(),Element,RE,RN);
-	H1_Debug( "\nRE = " << RE );
+//	H1_Debug( "\nRE = " << RE );
 	if( RE > 0.1 ){
 		static bool runOnce = true;
 		WarnOnce(runOnce,"In HeatingModel::IonHeatFlux(double DustTemperature)\nRE > 0.1. Ion Heat Flux affected by backscattering by more than 10%!");

@@ -12,9 +12,9 @@
 class PlasmaGrid{
 	// Plasma variables
 	protected:
-//		const PlasmaGridData PGD;
 
-		// THE VALUE mevap ISN'T CONST CAUSE THIS WAS HOW EVAPORATED MASS DEPOSITION WAS MEASURED
+		// Oh by the way, na0 is the ion density and na1 is the electron density,
+		// ua0 is the ion drift velocity and ua1 is the electron drift velocity! po is the potential. You're welcome.
 		std::vector<std::vector<double>> Te, Ti, na0, na1, po, ua0, ua1, bx, by, bz, x, z, mevap;
 		std::vector<std::vector<int>> gridflag;
 		int gridx, gridz;  
@@ -44,8 +44,8 @@ class PlasmaGrid{
 		// functions to locate dust, update electromagnetic fields, calculate mass loss and check position
 		void setfields(int i, int k);
 		void summevap(int i, int k, double dm){mevap[i][k] += dm;}
-		void locate(int &i, int &k, threevector xd)const; // Locate dust particle in the plasma grid		
-		void checkingrid(int i, int k)const;
+		bool locate(int &i, int &k, threevector xd)const; // Locate dust particle in the plasma grid		
+		bool checkingrid(int i, int k)const;
 
 		// Methods to get variables
 		const PlasmaData &get_plasmadata(const threevector pos)const;
@@ -153,7 +153,8 @@ class PlasmaGrid{
                         }else{
                                 return 0;
                         }
-		}	double getmi		()		const{return mi;}
+		}	
+		double getmi		()		const{return mi;}
 		double getgamma		()		const{return gamma;}
 		double getdl		()		const{return dl;}
 

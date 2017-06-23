@@ -44,7 +44,7 @@ Model::Model( Matter *&sample, PlasmaGrid &pgrid, double accuracy )
 }
 
 void Model::update_plasmadata(PlasmaData &pdata){
-	std::cout << "\tIn plasmagrid::get_plasmadata(PlasmaData & pdata)\n\n";
+	std::cout << "\tIn Model::update_plasmadata(PlasmaData & pdata)\n\n";
 	Pdata.NeutralDensity 	= pdata.NeutralDensity;
 	Pdata.ElectronDensity 	= pdata.ElectronDensity;
 	Pdata.IonDensity 	= pdata.IonDensity;
@@ -59,25 +59,31 @@ void Model::update_plasmadata(PlasmaData &pdata){
 	std::cout << "\t\tPdata.MagneticField = " << Pdata.MagneticField << "\n";
 }
 
-void Model::update_plasmadata(threevector pos){
-	std::cout << "\tIn plasmagrid::get_plasmadata(" << pos << ")\n\n";
+bool Model::update_plasmadata(threevector pos){
+	std::cout << "\tIn Model::update_plasmadata(" << pos << ")\n\n";
+	double ConvertevtoK(1.16e4);		// Conversion factor from ev to K
 	int i(0), k(0);
-	Pgrid->locate(i,k,pos);
+	bool InGrid = Pgrid->locate(i,k,pos);
+	if( !InGrid ) return InGrid;			// Particle has escaped simulation domain
 	update_fields(i,k);
-	Pdata.NeutralDensity 	= Pgrid->getna0(i,k); 
-	Pdata.ElectronDensity 	= Pgrid->getna1(i,k);  // ELECTRON DENSITY EQUALS ION DENSITY
-	Pdata.IonDensity 	= Pgrid->getna1(i,k);
-	Pdata.IonTemp		= Pgrid->getTi(i,k); 
-	Pdata.ElectronTemp 	= Pgrid->getTe(i,k); 
-	Pdata.NeutralTemp 	= Pgrid->getTi(i,k); // NEUTRAL TEMP EQUAL TO ION TEMP
-	Pdata.AmbientTemp 	= 300; // NOTE THIS IS HARD CODED OHMEINGOD
+	Pdata.NeutralDensity 	= Pgrid->getna0(i,k);  	// NEUTRAL DENSITY EQUALS ION DENSITY
+	Pdata.ElectronDensity 	= Pgrid->getna1(i,k);  
+	Pdata.IonDensity 	= Pgrid->getna0(i,k);
+	Pdata.IonTemp		= Pgrid->getTi(i,k)*ConvertevtoK;
+	Pdata.ElectronTemp 	= Pgrid->getTe(i,k)*ConvertevtoK;
+	Pdata.NeutralTemp 	= Pgrid->getTi(i,k)*ConvertevtoK; 	// NEUTRAL TEMP EQUAL TO ION TEMP
+//	std::cout << "\nTi = " << Pdata.IonTemp;
+//	std::cout << "\nTe = " << Pdata.ElectronTemp;
+//	std::cout << "\nTn = " << Pdata.NeutralTemp; std::cin.get();
+	Pdata.AmbientTemp 	= 300; 			// NOTE THIS IS HARD CODED OHMEINGOD
 
-	std::cout << "\t\tPdata.MagneticField = " << Pdata.MagneticField << "\n";
+	return true;
+//	std::cout << "\t\tPdata.MagneticField = " << Pdata.MagneticField << "\n";
 }
 
 // CHECK THIS FUNCTION IS THE SAME AS IT WAS BEFORE!
 void Model::update_fields(int i, int k){
-	std::cout << "\tIn plasmagrid::update_fields(int " << i << ", int " << k << ")\n\n";
+	std::cout << "\tIn Model::update_fields(int " << i << ", int " << k << ")\n\n";
 	threevector vp, E, B;
 	double aveu;
 	if( (Pgrid->getna0(i,k)>0.0) || (Pgrid->getna1(i,k)>0.0) ){

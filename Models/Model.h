@@ -49,7 +49,7 @@ class Model{
 		double get_timestep			()const{ return TimeStep; 	}
 
 		void update_plasmadata(PlasmaData &pdata);
-		void update_plasmadata(threevector pos);
+		bool update_plasmadata(threevector pos);
 		void update_fields(int i, int k);
 };
 

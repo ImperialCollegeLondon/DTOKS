@@ -66,14 +66,13 @@ int DTOKSU::Run(){
 	D_Debug("- In DTOKSU::Run()\n\n");
 
 	double HeatTime(0),ForceTime(0),ChargeTime(0);
-	for(size_t i = 0; i < 100; i ++){
-
+	for(size_t i = 0; i < 1000; i ++){
 		CM.Charge();
 		Sample->update();			// Update data in GrainStructs
 
 		ChargeTime 	= CM.UpdateTimeStep();		// Check Time step length is appropriate
-		ForceTime 	= FM.UpdateTimeStep();			// Check Time step length is appropriate
-		HeatTime 	= HM.UpdateTimeStep();			// Check Time step length is appropriate
+		ForceTime 	= FM.UpdateTimeStep();		// Check Time step length is appropriate
+		HeatTime 	= HM.UpdateTimeStep();		// Check Time step length is appropriate
 		std::cout << "\nCT = " << ChargeTime << "\nFT = " << ForceTime << "\nHT = " << HeatTime;
 		if( HeatTime == 1) break;			// Thermal Equilibrium Reached
 
@@ -86,10 +85,13 @@ int DTOKSU::Run(){
 			static bool runOnce = true;
 			WarnOnce(runOnce,"*** WARNING! Charging Time scale is not the shortest timescale!! ***\n");
 		}
-
-
-		// Resolve region of rapid charge variation
-		if( Sample->get_deltatot() > 0.5 && Sample->get_deltatot() < 1.0 ){
+		
+		// Resolve region where plasma parameters are zero
+		if( HeatTime == 10 ){
+			D1_Debug("\nNo Plasma Region...");
+			FM.Force();
+			std::cout << "\nPos = " << Sample->get_position();
+		}else if( Sample->get_deltatot() > 0.5 && Sample->get_deltatot() < 1.0 ){ // Resolve region of rapid charge variation
 			D1_Debug("\n\nPotential Focus Region, steps taken at 0.01*MinTimeStep\n");
 			D1_Debug("Potential = " << Sample->get_potential() << "\nDeltaTot = " << Sample->get_deltatot() << "\n\n");
 			CM.Charge(MinTimeStep*0.01);
@@ -136,7 +138,16 @@ int DTOKSU::Run(){
 			std::cout << "\n\nSample has Evaporated ";
 			break;
 		}
-
+		bool InGrid = FM.update_plasmadata(Sample->get_position());		// You know this is bad coding, and yet you do it
+		HM.update_plasmadata(Sample->get_position());
+		CM.update_plasmadata(Sample->get_position());
+		if( !InGrid ){
+			std::cout << "\nDust has left simulation domain";
+			break;
+		}else if( Sample->is_gas() ){
+			std::cout << "\nDust has vapourised";
+			break;
+		}
 		TotalTime += MinTimeStep;
 	}
 	if( HeatTime == 1 ) std::cout << "\nEnd of Run, exiting due to Thermal Equilibrium being reached!\n\n";

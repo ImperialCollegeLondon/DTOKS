@@ -128,7 +128,9 @@ double ChargingModel::solveOML(double a, double guess){
 		WarnOnce(runOnce,"DeltaTot >= 1.0. DeltaTot being set equal to unity.");
 		a = 1.0;
 	}
-	double b = Pdata.IonTemp/Pdata.ElectronTemp;
+	double b(0);
+	if( Pdata.ElectronTemp == 0 ) 	b = 0;
+	else 				b = Pdata.IonTemp/Pdata.ElectronTemp;
 	double C = Me/Mp;
 
 	double x1 = guess - ( (( 1-a)*exp(-guess) - sqrt(b*C)*(1+guess/b))/((a-1)*exp(-guess) - sqrt(C/b) ) );

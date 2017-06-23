@@ -347,6 +347,9 @@ void Matter::update_temperature(double EnergyIn){
 void Matter::update_motion(threevector &ChangeInPosition,threevector &ChangeInVelocity){
 	M_Debug("\tIn Matter::update_motion(threevector &ChangeInPosition,threevector &ChangeInVelocity)\n\n");
 	// Calculate new position
+	std::cout << "\nChange in Vel = " << ChangeInVelocity;
+	std::cout << "\nVel = " << St.DustVelocity;
+
 	St.DustPosition = St.DustPosition + ChangeInPosition;
 	St.DustVelocity = St.DustVelocity + ChangeInVelocity;
 };
