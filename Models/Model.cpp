@@ -1,5 +1,5 @@
 //#define PAUSE
-#define MODEL_DEBUG
+//#define MODEL_DEBUG
 
 #include "Model.h"
 
@@ -44,7 +44,7 @@ Model::Model( Matter *&sample, PlasmaGrid &pgrid, double accuracy )
 }
 
 void Model::update_plasmadata(PlasmaData &pdata){
-	std::cout << "\tIn Model::update_plasmadata(PlasmaData & pdata)\n\n";
+	Mo_Debug( "\tIn Model::update_plasmadata(PlasmaData & pdata)\n\n");
 	Pdata.NeutralDensity 	= pdata.NeutralDensity;
 	Pdata.ElectronDensity 	= pdata.ElectronDensity;
 	Pdata.IonDensity 	= pdata.IonDensity;
@@ -56,11 +56,10 @@ void Model::update_plasmadata(PlasmaData &pdata){
 	Pdata.Gravity 		= pdata.Gravity;
 	Pdata.ElectricField     = pdata.ElectricField;
 	Pdata.MagneticField     = pdata.MagneticField;
-	std::cout << "\t\tPdata.MagneticField = " << Pdata.MagneticField << "\n";
 }
 
 bool Model::update_plasmadata(threevector pos){
-	std::cout << "\tIn Model::update_plasmadata(" << pos << ")\n\n";
+	Mo_Debug( "\tIn Model::update_plasmadata(" << pos << ")\n\n");
 	double ConvertevtoK(1.16e4);		// Conversion factor from ev to K
 	int i(0), k(0);
 	bool InGrid = Pgrid->locate(i,k,pos);
@@ -83,7 +82,7 @@ bool Model::update_plasmadata(threevector pos){
 
 // CHECK THIS FUNCTION IS THE SAME AS IT WAS BEFORE!
 void Model::update_fields(int i, int k){
-	std::cout << "\tIn Model::update_fields(int " << i << ", int " << k << ")\n\n";
+	Mo_Debug( "\tIn Model::update_fields(int " << i << ", int " << k << ")\n\n");
 	threevector vp, E, B;
 	double aveu;
 	if( (Pgrid->getna0(i,k)>0.0) || (Pgrid->getna1(i,k)>0.0) ){

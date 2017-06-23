@@ -27,9 +27,9 @@ class ForceModel : public Model {
 				Matter *& sample, PlasmaGrid & pgrid);
 
 		// Destructor
-		~ForceModel(){
-		};
+		~ForceModel(){};
 		
+		double ProbeTimeStep()const;	// Verify time step
 		double UpdateTimeStep();	// Verify time step
 
 		// Functions which generate and save data from heating the Sample.

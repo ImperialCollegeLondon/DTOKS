@@ -1,6 +1,6 @@
 //#define PAUSE
 //#define HEATING_DEBUG
-#define HEATING_DEEP_DEBUG
+//#define HEATING_DEEP_DEBUG
 
 #include "HeatingModel.h"
 #include "Constants.h"
@@ -91,8 +91,8 @@ void HeatingModel::Heat(double timestep){
 	
 
 	// Make sure timestep input time is valid. Shouldn't exceed the timescale of the process.
+//	std::cout << "\nTimeStep = " << TimeStep << "\ntimestep = " << timestep; std::cin.get();
 	assert(timestep > 0 && timestep <= TimeStep );
-	TimeStep = timestep;
 
 	assert( Sample->get_mass() > 0 );
 
@@ -102,11 +102,10 @@ void HeatingModel::Heat(double timestep){
 
 	// Account for evaporative mass loss
 	if( UseModel[1] && Sample->is_liquid() )
-		Sample->update_mass( (TimeStep*EvaporationFlux(Sample->get_temperature())*Sample->get_atomicmass())/AvNo );
-	
+		Sample->update_mass( (timestep*EvaporationFlux(Sample->get_temperature())*Sample->get_atomicmass())/AvNo );
 	Sample->update();
         H_Debug("\t"); Print();                // Print data to file
-	TotalTime += TimeStep;
+	TotalTime += timestep;
 }
 
 void HeatingModel::Heat(){
@@ -126,7 +125,6 @@ void HeatingModel::Heat(){
 	Sample->update();
         H_Debug("\t"); Print();                // Print data to file
 	TotalTime += TimeStep;
-//	std::cout << "\nTotalTime : " << TotalTime; std::cin.get();
 }
 
 double HeatingModel::CalculatePower(double DustTemperature)const{
@@ -188,6 +186,21 @@ double HeatingModel::RungeKutta4(){
 	return (TimeStep/6)*(k1+2*k2+2*k3+k4);
 };
 
+
+// This model forces the time step to be the value which produces a change in temperature or 1*accuracy degree
+double HeatingModel::ProbeTimeStep()const{
+	H_Debug( "\tIn HeatingModel::ProbeTimeStep()\n\n" );
+
+	// Take Eularian step to get initial time step
+	H_Debug("\t"); double TotalPower = CalculatePower(Sample->get_temperature());
+	double timestep = fabs((Sample->get_mass()*Sample->get_heatcapacity())/(TotalPower*Accuracy));
+	
+	H1_Debug("\nSample->get_mass() = " << Sample->get_mass() << "\nSample->get_heatcapacity() = " << 
+		Sample->get_heatcapacity() << "\nTotalPower = " << TotalPower << "\nAccuracy = " << Accuracy);
+	assert(timestep > 0 && timestep != INFINITY && timestep == timestep);
+
+	return timestep;
+}
 
 // This model forces the time step to be the value which produces a change in temperature or 1*accuracy degree
 double HeatingModel::UpdateTimeStep(){

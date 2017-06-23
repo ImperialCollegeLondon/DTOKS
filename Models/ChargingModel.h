@@ -26,6 +26,7 @@ class ChargingModel : public Model{
 		~ChargingModel(){
 		};
 		
+		double ProbeTimeStep()const;
 		double UpdateTimeStep();
 		// Functions which generate and save data from heating the Sample.
 		void CreateFile(std::string filename);

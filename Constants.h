@@ -4,6 +4,12 @@
 #define Mo_Debug(x) 
 #endif 
 
+#ifdef PLASMAGRID_DEBUG
+#define P_Debug(x) std::cout << x
+#else
+#define P_Debug(x) 
+#endif 
+
 #ifdef CHARGING_DEBUG
 #define C_Debug(x) std::cout << x
 #else

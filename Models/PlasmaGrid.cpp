@@ -1,7 +1,9 @@
+//#define PLASMAGRID_Debug
+
 #include "PlasmaGrid.h"
 
 PlasmaGrid::PlasmaGrid(char element, char machine, double spacing):mi(Mp),gamma(Me/mi),gas(element),device(machine),dl(spacing){
-	std::cout << "\n\nIn PlasmaGrid::PlasmaGrid(char element, char machine, double spacing):mi(Mp),gamma(Me/mi),gas(element),device(machine),dl(spacing)\n\n";
+	P_Debug( "\n\nIn PlasmaGrid::PlasmaGrid(char element, char machine, double spacing):mi(Mp),gamma(Me/mi),gas(element),device(machine),dl(spacing)\n\n");
 	
 	// Plasma parameters
 	if(device=='m'){
@@ -54,6 +56,7 @@ PlasmaGrid::PlasmaGrid(char element, char machine, double spacing):mi(Mp),gamma(
 
 // Read an input file
 void PlasmaGrid::readscalars(std::ifstream &input){
+	P_Debug("\tPlasmaGrid::readscalars(std::ifstream &input)\n\n");
 	int i,k;
 	char dummy;
 	// Ignore first line of file
@@ -70,6 +73,7 @@ void PlasmaGrid::readscalars(std::ifstream &input){
 }
 
 void PlasmaGrid::readthreevectors(std::ifstream &input){
+	P_Debug("\tPlasmaGrid::readthreevectors(std::ifstream &input)\n\n");
 	int i,k;
 	char dummy;
 	double dummy1, dummy2;
@@ -86,6 +90,7 @@ void PlasmaGrid::readthreevectors(std::ifstream &input){
 }
 
 void PlasmaGrid::readgridflag(std::ifstream &input){
+	P_Debug("\tPlasmaGrid::readgridflag(std::ifstream &input)\n\n");
 	int i,k;
 	double dummy1,dummy2;
 	for(k=0;k<=gridz-1;k++){
@@ -96,6 +101,7 @@ void PlasmaGrid::readgridflag(std::ifstream &input){
 }
 
 void PlasmaGrid::readdata(){
+	P_Debug("\tPlasmaGrid::readdata()\n\n");
 	// Input files
 	std::ifstream scalars,threevectors,gridflagfile;
 	if(device=='m'){
@@ -130,7 +136,7 @@ void PlasmaGrid::readdata(){
 
 // Locate dust particle in the plasma grid
 bool PlasmaGrid::locate(int &i, int &k, const threevector xd)const{
-	std::cout << "\tIn PlasmaGrid::locate(int &" << i << ", int &" << k << ", " << xd << ")\n\n";
+	P_Debug("\tIn PlasmaGrid::locate(int &" << i << ", int &" << k << ", " << xd << ")\n\n");
 	// Adding 0.5 makes the rounding work properly
 	i = int(0.5+(xd.getx()-gridxmin)/dl);
 	k = int(0.5+(xd.getz()-gridzmin)/dl);
@@ -139,7 +145,7 @@ bool PlasmaGrid::locate(int &i, int &k, const threevector xd)const{
 }
 
 bool PlasmaGrid::checkingrid(const int i, const int k)const{
-//	std::cout << "\tIn PlasmaGrid::checkingrid(int " << i << ", int " << k  << ")\n\n";
+	P_Debug("\tIn PlasmaGrid::checkingrid(int " << i << ", int " << k  << ")\n\n");
 	bool returnval(true);
 	if( i > gridx || i < 0) returnval = false;
 	if( k > gridz || k < 0) returnval = false;
@@ -150,6 +156,7 @@ bool PlasmaGrid::checkingrid(const int i, const int k)const{
 
 // Print the inside and the outside of the tokamak
 void PlasmaGrid::vtkcircle(double r, std::ofstream &fout){
+	P_Debug("\tPlasmaGrid::vtkcircle(double r, std::ofstream &fout)\n\n");
 	int i,imax;
 	double phi, dphi = PI/100.0;
 	imax = 201;
@@ -171,8 +178,8 @@ void PlasmaGrid::vtkcircle(double r, std::ofstream &fout){
 	}
 }
 
-void PlasmaGrid::vtktoroid()
-{
+void PlasmaGrid::vtktoroid(){
+	P_Debug("\tPlasmaGrid::vtktoroid()\n\n");
 	std::ofstream inner("output/innerplasma.vtk"),outer("output/outerplasma.vtk");
 	vtkcircle(rmin,inner);
 	vtkcircle(rmax,outer);
@@ -207,6 +214,7 @@ void PlasmaGrid::impurityprint(double totalmass)
 }
 */
 void PlasmaGrid::datadump(double totalmass){
+	P_Debug("\tPlasmaGrid::datadump(double totalmass)\n\n");
 	vtktoroid();
 	//impurityprint(totalmass);
 }

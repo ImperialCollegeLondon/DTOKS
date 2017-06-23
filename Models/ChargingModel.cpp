@@ -40,6 +40,27 @@ void ChargingModel::Print(){
 	ModelDataFile << "\n";
 }
 
+double ChargingModel::ProbeTimeStep()const{
+	C_Debug( "\tIn ChargingModel::ProbeTimeStep()\n\n" );
+	double timestep(0);	
+
+	if( Pdata.ElectronDensity != 0 && Pdata.IonTemp != 0){
+		// Calcualte the time scale of the behaviour from Krashinnenikovs equation
+		double DebyeLength=sqrt((epsilon0*Kb*Pdata.ElectronTemp)/(Pdata.ElectronDensity*pow(echarge,2)));
+		double PlasmaFreq = sqrt((Pdata.ElectronDensity*pow(echarge,2))/(epsilon0*Me));
+		timestep = sqrt(2*PI) * ((DebyeLength)/Sample->get_radius()) 
+				* (1/(PlasmaFreq*(1+Pdata.ElectronTemp/Pdata.IonTemp+Sample->get_potential())));	
+	}else{	timestep = 1; } // In region of no plasma
+
+	C_Debug("\n\t\tDebyeLength = " << DebyeLength << "\n\t\tPlasmaFreq = " << PlasmaFreq 
+			<< "\n\t\ttimestep = " << timestep << "\n\n");
+
+	assert(timestep == timestep);
+	assert(timestep > 0);
+
+	return timestep;
+}
+
 double ChargingModel::UpdateTimeStep(){
 	C_Debug( "\tIn ChargingModel::UpdateTimeStep()\n\n" );
 	
@@ -55,9 +76,6 @@ double ChargingModel::UpdateTimeStep(){
 	C_Debug("\n\t\tDebyeLength = " << DebyeLength << "\n\t\tPlasmaFreq = " << PlasmaFreq 
 			<< "\n\t\tTimeStep = " << TimeStep << "\n\n");
 
-	C_Debug("\n\t\tDebyeLength = " << DebyeLength << "\n\t\tPlasmaFreq = " << PlasmaFreq 
-			<< "\n\t\tTimeStep = " << TimeStep << "\n\n");
-
 	assert(TimeStep == TimeStep);
 	assert(TimeStep > 0);
 
@@ -65,11 +83,10 @@ double ChargingModel::UpdateTimeStep(){
 }
 
 void ChargingModel::Charge(double timestep){
-	C_Debug("\tIn ChargingModel::Charge()\n\n");
+	C_Debug("\tIn ChargingModel::Charge(double timestep)\n\n");
 
 	// Make sure timestep input time is valid. Shouldn't exceed the timescale of the process.
 	assert(timestep > 0);// && timestep <= TimeStep );
-	TimeStep = timestep;
 	double DSec = DeltaSec();
 	double DTherm = DeltaTherm();
 	// Assume the grain is negative and calculate potential
@@ -87,9 +104,8 @@ void ChargingModel::Charge(double timestep){
 		Sample->update_charge(Potential,DSec,DTherm);
 //		std::cout << "\nPotential = " << Potential << "\nDeltaSec = " << Sample->get_deltasec() << "\nDeltatherm = " 
 //			<< Sample->get_deltatherm() << "\n"; std::cin.get();
-
 	}
-	TotalTime += TimeStep;
+	TotalTime += timestep;
 
 	C_Debug("\t"); Print();
 }
@@ -97,7 +113,6 @@ void ChargingModel::Charge(double timestep){
 void ChargingModel::Charge(){
 	C_Debug("\tIn ChargingModel::Charge()\n\n");
 
-//	std::cout << "\n(4)Temp = " << Sample->get_temperature() << "\nVapPressure = " << Sample->get_vapourpressure() << "\nCv = " << Sample->get_heatcapacity() << "\n";
 	double DSec = DeltaSec();
 	double DTherm = DeltaTherm();
 	// Assume the grain is negative and calculate potential

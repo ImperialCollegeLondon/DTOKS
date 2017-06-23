@@ -32,7 +32,8 @@ class Model{
 
 	protected:
 		virtual void Print()=0;			// Write to output data file
-		virtual double UpdateTimeStep()=0;	// Check Time Scale of development, returns the time step
+		virtual double UpdateTimeStep()=0;	// Update Time Scale of development, returns the time step
+		virtual double ProbeTimeStep()const=0;	// Check Time Scale of development, returns the time step
 
 	public:
 		// Constructors
@@ -51,6 +52,8 @@ class Model{
 		void update_plasmadata(PlasmaData &pdata);
 		bool update_plasmadata(threevector pos);
 		void update_fields(int i, int k);
+
+		void AddTime(double T){	TotalTime = TotalTime + T;	}
 };
 
 #endif

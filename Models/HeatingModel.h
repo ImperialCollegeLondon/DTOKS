@@ -39,7 +39,8 @@ class HeatingModel : public Model{
 		double CalculatePower(double DustTemperature)const;
 		double RungeKutta4();
 
-		double UpdateTimeStep();	// Verify time step
+		double ProbeTimeStep()const;	// Check time step
+		double UpdateTimeStep();	// Update time step
 
 		// Heating Models
 		const double EmissivityModel		(double DustTemperature)const;

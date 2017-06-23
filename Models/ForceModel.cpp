@@ -51,13 +51,33 @@ void ForceModel::Print(){
 	ForceFile << "\n";
 }
 
+double ForceModel::ProbeTimeStep()const{
+	F_Debug( "\tIn ForceModel::ProbeTimeStep()\n\n" );
+	// Deal with case where power/time step causes large temperature change.
+	
+	threevector Acceleration = CalculateAcceleration();
+	double timestep(0);
+	// For Accuracy = 1.0, requires change in velocity less than 0.01m or 1cm/s
+	if( Acceleration.mag3() == 0 ){
+		static bool runOnce = true;
+		WarnOnce(runOnce,"Warning! Zero Acceleration!\ntimestep being set to unity");
+		timestep = 1;	// Set arbitarily large time step (Should this be float max?)
+	}else{
+		timestep = (0.01*Accuracy)*(1.0/Acceleration.mag3());
+	}
+	F1_Debug( "\t\tAcceleration = " << Acceleration << "\n\t\ttimestep = " << timestep << "\n");
+	assert(timestep == timestep);
+	assert(timestep > 0);
+	return timestep;
+}
+
 double ForceModel::UpdateTimeStep(){
 	F_Debug( "\tIn ForceModel::UpdateTimeStep()\n\n" );
 	// Deal with case where power/time step causes large temperature change.
 	
 	threevector Acceleration = CalculateAcceleration();
 
-	// For Accuracy = 1.0, requires change in velocity less than 0.01m or 10cm/s
+	// For Accuracy = 1.0, requires change in velocity less than 0.01m or 1cm/s
 	if( Acceleration.mag3() == 0 ){
 		static bool runOnce = true;
 		WarnOnce(runOnce,"Warning! Zero Acceleration!\nTimeStep being set to unity");
@@ -73,26 +93,29 @@ double ForceModel::UpdateTimeStep(){
 
 // Move the dust grain by calculating the forces acting on it
 void ForceModel::Force(double timestep){
-	F_Debug("\tIn ForceModel::Force()\n\n");
+	F_Debug("\tIn ForceModel::Force(double timestep)\n\n");
 
 	// Make sure timestep input time is valid. Shouldn't exceed the timescale of the process.
 	assert(timestep > 0 && timestep <= TimeStep );
-	TimeStep = timestep;
+
 	// Forces: Lorentz + ion drag + gravity
 	threevector Acceleration = CalculateAcceleration();
 
 	threevector ChangeInPosition(
-			Sample->get_velocity().getx()*TimeStep,
-			(Sample->get_velocity().gety()*TimeStep)/(Sample->get_position().getx()),
-			Sample->get_velocity().getz()*TimeStep);
+			Sample->get_velocity().getx()*timestep,
+			(Sample->get_velocity().gety()*timestep)/(Sample->get_position().getx()),
+			Sample->get_velocity().getz()*timestep);
 
-	threevector ChangeInVelocity = Acceleration*TimeStep;
+	threevector ChangeInVelocity = Acceleration*timestep;
 	
+	// Assert change in absolute vel less than ten times accuracy
+	assert( ChangeInVelocity.mag3() < 0.1*Accuracy ); // Assert change in velocity less than 10* TimeStep accuracy
+
 	Sample->update_motion(ChangeInPosition,ChangeInVelocity);
 
-	F_Debug("\t");
-	Print();
-	TotalTime += TimeStep;
+	F1_Debug( "ChangeInVelocity : " << ChangeInVelocity << "\nAcceleration : " << Acceleration << "\nTimeStep : " << TimeStep);
+	F_Debug("\t"); Print();
+	TotalTime += timestep;
 }
 
 
@@ -112,9 +135,8 @@ void ForceModel::Force(){
 	
 	Sample->update_motion(ChangeInPosition,ChangeInVelocity);
 
-	F_Debug("\t"); 
 	F1_Debug( "ChangeInVelocity : " << ChangeInVelocity << "\nAcceleration : " << Acceleration << "\nTimeStep : " << TimeStep);
-	Print();
+	F_Debug("\t"); Print();
 	TotalTime += TimeStep;
 }
 
