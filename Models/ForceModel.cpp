@@ -42,7 +42,8 @@ void ForceModel::CreateFile(std::string filename){
 
 void ForceModel::Print(){
 	F_Debug("\tIn ForceModel::Print()\n\n");
-	ForceFile << Sample->get_position() << "\t" << Sample->get_velocity();
+	ForceFile << Sample->get_position().getx() << " " << Sample->get_position().gety() << " " << Sample->get_position().getz() 
+	<< "\t" << Sample->get_velocity().getx() << " " << Sample->get_velocity().gety() << " " << Sample->get_velocity().getz();
 	bool PrintGravity = false; // Lol
 	if( UseModel[0] && PrintGravity ) 	ForceFile << "\t(0.0,0.0,-9.81)"; // Maybe this should be coded better...
 	if( UseModel[1] ) 			ForceFile << "\t" << Centrifugal();
@@ -52,7 +53,7 @@ void ForceModel::Print(){
 }
 
 double ForceModel::ProbeTimeStep()const{
-	F_Debug( "\tIn ForceModel::ProbeTimeStep()\n\n" );
+	F_Debug( "\tIn ForceModel::ProbeTimeStep()const\n\n" );
 	// Deal with case where power/time step causes large temperature change.
 	
 	threevector Acceleration = CalculateAcceleration();
@@ -65,6 +66,24 @@ double ForceModel::ProbeTimeStep()const{
 	}else{
 		timestep = (0.01*Accuracy)*(1.0/Acceleration.mag3());
 	}
+
+	// Check if the timestep should be shortened such that particles don't cross many grid cells in a single step
+	// (This is often the case without this condition.)
+	if( Sample->get_velocity().mag3() != 0.0 && ( get_dl()/(2*Sample->get_velocity().mag3()) ) < timestep ){
+		F_Debug("\ntimestep limited by grid size!");
+		timestep = get_dl()/(2*Sample->get_velocity().mag3());
+	}
+	
+	// Check if the timestep is limited by the gyration of the particle in a magnetic field.
+	if( 0.1*pow(Sample->get_radius(),2)*Sample->get_density()
+		*sqrt(1-(Pdata->MagneticField.getunit()*Sample->get_velocity().getunit()))
+		/(3.0*epsilon0*Pdata->ElectronTemp*Sample->get_potential()*Pdata->MagneticField.mag3()) < timestep ){
+		std::cout << "\ntimestep limited by magnetic field (Gyromotion)";
+		timestep = 0.1*pow(Sample->get_radius(),2)*Sample->get_density()
+				*sqrt(1-(Pdata->MagneticField.getunit()*Sample->get_velocity().getunit()))
+				/(3.0*epsilon0*Pdata->ElectronTemp*Sample->get_potential()*Pdata->MagneticField.mag3());
+	}
+
 	F1_Debug( "\t\tAcceleration = " << Acceleration << "\n\t\ttimestep = " << timestep << "\n");
 	assert(timestep == timestep);
 	assert(timestep > 0);
@@ -85,6 +104,24 @@ double ForceModel::UpdateTimeStep(){
 	}else{
 		TimeStep = (0.01*Accuracy)*(1.0/Acceleration.mag3());
 	}
+
+	// Check if the timestep should be shortened such that particles don't cross many grid cells in a single step
+	// (This is often the case without this condition.)
+	if( Sample->get_velocity().mag3() != 0.0 && ( get_dl()/(2*Sample->get_velocity().mag3()) ) < TimeStep ){
+		F_Debug("\nTimeStep limited by grid size!");
+		TimeStep = get_dl()/(2*Sample->get_velocity().mag3());
+	}
+
+	// Check if the timestep is limited by the gyration of the particle in a magnetic field.
+	if( 0.1*pow(Sample->get_radius(),2)*Sample->get_density()
+		*sqrt(1-(Pdata->MagneticField.getunit()*Sample->get_velocity().getunit()))
+		/(3.0*epsilon0*Pdata->ElectronTemp*Sample->get_potential()*Pdata->MagneticField.mag3()) < TimeStep ){
+		std::cout << "\ntimestep limited by magnetic field (Gyromotion)";
+		TimeStep = 0.1*pow(Sample->get_radius(),2)*Sample->get_density()
+				*sqrt(1-(Pdata->MagneticField.getunit()*Sample->get_velocity().getunit()))
+				/(3.0*epsilon0*Pdata->ElectronTemp*Sample->get_potential()*Pdata->MagneticField.mag3());
+	}
+
 	F1_Debug( "\t\tAcceleration = " << Acceleration << "\n\t\tTimeStep = " << TimeStep << "\n");
 	assert(TimeStep == TimeStep);
 	assert(TimeStep > 0);
