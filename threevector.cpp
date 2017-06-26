@@ -1,22 +1,6 @@
 #include "threevector.h"
 #include "Constants.h"
 
-threevector operator*(double scalar, const threevector& y)
-{
-
-	threevector v_new(y.getx()*scalar,y.gety()*scalar,y.getz()*scalar);
-	return v_new;
-}
-
-threevector operator*(const bool scalar, const threevector& y)
-{
-
-	threevector v_new(y.getx()*scalar,y.gety()*scalar,y.getz()*scalar);
-	return v_new;
-}
-
-
-
 // Default constructor
 threevector::threevector() 
 {
@@ -117,7 +101,7 @@ double threevector::getphi()const
 }
 
 // Calculate a unit threevector
-threevector threevector::getunit()
+threevector threevector::getunit()const
 {
 	threevector unitvec(0.0,0.0,0.0);
 	if(mag3()!=0.0){
@@ -167,20 +151,20 @@ void threevector::operator=(threevector v_old)
 }
 
 // Overload the * operator to multiply by a scalar
-threevector threevector::operator*(double scalar)
+threevector threevector::operator*(double scalar)const
 {
 	threevector v_new(xcoord*scalar,ycoord*scalar,zcoord*scalar);
 	return v_new;
 }
 
 // The dot product
-double threevector::operator*(threevector v_old)
+double threevector::operator*(threevector v_old)const
 {
 	return xcoord*v_old.getx() + ycoord*v_old.gety() +  zcoord*v_old.getz();
 }
 
 // The threevector product
-threevector threevector::operator^(threevector v_old)
+threevector threevector::operator^(threevector v_old)const
 {
 	threevector v_new((ycoord * v_old.getz()) - (zcoord * v_old.gety()),
 				 (zcoord * v_old.getx()) - (xcoord * v_old.getz()),
@@ -194,3 +178,13 @@ std::ostream& operator<<(std::ostream& os, const threevector &v)
 	os << "(" << v.getx() << ", " << v.gety() << ", " << v.getz() << ")";
 	return os;
 }
+
+threevector operator*(double scalar, const threevector& y){
+	return y*scalar;
+}
+
+threevector operator*(const bool scalar, const threevector& y){
+	threevector v_new(y.getx()*scalar,y.gety()*scalar,y.getz()*scalar);
+	return v_new;
+}
+

@@ -1,7 +1,6 @@
 #ifndef __THREEVECTOR_H_INCLUDED__   // if plasmagrid.h hasn't been included yet...
 #define __THREEVECTOR_H_INCLUDED__
 
-//#include "header.h"
 #include <math.h>
 #include <fstream>
 #include <iostream>
@@ -9,8 +8,6 @@
 class threevector{
 	protected:
 		double xcoord, ycoord, zcoord;
-
-		
 
 	public:
 	
@@ -37,19 +34,22 @@ class threevector{
 		double gettheta()const; 	// Calculate theta
 		double getphi()const; 		// Calculate phi in range 0 to 2pi
 		
-		threevector getunit(); 	// Calculate a unit threevector
+		threevector getunit()const; 	// Calculate a unit threevector
 		
 		threevector operator+(const threevector v_old)const; 	// Overload the + operator
 		threevector operator-(const threevector v_old)const; 	// Overload the - operator
 	
-		void operator+=(threevector v_old); 		// Overload the += operator
-		void operator-=(threevector v_old); 		// Overload the -= operator
-		void operator=(threevector v_old); 		// Overload the = operator
-		threevector operator*(double scalar); 		// Overload the * operator to multiply by a scalar
-		double operator*(threevector v_old); 		// The dot product	
-		threevector operator^(threevector v_old); 	// The threevector product
+		void operator+=(threevector v_old);			// Overload the += operator
+		void operator-=(threevector v_old);			// Overload the -= operator
+		void operator=(threevector v_old); 			// Overload the = operator
+		threevector operator*(double scalar)const; 		// Overload the * operator to multiply by a scalar
+		double operator*(threevector v_old)const; 		// The dot product	
+		threevector operator^(threevector v_old)const; 		// The threevector product
 		
 		friend std::ostream& operator<<(std::ostream& os, const threevector& vec);
 };
+
+threevector operator*(double scalar, const threevector& y);
+threevector operator*(const bool scalar, const threevector& y);
 
 #endif
