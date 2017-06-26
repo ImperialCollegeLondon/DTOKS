@@ -41,13 +41,14 @@ template<typename T> int InputFunction(int &argc, char* argv[], int &i, std::str
 */
 int main(int argc, char* argv[]){
 
+	clock_t begin = clock();
 	std::array<char,4> ConstModels  = {'c','c','c','y'};
 //	Matter *Sample1 = new Tungsten(1e-6,300,ConstModels);
 
 	// ***************************************** INITIALISE PLASMA ***************************************** //
 	char Plasma='h';
 	char Machine='m';	// Initialise plasma grid
-	double Spacing =0.01;
+	double Spacing =0.01;	// metres
 
 	PlasmaGrid Pgrid(Plasma,Machine,Spacing);
 
@@ -66,7 +67,7 @@ int main(int argc, char* argv[]){
 	std::string Name="constant";	// Describes heating model
 
  	// Parameters describing the heating model
-	char Element='B';		// Element, (W) : Tungsten, (G) : Graphite, (B) : Beryllium or (F) : Iron.
+	char Element='W';		// Element, (W) : Tungsten, (G) : Graphite, (B) : Beryllium or (F) : Iron.
 //	double Power=0;			// Kilo-Watts power in addition to heating model powers
 	double Size=1e-6; 		// m
 	double Temp=300;		// K
@@ -174,5 +175,10 @@ int main(int argc, char* argv[]){
 	int errcode2 = MyDtoks2.Run();
 
 	std::cout << "\n\n * MAIN SCRIPT COMPLETE * \n\n";
+	clock_t end = clock();
+	double elapsd_secs = double(end-begin)/CLOCKS_PER_SEC;
+		
+	std::cout << "\n\n*****\n\nCOMPLETED IN : " << elapsd_secs << "s\n\n";
+
 	return 0;
 }
