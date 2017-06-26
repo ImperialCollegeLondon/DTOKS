@@ -61,6 +61,7 @@ void Tungsten::tungsten_defaults(){
         St.HeatCapacity = 0.13398; 		// kJ/(kg-K)         
 	St.Emissivity = 0.04; 			// Arb, http://www.engineeringtoolbox.com/emissivity-coefficients-d_447.html
         St.SuperBoilingTemp = Ec.BoilingTemp; 	// K, At any pressure
+	St.Density = 19600;			// (kg/m^3) from Wikipedia
 	update_models('c','c','c','y');
 	
 

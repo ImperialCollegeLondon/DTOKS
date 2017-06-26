@@ -1,6 +1,6 @@
-//#define PAUSE
-//#define DTOKSU_DEBUG
-//#define DTOKSU_DEEP_DEBUG
+#define PAUSE
+#define DTOKSU_DEBUG
+#define DTOKSU_DEEP_DEBUG
 #include "DTOKSU.h"
 
 // CONSIDER DEFINING A DEFAULT SAMPLE
@@ -95,7 +95,7 @@ int DTOKSU::Run(){
 			HM.AddTime(ForceTime);
 			TotalTime += ForceTime;
 		}else if( Sample->get_deltatot() > 0.5 && Sample->get_deltatot() < 1.0 ){ // Region of rapid charge variation
-			// WARNING, CURRENTLY DTOKSU DOESN'T ENTER HERE AT ALL.
+			// WARNING, CURRENT TESTING SHOWS DTOKSU DOESN'T ENTER HERE AT ALL WITH PGRID.
 			// I'm pretty sure that the grain does become positive at some point so this is likely because
 			// it is going through that region in the for loop below...
 			D1_Debug("\n\nPotential Focus Region, steps taken at 0.01*MinTimeStep\n");
@@ -132,8 +132,8 @@ int DTOKSU::Run(){
 				}
 				
 				// Check that time scales haven't changed significantly whilst looping... 
-				if( HeatTime/HM.ProbeTimeStep() > 10 || ForceTime/FM.ProbeTimeStep() > 10 ){
-					std::cout << "\nTimeStep Has Changed Significantly whilst taking small steps...";
+				if( HeatTime/HM.ProbeTimeStep() > 2 || ForceTime/FM.ProbeTimeStep() > 2 ){
+					D1_Debug("\nTimeStep Has Changed Significantly whilst taking small steps...");
 					j ++;
 					break; // Can't do this: MaxTimeStep = j*MinTimeStep; as we change MaxTimeStep...
 				}
@@ -156,7 +156,7 @@ int DTOKSU::Run(){
 
 		D_Debug("\n\tMinTimeStep = " << MinTimeStep << "\n\tChargeTime = " << ChargeTime
 			<< "\n\tForceTime = " << ForceTime << "\n\tHeatTime = " << HeatTime << "\n");
-		
+		Pause();
 		// Update the plasma data from the plasma grid...
 		bool InGrid = FM.update_plasmadata(Sample->get_position());
 
@@ -177,25 +177,15 @@ int DTOKSU::Run(){
 		}
 		// ***** END OF : DETERMINE IF END CONDITION HAS BEEN REACHED ***** //
 	}
-//	if( HM.get_totaltime() != FM.get_totaltime() || FM.get_totaltime() != CM.get_totaltime() ){
-//		std::cout << "\nWarning! Total Times recorded by processes don't match!";
-//	}
-	std::cout << "\nHM.get_totaltime() = " << HM.get_totaltime() << "\nFM.get_totaltime() = " << FM.get_totaltime() << "\nCM.get_totaltime() = " << CM.get_totaltime() << "\n\nTotalTime = " << TotalTime;
+	if( fabs(1 - (HM.get_totaltime()/FM.get_totaltime())) > 0.001  
+		|| fabs(1 - (FM.get_totaltime()/CM.get_totaltime())) > 0.001 ){
+		std::cout << "\nWarning! Total Times recorded by processes don't match!";
+		std::cout << "\nHM.get_totaltime() = " << HM.get_totaltime() << "\nFM.get_totaltime() = " 
+			<< FM.get_totaltime() << "\nCM.get_totaltime() = " << CM.get_totaltime() << "\n\nTotalTime = " << TotalTime;
+
+	}
 	if( HeatTime == 1 ) std::cout << "\nEnd of Run, exiting due to Thermal Equilibrium being reached!\n\n";
 	std::cout << "\nFinished DTOKS-U run.";
 	return 0;
 }
 
-//				if( TestForceTime < MinTimeStep || TestForceTime < HeatTime*0.1 ){
-				// Check if the timescale hasn't changed substantially this step... (May not be necessary)
-//				double TestHeatTime = HM.CheckTimeStep();
-//				double TestForceTime = FM.CheckTimeStep();
-//				if( TestForceTime < MinTimeStep || TestForceTime < HeatTime*0.5 ){
-//					std::cout << "\nWARNING! Smallest time scale changeover! Heat -> Force";
-//					MinTimeStep = TestForceTime;
-//				}
-//				if( TestHeatTime < MinTimeStep || TestHeatTime < ForceTime*0.5 ){
-//					std::cout << "\nWARNING! Smallest time scale changeover! Force -> Heat";
-//					MinTimeStep = TestHeatTime;
-//				}
-//				if( MinTimeStep == HeatTime || MinTimeStep == TestHeatTime){

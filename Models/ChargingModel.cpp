@@ -44,16 +44,17 @@ double ChargingModel::ProbeTimeStep()const{
 	C_Debug( "\tIn ChargingModel::ProbeTimeStep()\n\n" );
 	double timestep(0);	
 
-	if( Pdata->ElectronDensity != 0 && Pdata->IonTemp != 0){
+	if( Pdata->ElectronDensity != 0 && Pdata->IonTemp != 0 ){
 		// Calcualte the time scale of the behaviour from Krashinnenikovs equation
 		double DebyeLength=sqrt((epsilon0*Kb*Pdata->ElectronTemp)/(Pdata->ElectronDensity*pow(echarge,2)));
 		double PlasmaFreq = sqrt((Pdata->ElectronDensity*pow(echarge,2))/(epsilon0*Me));
 		timestep = sqrt(2*PI) * ((DebyeLength)/Sample->get_radius()) 
 				* (1/(PlasmaFreq*(1+Pdata->ElectronTemp/Pdata->IonTemp+Sample->get_potential())));	
+		C_Debug("\n\t\tDebyeLength = " << DebyeLength << "\n\t\tPlasmaFreq = " << PlasmaFreq 
+			<< "\n\t\ttimestep = " << timestep << "\n\n");
+
 	}else{	timestep = 1; } // In region of no plasma
 
-	C_Debug("\n\t\tDebyeLength = " << DebyeLength << "\n\t\tPlasmaFreq = " << PlasmaFreq 
-			<< "\n\t\ttimestep = " << timestep << "\n\n");
 
 	assert(timestep == timestep);
 	assert(timestep > 0);
@@ -65,16 +66,18 @@ double ChargingModel::UpdateTimeStep(){
 	C_Debug( "\tIn ChargingModel::UpdateTimeStep()\n\n" );
 	
 
-	if( Pdata->ElectronDensity != 0 && Pdata->IonTemp != 0){
+	if( Pdata->ElectronDensity != 0 && Pdata->IonTemp != 0 ){
 		// Calcualte the time scale of the behaviour from Krashinnenikovs equation
+
 		double DebyeLength=sqrt((epsilon0*Kb*Pdata->ElectronTemp)/(Pdata->ElectronDensity*pow(echarge,2)));
 		double PlasmaFreq = sqrt((Pdata->ElectronDensity*pow(echarge,2))/(epsilon0*Me));
 		TimeStep = sqrt(2*PI) * ((DebyeLength)/Sample->get_radius()) 
-				* (1/(PlasmaFreq*(1+Pdata->ElectronTemp/Pdata->IonTemp+Sample->get_potential())));	
+				* (1/(PlasmaFreq*(1+Pdata->ElectronTemp/Pdata->IonTemp+Sample->get_potential())));
+		C_Debug("\n\t\tDebyeLength = " << DebyeLength << "\n\t\tPlasmaFreq = " << PlasmaFreq 
+			<< "\n\t\tTimeStep = " << TimeStep << "\n\n");
+
 	}else{	TimeStep = 1; } // In region of no plasma
 
-	C_Debug("\n\t\tDebyeLength = " << DebyeLength << "\n\t\tPlasmaFreq = " << PlasmaFreq 
-			<< "\n\t\tTimeStep = " << TimeStep << "\n\n");
 
 	assert(TimeStep == TimeStep);
 	assert(TimeStep > 0);

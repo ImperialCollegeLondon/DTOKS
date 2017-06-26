@@ -1,6 +1,6 @@
 //#define PAUSE
 //#define HEATING_DEBUG
-#define HEATING_DEEP_DEBUG
+//#define HEATING_DEEP_DEBUG
 
 #include "HeatingModel.h"
 #include "Constants.h"
@@ -195,6 +195,35 @@ double HeatingModel::ProbeTimeStep()const{
 	// Take Eularian step to get initial time step
 	H_Debug("\t"); double TotalPower = CalculatePower(Sample->get_temperature());
 	double timestep = fabs((Sample->get_mass()*Sample->get_heatcapacity())/(TotalPower*Accuracy));
+
+	// Calculate timestep that produces mass change of less than 0.01% of current mass.
+	// If this timestep is quicker than current step, change timestep
+	if( UseModel[1] && Sample->is_liquid() ){
+		double MassTimeStep = (0.01*Sample->get_mass()*AvNo)
+					/(EvaporationFlux(Sample->get_temperature())*Sample->get_atomicmass());
+		if( MassTimeStep < timestep ){
+			H_Debug("\nMass is limiting time step\nMassTimeStep = " << MassTimeStep << "\ntimestep = " << timestep);
+			timestep = MassTimeStep;
+		}
+	}
+
+	// Check we're in a region that actually has plasma paramters. 
+	if( Pdata->IonTemp == 0.0 ){
+		timestep = 10;
+		double VacuumPowerLoss(0);
+		// If not, assume a vacuum like plasma, dust only loses energy due to evaporation, radiation etc
+		if( UseModel[0] ){
+			VacuumPowerLoss -= EmissivityModel (Sample->get_temperature());
+		}
+		if( UseModel[1] ){
+			VacuumPowerLoss -= EvaporationModel(Sample->get_temperature()); 
+		}
+		if( UseModel[7] ){
+			VacuumPowerLoss -= TEE(Sample->get_temperature()); 
+		}
+		if( VacuumPowerLoss != 0 )	
+			timestep = fabs((Sample->get_mass()*Sample->get_heatcapacity())/(VacuumPowerLoss*Accuracy));
+	}
 	
 	H1_Debug("\nSample->get_mass() = " << Sample->get_mass() << "\nSample->get_heatcapacity() = " << 
 		Sample->get_heatcapacity() << "\nTotalPower = " << TotalPower << "\nAccuracy = " << Accuracy);
@@ -216,28 +245,54 @@ double HeatingModel::UpdateTimeStep(){
 //	if( TimeStep == 0 || fabs(TimeStep*TotalPower/(Sample->get_mass()*Sample->get_heatcapacity())) > 1 ) 
 	TimeStep = fabs((Sample->get_mass()*Sample->get_heatcapacity())/(TotalPower*Accuracy));
 
-	// Check Thermal Equilibrium hasn't been reached
-	double DeltaTempTest = TotalPower*TimeStep/(Sample->get_mass()*Sample->get_heatcapacity());
+	// Calculate timestep that produces mass change of less than 0.01% of current mass.
+	// If this timestep is quicker than current step, change timestep
+	if( UseModel[1] && Sample->is_liquid() ){
+		double MassTimeStep = (0.01*Sample->get_mass()*AvNo)
+					/(EvaporationFlux(Sample->get_temperature())*Sample->get_atomicmass());
+		if( MassTimeStep < TimeStep ){
+			H_Debug("\nMass is limiting time step\nMassTimeStep = " << MassTimeStep << "\nTimeStep = " << TimeStep);
+			TimeStep = MassTimeStep;
+		}
+	}
 
-	if( Pdata->IonTemp == 0 ){ // Consider testing if other plasma values are zero
+	// Check we're in a region that actually has plasma paramters. 
+	if( Pdata->IonTemp == 0.0 ){
 		TimeStep = 10;
+		double VacuumPowerLoss(0);
+		// If not, assume a vacuum like plasma, dust only loses energy due to evaporation, radiation etc
+		if( UseModel[0] ){
+			VacuumPowerLoss -= EmissivityModel (Sample->get_temperature());
+		}
+		if( UseModel[1] ){
+			VacuumPowerLoss -= EvaporationModel(Sample->get_temperature()); 
+		}
+		if( UseModel[7] ){
+			VacuumPowerLoss -= TEE(Sample->get_temperature()); 
+		}
+		if( VacuumPowerLoss != 0 )	
+			TimeStep = fabs((Sample->get_mass()*Sample->get_heatcapacity())/(VacuumPowerLoss*Accuracy));
 		return TimeStep;
 	}
-	// May be that we could remove this condition now...
+
+	// Check thermal equilibrium hasn't been explicitly reached somehow. May be that we could remove this condition now...
 	if( TotalPower == 0 ){	
 		static bool runOnce = true;
 		WarnOnce(runOnce,"\nWarning! TotalPower = 0\nThermalEquilibrium Assumed, TimeStep being set to unity.");
 		ThermalEquilibrium = true;
 		TimeStep = 1;
 	}
-	
-	if( Sample->get_temperature() != Sample->get_superboilingtemp() ){
-		if( ((Sample->get_temperature()-OldTemp > 0 && DeltaTempTest < 0) // If temperature changed sign changed this step
-			|| (Sample->get_temperature()-OldTemp < 0 && DeltaTempTest > 0)) && ContinuousPlasma ){
+
+	// Check Thermal Equilibrium hasn't been reached for continuous plasma
+	double DeltaTempTest = TotalPower*TimeStep/(Sample->get_mass()*Sample->get_heatcapacity());
+	// If we're not boiling	
+	if( Sample->get_temperature() != Sample->get_superboilingtemp() && ContinuousPlasma ){
+		if( ((Sample->get_temperature()-OldTemp > 0 && DeltaTempTest < 0) // If temperature changed sign this step
+			|| (Sample->get_temperature()-OldTemp < 0 && DeltaTempTest > 0)) ){
 			std::cout << "\n\nThermal Equilibrium reached on condition (1): Sign change of Temperature change!";
 			ThermalEquilibrium = true;
 			TimeStep = 1; 
-		}if( (fabs(DeltaTempTest/TimeStep) < 0.01) && ContinuousPlasma ){ // If Temperature gradient is less than 1%
+		}if( (fabs(DeltaTempTest/TimeStep) < 0.01) ){ // If Temperature gradient is less than 1%
 			std::cout << "\n\nThermal Equilibrium reached on condition (2): Temperature Gradient < 0.01!";
 			ThermalEquilibrium = true;
 			TimeStep = 1;

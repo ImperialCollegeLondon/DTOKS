@@ -46,8 +46,10 @@ class Model{
 
 		const Matter *get_sample		()const{ return Sample;		}
 		const PlasmaData *get_plasmadata	()const{ return Pdata; 		}
+		double get_dl				()const{ return Pgrid->getdl();	}
 		double get_totaltime			()const{ return TotalTime; 	}
 		double get_timestep			()const{ return TimeStep; 	}
+
 
 		void update_plasmadata(PlasmaData *&pdata);
 		bool update_plasmadata(threevector pos);
