@@ -65,8 +65,17 @@ void PlasmaGrid::readscalars(std::ifstream &input){
 	}
 	for(k=0;k<=gridz-1;k++){
 		for(i=0;i<=gridx-1;i++){
-			input >> x[i][k] >> z[i][k] >> Te[i][k] >> Ti[i][k] >> na0[i][k] >> na1[i][k] >> po[i][k] >> ua0[i][k] 
+			input >> x[i][k] >> z[i][k] >> Te[i][k] >> Ti[i][k] >> na0[i][k] >> na1[i][k] >> po[i][k] >> ua0[i][k]
 				>> ua1[i][k];
+			// For some reason, very small non-zero values are being assigned to the 'zero' values being read in.
+			// This should correct for this...
+			if( Te[i][k] != 0 && Te[i][k] < 1e-100 ) {	Te[i][k]  = 0.0; } 
+			if( Ti[i][k] != 0 && Ti[i][k] < 1e-100 ) {	Ti[i][k]  = 0.0; } 
+			if( na0[i][k]!= 0 && na0[i][k] < 1e-100 ){ 	na0[i][k] = 0.0; }
+			if( na1[i][k]!= 0 && na1[i][k] < 1e-100 ){ 	na1[i][k] = 0.0; }
+			if( po[i][k] != 0 && po[i][k] < 1e-100 ) {	po[i][k]  = 0.0; } 
+			if( ua0[i][k]!= 0 && ua0[i][k] < 1e-100 ){ 	ua0[i][k] = 0.0; }
+			if( ua1[i][k]!= 0 && ua1[i][k] < 1e-100 ){ 	ua1[i][k] = 0.0; }
 			mevap[i][k] = 0.0;
 		}
 	}
@@ -85,6 +94,9 @@ void PlasmaGrid::readthreevectors(std::ifstream &input){
 		for(i=0;i<=gridx-1;i++){
 			input >> dummy1 >> dummy2 >> bx[i][k] >> bz[i][k] >> by[i][k];
 			bz[i][k] = -bz[i][k];
+			if( bx[i][k] != 0 && bx[i][k] < 1e-100 ) {	bx[i][k]  = 0.0; } 
+			if( by[i][k] != 0 && by[i][k] < 1e-100 ) {	by[i][k]  = 0.0; } 
+			if( bz[i][k]!= 0 && bz[i][k] < 1e-100 ){ 	bz[i][k] = 0.0; }
 		}
 	}
 }
@@ -147,8 +159,8 @@ bool PlasmaGrid::locate(int &i, int &k, const threevector xd)const{
 bool PlasmaGrid::checkingrid(const int i, const int k)const{
 	P_Debug("\tIn PlasmaGrid::checkingrid(int " << i << ", int " << k  << ")\n\n");
 	bool returnval(true);
-	if( i > gridx || i < 0) returnval = false;
-	if( k > gridz || k < 0) returnval = false;
+	if( i >= gridx || i < 0) returnval = false;
+	if( k >= gridz || k < 0) returnval = false;
 	return returnval;
 }
 
