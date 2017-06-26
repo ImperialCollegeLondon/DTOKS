@@ -22,7 +22,7 @@ class ForceModel : public Model {
 		// Constructors
 		ForceModel();
 		ForceModel(std::string filename, double accuracy, std::array<bool,4> models, 
-				Matter *& sample, PlasmaData & pdata);
+				Matter *& sample, PlasmaData *& pdata);
 		ForceModel(std::string filename, double accuracy, std::array<bool,4> models, 
 				Matter *& sample, PlasmaGrid & pgrid);
 

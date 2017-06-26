@@ -9,7 +9,7 @@ std::array<bool,4> DefaultForceModels = {false,false,false,false};
 std::array<bool,1> DefaultChargeModels = {false};
 std::array<char,4> DefaultConstModels = { 'c','c','c','c'};
 
-DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample, PlasmaData &pdata,
+DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample, PlasmaData *&pdata,
 				std::array<bool,9> &heatmodels, std::array<bool,4> &forcemodels, std::array<bool,1> &chargemodels)
 				: Sample(sample),
 				CM("cf.txt",acclvls[0],chargemodels,sample,pdata),
@@ -158,9 +158,7 @@ int DTOKSU::Run(){
 			<< "\n\tForceTime = " << ForceTime << "\n\tHeatTime = " << HeatTime << "\n");
 		
 		// Update the plasma data from the plasma grid...
-		bool InGrid = FM.update_plasmadata(Sample->get_position());	// You know this is bad coding, and yet you do it
-		HM.update_plasmadata(Sample->get_position());
-		CM.update_plasmadata(Sample->get_position());
+		bool InGrid = FM.update_plasmadata(Sample->get_position());
 
 		// ***** START OF : DETERMINE IF END CONDITION HAS BEEN REACHED ***** //
 		if( Sample->is_gas() && Sample->get_superboilingtemp() <= Sample->get_temperature() ){
@@ -169,13 +167,13 @@ int DTOKSU::Run(){
 		}else if( Sample->is_gas() && Sample->get_superboilingtemp() > Sample->get_temperature() ){
 			std::cout << "\n\nSample has Evaporated ";
 			break;
-		}else if( !InGrid ){
-			std::cout << "\nSample has left simulation domain";
-			break;
 		}else if( Sample->is_gas() ){
 			std::cout << "\nSample has vapourised";
 			break;
 		
+		}else if( !InGrid ){
+			std::cout << "\nSample has left simulation domain";
+			break;
 		}
 		// ***** END OF : DETERMINE IF END CONDITION HAS BEEN REACHED ***** //
 	}

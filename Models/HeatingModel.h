@@ -20,7 +20,7 @@ class HeatingModel : public Model{
 		// Constructors
 		HeatingModel();
 		HeatingModel( std::string filename, double accuracy, std::array<bool,9> &models, 
-				Matter *& sample, PlasmaData & pdata);
+				Matter *& sample, PlasmaData *& pdata);
 		HeatingModel( std::string filename, double accuracy, std::array<bool,9> &models, 
 				Matter *& sample, PlasmaGrid & pgrid);
 

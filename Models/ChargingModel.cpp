@@ -10,7 +10,7 @@ ChargingModel::ChargingModel():Model(){
 }
 
 ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<bool,1> models,
-				Matter *& sample, PlasmaData &pdata) : Model(sample,pdata,accuracy){
+				Matter *& sample, PlasmaData *&pdata) : Model(sample,pdata,accuracy){
 	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename,double accuracy,std::array<bool,1> models,Matter *& sample, PlasmaData const& pdata) : Model(sample,pdata,accuracy)\n\n");
 	UseModel = models;
 	CreateFile(filename);
@@ -44,12 +44,12 @@ double ChargingModel::ProbeTimeStep()const{
 	C_Debug( "\tIn ChargingModel::ProbeTimeStep()\n\n" );
 	double timestep(0);	
 
-	if( Pdata.ElectronDensity != 0 && Pdata.IonTemp != 0){
+	if( Pdata->ElectronDensity != 0 && Pdata->IonTemp != 0){
 		// Calcualte the time scale of the behaviour from Krashinnenikovs equation
-		double DebyeLength=sqrt((epsilon0*Kb*Pdata.ElectronTemp)/(Pdata.ElectronDensity*pow(echarge,2)));
-		double PlasmaFreq = sqrt((Pdata.ElectronDensity*pow(echarge,2))/(epsilon0*Me));
+		double DebyeLength=sqrt((epsilon0*Kb*Pdata->ElectronTemp)/(Pdata->ElectronDensity*pow(echarge,2)));
+		double PlasmaFreq = sqrt((Pdata->ElectronDensity*pow(echarge,2))/(epsilon0*Me));
 		timestep = sqrt(2*PI) * ((DebyeLength)/Sample->get_radius()) 
-				* (1/(PlasmaFreq*(1+Pdata.ElectronTemp/Pdata.IonTemp+Sample->get_potential())));	
+				* (1/(PlasmaFreq*(1+Pdata->ElectronTemp/Pdata->IonTemp+Sample->get_potential())));	
 	}else{	timestep = 1; } // In region of no plasma
 
 	C_Debug("\n\t\tDebyeLength = " << DebyeLength << "\n\t\tPlasmaFreq = " << PlasmaFreq 
@@ -65,12 +65,12 @@ double ChargingModel::UpdateTimeStep(){
 	C_Debug( "\tIn ChargingModel::UpdateTimeStep()\n\n" );
 	
 
-	if( Pdata.ElectronDensity != 0 && Pdata.IonTemp != 0){
+	if( Pdata->ElectronDensity != 0 && Pdata->IonTemp != 0){
 		// Calcualte the time scale of the behaviour from Krashinnenikovs equation
-		double DebyeLength=sqrt((epsilon0*Kb*Pdata.ElectronTemp)/(Pdata.ElectronDensity*pow(echarge,2)));
-		double PlasmaFreq = sqrt((Pdata.ElectronDensity*pow(echarge,2))/(epsilon0*Me));
+		double DebyeLength=sqrt((epsilon0*Kb*Pdata->ElectronTemp)/(Pdata->ElectronDensity*pow(echarge,2)));
+		double PlasmaFreq = sqrt((Pdata->ElectronDensity*pow(echarge,2))/(epsilon0*Me));
 		TimeStep = sqrt(2*PI) * ((DebyeLength)/Sample->get_radius()) 
-				* (1/(PlasmaFreq*(1+Pdata.ElectronTemp/Pdata.IonTemp+Sample->get_potential())));	
+				* (1/(PlasmaFreq*(1+Pdata->ElectronTemp/Pdata->IonTemp+Sample->get_potential())));	
 	}else{	TimeStep = 1; } // In region of no plasma
 
 	C_Debug("\n\t\tDebyeLength = " << DebyeLength << "\n\t\tPlasmaFreq = " << PlasmaFreq 
@@ -98,7 +98,7 @@ void ChargingModel::Charge(double timestep){
 			Potential = solveOML( DSec + DTherm,Sample->get_potential());
 			if( Potential < 0.0 ){
 				Potential = solveOML(0.0,Sample->get_potential())-Kb*Sample->get_temperature()
-						/(echarge*Pdata.ElectronTemp);
+						/(echarge*Pdata->ElectronTemp);
 			}
 		}
 		Sample->update_charge(Potential,DSec,DTherm);
@@ -124,7 +124,7 @@ void ChargingModel::Charge(){
 			Potential = solveOML(DSec+DTherm,Sample->get_potential());
 			if( Potential < 0.0 ){
 				Potential = solveOML(0.0,Sample->get_potential())-Kb*Sample->get_temperature()
-						/(echarge*Pdata.ElectronTemp);
+						/(echarge*Pdata->ElectronTemp);
 			}
 		}
 		Sample->update_charge(Potential,DSec,DTherm);
@@ -144,8 +144,8 @@ double ChargingModel::solveOML(double a, double guess){
 		a = 1.0;
 	}
 	double b(0);
-	if( Pdata.ElectronTemp == 0 ) 	b = 0;
-	else 				b = Pdata.IonTemp/Pdata.ElectronTemp;
+	if( Pdata->ElectronTemp == 0 ) 	b = 0;
+	else 				b = Pdata->IonTemp/Pdata->ElectronTemp;
 	double C = Me/Mp;
 
 	double x1 = guess - ( (( 1-a)*exp(-guess) - sqrt(b*C)*(1+guess/b))/((a-1)*exp(-guess) - sqrt(C/b) ) );
@@ -165,5 +165,5 @@ double ChargingModel::DeltaSec()const{
 
 double ChargingModel::DeltaTherm()const{
 	C_Debug("\tIn ChargingModel::DeltaTherm()\n\n");
-	return sec(Pdata.ElectronTemp/1.16e5,Sample->get_elem());
+	return sec(Pdata->ElectronTemp/1.16e5,Sample->get_elem());
 }

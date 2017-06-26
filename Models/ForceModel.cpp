@@ -13,8 +13,8 @@ ForceModel::ForceModel():Model(){
 }
 
 ForceModel::ForceModel(std::string filename, double accuracy, std::array<bool,4> models, 
-			Matter *& sample, PlasmaData & pdata) : Model(sample,pdata,accuracy){
-	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, std::array<bool,3> models, Matter *& sample, PlasmaData const& pdata) : Model(sample,pdata,accuracy)\n\n");
+			Matter *& sample, PlasmaData *& pdata) : Model(sample,pdata,accuracy){
+	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, std::array<bool,3> models, Matter *& sample, PlasmaData const *& pdata) : Model(sample,pdata,accuracy)\n\n");
 	UseModel = models;
 	CreateFile(filename);
 }
@@ -163,22 +163,22 @@ threevector ForceModel::DTOKSIonDrag()const{
 // ION TEMPERATURE IN THIS FUNCTION IS IN ev.
 	double ConvertKelvsToeV(8.621738e-5);
 	threevector Mt(0.0,0.0,0.0);
-	if( Pdata.IonTemp != 0 ) Mt = (Pdata.PlasmaVel-Sample->get_velocity())*sqrt(Mp/(echarge*Pdata.IonTemp*ConvertKelvsToeV)); 
+	if( Pdata->IonTemp != 0 ) Mt = (Pdata->PlasmaVel-Sample->get_velocity())*sqrt(Mp/(echarge*Pdata->IonTemp*ConvertKelvsToeV)); 
 	F_Debug("\nMt = " << Mt);
 
-        if( Pdata.IonDensity == 0 || Pdata.IonTemp*ConvertKelvsToeV == 0 || Pdata.ElectronTemp*ConvertKelvsToeV == 0  || Mt.mag3() == 0 ){ 
+        if( Pdata->IonDensity == 0 || Pdata->IonTemp*ConvertKelvsToeV == 0 || Pdata->ElectronTemp*ConvertKelvsToeV == 0  || Mt.mag3() == 0 ){ 
 		// || Mt.mag3() == 0 ){
-                F_Debug("\nWarning! IonDensity = " << Pdata.IonDensity << "\nIonTemp*ConvertKelvsToeV = " 
-			<< Pdata.IonTemp*ConvertKelvsToeV << "\nElectronTemp*ConvertKelvsToeV = " 
-			<< Pdata.ElectronTemp*ConvertKelvsToeV << "!\nThis blows up calculations! Setting Fid=0.");
+                F_Debug("\nWarning! IonDensity = " << Pdata->IonDensity << "\nIonTemp*ConvertKelvsToeV = " 
+			<< Pdata->IonTemp*ConvertKelvsToeV << "\nElectronTemp*ConvertKelvsToeV = " 
+			<< Pdata->ElectronTemp*ConvertKelvsToeV << "!\nThis blows up calculations! Setting Fid=0.");
                 Fid = threevector(0.0,0.0,0.0);
         }else{
 		if(Mt.mag3()<2.0){ // Relative speed less than twice mach number, use Fortov et al theory with screening length 'Lambda'.
 
-			double lambda = sqrt(epsilon0/(Pdata.IonDensity*echarge*exp(-Mt.mag3()*Mt.mag3()/2)
-				*(1.0/(Pdata.IonTemp*ConvertKelvsToeV))+1.0/(Pdata.ElectronTemp*ConvertKelvsToeV)));
-			double beta = Pdata.ElectronTemp*ConvertKelvsToeV*Sample->get_radius()
-				*fabs(Sample->get_potential())/(lambda*Pdata.IonTemp*ConvertKelvsToeV);
+			double lambda = sqrt(epsilon0/(Pdata->IonDensity*echarge*exp(-Mt.mag3()*Mt.mag3()/2)
+				*(1.0/(Pdata->IonTemp*ConvertKelvsToeV))+1.0/(Pdata->ElectronTemp*ConvertKelvsToeV)));
+			double beta = Pdata->ElectronTemp*ConvertKelvsToeV*Sample->get_radius()
+				*fabs(Sample->get_potential())/(lambda*Pdata->IonTemp*ConvertKelvsToeV);
 			F_Debug("\nlambda = " << lambda << "\nbeta = " << beta << "\nPot = " << Sample->get_potential());
 
 			if(beta>13.0) std::cout << "nonlinear drag parameter" << std::endl;
@@ -188,11 +188,11 @@ threevector ForceModel::DTOKSIonDrag()const{
 				FidS = threevector(0.0,0.0,0.0);
 			}else{
 				double Lambda = -exp(beta/2.0)*Exponential_Integral_Ei(-beta/2.0); 
-				FidS = Mt*(sqrt(32*PI)/3.0*epsilon0*pow(Pdata.IonTemp*ConvertKelvsToeV,2)*Lambda*pow(beta,2));
+				FidS = Mt*(sqrt(32*PI)/3.0*epsilon0*pow(Pdata->IonTemp*ConvertKelvsToeV,2)*Lambda*pow(beta,2));
 			}
 
-			FidC =(Pdata.PlasmaVel-Sample->get_velocity())*4.0*PI*pow(Sample->get_radius(),2)*Pdata.IonDensity*Mp
-				*sqrt(echarge*Pdata.ElectronTemp*ConvertKelvsToeV/(2.0*PI*Me))*exp(-Sample->get_potential()); 
+			FidC =(Pdata->PlasmaVel-Sample->get_velocity())*4.0*PI*pow(Sample->get_radius(),2)*Pdata->IonDensity*Mp
+				*sqrt(echarge*Pdata->ElectronTemp*ConvertKelvsToeV/(2.0*PI*Me))*exp(-Sample->get_potential()); 
 			//for John's ion drag... I assume here and in other places in the 
 			//calculation that the given potential is normalised to kTe/e
 	    
@@ -203,9 +203,9 @@ threevector ForceModel::DTOKSIonDrag()const{
 			Fid=FidS+FidC;
 			F_Debug("\nFidS = " << FidS << "\nFidC = " << FidC);
 		}else{	// Relative speed greater than twice the mach number, use just plain collection area
-			double lambdadi = sqrt(epsilon0*Pdata.IonTemp*ConvertKelvsToeV)/sqrt(Pdata.IonDensity*echarge);
+			double lambdadi = sqrt(epsilon0*Pdata->IonTemp*ConvertKelvsToeV)/sqrt(Pdata->IonDensity*echarge);
 			F_Debug("\nlambdadi = " << lambdadi);
-			Fid = Mt*(Mt.mag3()*4*PI*epsilon0*pow(Pdata.IonTemp*ConvertKelvsToeV,2)*(pow(Sample->get_radius(),2)
+			Fid = Mt*(Mt.mag3()*4*PI*epsilon0*pow(Pdata->IonTemp*ConvertKelvsToeV,2)*(pow(Sample->get_radius(),2)
 					/(4*lambdadi*lambdadi)));	
 		}
 	}
@@ -221,12 +221,12 @@ threevector ForceModel::LorentzForce()const{
 
 	if( Sample->is_positive() ) (qtom = 3.0*epsilon0*Kb*Sample->get_temperature())
 					/(echarge*pow(Sample->get_radius(),2)*Sample->get_density());
-	else qtom = -3.0*epsilon0*Pdata.ElectronTemp*ConvertKelvsToeV*Sample->get_potential()
+	else qtom = -3.0*epsilon0*Pdata->ElectronTemp*ConvertKelvsToeV*Sample->get_potential()
 			/(pow(Sample->get_radius(),2)*Sample->get_density());	
 	//else qtom = -1000.0*3.0*epsilon0*V/(a*a*rho);//why it had Te???????
 	//edo to eixa allaksei se ola ta runs sto After 28_Feb ara prepei na ksana ginoun
 	// Google Translate: Here I had changed it to all the brides in After 28_Feb so they have to be done again
-	threevector returnvec = (Pdata.ElectricField+(Sample->get_velocity()^Pdata.MagneticField))*qtom;
+	threevector returnvec = (Pdata->ElectricField+(Sample->get_velocity()^Pdata->MagneticField))*qtom;
 	
 	
 	return returnvec;

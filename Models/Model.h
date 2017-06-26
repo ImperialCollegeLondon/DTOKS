@@ -23,7 +23,7 @@ class Model{
 		// Be const ones that do not modify member data. The other option is to capture by reference using Lambda functions.
 		// Hah, good luck with that.
 		Matter *Sample;				// Tungsten, Beryllium, Iron or Graphite
-		PlasmaData Pdata;			// Const Plasma Data structure
+		PlasmaData *Pdata;			// Const Plasma Data structure
 		std::ofstream ModelDataFile;		// Output data file
 		const double Accuracy;			// Accuracy of model, normalised to one.
 		const bool ContinuousPlasma;		// Is the plasma background is constant in space.
@@ -38,18 +38,18 @@ class Model{
 	public:
 		// Constructors
 		Model();
-		Model(Matter *& sample, PlasmaData &pdata, double accuracy);
+		Model(Matter *& sample, PlasmaData *&pdata, double accuracy);
 		Model(Matter *& sample, PlasmaGrid &pgrid, double accuracy);
 
 		// Destructor
 		virtual ~Model(){};
 
 		const Matter *get_sample		()const{ return Sample;		}
-		const PlasmaData &get_plasmadata	()const{ return Pdata; 		}
+		const PlasmaData *get_plasmadata	()const{ return Pdata; 		}
 		double get_totaltime			()const{ return TotalTime; 	}
 		double get_timestep			()const{ return TimeStep; 	}
 
-		void update_plasmadata(PlasmaData &pdata);
+		void update_plasmadata(PlasmaData *&pdata);
 		bool update_plasmadata(threevector pos);
 		void update_fields(int i, int k);
 

@@ -12,7 +12,7 @@ struct GrainData MatterDefaults = {
 	1.26e-11,	// Surface Area		should be updated
 	4.189e-18,	// Volume		should be updated
 	19600,		// Density		should be updated
-	3000,		// SuperBoilingTemp	should be updated
+	5555,		// SuperBoilingTemp	should be updated	(was 3000)
 	270,		// Temperature		fine
 	1e5,		// Vapour Pressure	should be updated
 	1.0,		// Emissivity		should be updated
@@ -32,11 +32,17 @@ struct GrainData MatterDefaults = {
 // Constructors
 Matter::Matter(const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults){
 	M_Debug("\n\nIn Matter::Matter(const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults)\n\n");
+	ConstModels = {'c','c','c','y'};
+	St.Mass = Ec.RTDensity*St.Volume;
 };
 Matter::Matter(double rad, const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults){
 	M_Debug("\n\nIn Matter::Matter(double rad, const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults)\n\n");
+	ConstModels = {'c','c','c','y'};
 	St.Radius = rad;			// m
 	St.UnheatedRadius = St.Radius;		// m
+	St.Volume = (4*PI*pow(St.Radius,3))/3;
+        St.SurfaceArea = 4*PI*pow(St.Radius,2);
+	St.Mass = Ec.RTDensity*St.Volume;
 	assert(St.Radius > 0 && St.UnheatedRadius > 0);
 //	M_Debug("\nSt.Radius = " << St.Radius << "\nSt.Mass = " << St.Mass);
 };
@@ -46,7 +52,11 @@ Matter::Matter(double rad, double temp, const ElementConsts *elementconsts):Ec(*
 	ConstModels = {'c','c','c','y'};
 	St.Radius = rad;					// m
 	St.UnheatedRadius = St.Radius;				// m
+	St.Volume = (4*PI*pow(St.Radius,3))/3;
+        St.SurfaceArea = 4*PI*pow(St.Radius,2);
 	St.Temperature = temp;					// K
+	if( ConstModels[1] != 'v' && ConstModels[1] != 'V' )	St.Mass = Ec.RTDensity*St.Volume;
+	else							update_dim();
 	assert(St.Radius > 0 && St.UnheatedRadius > 0 && St.Temperature > 0);
 
 	M_Debug("\nSt.Radius = " << St.Radius << "\nSt.Mass = " << St.Mass << "\nSt.Temperature = " << St.Temperature);
@@ -57,7 +67,11 @@ Matter::Matter(double rad, double temp, const ElementConsts *elementconsts, std:
 	ConstModels = constmodels;
 	St.Radius = rad;					// m
 	St.UnheatedRadius = St.Radius;				// m
+	St.Volume = (4*PI*pow(St.Radius,3))/3;
+        St.SurfaceArea = 4*PI*pow(St.Radius,2);
 	St.Temperature = temp;					// K
+	if( ConstModels[1] != 'v' && ConstModels[1] != 'V' )	St.Mass = Ec.RTDensity*St.Volume;
+	else							update_dim();
 	assert(St.Radius > 0 && St.UnheatedRadius > 0 && St.Temperature > 0);
 
 	M_Debug("\nSt.Radius = " << St.Radius << "\nSt.Mass = " << St.Mass << "\nSt.Temperature = " << St.Temperature);
@@ -81,7 +95,7 @@ void Matter::update_dim(){ // Assuming spherical particle.
 
 	}else if(ConstModels[1] == 'c' || ConstModels[1] == 'C'){
 		St.Density = Ec.RTDensity;				// Density is RT density
-	//	St.Radius = pow((3*St.Mass)/(4*PI*St.Density),1./3.);	// Set radius from Mass
+		St.Radius = pow((3*St.Mass)/(4*PI*Ec.RTDensity),1./3.);	// Set radius from Mass
 	}else if(ConstModels[1] == 's' || ConstModels[1] == 's'){
 		St.Density = Ec.RTDensity;				// Fix the density
 	}else{
@@ -92,26 +106,13 @@ void Matter::update_dim(){ // Assuming spherical particle.
 	St.Volume = (4*PI*pow(St.Radius,3))/3;
 	St.SurfaceArea = 4*PI*pow(St.Radius,2);
         St.Mass = St.Density*St.Volume; 
-	// This is a weird way of updating mass because:
-	// When mass is lost, it is removed from St.Mass, then the new 'St.UnheatedRadius' is calculated.
-	// This is then used to calculate the new smaller St.Volume. Finally the St.Mass is calculated again.
-//	static bool InitialiseMass = true;
-//	if( InitialiseMass ){
-//	        St.Mass = St.Density*St.Volume; 
-//	        InitialiseMass = false;
-//	}
-
 
 //	assert( abs((St.Density - St.Mass/St.Volume)/St.Density) < 0.000001 ); // Sanity Check, this may be an issue
-//	St.Mass = St.Density*St.Volume;
-	
-//	std::cout << "\n = " << St.Mass; 
-//	std::cout << "\nSt.Mass = " << St.Mass; std::cin.get();
 	
 	M2_Debug("\nSt.Mass = " << St.Mass << "\nSt.Volume = " << St.Volume << "\nSt.Density = " << St.Density
 			<< "\nSt.Mass/St.Volume = " << St.Mass/St.Volume);
 
-	assert(St.Mass > 10e-25 );
+	if( St.Gas == false ) assert(St.Mass > 10e-25 );
 }
 
 // For variable emissivity: https://github.com/cfinch/Mie_scattering
