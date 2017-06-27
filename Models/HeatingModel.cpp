@@ -1,6 +1,6 @@
 //#define PAUSE
 //#define HEATING_DEBUG
-#define HEATING_DEEP_DEBUG
+//#define HEATING_DEEP_DEBUG
 
 #include "HeatingModel.h"
 #include "Constants.h"
@@ -66,7 +66,7 @@ double HeatingModel::ProbeTimeStep()const{
 
 	// Take Eularian step to get initial time step
 	H_Debug("\t"); double TotalPower = CalculatePower(Sample->get_temperature());
-	double timestep = fabs((Sample->get_mass()*Sample->get_heatcapacity())/(TotalPower*Accuracy));
+	double timestep = fabs((Sample->get_mass()*Sample->get_heatcapacity()*Accuracy)/TotalPower);
 
 	// Calculate timestep that produces mass change of less than 0.01% of current mass.
 	// If this timestep is quicker than current step, change timestep
@@ -103,12 +103,13 @@ double HeatingModel::UpdateTimeStep(){
 
 	// Take Eularian step to get initial time step
 	H_Debug("\t"); double TotalPower = CalculatePower(Sample->get_temperature());
+	TimeStep = fabs((Sample->get_mass()*Sample->get_heatcapacity()*Accuracy)/TotalPower);
 
 	// COULD BE: If first time step or change in temp is greater than 1 degree, set time step to be equal to 1 degree step
 	// Note, if the time step changes conditionally, then the time scale of the process may vary independantly of the time step.
 	// This causes issues when deciding on the time ordering of processes.
 //	if( TimeStep == 0 || fabs(TimeStep*TotalPower/(Sample->get_mass()*Sample->get_heatcapacity())) > 1 ) 
-	TimeStep = fabs((Sample->get_mass()*Sample->get_heatcapacity())/(TotalPower*Accuracy));
+
 
 	// Calculate timestep that produces mass change of less than 0.01% of current mass.
 	// If this timestep is quicker than current step, change timestep

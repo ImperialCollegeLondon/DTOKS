@@ -49,7 +49,7 @@ double ChargingModel::ProbeTimeStep()const{
 		double DebyeLength=sqrt((epsilon0*Kb*Pdata->ElectronTemp)/(Pdata->ElectronDensity*pow(echarge,2)));
 		double PlasmaFreq = sqrt((Pdata->ElectronDensity*pow(echarge,2))/(epsilon0*Me));
 		timestep = sqrt(2*PI) * ((DebyeLength)/Sample->get_radius()) 
-				* (1/(PlasmaFreq*(1+Pdata->ElectronTemp/Pdata->IonTemp+Sample->get_potential())));	
+				* (1/(PlasmaFreq*(1+Pdata->ElectronTemp/Pdata->IonTemp+Sample->get_potential())))*Accuracy;
 		C_Debug("\n\t\tDebyeLength = " << DebyeLength << "\n\t\tPlasmaFreq = " << PlasmaFreq 
 			<< "\n\t\ttimestep = " << timestep << "\n\n");
 
@@ -72,7 +72,7 @@ double ChargingModel::UpdateTimeStep(){
 		double DebyeLength=sqrt((epsilon0*Kb*Pdata->ElectronTemp)/(Pdata->ElectronDensity*pow(echarge,2)));
 		double PlasmaFreq = sqrt((Pdata->ElectronDensity*pow(echarge,2))/(epsilon0*Me));
 		TimeStep = sqrt(2*PI) * ((DebyeLength)/Sample->get_radius()) 
-				* (1/(PlasmaFreq*(1+Pdata->ElectronTemp/Pdata->IonTemp+Sample->get_potential())));
+				* (1/(PlasmaFreq*(1+Pdata->ElectronTemp/Pdata->IonTemp+Sample->get_potential())))*Accuracy;
 		C_Debug("\n\t\tDebyeLength = " << DebyeLength << "\n\t\tPlasmaFreq = " << PlasmaFreq 
 			<< "\n\t\tTimeStep = " << TimeStep << "\n\n");
 
