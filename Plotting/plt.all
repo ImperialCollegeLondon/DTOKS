@@ -1,0 +1,33 @@
+set terminal qt 1
+plot "hf.txt" using 1:3 title 'Mass vs Time' with line
+set terminal qt 2
+plot "hf.txt" using 2:3 title 'Mass vs Temp' with line
+set logscale y
+#set format y "10^{%L}"
+#set terminal postscript eps enhanced
+#set ylabel "Y-AXIS" 2,0
+
+#set terminal qt 3
+#plot "hf.txt" using 1:6 title 'EvapRate' with line
+#set terminal qt 4
+#plot "hf.txt" using 1:7 title 'EvapLoss' with line
+#set terminal qt 5
+#plot "hf.txt" using 1:8 title 'EvapMassLoss' with line
+#set logscale y
+set terminal qt 6
+
+plot "hf.txt" using 1:10 title 'IonHeatFlux' with line, \
+	"hf.txt" using 1:12 title 'ElectronHeatFlux' with line, \
+	"hf.txt" using 1:14 title 'NeutralHeatFlux' with line, \
+	"hf.txt" using 1:15 title 'NeutralRecomb' with line
+set logscale y
+set terminal qt 7
+
+plot "hf.txt" using 1:5 title 'EmissLoss' with line, \
+	"hf.txt" using 1:7 title 'EvapLoss' with line, \
+	"hf.txt" using 1:16 title 'SEE' with line, \
+	"hf.txt" using 1:17 title 'TEE' with line
+set logscale y
+set terminal qt 0
+plot "hf.txt" using 1:2 title 'Temperature' with line
+

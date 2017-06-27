@@ -1,0 +1,2 @@
+splot "ff.txt" using 1:2:3 title 'Position' with line
+
