@@ -81,7 +81,7 @@ double ForceModel::ProbeTimeStep()const{
 		std::cout << "\ntimestep limited by magnetic field (Gyromotion)";
 		timestep = 0.1*pow(Sample->get_radius(),2)*Sample->get_density()
 				*sqrt(1-(Pdata->MagneticField.getunit()*Sample->get_velocity().getunit()))
-				/(3.0*epsilon0*Pdata->ElectronTemp*Sample->get_potential()*Pdata->MagneticField.mag3());
+				/(3.0*epsilon0*Pdata->ElectronTemp*fabs(Sample->get_potential())*Pdata->MagneticField.mag3());
 	}
 
 	F1_Debug( "\t\tAcceleration = " << Acceleration << "\n\t\ttimestep = " << timestep << "\n");
@@ -119,7 +119,7 @@ double ForceModel::UpdateTimeStep(){
 		std::cout << "\ntimestep limited by magnetic field (Gyromotion)";
 		TimeStep = 0.1*pow(Sample->get_radius(),2)*Sample->get_density()
 				*sqrt(1-(Pdata->MagneticField.getunit()*Sample->get_velocity().getunit()))
-				/(3.0*epsilon0*Pdata->ElectronTemp*Sample->get_potential()*Pdata->MagneticField.mag3());
+				/(3.0*epsilon0*Pdata->ElectronTemp*fabs(Sample->get_potential())*Pdata->MagneticField.mag3());
 	}
 
 	F1_Debug( "\t\tAcceleration = " << Acceleration << "\n\t\tTimeStep = " << TimeStep << "\n");
