@@ -39,8 +39,8 @@ class HeatingModel : public Model{
 		double CalculatePower(double DustTemperature)const;
 		double RungeKutta4();
 
-		double ProbeTimeStep()const;	// Check time step
-		double UpdateTimeStep();	// Update time step
+		double ProbeTimeStep()const;		// Check time step
+		double UpdateTimeStep();		// Update time step
 
 		// Heating Models
 		const double EmissivityModel		(double DustTemperature)const;
@@ -59,7 +59,9 @@ class HeatingModel : public Model{
 		const double ElectronFlux		(double DustTemperature)const;
 		const double NeutralFlux		()			const;
 
-		void set_PowerIncident			(double powerincident){ PowerIncident = powerincident; }
+		bool get_thermalequilibrium		(){ return ThermalEquilibrium; }
+		void set_PowerIncident			(double powerincident){ PowerIncident = powerincident; 		}
+		void set_ThermalEquilibrium		(double thermequilib ){ ThermalEquilibrium = thermequilib; 	}
 };
 
 #endif

@@ -1,5 +1,5 @@
 //#define PAUSE
-#define DTOKSU_DEBUG
+//#define DTOKSU_DEBUG
 #define DTOKSU_DEEP_DEBUG
 #include "DTOKSU.h"
 
@@ -97,9 +97,9 @@ int DTOKSU::Run(){
 		// Even in No Plasma Region, cooling processes can still occur, but this is specifically for zero power
 		if( HeatTime == 10 ){
 			D1_Debug("\nNo Net Power Region...");
-			CM.Charge(ForceTime);
 			FM.Force();
 			HM.AddTime(ForceTime);
+			CM.Charge(ForceTime);
 			TotalTime += ForceTime;
 		}else if( Sample->get_deltatot() > 0.5 && Sample->get_deltatot() < 1.0 ){ // Region of rapid charge variation
 			// WARNING, CURRENT TESTING SHOWS DTOKSU DOESN'T ENTER HERE AT ALL WITH PGRID.
@@ -107,25 +107,22 @@ int DTOKSU::Run(){
 			// it is going through that region in the for loop below...
 			D1_Debug("\n\nPotential Focus Region, steps taken at 0.01*MinTimeStep\n");
 			D1_Debug("Potential = " << Sample->get_potential() << "\nDeltaTot = " << Sample->get_deltatot() << "\n\n");
-			CM.Charge(MinTimeStep*0.01);
 			HM.Heat(MinTimeStep*0.01);
 			FM.Force(MinTimeStep*0.01);
+			CM.Charge(MinTimeStep*0.01);
 			TotalTime += MinTimeStep*0.01;
 		// Else If the timescales of the processes are comparable, step through each at the faster timescale
 		}else if( MinTimeStep*2.0 > MaxTimeStep){
 			D1_Debug("\nComparable Timescales, taking time steps through both processes at shorter time scale");
-			CM.Charge(MinTimeStep);
 			HM.Heat(MinTimeStep);
 			FM.Force(MinTimeStep);
+			CM.Charge(MinTimeStep);
 			TotalTime += MinTimeStep;
 		}else{ // Else, we can take steps through the smaller one til the sum of the steps is the larger.
 			D1_Debug("\nDifferent Timescales, taking many time steps through quicker process at shorter time scale");
 			unsigned int j(1);
 			for( j =1; (j*MinTimeStep) < MaxTimeStep; j ++){
 				D1_Debug( "\nIntermediateStep/MaxTimeStep = " << j*MinTimeStep << "/" << MaxTimeStep);
-
-				CM.Charge(MinTimeStep);
-				Sample->update();
 
 				// Take the time step in the faster time process
 				if( MinTimeStep == HeatTime ){
@@ -139,7 +136,10 @@ int DTOKSU::Run(){
 				}else{
 					std::cerr << "\nUnexpected Timescale Behaviour (1)!";
 				}
+				CM.Charge(MinTimeStep);
+				Sample->update();
 
+				// Check that time scales haven't changed significantly whilst looping...
 				if( ForceTime/FM.ProbeTimeStep() > 2 ){
 					D1_Debug("\nForce TimeStep Has Changed Significantly whilst taking small steps...");
 					j ++;
@@ -149,12 +149,13 @@ int DTOKSU::Run(){
 					D1_Debug("\nHeat TimeStep Has Changed Significantly whilst taking small steps...");
 					j ++;
 					break; // Can't do this: MaxTimeStep = j*MinTimeStep; as we change MaxTimeStep...
-				}				
+				}
 			}
 
 			// Take a time step in the slower time process
 			D1_Debug("\n*STEP* = " << (j-1)*MinTimeStep << "\nMaxTimeStep = " << MaxTimeStep << "\nj = " << j << "\n");
-			if( MaxTimeStep == HeatTime ){		
+				
+			if( MaxTimeStep == HeatTime ){
 				HM.Heat((j-1)*MinTimeStep); 
 				D_Debug("\nHeat Step Taken."); 
 			}else if( MaxTimeStep == ForceTime ){	
@@ -162,8 +163,9 @@ int DTOKSU::Run(){
 				D_Debug("\nForce Step Taken."); 
 			}else{	std::cerr << "\nUnexpected Timescale Behaviour! (2)";	}
 			TotalTime += (j-1)*MinTimeStep;
+			CM.Charge(MinTimeStep);
+			Sample->update();
 		}
-
 		// ***** END OF : NUMERICAL METHOD BASED ON TIME SCALES ***** //	
 		D1_Debug("\nTemperature = " << Sample->get_temperature() << "\n\n"); 
 		D_Debug("\n\tMinTimeStep = " << MinTimeStep << "\n\tChargeTime = " << ChargeTime
@@ -173,7 +175,6 @@ int DTOKSU::Run(){
 		InGrid = FM.update_plasmadata(Sample->get_position());
 		Sample->update();
 		Print();
-
 		// ***** START OF : DETERMINE IF END CONDITION HAS BEEN REACHED ***** //
 		if( Sample->is_gas() && Sample->get_superboilingtemp() <= Sample->get_temperature() ){
 			std::cout << "\n\nSample has Boiled ";

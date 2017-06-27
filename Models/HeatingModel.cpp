@@ -79,7 +79,7 @@ double HeatingModel::ProbeTimeStep()const{
 		}
 	}
 
-	// Check thermal equilibrium hasn't been explicitly reached somehow. May be that we could remove this condition now...
+	// Check thermal equilibrium hasn't been explicitly reached somehow.
 	if( TotalPower == 0 && ContinuousPlasma ){	
 		static bool runOnce = true;
 		WarnOnce(runOnce,"\nWarning! TotalPower = 0");
@@ -122,7 +122,7 @@ double HeatingModel::UpdateTimeStep(){
 		}
 	}
 
-	// Check thermal equilibrium hasn't been explicitly reached somehow. May be that we could remove this condition now...
+	// Check thermal equilibrium hasn't been explicitly reached somehow.
 	if( TotalPower == 0 && ContinuousPlasma ){	
 		static bool runOnce = true;
 		WarnOnce(runOnce,"\nWarning! TotalPower = 0");
@@ -140,17 +140,18 @@ double HeatingModel::UpdateTimeStep(){
 	if( Sample->get_temperature() != Sample->get_superboilingtemp() && ContinuousPlasma ){
 		if( ((Sample->get_temperature()-OldTemp > 0 && DeltaTempTest < 0) // If temperature changed sign this step
 			|| (Sample->get_temperature()-OldTemp < 0 && DeltaTempTest > 0)) ){
-			std::cout << "\n\nThermal Equilibrium reached on condition (1): Sign change of Temperature change!";
+			std::cout << "\n\nThermal Equilibrium reached on condition (2): Sign change of Temperature change!";
 			ThermalEquilibrium = true;
-			TimeStep = 1; 
+			TimeStep = 1;	// NOT SURE IF I NEED THESE FOR CONSTANT PLASMA BACKGROUND 
 		}if( (fabs(DeltaTempTest/TimeStep) < 0.01) ){ // If Temperature gradient is less than 1%
-			std::cout << "\n\nThermal Equilibrium reached on condition (2): Temperature Gradient < 0.01!";
+			std::cout << "\n\nThermal Equilibrium reached on condition (3): Temperature Gradient < 0.01!";
 			ThermalEquilibrium = true;
-			TimeStep = 1;
+			TimeStep = 1;   // NOT SURE IF I NEED THESE FOR CONSTANT PLASMA BACKGROUND
 		}
 	}
 
 	OldTemp = Sample->get_temperature();
+
 
 	H1_Debug("\nSample->get_mass() = " << Sample->get_mass() << "\nSample->get_heatcapacity() = " << 
 		Sample->get_heatcapacity() << "\nTotalPower = " << TotalPower << "\nAccuracy = " << Accuracy);
@@ -294,25 +295,25 @@ double HeatingModel::RungeKutta4(){
 	H_Debug( "\tIn HeatingModel::RungeKutta4()\n\n");
 	double k1 = CalculatePower(Sample->get_temperature()); 
 	if(k1<0 && fabs(k1/2) > Sample->get_temperature()){
-		std::cout << "\n\nThermal Equilibrium reached on condition (3): k1 step negative and larger than Td!";
+		std::cout << "\n\nThermal Equilibrium reached on condition (4): k1 step negative and larger than Td!";
 		ThermalEquilibrium = true;
 		return 0;
 	}
 	double k2 = CalculatePower(Sample->get_temperature()+k1/2); 
 	if( k2<0 && fabs(k2/2) > Sample->get_temperature() ){
-		std::cout << "\n\nThermal Equilibrium reached on condition (3): k2 step negative and larger than Td!";
+		std::cout << "\n\nThermal Equilibrium reached on condition (4): k2 step negative and larger than Td!";
 		ThermalEquilibrium = true;
 		return (TimeStep/6)*k1;
 	}
 	double k3 = CalculatePower(Sample->get_temperature()+k2/2);
 	if( k3<0 && fabs(k3) > Sample->get_temperature() ){
-		std::cout << "\n\nThermal Equilibrium reached on condition (3): k3 step negative and larger than Td!";
+		std::cout << "\n\nThermal Equilibrium reached on condition (4): k3 step negative and larger than Td!";
 		ThermalEquilibrium = true;
 		return (TimeStep/6)*(k1+2*k2);
 	}
 	double k4 = CalculatePower(Sample->get_temperature()+k3);
 	if( k4<0 && fabs(k4/2) > Sample->get_temperature() ){
-		std::cout << "\n\nThermal Equilibrium reached on condition (3): k4 step negative and larger than Td!";
+		std::cout << "\n\nThermal Equilibrium reached on condition (4): k4 step negative and larger than Td!";
 		ThermalEquilibrium = true;
 		return (TimeStep/6)*(k1+2*k2+2*k3);
 	}
