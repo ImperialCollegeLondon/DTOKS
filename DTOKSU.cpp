@@ -1,4 +1,4 @@
-#define PAUSE
+//#define PAUSE
 #define DTOKSU_DEBUG
 #define DTOKSU_DEEP_DEBUG
 #include "DTOKSU.h"
@@ -42,7 +42,7 @@ DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample,
 void DTOKSU::CreateFile( std::string filename ){
 	D_Debug("\n\nIn DTOKSU::CreateFile(std::string filename)\n\n");
 	MyFile.open(filename);
-	MyFile << "\n";
+	MyFile << "TotalTime\n";
 }
 
 void DTOKSU::CheckTimeStep(){
@@ -57,7 +57,7 @@ void DTOKSU::CheckTimeStep(){
 void DTOKSU::Print(){
 	D_Debug("\tIn DTOKSU::Print()\n\n");
 
-	MyFile 	<< "\nSomeStuff";
+	MyFile 	<< TotalTime;
 
 	MyFile << "\n";
 }
@@ -66,13 +66,17 @@ int DTOKSU::Run(){
 	D_Debug("- In DTOKSU::Run()\n\n");
 
 	double HeatTime(0),ForceTime(0),ChargeTime(0);
+
+	bool InGrid = FM.update_plasmadata(Sample->get_position());
 	CM.Charge();
 	Sample->update();			// Update data in GrainStructs
-	for(size_t i = 0; i < 1000; i ++){
+	while( InGrid ){
+
+		// ***** START OF : DETERMINE TIMESCALES OF PROCESSES ***** //	
+
 		ChargeTime 	= CM.UpdateTimeStep();		// Check Time step length is appropriate
 		ForceTime 	= FM.UpdateTimeStep();		// Check Time step length is appropriate
 		HeatTime 	= HM.UpdateTimeStep();		// Check Time step length is appropriate
-		D1_Debug( "\nCT = " << ChargeTime << "\nFT = " << ForceTime << "\nHT = " << HeatTime);
 		if( HeatTime == 1) break;			// Thermal Equilibrium Reached
 
 		// We will assume Charging Time scale is much faster than either heating or moving, but check for the other case.
@@ -85,11 +89,14 @@ int DTOKSU::Run(){
 			WarnOnce(runOnce,"*** WARNING! Charging Time scale is not the shortest timescale!! ***\n");
 		}
 	
+		// ***** END OF : DETERMINE TIMESCALES OF PROCESSES ***** //	
 		// ***** START OF : NUMERICAL METHOD BASED ON TIME SCALES ***** //	
 	
-		// Resolve region where plasma parameters are zero
+		// Resolve region where the Total Power is zero for a Plasma Grid.
+		// This typically occurs when plasma parameters are zero in a cell and other models are off (or zero)... 
+		// Even in No Plasma Region, cooling processes can still occur, but this is specifically for zero power
 		if( HeatTime == 10 ){
-			D1_Debug("\nNo Plasma Region...");
+			D1_Debug("\nNo Net Power Region...");
 			CM.Charge(ForceTime);
 			FM.Force();
 			HM.AddTime(ForceTime);
@@ -124,19 +131,25 @@ int DTOKSU::Run(){
 				if( MinTimeStep == HeatTime ){
 					HM.Heat(MinTimeStep);
 					D1_Debug("\nHeat Step Taken.");
+					// Check that time scales haven't changed significantly whilst looping... 
 				}else if( MinTimeStep == ForceTime ){
 					FM.Force(MinTimeStep);	
 					D1_Debug("\nForce Step Taken.");
+					// Check that time scales haven't changed significantly whilst looping... 
 				}else{
 					std::cerr << "\nUnexpected Timescale Behaviour (1)!";
 				}
-				
-				// Check that time scales haven't changed significantly whilst looping... 
-				if( HeatTime/HM.ProbeTimeStep() > 2 || ForceTime/FM.ProbeTimeStep() > 2 ){
-					D1_Debug("\nTimeStep Has Changed Significantly whilst taking small steps...");
+
+				if( ForceTime/FM.ProbeTimeStep() > 2 ){
+					D1_Debug("\nForce TimeStep Has Changed Significantly whilst taking small steps...");
 					j ++;
 					break; // Can't do this: MaxTimeStep = j*MinTimeStep; as we change MaxTimeStep...
 				}
+				if( HeatTime/HM.ProbeTimeStep() > 2 ){
+					D1_Debug("\nHeat TimeStep Has Changed Significantly whilst taking small steps...");
+					j ++;
+					break; // Can't do this: MaxTimeStep = j*MinTimeStep; as we change MaxTimeStep...
+				}				
 			}
 
 			// Take a time step in the slower time process
@@ -152,13 +165,14 @@ int DTOKSU::Run(){
 		}
 
 		// ***** END OF : NUMERICAL METHOD BASED ON TIME SCALES ***** //	
-		D1_Debug("\ni : " << (int)i << "\nTemperature = " << Sample->get_temperature() << "\n\n"); 
-
+		D1_Debug("\nTemperature = " << Sample->get_temperature() << "\n\n"); 
 		D_Debug("\n\tMinTimeStep = " << MinTimeStep << "\n\tChargeTime = " << ChargeTime
 			<< "\n\tForceTime = " << ForceTime << "\n\tHeatTime = " << HeatTime << "\n");
-		Pause();
-		// Update the plasma data from the plasma grid...
-		bool InGrid = FM.update_plasmadata(Sample->get_position());
+
+		// Update the plasma data from the plasma grid for all models...
+		InGrid = FM.update_plasmadata(Sample->get_position());
+		Sample->update();
+		Print();
 
 		// ***** START OF : DETERMINE IF END CONDITION HAS BEEN REACHED ***** //
 		if( Sample->is_gas() && Sample->get_superboilingtemp() <= Sample->get_temperature() ){
@@ -171,11 +185,11 @@ int DTOKSU::Run(){
 			std::cout << "\nSample has vapourised";
 			break;
 		
-		}else if( !InGrid ){
-			std::cout << "\nSample has left simulation domain";
-			break;
 		}
 		// ***** END OF : DETERMINE IF END CONDITION HAS BEEN REACHED ***** //
+	}
+	if( !InGrid ){
+		std::cout << "\nSample has left simulation domain";
 	}
 	if( fabs(1 - (HM.get_totaltime()/FM.get_totaltime())) > 0.001  
 		|| fabs(1 - (FM.get_totaltime()/CM.get_totaltime())) > 0.001 ){
