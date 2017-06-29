@@ -1,6 +1,6 @@
 //#define PAUSE
 //#define DTOKSU_DEBUG
-#define DTOKSU_DEEP_DEBUG
+//#define DTOKSU_DEEP_DEBUG
 #include "DTOKSU.h"
 
 // CONSIDER DEFINING A DEFAULT SAMPLE
@@ -69,7 +69,7 @@ int DTOKSU::Run(){
 
 	bool InGrid = FM.update_plasmadata(Sample->get_position());
 	CM.Charge();
-	Sample->update();			// Update data in GrainStructs
+	Sample->update();			// Need to manually update the first time as first step is not necessarily heating
 	while( InGrid ){
 
 		// ***** START OF : DETERMINE TIMESCALES OF PROCESSES ***** //	
@@ -137,7 +137,7 @@ int DTOKSU::Run(){
 					std::cerr << "\nUnexpected Timescale Behaviour (1)!";
 				}
 				CM.Charge(MinTimeStep);
-				Sample->update();
+
 
 				// Check that time scales haven't changed significantly whilst looping...
 				if( ForceTime/FM.ProbeTimeStep() > 2 ){
@@ -164,16 +164,14 @@ int DTOKSU::Run(){
 			}else{	std::cerr << "\nUnexpected Timescale Behaviour! (2)";	}
 			TotalTime += (j-1)*MinTimeStep;
 			CM.Charge(MinTimeStep);
-			Sample->update();
 		}
 		// ***** END OF : NUMERICAL METHOD BASED ON TIME SCALES ***** //	
-		D1_Debug("\nTemperature = " << Sample->get_temperature() << "\n\n"); 
+		D_Debug("\nTemperature = " << Sample->get_temperature() << "\n\n"); 
 		D_Debug("\n\tMinTimeStep = " << MinTimeStep << "\n\tChargeTime = " << ChargeTime
 			<< "\n\tForceTime = " << ForceTime << "\n\tHeatTime = " << HeatTime << "\n");
 
 		// Update the plasma data from the plasma grid for all models...
 		InGrid = FM.update_plasmadata(Sample->get_position());
-		Sample->update();
 		Print();
 		// ***** START OF : DETERMINE IF END CONDITION HAS BEEN REACHED ***** //
 		if( Sample->is_gas() && Sample->get_superboilingtemp() <= Sample->get_temperature() ){
