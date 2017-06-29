@@ -405,7 +405,7 @@ const double HeatingModel::SEE(double DustTemperature)const{
 //			<< "\nSample->get_bondenergy() = " << Sample->get_bondenergy());
 //	H1_Debug("\nReturn = " << eFlux*Sample->get_deltasec()*(3*echarge+Sample->get_bondenergy()));
 	double SEE=0;
-	if(ForceNegative || Sample->get_deltatot() <= 1 )
+	if( ForceNegative || Sample->get_deltatot() <= 1 )
 		SEE = Sample->get_surfacearea()*ElectronFlux(DustTemperature)*Sample->get_deltasec()*echarge*
                                         (3+Sample->get_workfunction())/1000; // Convert
 	else if( Sample->get_deltatot() > 1 ) 	SEE = 0; // Electrons captured by positive grain

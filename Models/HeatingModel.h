@@ -15,32 +15,9 @@ class HeatingModel : public Model{
 		std::array<bool,9> UseModel; 		// Heating Models turned on of possibly 9
 
 		void Print();				// Write to output data file
-
-	public:
-		// Constructors
-		HeatingModel();
-		HeatingModel( std::string filename, double accuracy, std::array<bool,9> &models, 
-				Matter *& sample, PlasmaData *& pdata);
-		HeatingModel( std::string filename, double accuracy, std::array<bool,9> &models, 
-				Matter *& sample, PlasmaGrid & pgrid);
-
-		// Destructor
-		~HeatingModel(){
-		};
-		
-		void Defaults(); // Sets default settings
-
-		// Functions which generate and save data from heating the Sample.
-		const int Vapourise();
-		void Heat();
-		void Heat(double timestep);
-
 		void CreateFile(std::string filename, bool PrintPhaseData);
-		double CalculatePower(double DustTemperature)const;
+		void Defaults(); // Sets default settings
 		double RungeKutta4();
-
-		double ProbeTimeStep()const;		// Check time step
-		double UpdateTimeStep();		// Update time step
 
 		// Heating Models
 		const double EmissivityModel		(double DustTemperature)const;
@@ -58,6 +35,30 @@ class HeatingModel : public Model{
 		const double IonFlux			(double DustTemperature)const;
 		const double ElectronFlux		(double DustTemperature)const;
 		const double NeutralFlux		()			const;
+
+
+	public:
+		// Constructors
+		HeatingModel();
+		HeatingModel( std::string filename, double accuracy, std::array<bool,9> &models, 
+				Matter *& sample, PlasmaData *& pdata);
+		HeatingModel( std::string filename, double accuracy, std::array<bool,9> &models, 
+				Matter *& sample, PlasmaGrid & pgrid);
+
+		// Destructor
+		~HeatingModel(){
+		};
+		
+
+		// Functions which generate and save data from heating the Sample.
+		const int Vapourise();
+		void Heat();
+		void Heat(double timestep);
+
+		double CalculatePower(double DustTemperature)const;
+
+		double ProbeTimeStep()const;		// Check time step
+		double UpdateTimeStep();		// Update time step
 
 		bool get_thermalequilibrium		(){ return ThermalEquilibrium; }
 		void set_PowerIncident			(double powerincident){ PowerIncident = powerincident; 		}

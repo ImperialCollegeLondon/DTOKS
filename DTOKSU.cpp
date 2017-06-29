@@ -86,7 +86,7 @@ int DTOKSU::Run(){
 		// Check Charging timescale isn't the fastest timescale.
 		if( ChargeTime > MinTimeStep && ChargeTime != 1){
 			static bool runOnce = true;
-			WarnOnce(runOnce,"*** WARNING! Charging Time scale is not the shortest timescale!! ***\n");
+			WarnOnce(runOnce,"*** Charging Time scale is not the shortest timescale!! ***\n");
 		}
 	
 		// ***** END OF : DETERMINE TIMESCALES OF PROCESSES ***** //	

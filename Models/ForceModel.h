@@ -8,15 +8,16 @@ class ForceModel : public Model {
 	private:
 		// Parameters defining the Force equation
 		std::array<bool,4> UseModel; 		// Force Models turned on of possibly 4
-		std::ofstream ForceFile;		// Output data file
 
 		void Print();			// Write to output data file
-		
+		void CreateFile(std::string filename);
+
 		// Different Force terms
 		threevector CalculateAcceleration()const;	// Sum of Force terms
 		threevector DTOKSIonDrag()const;
 		threevector LorentzForce()const;
 		threevector Centrifugal()const;
+
 
 	public:
 		// Constructors
@@ -33,7 +34,7 @@ class ForceModel : public Model {
 		double UpdateTimeStep();	// Verify time step
 
 		// Functions which generate and save data from heating the Sample.
-		void CreateFile(std::string filename);
+
 
 		void Force();
 		void Force(double timestep);

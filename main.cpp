@@ -79,16 +79,16 @@ int main(int argc, char* argv[]){
 
 	// ------------------- HEATING MODELS ------------------- //
 	// Set to true all heating models that are wanted
-	bool RadiativeCooling = true;
-	bool EvaporativeCooling = true;
-	bool NewtonCooling = false;		// This model is equivalent to Electron and Ion heat flux terms
-	bool NeutralHeatFlux = true; 		// Plasma heating terms
-	bool ElectronHeatFlux = true;
-	bool IonHeatFlux = true;
-	bool NeutralRecomb = true;
-	bool TEE = true;			// Electron Emission terms
-	bool SEE = true;
-	bool PlasmaHeating = true; 		// If we want plasma heating terms turned off
+	bool RadiativeCooling = 0;
+	bool EvaporativeCooling = 0;
+	bool NewtonCooling = 0;			// This model is equivalent to Electron and Ion heat flux terms
+	bool NeutralHeatFlux = 1; 		// Plasma heating terms
+	bool ElectronHeatFlux = 1;
+	bool IonHeatFlux = 1;
+	bool NeutralRecomb = 1;
+	bool TEE = 0;				// Electron Emission terms
+	bool SEE = 0;
+	bool PlasmaHeating = 1; 		// If we want plasma heating terms turned off
 	// NOTE: For Negative dust with RE=0 and Te = Ti, the Ion and Electron heat flux will be identical!
 	if( !PlasmaHeating ){
 		NeutralHeatFlux = false;
@@ -98,30 +98,31 @@ int main(int argc, char* argv[]){
 	}
 
 	// ------------------- FORCING MODELS ------------------- //
-        bool Gravity = true;
-        bool Centrifugal = true;
-        bool Lorentz = true;
-        bool IonDrag = true;	
+        bool Gravity = false;
+        bool Centrifugal = false;
+        bool Lorentz = false;
+        bool IonDrag = false;	
 
 	// ------------------- CHARGING MODELS ------------------- //
         bool DTOKSOML = true;
 
 	// Plasma Data
 	// NOTE: 16/06/17, current plasma data matches DTOKS initial plasma data for debugging purposes.
-	PlasmaData Pdata;
-	Pdata.NeutralDensity =  1e18;//10e17;	// m^-3, Neutral density
-	Pdata.IonDensity =  3.8e18;//10e17;	// m^-3, Ion density
-	Pdata.ElectronDensity = 1e18;//10e18; 	// m^-3, Electron density
+
+	PlasmaData *Pdata = new PlasmaData;
+	Pdata->NeutralDensity =  1e18;//10e17;	// m^-3, Neutral density
+	Pdata->IonDensity =  3.8e18;//10e17;	// m^-3, Ion density
+	Pdata->ElectronDensity = 1e18;//10e18; 	// m^-3, Electron density
 	double NumOfev = 1.5;
-	Pdata.IonTemp = NumOfev*1.16e4;	 	// K, Ion Temperature
-	Pdata.ElectronTemp = 1.188*1.16e4; 	// K, Electron Temperature, convert from eV
-	Pdata.NeutralTemp = NumOfev*1.16e4; 	// K, Neutral Temperature, convert from eV
+	Pdata->IonTemp = NumOfev*1.16e4;	// K, Ion Temperature
+	Pdata->ElectronTemp = 1.188*1.16e4; 	// K, Electron Temperature, convert from eV
+	Pdata->NeutralTemp = NumOfev*1.16e4; 	// K, Neutral Temperature, convert from eV
 	threevector PlasmaVelocity(501.33, 7268.5, 914.947); // Taken from initial for DTOKS
-	Pdata.PlasmaVel = PlasmaVelocity;
+	Pdata->PlasmaVel = PlasmaVelocity;
 	threevector Efield(-13.673, 0, -27.925);
-	Pdata.ElectricField = Efield;
+	Pdata->ElectricField = Efield;
 	threevector Bfield(0.0226868, 0.328923, 0.0414043);
-	Pdata.MagneticField = Bfield;
+	Pdata->MagneticField = Bfield;
 
 	std::vector <std::string> sources;
 	std::stringstream ss0;
@@ -161,7 +162,7 @@ int main(int argc, char* argv[]){
 	}
 
 	threevector xinit(1.15,0.0,-1.99);// default injection right hand side
-	threevector vinit(0.0,0.0,100.0);
+	threevector vinit(0.0,0.0,10.0);
 	Sample->update_motion(xinit,vinit);
 
 	std::cout << "\n\n * GENERATE DTOKS * \n\n";

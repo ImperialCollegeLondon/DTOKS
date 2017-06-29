@@ -10,8 +10,9 @@ class ChargingModel : public Model{
 		std::array<bool,1> UseModel; 		// Charging Models turned on of possible 1
 
 		void Print();			// Write to output data file
-		double solveOML(double a, double guess);
+		void CreateFile(std::string filename);
 
+		double solveOML(double a, double guess);
 		double DeltaTherm()const;
 		double DeltaSec()const;
 	public:
@@ -29,7 +30,7 @@ class ChargingModel : public Model{
 		double ProbeTimeStep()const;
 		double UpdateTimeStep();
 		// Functions which generate and save data from heating the Sample.
-		void CreateFile(std::string filename);
+
 		
 		void Charge();
 		void Charge(double timestep);

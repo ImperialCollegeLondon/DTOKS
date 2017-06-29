@@ -84,7 +84,9 @@ bool Model::update_plasmadata(threevector pos){
 void Model::update_fields(int i, int k){
 	Mo_Debug( "\tIn Model::update_fields(int " << i << ", int " << k << ")\n\n");
 	threevector vp, E, B;
-	double aveu;
+
+	// Get Average plasma velocity
+	double aveu(0.0);
 	if( (Pgrid->getna0(i,k)>0.0) || (Pgrid->getna1(i,k)>0.0) ){
 		aveu = (Pgrid->getna0(i,k)*Pgrid->getua0(i,k)+Pgrid->getna1(i,k)*Pgrid->getua1(i,k))
 			/(Pgrid->getna0(i,k)+Pgrid->getna1(i,k));

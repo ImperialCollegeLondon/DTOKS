@@ -29,27 +29,27 @@ ForceModel::ForceModel(std::string filename, double accuracy, std::array<bool,4>
 
 void ForceModel::CreateFile(std::string filename){
 	F_Debug("\tIn ForceModel::CreateFile(std::string filename)\n\n");
-	ForceFile.open(filename);
-	ForceFile << "Position\tVelocity";
+	ModelDataFile.open(filename);
+	ModelDataFile << "Position\tVelocity";
 	bool PrintGravity = false; // Lol
-	if( UseModel[0] && PrintGravity ) 	ForceFile << "\tGravity";
-       	if( UseModel[1] ) 			ForceFile << "\tCentrifugal";
-       	if( UseModel[2] ) 			ForceFile << "\tLorentz";
-       	if( UseModel[3] ) 			ForceFile << "\tIonDrag";
-
-	ForceFile << "\n";
+	if( UseModel[0] && PrintGravity ) 	ModelDataFile << "\tGravity";
+       	if( UseModel[1] ) 			ModelDataFile << "\tCentrifugal";
+       	if( UseModel[2] ) 			ModelDataFile << "\tLorentz";
+       	if( UseModel[3] ) 			ModelDataFile << "\tIonDrag";
+		
+	ModelDataFile << "\n";
 }
 
 void ForceModel::Print(){
 	F_Debug("\tIn ForceModel::Print()\n\n");
-	ForceFile << Sample->get_position().getx() << " " << Sample->get_position().gety() << " " << Sample->get_position().getz() 
+	ModelDataFile << Sample->get_position().getx() << " " << Sample->get_position().gety() << " " << Sample->get_position().getz() 
 	<< "\t" << Sample->get_velocity().getx() << " " << Sample->get_velocity().gety() << " " << Sample->get_velocity().getz();
 	bool PrintGravity = false; // Lol
-	if( UseModel[0] && PrintGravity ) 	ForceFile << "\t(0.0,0.0,-9.81)"; // Maybe this should be coded better...
-	if( UseModel[1] ) 			ForceFile << "\t" << Centrifugal();
-	if( UseModel[2] ) 			ForceFile << "\t" << LorentzForce();
-	if( UseModel[3] ) 			ForceFile << "\t" << DTOKSIonDrag();
-	ForceFile << "\n";
+	if( UseModel[0] && PrintGravity ) 	ModelDataFile << "\t(0.0,0.0,-9.81)"; // Maybe this should be coded better...
+	if( UseModel[1] ) 			ModelDataFile << "\t" << Centrifugal();
+	if( UseModel[2] ) 			ModelDataFile << "\t" << LorentzForce();
+	if( UseModel[3] ) 			ModelDataFile << "\t" << DTOKSIonDrag();
+	ModelDataFile << "\n";
 }
 
 double ForceModel::ProbeTimeStep()const{
@@ -61,7 +61,7 @@ double ForceModel::ProbeTimeStep()const{
 	// For Accuracy = 1.0, requires change in velocity less than 0.01m or 1cm/s
 	if( Acceleration.mag3() == 0 ){
 		static bool runOnce = true;
-		WarnOnce(runOnce,"Warning! Zero Acceleration!\ntimestep being set to unity");
+		WarnOnce(runOnce,"Zero Acceleration!\ntimestep being set to unity");
 		timestep = 1;	// Set arbitarily large time step (Should this be float max?)
 	}else{
 		timestep = (0.01*Accuracy)*(1.0/Acceleration.mag3());
@@ -99,7 +99,7 @@ double ForceModel::UpdateTimeStep(){
 	// For Accuracy = 1.0, requires change in velocity less than 0.01m or 1cm/s
 	if( Acceleration.mag3() == 0 ){
 		static bool runOnce = true;
-		WarnOnce(runOnce,"Warning! Zero Acceleration!\nTimeStep being set to unity");
+		WarnOnce(runOnce,"Zero Acceleration!\nTimeStep being set to unity");
 		TimeStep = 1;	// Set arbitarily large time step (Should this be float max?)
 	}else{
 		TimeStep = (0.01*Accuracy)*(1.0/Acceleration.mag3());
