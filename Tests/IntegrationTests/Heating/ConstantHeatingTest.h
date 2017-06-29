@@ -36,7 +36,7 @@ int ConstantHeatingTest(char Element){
 	bool TEE = false;
 	bool SEE = false;
 
-	PlasmaData Pdata;
+	PlasmaData *Pdata = new PlasmaData;
 
 	bool PlasmaHeating = false; 		// If we want plasma heating terms turned off
 	if( !PlasmaHeating ){

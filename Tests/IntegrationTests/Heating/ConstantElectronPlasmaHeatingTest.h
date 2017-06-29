@@ -36,14 +36,14 @@ int ConstantElectronPlasmaHeatingTest(char Element){
 	bool TEE = false;
 	bool SEE = false;
 
-	PlasmaData Pdata;
-	Pdata.NeutralDensity = 3e19;		// m^-3, Neutral density
-	Pdata.ElectronDensity = 8e17;	 	// m^-3, Electron density
+	PlasmaData *Pdata = new PlasmaData;
+	Pdata->NeutralDensity = 3e19;		// m^-3, Neutral density
+	Pdata->ElectronDensity = 8e17;	 	// m^-3, Electron density
 	double Potential = 1;			// arb, assumed negative, potential normalised to dust temperature, (-e*phi)/(Kb*Td)
-	Pdata.IonTemp = 100*1.16e4;	 	// K, Ion Temperature
-	Pdata.ElectronTemp = 100*1.16e4;	// K, Electron Temperature, convert from eV
-	Pdata.NeutralTemp = 100*1.16e4; 	// K, Neutral Temperature, convert from eV
-	Pdata.AmbientTemp = 0;
+	Pdata->IonTemp = 10*1.16e4;	 	// K, Ion Temperature
+	Pdata->ElectronTemp = 10*1.16e4;	// K, Electron Temperature, convert from eV
+	Pdata->NeutralTemp = 10*1.16e4; 	// K, Neutral Temperature, convert from eV
+	Pdata->AmbientTemp = 0;
 
 	// Models and ConstModels are placed in an array in this order:
 	std::array<bool, 9> Models = 
@@ -68,6 +68,9 @@ int ConstantElectronPlasmaHeatingTest(char Element){
 		std::cerr << "\nInvalid Option entered";
 		return -1;
 	}
+	threevector xinit(1.15,0.0,-1.99);// default injection right hand side
+	threevector vinit(0.0,0.0,0.0);
+	Sample->update_motion(xinit,vinit);
 	Sample->set_potential(Potential);
 	HeatingModel MyModel("out_ConstantHeatingTest.txt",1.0,Models,Sample,Pdata);
 	double Mass = Sample->get_mass();
@@ -80,11 +83,11 @@ int ConstantElectronPlasmaHeatingTest(char Element){
 
 	// *********************** BEGIN ANALYTICAL MODEL ************************************ //
 
-	double ElectronFlux = Pdata.ElectronDensity*exp(-Potential)*sqrt(Kb*Pdata.ElectronTemp/(2*PI*Me));
-	double NeutralFlux = Pdata.NeutralDensity*sqrt(Kb*Pdata.NeutralTemp/(2*PI*Mp));
+	double ElectronFlux = Pdata->ElectronDensity*exp(-Potential)*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
+	double NeutralFlux = Pdata->NeutralDensity*sqrt(Kb*Pdata->NeutralTemp/(2*PI*Mp));
 	
-	double ElectronFluxPower = Sample->get_surfacearea()*2*ElectronFlux*Pdata.ElectronTemp*Kb/1000; // Convert from Joules to KJ
-	double NeutralFluxPower = Sample->get_surfacearea()*2*NeutralFlux*Pdata.NeutralTemp*Kb/1000; // Convert from Joules to KJ
+	double ElectronFluxPower = Sample->get_surfacearea()*2*ElectronFlux*Pdata->ElectronTemp*Kb/1000; // Convert from Joules to KJ
+	double NeutralFluxPower = Sample->get_surfacearea()*2*NeutralFlux*Pdata->NeutralTemp*Kb/1000; // Convert from Joules to KJ
 
 
 

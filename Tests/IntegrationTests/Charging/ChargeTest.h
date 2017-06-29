@@ -37,18 +37,18 @@ int ChargeTest(char Element){
 	double Potential = 2.5;		// Normalised Potential
 	Matter *Sample;			// Define the sample matter type
 
-	PlasmaData Pdata;
-	Pdata.NeutralDensity = 3e19;		// m^-3, Neutral density
-	Pdata.ElectronDensity = 8e17;	 	// m^-3, Electron density
-	Pdata.IonTemp = 10*1.16e4;	 	// K, Ion Temperature
-	Pdata.NeutralTemp = 10*1.16e4; 	// K, Neutral Temperature, convert from eV
-	Pdata.ElectronTemp = 10*1.16e4;	// K, Electron Temperature, convert from eV
+	PlasmaData *Pdata = new PlasmaData;
+	Pdata->NeutralDensity = 3e19;		// m^-3, Neutral density
+	Pdata->ElectronDensity = 8e17;	 	// m^-3, Electron density
+	Pdata->IonTemp = 10*1.16e4;	 	// K, Ion Temperature
+	Pdata->NeutralTemp = 10*1.16e4; 	// K, Neutral Temperature, convert from eV
+	Pdata->ElectronTemp = 10*1.16e4;	// K, Electron Temperature, convert from eV
 	threevector GravityForce(0, 0, -9.81);
-	Pdata.Gravity = GravityForce;
+	Pdata->Gravity = GravityForce;
 	threevector Efield(1, -2, 3);
-	Pdata.ElectricField = Efield;
+	Pdata->ElectricField = Efield;
 	threevector Bfield(0.0, 0.0, 0.0);
-	Pdata.MagneticField = Bfield;
+	Pdata->MagneticField = Bfield;
 
 	std::array<bool,1> ChargeModels  = {true};
 
@@ -76,12 +76,12 @@ int ChargeTest(char Element){
 	double AnalyticPotential(0);
 	std::cout << "\nSample->get_deltatot() = " << Sample->get_deltatot();
 	if( Sample->get_deltatot() < 1.0 ){ // solveOML only defined for deltatot < 1.0
-		AnalyticPotential = solveOML(Sample->get_deltatot(),Sample->get_potential(),Pdata.IonTemp,Pdata.ElectronTemp);
+		AnalyticPotential = solveOML(Sample->get_deltatot(),Sample->get_potential(),Pdata->IonTemp,Pdata->ElectronTemp);
 	}else{ // If the grain is in fact positive ...
-		AnalyticPotential = solveOML(Sample->get_deltatot(),Sample->get_potential(),Pdata.IonTemp,Pdata.ElectronTemp);
+		AnalyticPotential = solveOML(Sample->get_deltatot(),Sample->get_potential(),Pdata->IonTemp,Pdata->ElectronTemp);
 		if( Potential < 0.0 ){
-			AnalyticPotential = solveOML(0.0,Sample->get_potential(),Pdata.IonTemp,Pdata.ElectronTemp)
-					-Kb*Sample->get_temperature()/(echarge*Pdata.ElectronTemp);
+			AnalyticPotential = solveOML(0.0,Sample->get_potential(),Pdata->IonTemp,Pdata->ElectronTemp)
+					-Kb*Sample->get_temperature()/(echarge*Pdata->ElectronTemp);
 		}
 	}
 

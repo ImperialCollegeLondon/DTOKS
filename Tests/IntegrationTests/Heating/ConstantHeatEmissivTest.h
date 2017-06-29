@@ -17,10 +17,10 @@ int ConstantHeatEmissivTest(char Element){
 	std::string Name="constant";	// Describes heating model
 
  	// Parameters describing the heating model
-	double Power=1e-6;		// Kilo-Watts power in addition to heating model powers
-	double Size=5e-8; 		// m
-	double Temp=270;		// K
-	double TimeStep=1e-12;		// s
+	double Power=1e-3;		// Kilo-Watts power in addition to heating model powers
+	double Size=1e-6; 		// m
+	double Temp=300;		// K
+	double TimeStep=1e-9;		// s
 	Matter *Sample;			// Define the sample matter type
 
 	// Set to true all heating models that are wanted
@@ -36,8 +36,8 @@ int ConstantHeatEmissivTest(char Element){
 	bool TEE = false;
 	bool SEE = false;
 
-	PlasmaData Pdata;
-	Pdata.AmbientTemp = 0;
+	PlasmaData *Pdata = new PlasmaData;
+	Pdata->AmbientTemp = 0;
 
 	bool PlasmaHeating = false; 		// If we want plasma heating terms turned off
 	if( !PlasmaHeating ){
@@ -70,7 +70,9 @@ int ConstantHeatEmissivTest(char Element){
 		std::cerr << "\nInvalid Option entered";
 		return -1;
 	}
-
+	threevector xinit(1.15,0.0,-1.99);// default injection right hand side
+	threevector vinit(0.0,0.0,0.0);
+	Sample->update_motion(xinit,vinit);
 	HeatingModel MyModel("out_ConstantHeatingTest.txt",1.0,Models,Sample,Pdata);
 //	MyModel.Vapourise("out_ConstantHeatingTest.txt",ConstModels,TimeStepType);
 	

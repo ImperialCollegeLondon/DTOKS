@@ -37,54 +37,56 @@ int main(){
 		if( out == -1 ) std::cout << "\n# FAILED!";
 
 		// Test bout 3,
-		// Integration test three for all materials
-		// Test if constant heating with thermal radiation with non-const emissivity is comparable to analytic result
-		double Emissivs[4]={0.98397,9.73852e-06,0.240571,0.33886}; // Final temperature (TEST 3) Emissivities
-//		double Emissivs[4]={0.04,0.18,0.2,0.70}; // DTOKS emissivities
+		// Integration test four for all materials
+		// Test if constant heating with plasma heating and thermal radiation is comparable to analytic result
+		// Note, emissivity is once again a const
 		std::cout << "\nRunning Test 3...\n";
-		out = CompareConstEmissivTest(Element[i],Emissivs[i]);
+		out = ConstantElectronPlasmaHeatingTest(Element[i]);
 		std::cout << "\nFinished Running Test 3!\n";
 
 		if( out == 1 ) std::cout << "\n# PASSED!";
 		if( out == 2 ) std::cout << "\n# WARNING! DEVIATION OF < 1%";
 		if( out == -1 ) std::cout << "\n# FAILED!";
 
-		// Test bout 4,
+		// Test bout 4, NOTE THIS DEVIATES AND I DON'T KNOW WHY EXACTLY! PRETTY SURE IT's THE CHARGING MODEL
 		// Integration test four for all materials
-		// Test if constant heating with plasma heating and thermal radiation is comparable to analytic result
+		// Test if constant heating with plasma heating and thermal radiation
 		// Note, emissivity is once again a const
 		std::cout << "\nRunning Test 4...\n";
-		out = ConstantElectronPlasmaHeatingTest(Element[i]);
+		out = ConstantPlasmaHeatingTest(Element[i]);
 		std::cout << "\nFinished Running Test 4!\n";
 
 		if( out == 1 ) std::cout << "\n# PASSED!";
 		if( out == 2 ) std::cout << "\n# WARNING! DEVIATION OF < 1%";
 		if( out == -1 ) std::cout << "\n# FAILED!";
 
-		// Test bout 5,
+		// Test bout 5, NOTE THIS DEVIATES AND I DON'T KNOW WHY EXACTLY! SAME PROBLEM
 		// Integration test four for all materials
-		// Test if constant heating with plasma heating and thermal radiation
+		// Test if constant heating with plasma heating, thermal radiation and neutral recombination
 		// Note, emissivity is once again a const
 		std::cout << "\nRunning Test 5...\n";
-		out = ConstantPlasmaHeatingTest(Element[i]);
+		out = ConstantPlasmaHeatingNeutralRecombTest(Element[i]);
 		std::cout << "\nFinished Running Test 5!\n";
 
 		if( out == 1 ) std::cout << "\n# PASSED!";
 		if( out == 2 ) std::cout << "\n# WARNING! DEVIATION OF < 1%";
 		if( out == -1 ) std::cout << "\n# FAILED!";
+		std::cout << "\n\n*****\n\n\n";
 
-		// Test bout 6,
-		// Integration test four for all materials
-		// Test if constant heating with plasma heating, thermal radiation and neutral recombination
-		// Note, emissivity is once again a const
+
+		// Test bout 6, NOTE THIS IS EXPECTED TO FAIL!!
+		// Integration test three for all materials
+		// Test if constant heating with thermal radiation with non-const emissivity is comparable to analytic result
+		double Emissivs[4]={0.98397,9.73852e-06,0.240571,0.33886}; // Final temperature (TEST 3) Emissivities
+		//		double Emissivs[4]={0.04,0.18,0.2,0.70}; // DTOKS emissivities
 		std::cout << "\nRunning Test 6...\n";
-		out = ConstantPlasmaHeatingNeutralRecombTest(Element[i]);
+		out = CompareConstEmissivTest(Element[i],Emissivs[i]);
 		std::cout << "\nFinished Running Test 6!\n";
-
+		
 		if( out == 1 ) std::cout << "\n# PASSED!";
 		if( out == 2 ) std::cout << "\n# WARNING! DEVIATION OF < 1%";
 		if( out == -1 ) std::cout << "\n# FAILED!";
-		std::cout << "\n\n*****\n\n\n";
+
 
 		// Other terms:
 		// TEE has no analytical solution as the solution involves exponential integrals
