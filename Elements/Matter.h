@@ -57,7 +57,7 @@ class Matter{
 
 		void update_motion(threevector &changeinposition, threevector &changeinvelocity);
 		// Resolve region of rapid charge variation
-		void update_charge(double potential, double deltas, double deltat);
+		void update_charge(double charge, double potential, double deltas, double deltat);
 
 		// Getter methods
 		char get_elem			()const{ return Ec.Elem;			};

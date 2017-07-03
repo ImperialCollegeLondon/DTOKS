@@ -38,7 +38,7 @@ struct GrainData{
 	// Charging Data
 	double DeltaSec;		// Secondary Electron Emission Yield (Arb)
 	double DeltaTherm;		// Thermionic Electron Emission Yield (Arb)
-	double Potential;		// Normalised Grain potential (Arb)
+	double Potential;		// Normalised Grain potential (Arb), Potential = (e*phi) / (kB * Te)
 	bool Positive;			// Defines the sign of the grain charge.
 
 	// Force/Motion Data

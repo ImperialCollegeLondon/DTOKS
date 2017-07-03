@@ -12,14 +12,14 @@ ForceModel::ForceModel():Model(){
 	CreateFile("Default_Force_filename.txt");
 }
 
-ForceModel::ForceModel(std::string filename, double accuracy, std::array<bool,4> models, 
+ForceModel::ForceModel(std::string filename, double accuracy, std::array<bool,5> models, 
 			Matter *& sample, PlasmaData *& pdata) : Model(sample,pdata,accuracy){
 	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, std::array<bool,3> models, Matter *& sample, PlasmaData const *& pdata) : Model(sample,pdata,accuracy)\n\n");
 	UseModel = models;
 	CreateFile(filename);
 }
 
-ForceModel::ForceModel(std::string filename, double accuracy, std::array<bool,4> models, 
+ForceModel::ForceModel(std::string filename, double accuracy, std::array<bool,5> models, 
 			Matter *& sample, PlasmaGrid & pgrid) : Model(sample,pgrid,accuracy){
 	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, std::array<bool,3> models, Matter *& sample, PlasmaGrid const& pgrid) : Model(sample,pgrid,accuracy)\n\n");
 	UseModel = models;
@@ -36,19 +36,21 @@ void ForceModel::CreateFile(std::string filename){
        	if( UseModel[1] ) 			ModelDataFile << "\tCentrifugal";
        	if( UseModel[2] ) 			ModelDataFile << "\tLorentz";
        	if( UseModel[3] ) 			ModelDataFile << "\tIonDrag";
+       	if( UseModel[4] ) 			ModelDataFile << "\tNeutralDrag";
 		
 	ModelDataFile << "\n";
 }
 
 void ForceModel::Print(){
 	F_Debug("\tIn ForceModel::Print()\n\n");
-	ModelDataFile << Sample->get_position().getx() << " " << Sample->get_position().gety() << " " << Sample->get_position().getz() 
-	<< "\t" << Sample->get_velocity().getx() << " " << Sample->get_velocity().gety() << " " << Sample->get_velocity().getz();
+	ModelDataFile << Sample->get_position() << "\t" << Sample->get_velocity();
+
 	bool PrintGravity = false; // Lol
-	if( UseModel[0] && PrintGravity ) 	ModelDataFile << "\t(0.0,0.0,-9.81)"; // Maybe this should be coded better...
+	if( UseModel[0] && PrintGravity ) 	ModelDataFile << "\t0.0 0.0 -9.81"; // Maybe this should be coded better...
 	if( UseModel[1] ) 			ModelDataFile << "\t" << Centrifugal();
 	if( UseModel[2] ) 			ModelDataFile << "\t" << LorentzForce();
 	if( UseModel[3] ) 			ModelDataFile << "\t" << DTOKSIonDrag();
+	if( UseModel[4] ) 			ModelDataFile << "\t" << NeutralDrag();
 	ModelDataFile << "\n";
 }
 
@@ -185,11 +187,23 @@ threevector ForceModel::CalculateAcceleration()const{
  	if( UseModel[1] ) Accel += Centrifugal(); // Centrifugal terms. CHECK THESE TWO LINES AT SOME POINT
  	if( UseModel[2] ) Accel += LorentzForce();
 	if( UseModel[3] ) Accel += DTOKSIonDrag();
+	if( UseModel[4] ) Accel += NeutralDrag();
 	F1_Debug( "\n\t\tg = " << threevector(0.0,0.0,-9.81) );
 	F1_Debug( "\n\t\tcentrifugal = " << Centrifugal() );
 	F1_Debug( "\n\t\tlorentzforce = " << LorentzForce() << "\n\n" );
 	F1_Debug( "\n\t\tFid = " << DTOKSIonDrag() );
         return Accel;
+}
+
+// Calculations for ion drag: Mach number, shielding length with fitting function and thermal scattering parameter
+threevector ForceModel::NeutralDrag()const{
+	F_Debug("\tIn ForceModel::DTOKSIonDrag()\n\n");
+	threevector Fnd;
+	
+	threevector RelativeVelocity = (Pdata->PlasmaVel-Sample->get_velocity());
+	double ThermalVelocity = sqrt(2*Kb*Pdata->IonTemp*Mp);
+	Fnd = RelativeVelocity*Pdata->NeutralDensity*ThermalVelocity*PI*pow(Sample->get_radius(),2);
+	return Fnd;
 }
 
 // Calculations for ion drag: Mach number, shielding length with fitting function and thermal scattering parameter

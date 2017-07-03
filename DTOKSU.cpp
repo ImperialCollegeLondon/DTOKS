@@ -5,13 +5,13 @@
 
 // CONSIDER DEFINING A DEFAULT SAMPLE
 std::array<bool, 9> DefaultHeatModels = {false,false,false,false,false,false, false,false,false};
-std::array<bool,4> DefaultForceModels = {false,false,false,false};
+std::array<bool,5> DefaultForceModels = {false,false,false,false,false};
 std::array<bool,1> DefaultChargeModels = {false};
 std::array<char,4> DefaultConstModels = { 'c','c','c','c'};
 
 DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample, PlasmaData *&pdata,
-				std::array<bool,9> &heatmodels, std::array<bool,4> &forcemodels, std::array<bool,1> &chargemodels)
-				: Sample(sample),
+				std::array<bool,9> &heatmodels, std::array<bool,5> &forcemodels, std::array<bool,1> &chargemodels)
+			: Sample(sample),
 				CM("cf.txt",acclvls[0],chargemodels,sample,pdata),
 				HM("hf.txt",acclvls[1],heatmodels,sample,pdata),
 				FM("ff.txt",acclvls[2],forcemodels,sample,pdata){
@@ -24,7 +24,7 @@ DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample,
 }
 
 DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample, PlasmaGrid &pgrid,
-				std::array<bool,9> &heatmodels, std::array<bool,4> &forcemodels, std::array<bool,1> &chargemodels)
+				std::array<bool,9> &heatmodels, std::array<bool,5> &forcemodels, std::array<bool,1> &chargemodels)
 				: Sample(sample),
 				CM("cf.txt",acclvls[0],chargemodels,sample,pgrid),
 				HM("hf.txt",acclvls[1],heatmodels,sample,pgrid),
@@ -107,10 +107,10 @@ int DTOKSU::Run(){
 			// it is going through that region in the for loop below...
 			D1_Debug("\n\nPotential Focus Region, steps taken at 0.01*MinTimeStep\n");
 			D1_Debug("Potential = " << Sample->get_potential() << "\nDeltaTot = " << Sample->get_deltatot() << "\n\n");
-			HM.Heat(MinTimeStep*0.01);
-			FM.Force(MinTimeStep*0.01);
-			CM.Charge(MinTimeStep*0.01);
-			TotalTime += MinTimeStep*0.01;
+			HM.Heat  (ChargeTime);
+			FM.Force (ChargeTime);
+			CM.Charge(ChargeTime);
+			TotalTime += ChargeTime;
 		// Else If the timescales of the processes are comparable, step through each at the faster timescale
 		}else if( MinTimeStep*2.0 > MaxTimeStep){
 			D1_Debug("\nComparable Timescales, taking time steps through both processes at shorter time scale");

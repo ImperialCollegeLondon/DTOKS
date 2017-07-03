@@ -175,7 +175,7 @@ threevector threevector::operator^(threevector v_old)const
 // The threevector product
 std::ostream& operator<<(std::ostream& os, const threevector &v)
 {
-	os << "(" << v.getx() << ", " << v.gety() << ", " << v.getz() << ")";
+	os << v.getx() << " " << v.gety() << " " << v.getz();
 	return os;
 }
 

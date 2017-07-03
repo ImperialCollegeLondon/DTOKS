@@ -79,15 +79,15 @@ int main(int argc, char* argv[]){
 
 	// ------------------- HEATING MODELS ------------------- //
 	// Set to true all heating models that are wanted
-	bool RadiativeCooling = 0;
-	bool EvaporativeCooling = 0;
+	bool RadiativeCooling = 1;
+	bool EvaporativeCooling = 1;
 	bool NewtonCooling = 0;			// This model is equivalent to Electron and Ion heat flux terms
 	bool NeutralHeatFlux = 1; 		// Plasma heating terms
 	bool ElectronHeatFlux = 1;
 	bool IonHeatFlux = 1;
 	bool NeutralRecomb = 1;
-	bool TEE = 0;				// Electron Emission terms
-	bool SEE = 0;
+	bool TEE = 1;				// Electron Emission terms
+	bool SEE = 1;
 	bool PlasmaHeating = 1; 		// If we want plasma heating terms turned off
 	// NOTE: For Negative dust with RE=0 and Te = Ti, the Ion and Electron heat flux will be identical!
 	if( !PlasmaHeating ){
@@ -98,10 +98,11 @@ int main(int argc, char* argv[]){
 	}
 
 	// ------------------- FORCING MODELS ------------------- //
-        bool Gravity = false;
-        bool Centrifugal = false;
-        bool Lorentz = false;
-        bool IonDrag = false;	
+        bool Gravity = 1;
+        bool Centrifugal = 1;
+        bool Lorentz = 1;
+        bool IonDrag = 1;	
+        bool NeutralDrag = 1;	
 
 	// ------------------- CHARGING MODELS ------------------- //
         bool DTOKSOML = true;
@@ -145,12 +146,12 @@ int main(int argc, char* argv[]){
 	std::array<bool, 9> HeatModels = 
 		{RadiativeCooling, EvaporativeCooling, NewtonCooling, IonHeatFlux, ElectronHeatFlux, NeutralHeatFlux, 
 		NeutralRecomb, SEE, TEE };
-	std::array<bool,4> ForceModels  = {Gravity,Centrifugal,Lorentz,IonDrag};
+	std::array<bool,5> ForceModels  = {Gravity,Centrifugal,Lorentz,IonDrag,NeutralDrag};
 	std::array<bool,1> ChargeModels = {DTOKSOML};
 	ConstModels  = {EmissivityModel,ExpansionModel,HeatCapacityModel,BoilingModel};
 	
 	// Accuracy Levels correspond to Charging, Heating and Forcing respectively
-	std::array<double,3> AccuracyLevels = {1.0,0.01,0.01};
+	std::array<double,3> AccuracyLevels = {1.0,0.1,0.1};
 
 	if 	(Element == 'W') Sample = new Tungsten(Size,Temp,ConstModels);
 	else if (Element == 'B') Sample = new Beryllium(Size,Temp,ConstModels);
@@ -162,7 +163,7 @@ int main(int argc, char* argv[]){
 	}
 
 	threevector xinit(1.15,0.0,-1.99);// default injection right hand side
-	threevector vinit(0.0,0.0,10.0);
+	threevector vinit(0.0,0.0,100.0);
 	Sample->update_motion(xinit,vinit);
 
 	std::cout << "\n\n * GENERATE DTOKS * \n\n";

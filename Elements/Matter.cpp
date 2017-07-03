@@ -352,7 +352,7 @@ void Matter::update_motion(threevector &ChangeInPosition,threevector &ChangeInVe
 	St.DustVelocity = St.DustVelocity + ChangeInVelocity;
 };
 
-void Matter::update_charge(double potential, double deltat, double deltas){
+void Matter::update_charge(double charge, double potential, double deltat, double deltas){
 	M_Debug("\tIn Matter::update_charge(double potential)\n\n");
 //	std::cout << "\npotential = " << potential << "\n"; std::cin.get();
 	St.Potential = potential;
@@ -364,5 +364,12 @@ void Matter::update_charge(double potential, double deltat, double deltas){
 		St.Positive = true;
 	}else{
 		St.Positive = false;
+	}
+
+	if( fabs(charge) > 8*PI*sqrt(epsilon0*Ec.SurfaceTension*pow(St.Radius,3)) ){
+		std::cout << "\nElectrostatic Breakup!";
+//		std::cout << "\nQcrit = " << 8*PI*sqrt(epsilon0*Ec.SurfaceTension*pow(St.Radius,3));
+//		std::cout << "\nCharge = " << charge;
+		St.Gas = true;
 	}
 }

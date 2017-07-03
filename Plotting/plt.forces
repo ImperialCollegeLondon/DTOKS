@@ -1,0 +1,17 @@
+set terminal qt 1
+plot "ff.txt" using 4:7 title 'Centrifugal' with line, \
+	"ff.txt" using 4:10 title 'Lorentz' with line, \
+	"ff.txt" using 4:13 title 'IonDrag' with line, \
+	"ff.txt" using 4:16 title 'NeutralDrag' with line
+
+set terminal qt 2
+plot "ff.txt" using 5:8 title 'Centrifugal' with line, \
+	"ff.txt" using 5:11 title 'Lorentz' with line, \
+	"ff.txt" using 5:14 title 'IonDrag' with line, \
+	"ff.txt" using 5:17 title 'NeutralDrag' with line
+
+set terminal qt 3
+plot "ff.txt" using 6:9 title 'Centrifugal' with line, \
+	"ff.txt" using 6:12 title 'Lorentz' with line, \
+	"ff.txt" using 6:15 title 'IonDrag' with line, \
+	"ff.txt" using 6:18 title 'NeutralDrag' with line
