@@ -4,7 +4,7 @@
 #include "Tungsten.h"
 #include "Constants.h"
 
-const struct ElementConsts Tungsten::TungstenConsts = {
+const struct ElementConsts TungstenConsts = {
 	'W',			// Specifies the element
 	3422, 			// K, Melting temperature at atmospheric pressure
 	5555,			// K, Boiling temperature at atmospheric pressure

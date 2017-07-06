@@ -3,7 +3,7 @@
 #include "Graphite.h"
 #include "Constants.h"
 
-const struct ElementConsts Graphite::GraphiteConsts = {
+const struct ElementConsts GraphiteConsts = {
 	'G',			// Specifies the element
 	4500, 			// K, Melting temperature at atmospheric pressure
 	4000,			// K, Boiling temperature at atmospheric pressure

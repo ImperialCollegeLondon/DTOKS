@@ -8,8 +8,6 @@ class Tungsten: public Matter{
 
 	private:
 
-		static const struct ElementConsts TungstenConsts;
-
 		// Functions called by Tungsten::update()
 		void update_radius		();
 		void update_heatcapacity 	();

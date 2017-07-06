@@ -3,7 +3,7 @@
 #include "Iron.h"
 #include "Constants.h"
 
-const struct ElementConsts Iron::IronConsts = {
+const struct ElementConsts IronConsts = {
 	'F',			// Specifies the element
 	1811, 			// K, Melting temperature at atmospheric pressure
 	3134,			// K, Boiling temperature at atmospheric pressure

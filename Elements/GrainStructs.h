@@ -17,6 +17,7 @@
 struct GrainData{
 	// Define if the material is a liquid or a gas
 	bool Liquid, Gas;
+	bool Breakup;			// True if the dust has undergone liquid breakup
 
 	// ******************************** Do vary with Temperature  ******************************** \\
 	// Geometric Data

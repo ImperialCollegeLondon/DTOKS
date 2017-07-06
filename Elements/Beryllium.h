@@ -8,8 +8,6 @@ class Beryllium: public Matter{
 
 	private:
 
-		static const struct ElementConsts BerylliumConsts;
-
 		// Functions called by Beryllium::update()
 		void update_radius		();
 		void update_heatcapacity 	();

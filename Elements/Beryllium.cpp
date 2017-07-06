@@ -3,7 +3,7 @@
 #include "Beryllium.h"
 #include "Constants.h"
 
-const struct ElementConsts Beryllium::BerylliumConsts = {
+const struct ElementConsts BerylliumConsts = {
 	'B',			// Specifies the element
 	1560, 			// K, Melting temperature at atmospheric pressure
 	2742,			// K, Boiling temperature at atmospheric pressure

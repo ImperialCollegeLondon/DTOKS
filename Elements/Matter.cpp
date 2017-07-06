@@ -1,11 +1,13 @@
 //#define PAUSE
 //#define MATTER_DEBUG
 //#define MATTER_DEEP_DEBUG
+#define MinMass 10e-25
 
 #include "Matter.h"
 struct GrainData MatterDefaults = {
 	false,		// Is Liquid,		fine
 	false,		// Is Gas,		fine
+	false,		// Breakup,		fine
 	1e-6,		// Unheated Radius,	should be updated
 	8.21e-14,	// Mass,		should be updated
 	1e-6,		// Radius,		fine
@@ -34,6 +36,7 @@ Matter::Matter(const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterD
 	M_Debug("\n\nIn Matter::Matter(const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults)\n\n");
 	ConstModels = {'c','c','c','y'};
 	St.Mass = Ec.RTDensity*St.Volume;
+	St.Breakup = false;
 };
 Matter::Matter(double rad, const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults){
 	M_Debug("\n\nIn Matter::Matter(double rad, const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults)\n\n");
@@ -43,6 +46,7 @@ Matter::Matter(double rad, const ElementConsts *elementconsts):Ec(*elementconsts
 	St.Volume = (4*PI*pow(St.Radius,3))/3;
         St.SurfaceArea = 4*PI*pow(St.Radius,2);
 	St.Mass = Ec.RTDensity*St.Volume;
+	St.Breakup = false;
 	assert(St.Radius > 0 && St.UnheatedRadius > 0);
 //	M_Debug("\nSt.Radius = " << St.Radius << "\nSt.Mass = " << St.Mass);
 };
@@ -55,6 +59,7 @@ Matter::Matter(double rad, double temp, const ElementConsts *elementconsts):Ec(*
 	St.Volume = (4*PI*pow(St.Radius,3))/3;
         St.SurfaceArea = 4*PI*pow(St.Radius,2);
 	St.Temperature = temp;					// K
+	St.Breakup = false;
 	if( ConstModels[1] != 'v' && ConstModels[1] != 'V' )	St.Mass = Ec.RTDensity*St.Volume;
 	else							update_dim();
 	assert(St.Radius > 0 && St.UnheatedRadius > 0 && St.Temperature > 0);
@@ -70,6 +75,7 @@ Matter::Matter(double rad, double temp, const ElementConsts *elementconsts, std:
 	St.Volume = (4*PI*pow(St.Radius,3))/3;
         St.SurfaceArea = 4*PI*pow(St.Radius,2);
 	St.Temperature = temp;					// K
+	St.Breakup = false;
 	if( ConstModels[1] != 'v' && ConstModels[1] != 'V' )	St.Mass = Ec.RTDensity*St.Volume;
 	else							update_dim();
 	assert(St.Radius > 0 && St.UnheatedRadius > 0 && St.Temperature > 0);
@@ -112,7 +118,7 @@ void Matter::update_dim(){ // Assuming spherical particle.
 	M2_Debug("\nSt.Mass = " << St.Mass << "\nSt.Volume = " << St.Volume << "\nSt.Density = " << St.Density
 			<< "\nSt.Mass/St.Volume = " << St.Mass/St.Volume);
 
-	if( St.Gas == false ) assert(St.Mass > 10e-25 );
+	if( St.Gas == false ) assert(St.Mass > MinMass );
 }
 
 // For variable emissivity: https://github.com/cfinch/Mie_scattering
@@ -254,7 +260,7 @@ void Matter::update_state(double EnergyIn){
 		}
 	}
 	M2_Debug("\nSt.Temperature = " << St.Temperature);
-	if( St.Mass < 10e-24 ){ // Lower limit for mass of dust
+	if( St.Mass < MinMass*10 ){ // Lower limit for mass of dust
 		std::cout << "\nSt.Mass = " << St.Mass << " < 10e-24, vaporisation assumed.";
 		St.Gas = true;
 	}
@@ -354,7 +360,6 @@ void Matter::update_motion(threevector &ChangeInPosition,threevector &ChangeInVe
 
 void Matter::update_charge(double charge, double potential, double deltat, double deltas){
 	M_Debug("\tIn Matter::update_charge(double potential)\n\n");
-//	std::cout << "\npotential = " << potential << "\n"; std::cin.get();
 	St.Potential = potential;
 	
 	St.DeltaTherm = deltat;
@@ -366,10 +371,17 @@ void Matter::update_charge(double charge, double potential, double deltat, doubl
 		St.Positive = false;
 	}
 
-	if( fabs(charge) > 8*PI*sqrt(epsilon0*Ec.SurfaceTension*pow(St.Radius,3)) ){
+	if( fabs(charge) > 8*PI*sqrt(epsilon0*Ec.SurfaceTension*pow(St.Radius,3)) && St.Liquid ){
 		std::cout << "\nElectrostatic Breakup!";
 //		std::cout << "\nQcrit = " << 8*PI*sqrt(epsilon0*Ec.SurfaceTension*pow(St.Radius,3));
 //		std::cout << "\nCharge = " << charge;
-		St.Gas = true;
+		if( St.Mass/2 < MinMass ){      
+			St.Gas = true;
+			std::cout << "\nMass too small to support breakup, vaporisation assumed...";
+		}else{
+			St.Mass = St.Mass/2;    // Assume mass is half of previous...
+			St.Breakup = true;
+			std::cout << "\nMass has split in two...";
+		}
 	}
 }

@@ -9,8 +9,6 @@ class Graphite: public Matter{
 
 	private:
 
-		static const struct ElementConsts GraphiteConsts;
-
 		// Functions called by Matter::update()
 		void update_radius		();
 		void update_heatcapacity 	();

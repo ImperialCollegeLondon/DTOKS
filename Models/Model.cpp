@@ -16,18 +16,17 @@ struct PlasmaData PlasmaDefaults = {
 	threevector(),	// V m^-1, Electric field at dust location (Normalised later) 
 	threevector(),	// T, Magnetic field at dust location (Normalised later)
 };
-PlasmaGrid *DefaultGrid = new PlasmaGrid('h','m',0.01);
+//PlasmaGrid *DefaultGrid = new PlasmaGrid('h','m',0.01);
 
-
-Model::Model():Sample(new Tungsten),Pgrid(DefaultGrid),Pdata(&PlasmaDefaults),Accuracy(1.0),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
+Model::Model():Sample(new Tungsten),Pgrid(new PlasmaGrid('h','m',0.01)),Pdata(&PlasmaDefaults),Accuracy(1.0),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
 	Mo_Debug("\n\nIn Model::Model():Sample(new Tungsten),Pgrid('h','m',0.01)Pdata(PlasmaDefaults),Accuracy(1.0),ContinuousPlasma(true)\n\n");
 	update_plasmadata(Sample->get_position());
 }
 
 // Constructor for Matter sample sitting in a constant plasma background given by PlasmaData (pdata) with a Default grid
 Model::Model( Matter *&sample, PlasmaData *&pdata, double accuracy )
-		:Sample(sample),Pgrid(DefaultGrid),Pdata(pdata),Accuracy(accuracy),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
-	Mo_Debug("\n\nIn Model::Model( Matter *& sample, PlasmaData *&pdata, double accuracy ):Sample(sample),Pgrid(DefaultGrid),Pdata(pdata),Accuracy(accuracy),ContinuousPlasma(true)\n\n");
+		:Sample(sample),Pgrid(new PlasmaGrid('h','m',0.01)),Pdata(pdata),Accuracy(accuracy),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
+	Mo_Debug("\n\nIn Model::Model( Matter *& sample, PlasmaData *&pdata, double accuracy ):Sample(sample),Pgrid(new PlasmaGrid('h','m',0.01)),Pdata(pdata),Accuracy(accuracy),ContinuousPlasma(true)\n\n");
 	assert(Accuracy > 0);
 	update_plasmadata(pdata);
 //	std::cout << "\nAccuracy = " << Accuracy;
@@ -44,18 +43,8 @@ Model::Model( Matter *&sample, PlasmaGrid &pgrid, double accuracy )
 }
 
 void Model::update_plasmadata(PlasmaData *&pdata){
-	Mo_Debug( "\tIn Model::update_plasmadata(PlasmaData *&pdata->\n\n");
-	Pdata->NeutralDensity 	= pdata->NeutralDensity;
-	Pdata->ElectronDensity 	= pdata->ElectronDensity;
-	Pdata->IonDensity 	= pdata->IonDensity;
-	Pdata->IonTemp		= pdata->IonTemp;
-	Pdata->ElectronTemp 	= pdata->ElectronTemp;
-	Pdata->NeutralTemp 	= pdata->NeutralTemp;
-	Pdata->AmbientTemp 	= pdata->AmbientTemp;
-	Pdata->PlasmaVel         = pdata->PlasmaVel;
-	Pdata->Gravity 		= pdata->Gravity;
-	Pdata->ElectricField     = pdata->ElectricField;
-	Pdata->MagneticField     = pdata->MagneticField;
+	Mo_Debug( "\tIn Model::update_plasmadata(PlasmaData *&pdata)\n\n");
+	Pdata = pdata;
 }
 
 bool Model::update_plasmadata(threevector pos){
