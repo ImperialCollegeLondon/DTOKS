@@ -40,10 +40,6 @@ class DTOKSU{
 		
 		int Run();
 		// Functions which generate and save data from heating the Sample.
-
-		const double DeltaTherm(double DustTemperature)const;	
-		const double DeltaSec()const;
-		const double DeltaTot(double DustTemperature)const;
 };
 
 #endif
