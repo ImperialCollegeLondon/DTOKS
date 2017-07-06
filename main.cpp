@@ -67,7 +67,7 @@ int main(int argc, char* argv[]){
 	std::string Name="constant";	// Describes heating model
 
  	// Parameters describing the heating model
-	char Element='B';		// Element, (W) : Tungsten, (G) : Graphite, (B) : Beryllium or (F) : Iron.
+	char Element='W';		// Element, (W) : Tungsten, (G) : Graphite, (B) : Beryllium or (F) : Iron.
 //	double Power=0;			// Kilo-Watts power in addition to heating model powers
 	double Size=1e-6; 		// m
 	double Temp=300;		// K
@@ -151,7 +151,7 @@ int main(int argc, char* argv[]){
 	ConstModels  = {EmissivityModel,ExpansionModel,HeatCapacityModel,BoilingModel};
 	
 	// Accuracy Levels correspond to Charging, Heating and Forcing respectively
-	std::array<double,3> AccuracyLevels = {1.0,0.1,0.1};
+	std::array<double,3> AccuracyLevels = {1.0,1.0,1.0};
 
 	if 	(Element == 'W') Sample = new Tungsten(Size,Temp,ConstModels);
 	else if (Element == 'B') Sample = new Beryllium(Size,Temp,ConstModels);

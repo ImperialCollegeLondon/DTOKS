@@ -1,6 +1,6 @@
 //#define PAUSE
-#define MATTER_DEBUG
-#define MATTER_DEEP_DEBUG
+//#define MATTER_DEBUG
+//#define MATTER_DEEP_DEBUG
 #define MinMass 10e-25
 
 #include "Matter.h"
