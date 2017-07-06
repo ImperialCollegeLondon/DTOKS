@@ -1,5 +1,9 @@
 Models/EmissivityData/
-Models/PlasmaData/
+Models/PlasmaData/*.dat
+Models/PlasmaData/*.vtk
+Models/PlasmaData/regulardataITER
+Models/PlasmaData/MASTDexp
+
 Tests/TemperatureVariationOfConstants
 main
 *.txt
