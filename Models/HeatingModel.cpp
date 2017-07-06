@@ -101,57 +101,24 @@ double HeatingModel::ProbeTimeStep()const{
 double HeatingModel::UpdateTimeStep(){
 	H_Debug( "\tIn HeatingModel::UpdateTimeStep()\n\n" );
 
-	// Take Eularian step to get initial time step
-	H_Debug("\t"); double TotalPower = CalculatePower(Sample->get_temperature());
-	TimeStep = fabs((Sample->get_mass()*Sample->get_heatcapacity()*Accuracy)/TotalPower);
-
-	// COULD BE: If first time step or change in temp is greater than 1 degree, set time step to be equal to 1 degree step
-	// Note, if the time step changes conditionally, then the time scale of the process may vary independantly of the time step.
-	// This causes issues when deciding on the time ordering of processes.
-//	if( TimeStep == 0 || fabs(TimeStep*TotalPower/(Sample->get_mass()*Sample->get_heatcapacity())) > 1 ) 
-
-
-	// Calculate timestep that produces mass change of less than 0.01% of current mass.
-	// If this timestep is quicker than current step, change timestep
-	if( UseModel[1] && Sample->is_liquid() ){
-		double MassTimeStep = (0.01*Sample->get_mass()*AvNo)
-					/(EvaporationFlux(Sample->get_temperature())*Sample->get_atomicmass());
-		if( MassTimeStep < TimeStep ){
-			H_Debug("\nMass is limiting time step\nMassTimeStep = " << MassTimeStep << "\nTimeStep = " << TimeStep);
-			TimeStep = MassTimeStep;
-		}
-	}
-
-	// Check thermal equilibrium hasn't been explicitly reached somehow.
-	if( TotalPower == 0 && ContinuousPlasma ){	
-		static bool runOnce = true;
-		WarnOnce(runOnce,"\nWarning! TotalPower = 0");
-		std::cout << "\nThermalEquilibrium reached on condition (1): TotalPower = 0.";
-		ThermalEquilibrium = true;
-		TimeStep = 1;
-	}else if( TotalPower == 0 && !ContinuousPlasma ){
-		std::cout << "\nNo Plasma Region...";
-		TimeStep = 10;
-	}
-
+	TimeStep = ProbeTimeStep();
 	// Check Thermal Equilibrium hasn't been reached for continuous plasma
-	double DeltaTempTest = TotalPower*TimeStep/(Sample->get_mass()*Sample->get_heatcapacity());
+	double DeltaTempTest = CalculatePower(Sample->get_temperature())*TimeStep/(Sample->get_mass()*Sample->get_heatcapacity());
 	// If we're not boiling	
 	if( Sample->get_temperature() != Sample->get_superboilingtemp() && ContinuousPlasma ){
 		if( ((Sample->get_temperature()-OldTemp > 0 && DeltaTempTest < 0) // If temperature changed sign this step
 			|| (Sample->get_temperature()-OldTemp < 0 && DeltaTempTest > 0)) ){
 			std::cout << "\n\nThermal Equilibrium reached on condition (2): Sign change of Temperature change!";
 			ThermalEquilibrium = true;
-			TimeStep = 1;	// NOT SURE IF I NEED THESE FOR CONSTANT PLASMA BACKGROUND 
+			TimeStep = 1;	
 		}if( (fabs(DeltaTempTest/TimeStep) < 0.01) ){ // If Temperature gradient is less than 1%
 			std::cout << "\n\nThermal Equilibrium reached on condition (3): Temperature Gradient < 0.01!";
 			ThermalEquilibrium = true;
-			TimeStep = 1;   // NOT SURE IF I NEED THESE FOR CONSTANT PLASMA BACKGROUND
+			TimeStep = 1;  
 		}
 	}
 
 	OldTemp = Sample->get_temperature();
-
 
 	H1_Debug("\nSample->get_mass() = " << Sample->get_mass() << "\nSample->get_heatcapacity() = " << 
 		Sample->get_heatcapacity() << "\nTotalPower = " << TotalPower << "\nAccuracy = " << Accuracy);

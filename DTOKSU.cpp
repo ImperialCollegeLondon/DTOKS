@@ -163,7 +163,9 @@ int DTOKSU::Run(){
 				D_Debug("\nForce Step Taken."); 
 			}else{	std::cerr << "\nUnexpected Timescale Behaviour! (2)";	}
 			TotalTime += (j-1)*MinTimeStep;
-			CM.Charge(MinTimeStep);
+			// This is effectively 'an extra step' which is necessary because we need the last step to be charging
+			// So we set the time step to be arbitrarily small... Not the best practice ever but okay.
+			CM.Charge(1e-100);	
 		}
 		// ***** END OF : NUMERICAL METHOD BASED ON TIME SCALES ***** //	
 		D_Debug("\nTemperature = " << Sample->get_temperature() << "\n\n"); 
