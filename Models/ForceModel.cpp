@@ -9,23 +9,24 @@
 ForceModel::ForceModel():Model(){
 	F_Debug("\n\nIn ForceModel::ForceModel():Model()\n\n");
 	UseModel = {false,false,false};
-	CreateFile("Default_Force_filename.txt");
 }
 
 ForceModel::ForceModel(std::string filename, double accuracy, std::array<bool,5> models, 
 			Matter *& sample, PlasmaData *& pdata) : Model(sample,pdata,accuracy){
 	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, std::array<bool,3> models, Matter *& sample, PlasmaData const *& pdata) : Model(sample,pdata,accuracy)\n\n");
 	UseModel = models;
-	CreateFile(filename);
 }
 
 ForceModel::ForceModel(std::string filename, double accuracy, std::array<bool,5> models, 
 			Matter *& sample, PlasmaGrid & pgrid) : Model(sample,pgrid,accuracy){
 	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, std::array<bool,3> models, Matter *& sample, PlasmaGrid const& pgrid) : Model(sample,pgrid,accuracy)\n\n");
 	UseModel = models;
-	CreateFile(filename);
 }
 
+ForceModel::ForceModel(const ForceModel &fm):Model(fm){
+	std::cout << "\n\nIn ForceModel::ForceModel(const ForceModel &fm):Model(fm)\n\n";
+	UseModel = fm.UseModel;
+}
 
 void ForceModel::CreateFile(std::string filename){
 	F_Debug("\tIn ForceModel::CreateFile(std::string filename)\n\n");
@@ -125,6 +126,7 @@ double ForceModel::UpdateTimeStep(){
 	}
 
 	F1_Debug( "\t\tAcceleration = " << Acceleration << "\n\t\tTimeStep = " << TimeStep << "\n");
+
 	assert(TimeStep == TimeStep);
 	assert(TimeStep > 0);
 	return TimeStep;

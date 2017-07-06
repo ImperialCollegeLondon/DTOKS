@@ -3,7 +3,7 @@
 #include "Iron.h"
 #include "Constants.h"
 
-const struct ElementConsts Iron::IronConsts = {
+const struct ElementConsts IronConsts = {
 	'F',			// Specifies the element
 	1811, 			// K, Melting temperature at atmospheric pressure
 	3134,			// K, Boiling temperature at atmospheric pressure
@@ -43,7 +43,7 @@ Iron::Iron(double radius, double tempin):Matter(radius,tempin,&IronConsts){
 			<< "\nSt.Volume = " << St.Volume);
 }
 
-Iron::Iron(double radius, double tempin, std::array<char,4> &constmodels):Matter(radius,tempin,&IronConsts,constmodels){
+Iron::Iron(double radius, double tempin, const std::array<char,4> &constmodels):Matter(radius,tempin,&IronConsts,constmodels){
 
 	E_Debug("\n\nIn Iron::Iron(double radius, double tempin, std::array<char,4> &constmodels)");
 

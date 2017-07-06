@@ -6,21 +6,23 @@
 ChargingModel::ChargingModel():Model(){
 	C_Debug("\n\nIn ChargingModel::ChargingModel():Model()\n\n");
 	UseModel[0] = true;				// Charging Models turned on of possibly 9
-	CreateFile("Default_Charging_Filename.txt");
 }
 
 ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<bool,1> models,
 				Matter *& sample, PlasmaData *&pdata) : Model(sample,pdata,accuracy){
 	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename,double accuracy,std::array<bool,1> models,Matter *& sample, PlasmaData const& pdata) : Model(sample,pdata,accuracy)\n\n");
 	UseModel = models;
-	CreateFile(filename);
 }
 
 ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<bool,1> models,
 				Matter *& sample, PlasmaGrid &pgrid) : Model(sample,pgrid,accuracy){
 	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename,double accuracy,std::array<bool,1> models,Matter *& sample, PlasmaGrid const& pgrid) : Model(sample,pgrid,accuracy)\n\n");
 	UseModel = models;
-	CreateFile(filename);
+}
+
+ChargingModel::ChargingModel(const ChargingModel &cm):Model(cm){
+	std::cout << "\n\nIn ChargingModel::ChargingModel(const ChargingModel &cm):Model(cm)\n\n";
+	UseModel = cm.UseModel;
 }
 
 void ChargingModel::CreateFile(std::string filename){

@@ -9,8 +9,6 @@ class Iron : public Matter{
 
 	private:
 		
-		static const struct ElementConsts IronConsts;
-
 		// Functions called by Iron::update()
 		void update_radius	 	();
 		void update_heatcapacity 	();
@@ -21,7 +19,7 @@ class Iron : public Matter{
 		Iron();
 		Iron(double radius);
 		Iron(double radius, double tempin);
-		Iron(double radius, double tempin, std::array<char,4> &constmodels);
+		Iron(double radius, double tempin, const std::array<char,4> &constmodels);
 
 		// Destructor
 		~Iron(){};

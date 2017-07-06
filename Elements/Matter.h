@@ -23,7 +23,7 @@ class Matter{
 		Matter(const ElementConsts *elementconsts);
 		Matter(double rad, const ElementConsts *elementconsts);
 		Matter(double rad, double temp, const ElementConsts *elementconsts);
-		Matter(double rad, double temp, const ElementConsts *elementconsts, std::array <char,4> &constmodels);
+		Matter(double rad, double temp, const ElementConsts *elementconsts, const std::array <char,4> &constmodels);
  
 		struct GrainData 		St;
 		const struct ElementConsts	Ec;
@@ -50,7 +50,7 @@ class Matter{
 		// Think about putting 'update()' in HeatingMatter.cpp
 		void update();
 		void update_models(char emissivmodel, char linexpanmodel, char heatcapacity, char boilingmodel);
-		void update_models(std::array<char,4> &constmodels);
+		void update_models(const std::array<char,4> &constmodels);
 		void update_mass(double LostMass); // Mass lost in Kilogrammes
 		// Takes argument of amount of energy lost in Kilo Joules and changes temperature in Degrees
 		void update_temperature(double EnergyIn);
@@ -67,9 +67,9 @@ class Matter{
 		double get_workfunction		()const{ return Ec.WorkFunction;		};
 		double get_heattransair		()const{ return Ec.HeatTransAir;		};
 		double get_atomicmass		()const{ return Ec.AtomicMass;			};
-
 		bool is_gas			()const{ return St.Gas;				};
 		bool is_liquid			()const{ return St.Liquid;			};
+		bool is_breakingup		()const{ return St.Breakup;			};
 		bool is_positive		()const{ return St.Positive;			};
 		bool get_c		   (int i)const{ assert(i < 4); return ConstModels[i];	};
 		double get_superboilingtemp	()const{ return St.SuperBoilingTemp;		};
@@ -92,8 +92,12 @@ class Matter{
 		double get_potential		()const{ return St.Potential;			};
 		threevector get_velocity	()const{ return St.DustVelocity;		};
 		threevector get_position	()const{ return St.DustPosition;		};
+		ElementConsts get_ec		()const{ return Ec;				};
+		const std::array<char,4>& 
+				get_models	()const{ return ConstModels;		};
 
 		void set_potential		(double potential){ St.Potential = potential;	};
+		void reset_breakup		(){ St.Breakup = false;				};
 };
 
 #endif

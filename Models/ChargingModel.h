@@ -10,7 +10,7 @@ class ChargingModel : public Model{
 		std::array<bool,1> UseModel; 		// Charging Models turned on of possible 1
 
 		void Print();			// Write to output data file
-		void CreateFile(std::string filename);
+
 
 		double solveOML(double a, double guess);
 		double DeltaTherm()const;
@@ -22,11 +22,14 @@ class ChargingModel : public Model{
 				Matter *& sample, PlasmaData *& pdata);
 		ChargingModel(std::string filename, double accuracy, std::array<bool,1> models, 
 				Matter *& sample, PlasmaGrid & pgrid);
+		ChargingModel(const ChargingModel &cm);
 
 		// Destructor
 		~ChargingModel(){
 		};
 		
+		void CreateFile(std::string filename);
+
 		double ProbeTimeStep()const;
 		double UpdateTimeStep();
 		// Functions which generate and save data from heating the Sample.

@@ -15,11 +15,11 @@ class DTOKSU{
 		double MinTimeStep;			// Seconds, the length of a particular time step
 		double TotalTime;			// Seconds, total time taken to perform simulation
 
-		Matter *Sample;				// Matter sample can be either Tungsten, Beryllium, Graphite or Iron
+		std::vector<Matter*> Sample;		// Matter sample can be either Tungsten, Beryllium, Graphite or Iron
 
-		HeatingModel HM;			// Heating Model 
-		ForceModel FM;				// Force Model 
-		ChargingModel CM;			// Charge Model
+		std::vector<HeatingModel> HM;		// Heating Model 
+		std::vector<ForceModel> FM;		// Force Model 
+		std::vector<ChargingModel> CM;		// Charge Model
 
 		std::ofstream MyFile;			// Output data file
 	

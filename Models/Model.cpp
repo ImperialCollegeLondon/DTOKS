@@ -16,17 +16,17 @@ struct PlasmaData PlasmaDefaults = {
 	threevector(),	// V m^-1, Electric field at dust location (Normalised later) 
 	threevector(),	// T, Magnetic field at dust location (Normalised later)
 };
-PlasmaGrid *DefaultGrid = new PlasmaGrid('h','m',0.01);
+//PlasmaGrid *DefaultGrid = new PlasmaGrid('h','m',0.01);
 
 
-Model::Model():Sample(new Tungsten),Pgrid(DefaultGrid),Pdata(&PlasmaDefaults),Accuracy(1.0),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
+Model::Model():Sample(new Tungsten),Pgrid(new PlasmaGrid('h','m',0.01)),Pdata(&PlasmaDefaults),Accuracy(1.0),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
 	Mo_Debug("\n\nIn Model::Model():Sample(new Tungsten),Pgrid('h','m',0.01)Pdata(PlasmaDefaults),Accuracy(1.0),ContinuousPlasma(true)\n\n");
 	update_plasmadata(Sample->get_position());
 }
 
 // Constructor for Matter sample sitting in a constant plasma background given by PlasmaData (pdata) with a Default grid
 Model::Model( Matter *&sample, PlasmaData *&pdata, double accuracy )
-		:Sample(sample),Pgrid(DefaultGrid),Pdata(pdata),Accuracy(accuracy),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
+		:Sample(sample),Pgrid(new PlasmaGrid('h','m',0.01)),Pdata(pdata),Accuracy(accuracy),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
 	Mo_Debug("\n\nIn Model::Model( Matter *& sample, PlasmaData *&pdata, double accuracy ):Sample(sample),Pgrid(DefaultGrid),Pdata(pdata),Accuracy(accuracy),ContinuousPlasma(true)\n\n");
 	assert(Accuracy > 0);
 	update_plasmadata(pdata);
@@ -43,19 +43,33 @@ Model::Model( Matter *&sample, PlasmaGrid &pgrid, double accuracy )
 	//	std::cout << "\nAccuracy = " << Accuracy;
 }
 
+// Copy Constructor
+Model::Model( const Model & mod ): Pgrid(mod.Pgrid), Accuracy(mod.Accuracy), ContinuousPlasma(mod.ContinuousPlasma), 
+	TimeStep(mod.TimeStep), TotalTime(mod.TotalTime){
+	Mo_Debug("\tIn Model::Model( const Model & mod )\n\n");
+	if 	(mod.Sample->get_ec().Elem == 'W')
+		Sample = new Tungsten( mod.Sample->get_radius(), mod.Sample->get_temperature(), mod.Sample->get_models() );
+	else if (mod.Sample->get_ec().Elem == 'B')
+		Sample = new Beryllium( mod.Sample->get_radius(), mod.Sample->get_temperature(), mod.Sample->get_models() );
+	else if (mod.Sample->get_ec().Elem == 'F')
+		Sample = new Iron( mod.Sample->get_radius(), mod.Sample->get_temperature(), mod.Sample->get_models() );
+	else if (mod.Sample->get_ec().Elem == 'G')
+		Sample = new Graphite( mod.Sample->get_radius(), mod.Sample->get_temperature(), mod.Sample->get_models() );
+	else{
+		std::cerr << "\nInvalid Option entered";
+	}
+	Pdata = new PlasmaData;
+	*Pdata = *mod.Pdata;
+}
+
 void Model::update_plasmadata(PlasmaData *&pdata){
-	Mo_Debug( "\tIn Model::update_plasmadata(PlasmaData *&pdata->\n\n");
-	Pdata->NeutralDensity 	= pdata->NeutralDensity;
-	Pdata->ElectronDensity 	= pdata->ElectronDensity;
-	Pdata->IonDensity 	= pdata->IonDensity;
-	Pdata->IonTemp		= pdata->IonTemp;
-	Pdata->ElectronTemp 	= pdata->ElectronTemp;
-	Pdata->NeutralTemp 	= pdata->NeutralTemp;
-	Pdata->AmbientTemp 	= pdata->AmbientTemp;
-	Pdata->PlasmaVel         = pdata->PlasmaVel;
-	Pdata->Gravity 		= pdata->Gravity;
-	Pdata->ElectricField     = pdata->ElectricField;
-	Pdata->MagneticField     = pdata->MagneticField;
+	Mo_Debug( "\tIn Model::update_plasmadata(PlasmaData *&pdata)\n\n");
+	Pdata = pdata;
+}
+
+void Model::update_sample(Matter *&sample){
+	Mo_Debug( "\tIn Model::update_sample(Matter *&sample)\n\n");
+	Sample = sample;
 }
 
 bool Model::update_plasmadata(threevector pos){
@@ -71,13 +85,9 @@ bool Model::update_plasmadata(threevector pos){
 	Pdata->IonTemp		= Pgrid->getTi(i,k)*ConvertevtoK;
 	Pdata->ElectronTemp 	= Pgrid->getTe(i,k)*ConvertevtoK;
 	Pdata->NeutralTemp 	= Pgrid->getTi(i,k)*ConvertevtoK; 	// NEUTRAL TEMP EQUAL TO ION TEMP
-//	std::cout << "\nTi = " << Pdata->IonTemp;
-//	std::cout << "\nTe = " << Pdata->ElectronTemp;
-//	std::cout << "\nTn = " << Pdata->NeutralTemp; std::cin.get();
 	Pdata->AmbientTemp 	= 300; 			// NOTE THIS IS HARD CODED OHMEINGOD
 
 	return true;
-//	std::cout << "\t\tPdata->MagneticField = " << Pdata->MagneticField << "\n";
 }
 
 // CHECK THIS FUNCTION IS THE SAME AS IT WAS BEFORE!

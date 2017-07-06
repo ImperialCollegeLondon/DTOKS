@@ -17,7 +17,7 @@
 struct GrainData{
 	// Define if the material is a liquid or a gas
 	bool Liquid, Gas;
-
+	bool Breakup;			// Define if particle is undergoing Electrostatic Breakup
 	// ******************************** Do vary with Temperature  ******************************** \\
 	// Geometric Data
 	double UnheatedRadius;		// metres

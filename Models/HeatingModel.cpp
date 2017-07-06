@@ -10,7 +10,6 @@
 HeatingModel::HeatingModel():Model(){
 	H_Debug("\n\nIn HeatingModel::HeatingModel():Model()\n\n");
 	Defaults();
-	CreateFile("Default_Heating_filename.txt",false);
 }
 
 
@@ -20,7 +19,6 @@ HeatingModel::HeatingModel(std::string filename, double accuracy, std::array<boo
 	H_Debug("\n\nIn HeatingModel::HeatingModel(std::string filename, double accuracy, std::array<bool,9> &models, Matter *& sample, PlasmaData const *&pdata) : Model(sample,pdata,accuracy)\n\n");
 	Defaults();
 	UseModel 		= models;
-	CreateFile(filename,false);
 }
 
 HeatingModel::HeatingModel(std::string filename, double accuracy, std::array<bool,9> &models,
@@ -28,7 +26,15 @@ HeatingModel::HeatingModel(std::string filename, double accuracy, std::array<boo
 	H_Debug("\n\nIn HeatingModel::HeatingModel(std::string filename,double accuracy, std::array<bool,9> &models, Matter *& sample, PlasmaGrid const &pgrid) : Model(sample,pgrid,accuracy)\n\n");
 	Defaults();
 	UseModel 	= models;
-	CreateFile(filename,false);
+}
+
+HeatingModel::HeatingModel(const HeatingModel &hm):Model(hm){
+	std::cout << "\n\nIn HeatingModel::HeatingModel(const HeatingModel &hm):Model(hm)\n\n";
+	PowerIncident = hm.PowerIncident;
+	OldTemp = hm.OldTemp;
+	ForceNegative = hm.ForceNegative;
+	ThermalEquilibrium = hm.ThermalEquilibrium;
+	UseModel = hm.UseModel;
 }
 
 void HeatingModel::Defaults(){
@@ -268,7 +274,7 @@ double HeatingModel::CalculatePower(double DustTemperature)const{
 	double TotalPower = PowerIncident;
 
 	if( UseModel[0] )				TotalPower -= EmissivityModel		(DustTemperature);
-	if( UseModel[1] && Sample->is_liquid() )	TotalPower -= EvaporationModel		(DustTemperature); 		
+	if( UseModel[1] && Sample->is_liquid() )	TotalPower -= EvaporationModel		(DustTemperature); 
 	if( UseModel[2] )				TotalPower -= NewtonCooling		(DustTemperature);
 	if( UseModel[3] )				TotalPower += IonHeatFlux		(DustTemperature);
 	if( UseModel[4] )				TotalPower += ElectronHeatFlux		(DustTemperature);
@@ -363,9 +369,9 @@ const double HeatingModel::EvaporationFlux(double DustTemperature)const{
 
 // Using Stefan-Boltzmann Law, returns Energy lost per second in Kila Joules
 const double HeatingModel::EmissivityModel(double DustTemperature)const{
-	H_Debug("\n\tIn HeatingModel::EmissivityModel(double DustTemperature):");
+//	H_Debug("\n\tIn HeatingModel::EmissivityModel(double DustTemperature):");
 //	H1_Debug("\nSample->get_surfacearea() = " << Sample->get_surfacearea() << "\nEmissiv = " << Sample->get_emissivity()
-//		<< "\nDustTemperature = " << DustTemperature << "\nAmbTemp = " << Pdata->AmbientTemp);
+//		<< "\nDustTemperature = " << DustTemperature);// << "\nAmbTemp = " << Pdata->AmbientTemp);
 //	H1_Debug("\nreturn = " << Sample->get_emissivity()*Sample->get_surfacearea()*Sigma*(pow(DustTemperature,4)-pow(Pdata->AmbientTemp,4))/1000);
 	// Energy emitted from a sample converted to kJ
 	return Sample->get_emissivity()*Sample->get_surfacearea()*Sigma*(pow(DustTemperature,4)-pow(Pdata->AmbientTemp,4))/1000;

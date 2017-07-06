@@ -3,7 +3,7 @@
 #include "Beryllium.h"
 #include "Constants.h"
 
-const struct ElementConsts Beryllium::BerylliumConsts = {
+const struct ElementConsts BerylliumConsts = {
 	'B',			// Specifies the element
 	1560, 			// K, Melting temperature at atmospheric pressure
 	2742,			// K, Boiling temperature at atmospheric pressure
@@ -44,7 +44,7 @@ Beryllium::Beryllium(double radius, double tempin):Matter(radius,tempin,&Berylli
 			<< "\nSt.Volume = " << St.Volume);
 }
 
-Beryllium::Beryllium(double radius, double tempin, std::array<char,4> &constmodels):Matter(radius,tempin,&BerylliumConsts){
+Beryllium::Beryllium(double radius, double tempin, const std::array<char,4> &constmodels):Matter(radius,tempin,&BerylliumConsts){
 	E_Debug("\n\nIn Beryllium::Beryllium(double radius, double tempin)");
 	set_defaults();
 

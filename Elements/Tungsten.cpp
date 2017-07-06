@@ -4,7 +4,7 @@
 #include "Tungsten.h"
 #include "Constants.h"
 
-const struct ElementConsts Tungsten::TungstenConsts = {
+const struct ElementConsts TungstenConsts = {
 	'W',			// Specifies the element
 	3422, 			// K, Melting temperature at atmospheric pressure
 	5555,			// K, Boiling temperature at atmospheric pressure
@@ -43,7 +43,7 @@ Tungsten::Tungsten(double radius, double tempin):Matter(radius,tempin,&TungstenC
 			<< "\nSt.Volume = " << St.Volume);
 }
 
-Tungsten::Tungsten(double radius, double tempin, std::array<char,4> &constmodels):Matter(radius,tempin,&TungstenConsts){
+Tungsten::Tungsten(double radius, double tempin, const std::array<char,4> &constmodels):Matter(radius,tempin,&TungstenConsts){
 	E_Debug("\n\nIn Tungsten::Tungsten(double radius, double tempin, std::array<char,4> &constmodels):Matter(radius,tempin,&TungstenConsts)\n\n\t");
 	tungsten_defaults();
 

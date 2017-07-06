@@ -8,8 +8,6 @@ class Beryllium: public Matter{
 
 	private:
 
-		static const struct ElementConsts BerylliumConsts;
-
 		// Functions called by Beryllium::update()
 		void update_radius		();
 		void update_heatcapacity 	();
@@ -20,7 +18,7 @@ class Beryllium: public Matter{
 		Beryllium();
 		Beryllium(double radius);
 		Beryllium(double radius, double tempin);
-		Beryllium(double radius, double tempin, std::array<char,4> &constmodels);
+		Beryllium(double radius, double tempin, const std::array<char,4> &constmodels);
 
 		// Destructor
 		~Beryllium(){};

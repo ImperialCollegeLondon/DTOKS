@@ -8,8 +8,6 @@ class Tungsten: public Matter{
 
 	private:
 
-		static const struct ElementConsts TungstenConsts;
-
 		// Functions called by Tungsten::update()
 		void update_radius		();
 		void update_heatcapacity 	();
@@ -20,7 +18,7 @@ class Tungsten: public Matter{
 		Tungsten();
 		Tungsten(double radius);
 		Tungsten(double radius, double tempin);
-		Tungsten(double radius, double tempin, std::array<char,4> &constmodels);
+		Tungsten(double radius, double tempin, const std::array<char,4> &constmodels);
 
 		// Destructor
 		~Tungsten(){};

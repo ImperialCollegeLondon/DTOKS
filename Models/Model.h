@@ -40,17 +40,21 @@ class Model{
 		Model();
 		Model(Matter *& sample, PlasmaData *&pdata, double accuracy);
 		Model(Matter *& sample, PlasmaGrid &pgrid, double accuracy);
+		
+		// Copy Constructor (Used for allowing std::vector<Model>)
+		Model( const Model & M );
 
 		// Destructor
 		virtual ~Model(){};
 
 		const Matter *get_sample		()const{ return Sample;		}
-		const PlasmaData *get_plasmadata	()const{ return Pdata; 		}
+		PlasmaData *get_plasmadata		()const{ return Pdata; 		}
 		double get_dl				()const{ return Pgrid->getdl();	}
 		double get_totaltime			()const{ return TotalTime; 	}
 		double get_timestep			()const{ return TimeStep; 	}
 
 
+		void update_sample(Matter *&sample);
 		void update_plasmadata(PlasmaData *&pdata);
 		bool update_plasmadata(threevector pos);
 		void update_fields(int i, int k);

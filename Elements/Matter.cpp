@@ -1,11 +1,13 @@
 //#define PAUSE
 //#define MATTER_DEBUG
 //#define MATTER_DEEP_DEBUG
+#define MinMass 10e-25
 
 #include "Matter.h"
 struct GrainData MatterDefaults = {
 	false,		// Is Liquid,		fine
 	false,		// Is Gas,		fine
+	false,		// Has Broken-up,	fine
 	1e-6,		// Unheated Radius,	should be updated
 	8.21e-14,	// Mass,		should be updated
 	1e-6,		// Radius,		fine
@@ -34,6 +36,7 @@ Matter::Matter(const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterD
 	M_Debug("\n\nIn Matter::Matter(const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults)\n\n");
 	ConstModels = {'c','c','c','y'};
 	St.Mass = Ec.RTDensity*St.Volume;
+	St.Breakup = false;
 };
 Matter::Matter(double rad, const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults){
 	M_Debug("\n\nIn Matter::Matter(double rad, const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults)\n\n");
@@ -44,6 +47,7 @@ Matter::Matter(double rad, const ElementConsts *elementconsts):Ec(*elementconsts
         St.SurfaceArea = 4*PI*pow(St.Radius,2);
 	St.Mass = Ec.RTDensity*St.Volume;
 	assert(St.Radius > 0 && St.UnheatedRadius > 0);
+	St.Breakup = false;
 //	M_Debug("\nSt.Radius = " << St.Radius << "\nSt.Mass = " << St.Mass);
 };
 
@@ -58,11 +62,12 @@ Matter::Matter(double rad, double temp, const ElementConsts *elementconsts):Ec(*
 	if( ConstModels[1] != 'v' && ConstModels[1] != 'V' )	St.Mass = Ec.RTDensity*St.Volume;
 	else							update_dim();
 	assert(St.Radius > 0 && St.UnheatedRadius > 0 && St.Temperature > 0);
-
+	St.Breakup = false;
 	M_Debug("\nSt.Radius = " << St.Radius << "\nSt.Mass = " << St.Mass << "\nSt.Temperature = " << St.Temperature);
 	M_Debug("\nEc.LatentVapour = " << Ec.LatentVapour << "\nEc.AtomicMass = " << Ec.AtomicMass);
 };
-Matter::Matter(double rad, double temp, const ElementConsts *elementconsts, std::array<char,4> &constmodels):Ec(*elementconsts),St(MatterDefaults){
+
+Matter::Matter(double rad, double temp, const ElementConsts *elementconsts, const std::array<char,4> &constmodels):Ec(*elementconsts),St(MatterDefaults){
 	M_Debug("\n\nIn Matter::Matter(double rad, double temp, const ElementConsts *elementconsts, std::array<char,4> &constmodels):Ec(*elementconsts),St(MatterDefaults)\n\n");
 	ConstModels = constmodels;
 	St.Radius = rad;					// m
@@ -73,7 +78,7 @@ Matter::Matter(double rad, double temp, const ElementConsts *elementconsts, std:
 	if( ConstModels[1] != 'v' && ConstModels[1] != 'V' )	St.Mass = Ec.RTDensity*St.Volume;
 	else							update_dim();
 	assert(St.Radius > 0 && St.UnheatedRadius > 0 && St.Temperature > 0);
-
+	St.Breakup = false;
 	M_Debug("\nSt.Radius = " << St.Radius << "\nSt.Mass = " << St.Mass << "\nSt.Temperature = " << St.Temperature);
 	M_Debug("\nEc.LatentVapour = " << Ec.LatentVapour << "\nEc.AtomicMass = " << Ec.AtomicMass);
 };
@@ -112,7 +117,7 @@ void Matter::update_dim(){ // Assuming spherical particle.
 	M2_Debug("\nSt.Mass = " << St.Mass << "\nSt.Volume = " << St.Volume << "\nSt.Density = " << St.Density
 			<< "\nSt.Mass/St.Volume = " << St.Mass/St.Volume);
 
-	if( St.Gas == false ) assert(St.Mass > 10e-25 );
+	if( St.Gas == false ) assert( St.Mass > MinMass );
 }
 
 // For variable emissivity: https://github.com/cfinch/Mie_scattering
@@ -254,7 +259,7 @@ void Matter::update_state(double EnergyIn){
 		}
 	}
 	M2_Debug("\nSt.Temperature = " << St.Temperature);
-	if( St.Mass < 10e-24 ){ // Lower limit for mass of dust
+	if( St.Mass < MinMass*10 ){ // Lower limit for mass of dust
 		std::cout << "\nSt.Mass = " << St.Mass << " < 10e-24, vaporisation assumed.";
 		St.Gas = true;
 	}
@@ -293,7 +298,7 @@ void Matter::update_models(char emissivmodel, char linexpanmodel, char heatcapac
 	ConstModels[3] = boilingmodel;
 };
 
-void Matter::update_models(std::array<char,4> &constmodels){
+void Matter::update_models(const std::array<char,4> &constmodels){
 	M_Debug("\tIn Matter::update_models(std::array<char,4> &constmodels)\n\n");
 //	update(constmodels[0],constmodels[1],constmodels[2],constmodels[3],);
 	ConstModels = constmodels;
@@ -348,6 +353,7 @@ void Matter::update_temperature(double EnergyIn){
 void Matter::update_motion(threevector &ChangeInPosition,threevector &ChangeInVelocity){
 	M_Debug("\tIn Matter::update_motion(threevector &ChangeInPosition,threevector &ChangeInVelocity)\n\n");
 	// Calculate new position
+	std::cout << "\nChangeInPosition = " << ChangeInPosition;
 	St.DustPosition = St.DustPosition + ChangeInPosition;
 	St.DustVelocity = St.DustVelocity + ChangeInVelocity;
 };
@@ -368,8 +374,13 @@ void Matter::update_charge(double charge, double potential, double deltat, doubl
 
 	if( fabs(charge) > 8*PI*sqrt(epsilon0*Ec.SurfaceTension*pow(St.Radius,3)) ){
 		std::cout << "\nElectrostatic Breakup!";
-//		std::cout << "\nQcrit = " << 8*PI*sqrt(epsilon0*Ec.SurfaceTension*pow(St.Radius,3));
-//		std::cout << "\nCharge = " << charge;
-		St.Gas = true;
+		if( St.Mass/2 < MinMass ){	
+			St.Gas = true;
+			std::cout << "\nMass too small to support further simulation...";
+		}else{
+			St.Mass = St.Mass/2;	// Assume mass is half of previous...
+			St.Breakup = true;
+			std::cout << "\nMass has split in two...";
+		}
 	}
 }

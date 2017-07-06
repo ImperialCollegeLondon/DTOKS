@@ -10,7 +10,6 @@ class ForceModel : public Model {
 		std::array<bool,5> UseModel; 		// Force Models turned on of possibly 4
 
 		void Print();			// Write to output data file
-		void CreateFile(std::string filename);
 
 		// Different Force terms
 		threevector CalculateAcceleration()const;	// Sum of Force terms
@@ -18,7 +17,6 @@ class ForceModel : public Model {
 		threevector NeutralDrag()const;
 		threevector LorentzForce()const;
 		threevector Centrifugal()const;
-
 
 	public:
 		// Constructors
@@ -28,8 +26,11 @@ class ForceModel : public Model {
 		ForceModel(std::string filename, double accuracy, std::array<bool,5> models, 
 				Matter *& sample, PlasmaGrid & pgrid);
 
+		ForceModel(const ForceModel &fm);
 		// Destructor
 		~ForceModel(){};
+
+		void CreateFile(std::string filename);
 		
 		double ProbeTimeStep()const;	// Verify time step
 		double UpdateTimeStep();	// Verify time step
