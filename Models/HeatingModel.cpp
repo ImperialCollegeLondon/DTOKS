@@ -202,8 +202,8 @@ void HeatingModel::Heat(double timestep){
 	H1_Debug( "\tTotalEnergy = " << TotalEnergy << "\n");
         Sample->update_temperature(TotalEnergy);                // Update Temperature
 
-	// Account for evaporative mass loss
-	if( UseModel[1] && Sample->is_liquid() )
+	// Account for evaporative mass loss, if model is turned on, if it's a liquid and not boiling!
+	if( UseModel[1] && Sample->is_liquid() && (Sample->get_temperature() != Sample->get_boilingtemp()) )
 		Sample->update_mass( (timestep*EvaporationFlux(Sample->get_temperature())*Sample->get_atomicmass())/AvNo );
 	H1_Debug("\tMass Loss = " << (timestep*EvaporationFlux(Sample->get_temperature())*Sample->get_atomicmass())/AvNo);
 	Sample->update();
@@ -221,8 +221,8 @@ void HeatingModel::Heat(){
 	H1_Debug( "\tTotalEnergy = " << TotalEnergy << "\n");
         Sample->update_temperature(TotalEnergy);                // Update Temperature
 
-	// Account for evaporative mass loss
-	if( UseModel[1] && Sample->is_liquid() )
+	// Account for evaporative mass loss, if model is turned on, if it's a liquid and not boiling!
+	if( UseModel[1] && Sample->is_liquid() && (Sample->get_temperature() != Sample->get_boilingtemp()) )
 		Sample->update_mass( (TimeStep*EvaporationFlux(Sample->get_temperature())*Sample->get_atomicmass())/AvNo );
 	
 	Sample->update();

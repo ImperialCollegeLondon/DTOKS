@@ -27,6 +27,7 @@ class Matter{
  
 		struct GrainData 		St;
 		const struct ElementConsts	Ec;
+		double PreBoilMass;			// A variable needed to remember the mass before boiling...
 		std::array<char,4> ConstModels;		// Constant Models variation with Temperature turned on of possibly 4
 
 		// Functions called by Matter::update(). These are element dependant and must be defined in the child class.

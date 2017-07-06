@@ -1,6 +1,6 @@
 //#define PAUSE
-//#define MATTER_DEBUG
-//#define MATTER_DEEP_DEBUG
+#define MATTER_DEBUG
+#define MATTER_DEEP_DEBUG
 #define MinMass 10e-25
 
 #include "Matter.h"
@@ -36,7 +36,7 @@ Matter::Matter(const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterD
 	M_Debug("\n\nIn Matter::Matter(const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults)\n\n");
 	ConstModels = {'c','c','c','y'};
 	St.Mass = Ec.RTDensity*St.Volume;
-	St.Breakup = false;
+	PreBoilMass = St.Mass;
 };
 Matter::Matter(double rad, const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults){
 	M_Debug("\n\nIn Matter::Matter(double rad, const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults)\n\n");
@@ -46,7 +46,7 @@ Matter::Matter(double rad, const ElementConsts *elementconsts):Ec(*elementconsts
 	St.Volume = (4*PI*pow(St.Radius,3))/3;
         St.SurfaceArea = 4*PI*pow(St.Radius,2);
 	St.Mass = Ec.RTDensity*St.Volume;
-	St.Breakup = false;
+	PreBoilMass = St.Mass;
 	assert(St.Radius > 0 && St.UnheatedRadius > 0);
 //	M_Debug("\nSt.Radius = " << St.Radius << "\nSt.Mass = " << St.Mass);
 };
@@ -59,7 +59,7 @@ Matter::Matter(double rad, double temp, const ElementConsts *elementconsts):Ec(*
 	St.Volume = (4*PI*pow(St.Radius,3))/3;
         St.SurfaceArea = 4*PI*pow(St.Radius,2);
 	St.Temperature = temp;					// K
-	St.Breakup = false;
+	PreBoilMass = St.Mass;
 	if( ConstModels[1] != 'v' && ConstModels[1] != 'V' )	St.Mass = Ec.RTDensity*St.Volume;
 	else							update_dim();
 	assert(St.Radius > 0 && St.UnheatedRadius > 0 && St.Temperature > 0);
@@ -75,7 +75,7 @@ Matter::Matter(double rad, double temp, const ElementConsts *elementconsts, std:
 	St.Volume = (4*PI*pow(St.Radius,3))/3;
         St.SurfaceArea = 4*PI*pow(St.Radius,2);
 	St.Temperature = temp;					// K
-	St.Breakup = false;
+	PreBoilMass = St.Mass;
 	if( ConstModels[1] != 'v' && ConstModels[1] != 'V' )	St.Mass = Ec.RTDensity*St.Volume;
 	else							update_dim();
 	assert(St.Radius > 0 && St.UnheatedRadius > 0 && St.Temperature > 0);
@@ -210,36 +210,44 @@ void Matter::update_boilingtemp(){
 void Matter::update_state(double EnergyIn){
 	M_Debug("\tIn Matter::update_state(double EnergyIn)\n\n");
 
-	if( St.Temperature < St.SuperBoilingTemp && St.Temperature >= Ec.MeltingTemp){ // Melting or Liquid
-		if( St.Temperature > Ec.BoilingTemp){
-			static bool runOnce = true;
-			WarnOnce(runOnce,"Substance is superheated! Temperature > BoilingTemp");
+	St.Temperature += EnergyIn/(St.Mass*St.HeatCapacity); // HeatCapacity in Units of kJ/(kg K)
+
+	// Account for latent heat of melted solid that needs to be re-frozen
+	if( St.FusionEnergy > 0 && St.Temperature < Ec.MeltingTemp && EnergyIn < 0 ){
+		St.FusionEnergy += EnergyIn;
+		St.Temperature = Ec.MeltingTemp;
+		if( St.FusionEnergy < 0 ){ // If it has just re-frozen, St.Fusion Energy is negative, account for lost energy
+			St.Temperature = Ec.MeltingTemp+(St.FusionEnergy-EnergyIn)/(St.Mass*St.HeatCapacity);
+			St.FusionEnergy = 0;
+			St.Liquid = false;
 		}
+
+	}
+	if( St.Temperature < St.SuperBoilingTemp && St.Temperature >= Ec.MeltingTemp ){ // Melting or Liquid
 		if( St.FusionEnergy < Ec.LatentFusion*St.Mass ){ // Must be melting
-			M2_Debug("\n*Liquid is melting*, T = " << St.Temperature
-				<< "\nFusionEnergy is < LatentFusion*Mass : " << St.FusionEnergy << " < " 
-					<< Ec.LatentFusion*St.Mass);
+
 			// Add energy to Latent heat and set Temperature to Melting Temperature
-			St.FusionEnergy += EnergyIn; 
+			St.FusionEnergy += EnergyIn;
 			St.Temperature = Ec.MeltingTemp;
-			if( St.FusionEnergy > Ec.LatentFusion*St.Mass ){ // if it melts fully
+			M2_Debug("\n*Liquid is melting*, T = " << St.Temperature
+			<< "\nFusionEnergy is < LatentFusion*Mass : " << St.FusionEnergy << " < " 
+				<< Ec.LatentFusion*St.Mass << "\nSt.Mass = " << St.Mass);
+			if( St.FusionEnergy >= Ec.LatentFusion*St.Mass ){ // if it melts fully
 				St.Liquid = true; St.Gas = false;
 				St.Temperature = Ec.MeltingTemp + 
 				        (St.FusionEnergy-Ec.LatentFusion*St.Mass)/St.HeatCapacity;
 			}
-		}else{ St.Liquid = true; St.Gas = false; }  // Else it has melted!
+			M2_Debug( "\nEnergyIn = " << EnergyIn << "\nSt.FusionEnergy = " << St.FusionEnergy 
+				<< "\nEc.LatentFusion = " << Ec.LatentFusion << "\nEc.LatentFusion*Mass = " 
+				<< Ec.LatentFusion*St.Mass << "\nMass = " << St.Mass);
+		}else{ St.Liquid = true; St.Gas = false; }  // Else it is in the liquid phase!
 	}else if( St.Temperature >= St.SuperBoilingTemp ){ // Boiling or Gas
-		// WE NEED TO RETHINK HOW WE DO THIS.
-		// YOU CAN'T USE MASS IN PLACE OF tempmass BECAUSE THIS CHANGES EACH LOOP AND IT SHOULDN'T.
-		// HOWEVER USING A STATIC VARIABLE MEANS THAT ONCE THE BOILING TEMP IS REACHED, IT MUST BOIL FROM HERE ON OUT
-		static double tempmass = St.Mass;
-		if( St.VapourEnergy < Ec.LatentVapour*tempmass ){ // Must be boiling
+		if( St.VapourEnergy == 0 ) PreBoilMass = St.Mass;
+		if( St.VapourEnergy < Ec.LatentVapour*PreBoilMass ){ // Must be boiling
 			// Add energy to Latent heat and set Temperature to Melting Temperature
-			M2_Debug( "\nEnergyIn = " << EnergyIn << "\nSt.VapourEnergy = " << St.VapourEnergy << "\nEc.LatentVapour = " << Ec.LatentVapour << "\nEc.LatentVapour*tempmass = " << Ec.LatentVapour*tempmass << "\nMass = " << St.Mass 
-				<< "\ntempmass = "  << tempmass);
-//			std::cin.get();
-			static bool runOnce = true;
-			WarnOnce(runOnce,"Calculation assumes that mass boils after reaching boiling temperature. See 'static double tempmass = St.Mass;'");
+			M2_Debug( "\nEnergyIn = " << EnergyIn << "\nSt.VapourEnergy = " << St.VapourEnergy 
+				<< "\nEc.LatentVapour = " << Ec.LatentVapour << "\nEc.LatentVapour*PreBoilMass = " 
+				<< Ec.LatentVapour*PreBoilMass << "\nMass = " << St.Mass << "\nPreBoilMass = "  << PreBoilMass);
 
 			update_mass(EnergyIn/Ec.LatentVapour);
 			St.VapourEnergy += EnergyIn; 
@@ -259,11 +267,15 @@ void Matter::update_state(double EnergyIn){
 			std::cout << "\n\n***** WARNING! SAMPLE IS GASEOUS *****\n";
 		}
 	}
-	M2_Debug("\nSt.Temperature = " << St.Temperature);
+	M2_Debug( "\n**** Temp change = " << EnergyIn/(St.Mass*St.HeatCapacity) << "\n**** Ein = " << EnergyIn 
+		<< "\n**** Mass = " << St.Mass << "\n**** Cv = " << St.HeatCapacity << "\nSt.Temperature = " << St.Temperature);
+	M2_Debug( "\n**** St.Liquid = " << St.Liquid << "\n**** St.Gas = " << St.Gas);
+
 	if( St.Mass < MinMass*10 ){ // Lower limit for mass of dust
 		std::cout << "\nSt.Mass = " << St.Mass << " < 10e-24, vaporisation assumed.";
 		St.Gas = true;
 	}
+	assert(St.Temperature > 0);
 }
 
 // Change geometric and variable properties of matter; 
@@ -318,7 +330,6 @@ void Matter::update_mass(double LostMass){
 		St.Mass = 0;
 		St.Gas = true;
 		St.Liquid = false;
-		//throw std::exception();
 	}
 }
 
@@ -326,10 +337,6 @@ void Matter::update_mass(double LostMass){
 void Matter::update_temperature(double EnergyIn){
 
 	M_Debug("\tIn Matter::update_temperature(double EnergyIn = " << EnergyIn << " kJ)\n\n");
-
-//	M_Debug("\n...\nTemp = " << St.Temperature << "K \nHeatCapacity = " << St.HeatCapacity 
-//		<< " kJ/(kg K)\nFusionEnergy = " << St.FusionEnergy << " kJ\nVapourEnergy = " 
-//		<< St.VapourEnergy << " kJ\n\n");
 
 	// Assert temperature changes smaller than 10% of current temperature
 	if(abs(EnergyIn/(St.Mass*St.HeatCapacity)) > St.Temperature*0.1){
@@ -341,11 +348,6 @@ void Matter::update_temperature(double EnergyIn){
 	}
 	assert(abs(EnergyIn/(St.Mass*St.HeatCapacity)) < St.Temperature*0.1); // Assert temperature change is less than 10%
 
-	St.Temperature += EnergyIn/(St.Mass*St.HeatCapacity); // HeatCapacity in Units of kJ/(kg K)
-	M2_Debug( "\n**** Temp change = " << EnergyIn/(St.Mass*St.HeatCapacity) << "\n**** Ein = " << EnergyIn 
-			<< "\n**** Mass = " << St.Mass << "\n**** Cv = " << St.HeatCapacity);
-
-	assert(St.Temperature > 0);
 	M_Debug("\t"); update_state(EnergyIn);
 	M2_Debug("\nSt.Temperature = " << St.Temperature);
 	if(!St.Gas)	assert(St.Temperature <= St.SuperBoilingTemp);
@@ -375,7 +377,7 @@ void Matter::update_charge(double charge, double potential, double deltat, doubl
 		std::cout << "\nElectrostatic Breakup!";
 //		std::cout << "\nQcrit = " << 8*PI*sqrt(epsilon0*Ec.SurfaceTension*pow(St.Radius,3));
 //		std::cout << "\nCharge = " << charge;
-		if( St.Mass/2 < MinMass ){      
+/*		if( St.Mass/2 < MinMass ){      
 			St.Gas = true;
 			std::cout << "\nMass too small to support breakup, vaporisation assumed...";
 		}else{
@@ -383,5 +385,8 @@ void Matter::update_charge(double charge, double potential, double deltat, doubl
 			St.Breakup = true;
 			std::cout << "\nMass has split in two...";
 		}
+*/
+		St.Gas = true;
+		std::cout << "\nVaporisation assumed...";
 	}
 }

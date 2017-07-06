@@ -67,7 +67,7 @@ int main(int argc, char* argv[]){
 	std::string Name="constant";	// Describes heating model
 
  	// Parameters describing the heating model
-	char Element='W';		// Element, (W) : Tungsten, (G) : Graphite, (B) : Beryllium or (F) : Iron.
+	char Element='B';		// Element, (W) : Tungsten, (G) : Graphite, (B) : Beryllium or (F) : Iron.
 //	double Power=0;			// Kilo-Watts power in addition to heating model powers
 	double Size=1e-6; 		// m
 	double Temp=300;		// K
