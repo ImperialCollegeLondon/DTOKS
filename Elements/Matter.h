@@ -1,6 +1,8 @@
 #ifndef __MATTER_H_INCLUDED__   // if Matter.h hasn't been included yet...
 #define __MATTER_H_INCLUDED__
 
+#define MinMass 10e-25
+
 #include "GrainStructs.h"// Contains the structure element for storing properties of material
 #include "Constants.h"	// Contains general physical constants
 #include "Functions.h"  // sec(Te,'f') function used by HeatingModel.cpp
@@ -72,6 +74,7 @@ class Matter{
 		bool is_gas			()const{ return St.Gas;				};
 		bool is_liquid			()const{ return St.Liquid;			};
 		bool is_positive		()const{ return St.Positive;			};
+		bool is_split			()const{ return St.Breakup;			};
 		bool get_c		   (int i)const{ assert(i < 4); return ConstModels[i];	};
 		double get_superboilingtemp	()const{ return St.SuperBoilingTemp;		};
 		double get_mass			()const{ return St.Mass;			};
@@ -95,6 +98,8 @@ class Matter{
 		threevector get_position	()const{ return St.DustPosition;		};
 
 		void set_potential		(double potential){ St.Potential = potential;	};
+		void set_mass			(double mass){ assert(mass > MinMass*10); St.Mass = mass;	};
+		void reset_breakup		(){	St.Breakup = false;			};
 };
 
 #endif

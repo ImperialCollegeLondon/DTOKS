@@ -42,6 +42,10 @@ Model::Model( Matter *&sample, PlasmaGrid &pgrid, double accuracy )
 	//	std::cout << "\nAccuracy = " << Accuracy;
 }
 
+void Model::CloseFile(){
+	ModelDataFile.close();
+}
+
 void Model::update_plasmadata(PlasmaData *&pdata){
 	Mo_Debug( "\tIn Model::update_plasmadata(PlasmaData *&pdata)\n\n");
 	Pdata = pdata;

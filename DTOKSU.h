@@ -39,7 +39,8 @@ class DTOKSU{
 		};
 		
 		int Run();
-		// Functions which generate and save data from heating the Sample.
+		void OpenFiles(std::string filename, unsigned int i);
+		void CloseFiles();			// Close all model files
 };
 
 #endif

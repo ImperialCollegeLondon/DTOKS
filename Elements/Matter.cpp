@@ -1,7 +1,7 @@
 //#define PAUSE
 //#define MATTER_DEBUG
 //#define MATTER_DEEP_DEBUG
-#define MinMass 10e-25
+
 
 #include "Matter.h"
 struct GrainData MatterDefaults = {
@@ -377,7 +377,7 @@ void Matter::update_charge(double charge, double potential, double deltat, doubl
 		std::cout << "\nElectrostatic Breakup!";
 //		std::cout << "\nQcrit = " << 8*PI*sqrt(epsilon0*Ec.SurfaceTension*pow(St.Radius,3));
 //		std::cout << "\nCharge = " << charge;
-/*		if( St.Mass/2 < MinMass ){      
+		if( St.Mass/2 < MinMass*10 ){
 			St.Gas = true;
 			std::cout << "\nMass too small to support breakup, vaporisation assumed...";
 		}else{
@@ -385,8 +385,6 @@ void Matter::update_charge(double charge, double potential, double deltat, doubl
 			St.Breakup = true;
 			std::cout << "\nMass has split in two...";
 		}
-*/
-		St.Gas = true;
-		std::cout << "\nVaporisation assumed...";
+
 	}
 }
