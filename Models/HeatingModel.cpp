@@ -212,22 +212,8 @@ void HeatingModel::Heat(double timestep){
 }
 
 void HeatingModel::Heat(){
-
 	H_Debug("\tIn HeatingModel::Heat()\n\n");
-	
-	assert( Sample->get_mass() > 0 );
-
-	double TotalEnergy = RungeKutta4();                     // Calculate total energy through RungeKutta4 method
-	H1_Debug( "\tTotalEnergy = " << TotalEnergy << "\n");
-        Sample->update_temperature(TotalEnergy);                // Update Temperature
-
-	// Account for evaporative mass loss, if model is turned on, if it's a liquid and not boiling!
-	if( UseModel[1] && Sample->is_liquid() && (Sample->get_temperature() != Sample->get_boilingtemp()) )
-		Sample->update_mass( (TimeStep*EvaporationFlux(Sample->get_temperature())*Sample->get_atomicmass())/AvNo );
-	
-	Sample->update();
-        H_Debug("\t"); Print();                // Print data to file
-	TotalTime += TimeStep;
+	Heat(TimeStep);
 }
 
 double HeatingModel::CalculatePower(double DustTemperature)const{

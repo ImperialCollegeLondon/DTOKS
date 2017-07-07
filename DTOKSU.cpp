@@ -68,8 +68,8 @@ int DTOKSU::Run(){
 	double HeatTime(0),ForceTime(0),ChargeTime(0);
 
 	bool InGrid = FM.update_plasmadata(Sample->get_position());
-	CM.Charge();
-	Sample->update();			// Need to manually update the first time as first step is not necessarily heating
+	CM.Charge(1e-100);	// Charge instantaneously as soon as we start.
+	Sample->update();	// Need to manually update the first time as first step is not necessarily heating
 	while( InGrid ){
 
 		// ***** START OF : DETERMINE TIMESCALES OF PROCESSES ***** //	
@@ -176,14 +176,18 @@ int DTOKSU::Run(){
 		InGrid = FM.update_plasmadata(Sample->get_position());
 		Print();
 		// ***** START OF : DETERMINE IF END CONDITION HAS BEEN REACHED ***** //
-		if( Sample->is_gas() && Sample->get_superboilingtemp() <= Sample->get_temperature() ){
-			std::cout << "\n\nSample has Boiled ";
+		if( Sample->is_gas() && Sample->is_split() ){
+			std::cout << "\nSample has undergone electrostatic breakup!";
+			break;
+		
+		}else if( Sample->is_gas() && Sample->get_superboilingtemp() <= Sample->get_temperature() ){
+			std::cout << "\n\nSample has Boiled!";
 			break;
 		}else if( Sample->is_gas() && Sample->get_superboilingtemp() > Sample->get_temperature() ){
-			std::cout << "\n\nSample has Evaporated ";
+			std::cout << "\n\nSample has Evaporated!";
 			break;
 		}else if( Sample->is_gas() ){
-			std::cout << "\nSample has vapourised";
+			std::cout << "\nSample has Vapourised!";
 			break;
 		
 		}

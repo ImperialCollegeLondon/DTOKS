@@ -71,6 +71,7 @@ class Matter{
 
 		bool is_gas			()const{ return St.Gas;				};
 		bool is_liquid			()const{ return St.Liquid;			};
+		bool is_split			()const{ return St.Breakup;			};
 		bool is_positive		()const{ return St.Positive;			};
 		bool get_c		   (int i)const{ assert(i < 4); return ConstModels[i];	};
 		double get_superboilingtemp	()const{ return St.SuperBoilingTemp;		};

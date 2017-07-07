@@ -374,19 +374,10 @@ void Matter::update_charge(double charge, double potential, double deltat, doubl
 	}
 
 	if( fabs(charge) > 8*PI*sqrt(epsilon0*Ec.SurfaceTension*pow(St.Radius,3)) && St.Liquid ){
-		std::cout << "\nElectrostatic Breakup!";
+		std::cout << "\nElectrostatic Breakup! Instantaneous vaporisation assumed.";
 //		std::cout << "\nQcrit = " << 8*PI*sqrt(epsilon0*Ec.SurfaceTension*pow(St.Radius,3));
 //		std::cout << "\nCharge = " << charge;
-/*		if( St.Mass/2 < MinMass ){      
-			St.Gas = true;
-			std::cout << "\nMass too small to support breakup, vaporisation assumed...";
-		}else{
-			St.Mass = St.Mass/2;    // Assume mass is half of previous...
-			St.Breakup = true;
-			std::cout << "\nMass has split in two...";
-		}
-*/
 		St.Gas = true;
-		std::cout << "\nVaporisation assumed...";
+		St.Breakup = true;
 	}
 }

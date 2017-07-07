@@ -88,6 +88,8 @@ void ChargingModel::Charge(double timestep){
 						/(echarge*Pdata->ElectronTemp);
 			}
 		}
+		// Have to do it this way since grain doesn't know about the Electron Temp and since potential is normalised.
+		// This information has to be passed to the grain.
 		double ChargeOfGrain = -(4.0*PI*epsilon0*Sample->get_radius()*Potential*Kb*Pdata->ElectronTemp)/echarge;
 		Sample->update_charge(ChargeOfGrain,Potential,DSec,DTherm);
 //		std::cout << "\nPotential = " << Potential << "\nDeltaSec = " << Sample->get_deltasec() << "\nDeltatherm = " 
@@ -100,29 +102,7 @@ void ChargingModel::Charge(double timestep){
 
 void ChargingModel::Charge(){
 	C_Debug("\tIn ChargingModel::Charge()\n\n");
-
-	double DSec = DeltaSec();
-	double DTherm = DeltaTherm();
-	// Assume the grain is negative and calculate potential
-	if( UseModel[0] ){
-		double Potential;
-		if( DSec+DTherm < 1.0 ){ // solveOML only defined for deltatot < 1.0
-			Potential = solveOML(DSec+DTherm,Sample->get_potential()); 
-		}else{ // If the grain is in fact positive ...
-			Potential = solveOML(DSec+DTherm,Sample->get_potential());
-			if( Potential < 0.0 ){
-				Potential = solveOML(0.0,Sample->get_potential())-Kb*Sample->get_temperature()
-						/(echarge*Pdata->ElectronTemp);
-			}
-		}
-		double ChargeOfGrain = -(4.0*PI*epsilon0*Sample->get_radius()*Potential*Kb*Pdata->ElectronTemp)/echarge;
-		Sample->update_charge(ChargeOfGrain,Potential,DSec,DTherm);
-//		std::cout << "\nPotential = " << Potential << "\nDeltaSec = " << Sample->get_deltasec() << "\nDeltatherm = " 
-//			<< Sample->get_deltatherm() << "\nCharge = " << ChargeOfGrain; std::cin.get();
-	}
-	TotalTime += TimeStep;
-
-	C_Debug("\t"); Print();
+	Charge(TimeStep);
 }
 
 double ChargingModel::solveOML(double a, double guess){

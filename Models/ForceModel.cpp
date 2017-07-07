@@ -128,22 +128,7 @@ void ForceModel::Force(double timestep){
 // Move the dust grain by calculating the forces acting on it
 void ForceModel::Force(){
 	F_Debug("\tIn ForceModel::Force()\n\n");
-
-	// Forces: Lorentz + ion drag + gravity
-	threevector Acceleration = CalculateAcceleration();
-
-	threevector ChangeInPosition(
-			Sample->get_velocity().getx()*TimeStep,
-			(Sample->get_velocity().gety()*TimeStep)/(Sample->get_position().getx()),
-			Sample->get_velocity().getz()*TimeStep);
-
-	threevector ChangeInVelocity = Acceleration*TimeStep;
-	
-	Sample->update_motion(ChangeInPosition,ChangeInVelocity);
-
-	F1_Debug( "ChangeInVelocity : " << ChangeInVelocity << "\nAcceleration : " << Acceleration << "\nTimeStep : " << TimeStep);
-	F_Debug("\t"); Print();
-	TotalTime += TimeStep;
+	Force(TimeStep);
 }
 
 threevector ForceModel::CalculateAcceleration()const{
