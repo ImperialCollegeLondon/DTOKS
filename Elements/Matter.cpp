@@ -412,3 +412,7 @@ void Matter::update_charge(double charge, double potential, double deltat, doubl
 		}
 	}
 }
+
+void Matter::update_graindata(GrainData &NewData){
+	St = NewData;
+}
