@@ -140,11 +140,15 @@ int DTOKSU::Run(){
 
 
 				// Check that time scales haven't changed significantly whilst looping...
-				if( ForceTime/FM.ProbeTimeStep() > 2 ){
-					D1_Debug("\nForce TimeStep Has Changed Significantly whilst taking small steps...");
-					j ++;
-					break; // Can't do this: MaxTimeStep = j*MinTimeStep; as we change MaxTimeStep...
-				}
+				// NOTE the FM.ProbeTimeStep() command takes a significant amount of time and has been found
+				// to be rarely activated. This could still be a nice/necessary check in some circumstances.
+				// However, I can't see a way to make this faster right now
+//				if( ForceTime/FM.ProbeTimeStep() > 2 ){
+//					D1_Debug("\nForce TimeStep Has Changed Significantly whilst taking small steps...");
+//					std::cin.get();
+//					j ++;
+//					break; // Can't do this: MaxTimeStep = j*MinTimeStep; as we change MaxTimeStep...
+//				}
 				if( HeatTime/HM.ProbeTimeStep() > 2 ){
 					D1_Debug("\nHeat TimeStep Has Changed Significantly whilst taking small steps...");
 					j ++;

@@ -3,7 +3,7 @@
 
 static void show_usage(std::string name){
 	std::cerr << "Usage: int main(int argc, char* argv[]) <option(s)> SOURCES"
-	<< "Options:\n"
+	<< "\n\nOptions:\n"
 	<< "\t-h,--help\t\tShow this help message\n\n"
 	<< "\t-d,--deltatime DELTATIME\t\tSpecify time step\n\n"
 	<< "\t-t,--temperature TEMPERATURE\tdouble variable defining the initial temperature\n"
@@ -62,12 +62,10 @@ int main(int argc, char* argv[]){
 	char HeatCapacityModel = 'c'; 	// Possible values 'c', 'v' and 's': Corresponding to (c)onstant, (v)ariable and (s)et
 	char BoilingModel = 'y'; 	// Possible values 'y', 'n', 's' and 't': Corresponding to (y)es, (n)o, (s)uper 
 													// and (t)homson
-	char TimeStepType = 'f';	// Possible values 'o', 's' and 'f': Corresponding to (o)ne degree steps, (s)mall steps 
-													// and (f)ixed steps
 	std::string Name="constant";	// Describes heating model
 
  	// Parameters describing the heating model
-	char Element='B';		// Element, (W) : Tungsten, (G) : Graphite, (B) : Beryllium or (F) : Iron.
+	char Element='W';		// Element, (W) : Tungsten, (G) : Graphite, (B) : Beryllium or (F) : Iron.
 //	double Power=0;			// Kilo-Watts power in addition to heating model powers
 	double Size=1e-6; 		// m
 	double Temp=300;		// K
