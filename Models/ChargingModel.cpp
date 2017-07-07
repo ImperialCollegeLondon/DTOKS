@@ -89,7 +89,7 @@ void ChargingModel::Charge(double timestep){
 			}
 		}
 		double ChargeOfGrain = -(4.0*PI*epsilon0*Sample->get_radius()*Potential*Kb*Pdata->ElectronTemp)/echarge;
-		Sample->update_charge(ChargeOfGrain,Potential,DSec,DTherm);
+		Sample->update_charge(fabs(ChargeOfGrain),Potential,DSec,DTherm);
 //		std::cout << "\nPotential = " << Potential << "\nDeltaSec = " << Sample->get_deltasec() << "\nDeltatherm = " 
 //			<< Sample->get_deltatherm() << "\nCharge = " << ChargeOfGrain; std::cin.get();
 	}

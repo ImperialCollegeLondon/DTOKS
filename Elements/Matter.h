@@ -62,6 +62,9 @@ class Matter{
 		// Resolve region of rapid charge variation
 		void update_charge(double charge, double potential, double deltas, double deltat);
 
+
+		void update_graindata(GrainData &NewData);
+
 		// Getter methods
 		char get_elem			()const{ return Ec.Elem;			};
 		double get_meltingtemp		()const{ return Ec.MeltingTemp;			};
@@ -96,6 +99,7 @@ class Matter{
 		double get_potential		()const{ return St.Potential;			};
 		threevector get_velocity	()const{ return St.DustVelocity;		};
 		threevector get_position	()const{ return St.DustPosition;		};
+		GrainData get_graindata		()const{ return St;				};
 
 		void set_potential		(double potential){ St.Potential = potential;	};
 		void set_mass			(double mass){ assert(mass > MinMass*10); St.Mass = mass;	};

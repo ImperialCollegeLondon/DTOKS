@@ -12,23 +12,23 @@ std::array<char,4> DefaultConstModels = { 'c','c','c','c'};
 DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample, PlasmaData *&pdata,
 				std::array<bool,9> &heatmodels, std::array<bool,5> &forcemodels, std::array<bool,1> &chargemodels)
 			: Sample(sample),
-				CM("cf.txt",acclvls[0],chargemodels,sample,pdata),
-				HM("hf.txt",acclvls[1],heatmodels,sample,pdata),
-				FM("ff.txt",acclvls[2],forcemodels,sample,pdata){
+				CM("Data/cf.txt",acclvls[0],chargemodels,sample,pdata),
+				HM("Data/hf.txt",acclvls[1],heatmodels,sample,pdata),
+				FM("Data/ff.txt",acclvls[2],forcemodels,sample,pdata){
         D_Debug("\n\nIn DTOKSU::DTOKSU( ... )\n\n");
         D_Debug("\n\n************************************* SETUP FINISHED ************************************* \n\n");
 //	std::cout << "\nacclvls[0] = " << acclvls[0];
 	MinTimeStep = timestep;
 	TotalTime = 0;
-	CreateFile("df.txt");
+	CreateFile("Data/df.txt");
 }
 
 DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample, PlasmaGrid &pgrid,
 				std::array<bool,9> &heatmodels, std::array<bool,5> &forcemodels, std::array<bool,1> &chargemodels)
 				: Sample(sample),
-				CM("cf.txt",acclvls[0],chargemodels,sample,pgrid),
-				HM("hf.txt",acclvls[1],heatmodels,sample,pgrid),
-				FM("ff.txt",acclvls[2],forcemodels,sample,pgrid){
+				CM("Data/cf.txt",acclvls[0],chargemodels,sample,pgrid),
+				HM("Data/hf.txt",acclvls[1],heatmodels,sample,pgrid),
+				FM("Data/ff.txt",acclvls[2],forcemodels,sample,pgrid){
         D_Debug("\n\nIn DTOKSU::DTOKSU( ... )\n\n");
         D_Debug("\n\n************************************* SETUP FINISHED ************************************* \n\n");
 
@@ -36,7 +36,7 @@ DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample,
 //	std::cout << "\nacclvls[0] = " << acclvls[0];
 	MinTimeStep = timestep;
 	TotalTime = 0;
-	CreateFile("df.txt");
+	CreateFile("Data/df.txt");
 }
 
 void DTOKSU::CreateFile( std::string filename ){
@@ -111,6 +111,7 @@ int DTOKSU::Run(){
 		// Resolve region where the Total Power is zero for a Plasma Grid.
 		// This typically occurs when plasma parameters are zero in a cell and other models are off (or zero)... 
 		// Even in No Plasma Region, cooling processes can still occur, but this is specifically for zero power
+		
 		if( HeatTime == 10 ){
 			D1_Debug("\nNo Net Power Region...");
 			FM.Force();
@@ -198,8 +199,11 @@ int DTOKSU::Run(){
 		}else if( Sample->is_gas() && Sample->get_superboilingtemp() > Sample->get_temperature() ){
 			std::cout << "\n\nSample has Evaporated ";
 			break;
+		}else if( Sample->is_split() && Sample->is_gas() ){
+			std::cout << "\n\nSample has broken up into a gas electrostatically";
+			break; // Could replace with return 3; and leave off the end check?...
 		}else if( Sample->is_split() ){
-			std::cout << "\n\nBreakup condition";
+			std::cout << "\n\nSample has broken up into two large parts";
 			break; // Could replace with return 3; and leave off the end check?...
 		}else if( Sample->is_gas() ){
 			std::cout << "\n\nSample has vapourised";
@@ -222,8 +226,8 @@ int DTOKSU::Run(){
 	}else if( HeatTime == 1 ){
 		std::cout << "\nEnd of Run, exiting due to Thermal Equilibrium being reached!\n\n";
 		return 2;
-	}else if( Sample->is_split() ){
-		return 3;	// Return status for Breakup condition
+	}else if( Sample->is_split() && !Sample->is_gas() ){
+		return 3;	// Return status for continue simulating Breakup condition
 	}
 
 	std::cout << "\nFinished DTOKS-U run.";

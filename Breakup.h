@@ -7,9 +7,7 @@ class Breakup{
 
 	private:
 		// Private member data
-		std::vector<threevector> EndPositions;
-		std::vector<threevector> EndVelocities;
-		std::vector<double> EndMasses;
+		std::vector<GrainData> GDvector; 
 		DTOKSU *Sim;
 		Matter *Sample;
 	public:
