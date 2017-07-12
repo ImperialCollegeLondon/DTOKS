@@ -91,9 +91,29 @@ void ChargingModel::Charge(double timestep){
 		// Have to do it this way since grain doesn't know about the Electron Temp and since potential is normalised.
 		// This information has to be passed to the grain.
 		double ChargeOfGrain = -(4.0*PI*epsilon0*Sample->get_radius()*Potential*Kb*Pdata->ElectronTemp)/echarge;
-		Sample->update_charge(ChargeOfGrain,Potential,DSec,DTherm);
+		Sample->update_charge(ChargeOfGrain,Potential,DTherm,DSec);
 //		std::cout << "\nPotential = " << Potential << "\nDeltaSec = " << Sample->get_deltasec() << "\nDeltatherm = " 
 //			<< Sample->get_deltatherm() << "\nCharge = " << ChargeOfGrain; std::cin.get();
+
+	/*	if( Pdata->ElectronTemp > 0 ){ // Avoid dividing by zero
+			if( (DSec + DTherm) >= 1.0 ){ 	// If electron emission yield exceeds unity, we have potential well...
+							// Take away factor of temperature ratios for depth of well
+							// This is not explained further...
+				Potential = solveOML( 0.0, Sample->get_potential()) 
+						- Sample->get_temperature()/Pdata->ElectronTemp; 
+			}else{ // If the grain is negative...
+				// Calculate the potential with the normal current balance including electron emission
+				Potential = solveOML( DSec + DTherm,Sample->get_potential());
+				if( Potential < 0.0 ){
+					// But! If it's now positive, our assumptions must be wrong!
+					// So now we assume it's positive and calculate the potential with a well.
+					Potential = solveOML(0.0,Sample->get_potential())-Sample->get_temperature()
+							/Pdata->ElectronTemp;
+				}
+			}
+		}else{
+			Potential = 0.0;
+		}*/
 	}
 	TotalTime += timestep;
 
@@ -108,13 +128,17 @@ void ChargingModel::Charge(){
 double ChargingModel::solveOML(double a, double guess){
         C_Debug("\tIn ChargingModel::solveOML(double a, double guess)\n\n");
         if( a >= 1.0 ){
-		static bool runOnce;
+		static bool runOnce = true;
 		WarnOnce(runOnce,"DeltaTot >= 1.0. DeltaTot being set equal to unity.");
 		a = 1.0;
 	}
 	double b(0);
-	if( Pdata->ElectronTemp == 0 ) 	b = 0;
-	else 				b = Pdata->IonTemp/Pdata->ElectronTemp;
+	try{
+		b = Pdata->IonTemp/Pdata->ElectronTemp;
+	}catch(std::overflow_error e){
+		std::cout << e.what();
+		b = 0;
+	}
 	double C = Me/Mp;
 
 	double x1 = guess - ( (( 1-a)*exp(-guess) - sqrt(b*C)*(1+guess/b))/((a-1)*exp(-guess) - sqrt(C/b) ) );
@@ -126,13 +150,15 @@ double ChargingModel::solveOML(double a, double guess){
 	return guess;
 }
 
-double ChargingModel::DeltaSec()const{
-	C_Debug("\tIn ChargingModel::DeltaSec()\n\n");
+double ChargingModel::DeltaTherm()const{
+	C_Debug("\tIn ChargingModel::DeltaTherm()\n\n");
+
 	return (Richardson*pow(Sample->get_temperature(),2)*exp(-(Sample->get_workfunction()*echarge)
 				/(Kb*Sample->get_temperature())))/echarge;
 }
 
-double ChargingModel::DeltaTherm()const{
-	C_Debug("\tIn ChargingModel::DeltaTherm()\n\n");
-	return sec(Pdata->ElectronTemp/1.16e5,Sample->get_elem());
+double ChargingModel::DeltaSec()const{
+	C_Debug("\tIn ChargingModel::DeltaSec()\n\n");
+	double ConvertKtoev(8.6173303e-5);
+	return sec(Pdata->ElectronTemp*ConvertKtoev,Sample->get_elem());
 }

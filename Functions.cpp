@@ -4,6 +4,7 @@
 #include <ctime>	// Time program
 
 // Empirical fit to secondary electron emission equation as in Stangeby
+// Electron temperature is expected to be in units of electron volts!
 double sec(double Te, char material)
 {
 

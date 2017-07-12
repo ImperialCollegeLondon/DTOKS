@@ -150,12 +150,8 @@ threevector ForceModel::CalculateAcceleration()const{
 // Calculations for ion drag: Mach number, shielding length with fitting function and thermal scattering parameter
 threevector ForceModel::NeutralDrag()const{
 	F_Debug("\tIn ForceModel::DTOKSIonDrag()\n\n");
-	threevector Fnd;
-	
-	threevector RelativeVelocity = (Pdata->PlasmaVel-Sample->get_velocity());
-	double ThermalVelocity = sqrt(2*Kb*Pdata->IonTemp*Mp);
-	Fnd = RelativeVelocity*Pdata->NeutralDensity*ThermalVelocity*PI*pow(Sample->get_radius(),2);
-	return Fnd;
+	return (Pdata->PlasmaVel-Sample->get_velocity())*Pdata->NeutralDensity*sqrt(2*Kb*Pdata->IonTemp*Mp)*PI
+			*pow(Sample->get_radius(),2);
 }
 
 // Calculations for ion drag: Mach number, shielding length with fitting function and thermal scattering parameter
@@ -166,14 +162,14 @@ threevector ForceModel::DTOKSIonDrag()const{
 // ION TEMPERATURE IN THIS FUNCTION IS IN ev.
 	double ConvertKelvsToeV(8.621738e-5);
 	threevector Mt(0.0,0.0,0.0);
-	if( Pdata->IonTemp != 0 ) Mt = (Pdata->PlasmaVel-Sample->get_velocity())*sqrt(Mp/(echarge*Pdata->IonTemp*ConvertKelvsToeV)); 
+	if( Pdata->IonTemp != 0 ) Mt = (Pdata->PlasmaVel-Sample->get_velocity())*sqrt(Mp/(Kb*Pdata->IonTemp)); 
 	F_Debug("\nMt = " << Mt);
 
         if( Pdata->IonDensity == 0 || Pdata->IonTemp*ConvertKelvsToeV == 0 || Pdata->ElectronTemp*ConvertKelvsToeV == 0  || Mt.mag3() == 0 ){ 
 		// || Mt.mag3() == 0 ){
-                F_Debug("\nWarning! IonDensity = " << Pdata->IonDensity << "\nIonTemp*ConvertKelvsToeV = " 
-			<< Pdata->IonTemp*ConvertKelvsToeV << "\nElectronTemp*ConvertKelvsToeV = " 
-			<< Pdata->ElectronTemp*ConvertKelvsToeV << "!\nThis blows up calculations! Setting Fid=0.");
+                F_Debug("\nWarning! IonDensity = " << Pdata->IonDensity << "\nIonTemp = " 
+			<< Pdata->IonTemp << "\nElectronTemp = " 
+			<< Pdata->ElectronTemp << "!\nThis blows up calculations! Setting Fid=0.");
                 Fid = threevector(0.0,0.0,0.0);
         }else{
 		if(Mt.mag3()<2.0){ // Relative speed less than twice mach number, use Fortov et al theory with screening length 'Lambda'.
@@ -195,7 +191,7 @@ threevector ForceModel::DTOKSIonDrag()const{
 			}
 
 			FidC =(Pdata->PlasmaVel-Sample->get_velocity())*4.0*PI*pow(Sample->get_radius(),2)*Pdata->IonDensity*Mp
-				*sqrt(echarge*Pdata->ElectronTemp*ConvertKelvsToeV/(2.0*PI*Me))*exp(-Sample->get_potential()); 
+				*sqrt(Kb*Pdata->ElectronTemp/(2.0*PI*Me))*exp(-Sample->get_potential()); 
 			//for John's ion drag... I assume here and in other places in the 
 			//calculation that the given potential is normalised to kTe/e
 	    
@@ -206,10 +202,9 @@ threevector ForceModel::DTOKSIonDrag()const{
 			Fid=FidS+FidC;
 			F_Debug("\nFidS = " << FidS << "\nFidC = " << FidC);
 		}else{	// Relative speed greater than twice the mach number, use just plain collection area
-			double lambdadi = sqrt(epsilon0*Pdata->IonTemp*ConvertKelvsToeV)/sqrt(Pdata->IonDensity*echarge);
+//			double lambdadi = sqrt(epsilon0*Pdata->IonTemp*ConvertKelvsToeV)/sqrt(Pdata->IonDensity*echarge);
 			F_Debug("\nlambdadi = " << lambdadi);
-			Fid = Mt*(Mt.mag3()*4*PI*epsilon0*pow(Pdata->IonTemp*ConvertKelvsToeV,2)*(pow(Sample->get_radius(),2)
-					/(4*lambdadi*lambdadi)));	
+			Fid = Mt*Mt.mag3()*PI*Pdata->IonTemp*ConvertKelvsToeV*pow(Sample->get_radius(),2)*Pdata->IonDensity*echarge;
 		}
 	}
 	return Fid*(3/(4*PI*pow(Sample->get_radius(),3)*Sample->get_density()));

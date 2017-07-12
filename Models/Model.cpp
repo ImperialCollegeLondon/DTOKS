@@ -49,7 +49,7 @@ void Model::update_plasmadata(PlasmaData *&pdata){
 
 bool Model::update_plasmadata(threevector pos){
 	Mo_Debug( "\tIn Model::update_plasmadata(" << pos << ")\n\n");
-	double ConvertevtoK(1.16e4);		// Conversion factor from ev to K
+	double ConvertJtoK(7.24297166e22);		// Conversion factor from ev to K
 	int i(0), k(0);
 	bool InGrid = Pgrid->locate(i,k,pos);
 	if( !InGrid ) return InGrid;			// Particle has escaped simulation domain
@@ -57,9 +57,9 @@ bool Model::update_plasmadata(threevector pos){
 	Pdata->NeutralDensity 	= Pgrid->getna0(i,k);  	// NEUTRAL DENSITY EQUALS ION DENSITY
 	Pdata->ElectronDensity 	= Pgrid->getna1(i,k);  
 	Pdata->IonDensity 	= Pgrid->getna0(i,k);
-	Pdata->IonTemp		= Pgrid->getTi(i,k)*ConvertevtoK;
-	Pdata->ElectronTemp 	= Pgrid->getTe(i,k)*ConvertevtoK;
-	Pdata->NeutralTemp 	= Pgrid->getTi(i,k)*ConvertevtoK; 	// NEUTRAL TEMP EQUAL TO ION TEMP
+	Pdata->IonTemp		= Pgrid->getTi(i,k)*ConvertJtoK;
+	Pdata->ElectronTemp 	= Pgrid->getTe(i,k)*ConvertJtoK;
+	Pdata->NeutralTemp 	= Pgrid->getTi(i,k)*ConvertJtoK; 	// NEUTRAL TEMP EQUAL TO ION TEMP
 //	std::cout << "\nTi = " << Pdata->IonTemp;
 //	std::cout << "\nTe = " << Pdata->ElectronTemp;
 //	std::cout << "\nTn = " << Pdata->NeutralTemp; std::cin.get();

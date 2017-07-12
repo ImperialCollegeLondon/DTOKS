@@ -52,7 +52,7 @@ class PlasmaGrid{
 		double getTe		(int i, int k)const{
 			checkingrid(i,k);
 			if(Te[i][k] == Te[i][k] ){
-				return Te[i][k]/echarge;
+				return Te[i][k];
 			}else{
 				return 0;
 			}
@@ -60,7 +60,7 @@ class PlasmaGrid{
 		double getTi		(int i, int k)const{
 			checkingrid(i,k);
 			if(Ti[i][k] == Ti[i][k] ){
-				return Ti[i][k]/echarge;
+				return Ti[i][k];
 			}else{
 				return 0;
 			}
