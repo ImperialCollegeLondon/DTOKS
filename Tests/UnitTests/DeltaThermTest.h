@@ -10,8 +10,10 @@
 // Plot results using matlab
 void DeltaThermTest(){
 	clock_t begin = clock();
+	double electronDensity = 1e18;
+	double NormalisedPotential = 2;
 	for(double T(280); T < 5e3; T ++){ // Loop over temperatures
-		double gammae = 1e18*exp(-2)*sqrt(echarge*10/(2*PI*Me));
+		double gammae = electronDensity*exp(-NormalisedPotential)*sqrt(echarge*10/(2*PI*Me));
 		std::cout << "\n" << T << ", " 
 			<< Richardson*pow(T,2)*exp(-(4.55*echarge)/(Kb*T))/(echarge*gammae);
 	}

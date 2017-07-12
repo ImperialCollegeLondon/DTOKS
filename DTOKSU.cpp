@@ -87,6 +87,7 @@ int DTOKSU::Run(){
 		if( ChargeTime > MinTimeStep && ChargeTime != 1){
 			static bool runOnce = true;
 			WarnOnce(runOnce,"*** Charging Time scale is not the shortest timescale!! ***\n");
+			std::cout << "\nChargeTime = " << ChargeTime;
 		}
 	
 		// ***** END OF : DETERMINE TIMESCALES OF PROCESSES ***** //	
@@ -95,7 +96,7 @@ int DTOKSU::Run(){
 		// Resolve region where the Total Power is zero for a Plasma Grid.
 		// This typically occurs when plasma parameters are zero in a cell and other models are off (or zero)... 
 		// Even in No Plasma Region, cooling processes can still occur, but this is specifically for zero power
-		if( HeatTime == 10 ){
+		if( HeatTime == 10 || ChargeTime == 1 ){
 			D1_Debug("\nNo Net Power Region...");
 			FM.Force();
 			HM.AddTime(ForceTime);

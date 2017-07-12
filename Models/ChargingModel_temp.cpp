@@ -43,11 +43,9 @@ void ChargingModel::Print(){
 double ChargingModel::ProbeTimeStep()const{
 	C_Debug( "\tIn ChargingModel::ProbeTimeStep()\n\n" );
 
-	double timestep(1.0);
-
-	// Tests have shown that 
-	if( Pdata->ElectronDensity != 0 )
-		timestep = Accuracy*sqrt((epsilon0*Me)/(2*PI*Pdata->ElectronDensity*pow(echarge,2)));
+	double timestep(1);
+	if( Pdata->ElectronDensity != 0 ) // Check not in region of no plasma
+			timestep = sqrt((Pdata->ElectronDensity*pow(echarge,2))/(epsilon0*Me));
 
 //	if( Pdata->ElectronDensity != 0 && Pdata->IonTemp != 0 ){
 		// Calcualte the time scale of the behaviour from Krashinnenikovs equation
@@ -57,6 +55,7 @@ double ChargingModel::ProbeTimeStep()const{
 //				* (1/(PlasmaFreq*(1+Pdata->ElectronTemp/Pdata->IonTemp+fabs(Sample->get_potential()))))*Accuracy;
 //		C_Debug("\n\t\tDebyeLength = " << DebyeLength << "\n\t\tPlasmaFreq = " << PlasmaFreq 
 //			<< "\n\t\ttimestep = " << timestep << "\n\n");
+
 //	}else{	timestep = 1; } // In region of no plasma
 
 

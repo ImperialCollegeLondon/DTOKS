@@ -149,8 +149,10 @@ int main(int argc, char* argv[]){
 	ConstModels  = {EmissivityModel,ExpansionModel,HeatCapacityModel,BoilingModel};
 	
 	// Accuracy Levels correspond to Charging, Heating and Forcing respectively
-//	std::array<double,3> AccuracyLevels = {1.0,1.0,1.0};
-	std::array<double,3> AccuracyLevels = {1.0,0.1,0.1};
+//	std::array<double,3> AccuracyLevels = {1.0,10.0,10.0};
+	std::array<double,3> AccuracyLevels = {1.0,1.0,1.0};
+//	std::array<double,3> AccuracyLevels = {1.0,0.1,0.1};
+//	std::array<double,3> AccuracyLevels = {1.0,0.01,0.01};
 
 	if 	(Element == 'W') Sample = new Tungsten(Size,Temp,ConstModels);
 	else if (Element == 'B') Sample = new Beryllium(Size,Temp,ConstModels);

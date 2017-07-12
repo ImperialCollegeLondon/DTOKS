@@ -15,9 +15,9 @@ void BackscatterTest(){
 	Pdata.ElectronDensity = 2e19;//10e18; 	// m^-3, Electron density
 	double Potential = 1;			// arb, assumed negative, potential normalised to dust temperature, (-e*phi)/(Kb*Td)
 	double NumOfev = 1;
-	Pdata.IonTemp = NumOfev*1.16e5;	 	// K, Ion Temperature
-	Pdata.ElectronTemp = NumOfev*1.16e5; 	// K, Electron Temperature, convert from eV
-	Pdata.NeutralTemp = NumOfev*1.16e5; 	// K, Neutral Temperature, convert from eV
+	Pdata.IonTemp = NumOfev*1.16e4;	 	// K, Ion Temperature
+	Pdata.ElectronTemp = NumOfev*1.16e4; 	// K, Electron Temperature, convert from eV
+	Pdata.NeutralTemp = NumOfev*1.16e4; 	// K, Neutral Temperature, convert from eV
 
 	for(int i(0); i < 5; i ++){ // Loop over Electron Temperature
 		for(int l(0); l < 5; l ++){ // Loop over Ion Temperatures

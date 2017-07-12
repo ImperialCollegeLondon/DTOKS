@@ -1,15 +1,22 @@
 #include "BackscatterTest.h"
 #include "DeltaSecTest.h"
 #include "DeltaThermTest.h"
+#include "ChargingTimescales.h"
+#include "DTOKSchargingTest.h"
 int main(){
 	// Backscatter Unit Test
-	BackscatterTest();
+//	BackscatterTest();
 
 	// Delta Sec Unit Test
-	DeltaSecTest();
+//	DeltaSecTest();
 
 	// Delta Therm Unit Test
-	DeltaThermTest();
+//	DeltaThermTest();
 
+	// Charging Timescale Test
+//	ChargingTimescales();
+	
+	// DTOKS Charging Test
+	DTOKSchargingTest();
 	return 0;
 }
