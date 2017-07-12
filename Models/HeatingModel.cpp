@@ -92,6 +92,22 @@ double HeatingModel::ProbeTimeStep()const{
 			timestep = 10;
 		}
 	}
+	// Check Thermal Equilibrium hasn't been reached for continuous plasma
+	double DeltaTempTest = TotalPower*timestep/(Sample->get_mass()*Sample->get_heatcapacity());
+	// If we're not boiling	and in a continuous Plasma
+	if( Sample->get_temperature() != Sample->get_superboilingtemp() && ContinuousPlasma ){
+		static bool runOnce = true;
+		WarnOnce(runOnce,"THIS MAY NOT WORK! OldTemp is only redefined inside UpdateTimeStep, not ProbeTimeStep! CAUTION!");
+		if( ((Sample->get_temperature()-OldTemp > 0 && DeltaTempTest < 0) // If temperature changed sign this step
+			|| (Sample->get_temperature()-OldTemp < 0 && DeltaTempTest > 0)) ){
+			std::cout << "\n\nThermal Equilibrium reached on condition (2): Sign change of Temperature change!";
+			timestep = 1;	
+		}if( (fabs(DeltaTempTest/timestep) < 0.01) ){ // If Temperature gradient is less than 1%
+			std::cout << "\n\nThermal Equilibrium reached on condition (3): Temperature Gradient < 0.01!";
+			timestep = 1;  
+		}
+	}
+
 	H1_Debug("\nSample->get_mass() = " << Sample->get_mass() << "\nSample->get_heatcapacity() = " << 
 		Sample->get_heatcapacity() << "\nTotalPower = " << TotalPower << "\nAccuracy = " << Accuracy);
 	assert(timestep > 0 && timestep != INFINITY && timestep == timestep);
@@ -104,22 +120,7 @@ double HeatingModel::UpdateTimeStep(){
 	H_Debug( "\tIn HeatingModel::UpdateTimeStep()\n\n" );
 
 	TimeStep = ProbeTimeStep();
-	// Check Thermal Equilibrium hasn't been reached for continuous plasma
-	double DeltaTempTest = CalculatePower(Sample->get_temperature())*TimeStep/(Sample->get_mass()*Sample->get_heatcapacity());
-	// If we're not boiling	
-	if( Sample->get_temperature() != Sample->get_superboilingtemp() && ContinuousPlasma ){
-		if( ((Sample->get_temperature()-OldTemp > 0 && DeltaTempTest < 0) // If temperature changed sign this step
-			|| (Sample->get_temperature()-OldTemp < 0 && DeltaTempTest > 0)) ){
-			std::cout << "\n\nThermal Equilibrium reached on condition (2): Sign change of Temperature change!";
-			ThermalEquilibrium = true;
-			TimeStep = 1;	
-		}if( (fabs(DeltaTempTest/TimeStep) < 0.01) ){ // If Temperature gradient is less than 1%
-			std::cout << "\n\nThermal Equilibrium reached on condition (3): Temperature Gradient < 0.01!";
-			ThermalEquilibrium = true;
-			TimeStep = 1;  
-		}
-	}
-
+	if( TimeStep == 1 ) 	ThermalEquilibrium = true;
 	OldTemp = Sample->get_temperature();
 
 	H1_Debug("\nSample->get_mass() = " << Sample->get_mass() << "\nSample->get_heatcapacity() = " << 
