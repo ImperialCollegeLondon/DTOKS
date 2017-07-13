@@ -14,6 +14,8 @@ class Model{
  	private:
 		// Feasably this could actually be const
 		PlasmaGrid *Pgrid;			// Holds information about what the current background plasma is.
+		int i;					// x Position
+		int k;					// y Position
 
 // 	This next section could also be private but this requires changing access methods in derived classes.
 //	This should be done at some later stage to ensure security in protection of Matter* Sample and Pdata.
@@ -49,10 +51,10 @@ class Model{
 		double get_dl				()const{ return Pgrid->getdl();	}
 		double get_totaltime			()const{ return TotalTime; 	}
 		double get_timestep			()const{ return TimeStep; 	}
-
+		bool new_cell				()const;
 
 		void update_plasmadata(PlasmaData *&pdata);
-		bool update_plasmadata(threevector pos);
+		bool update_plasmadata();
 		void update_fields(int i, int k);
 
 		void AddTime(double T){	TotalTime = TotalTime + T;	}

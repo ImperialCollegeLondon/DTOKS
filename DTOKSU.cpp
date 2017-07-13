@@ -1,6 +1,6 @@
 //#define PAUSE
 //#define DTOKSU_DEBUG
-//#define DTOKSU_DEEP_DEBUG
+#define DTOKSU_DEEP_DEBUG
 #include "DTOKSU.h"
 
 // CONSIDER DEFINING A DEFAULT SAMPLE
@@ -67,7 +67,7 @@ int DTOKSU::Run(){
 
 	double HeatTime(0),ForceTime(0),ChargeTime(0);
 
-	bool InGrid = FM.update_plasmadata(Sample->get_position());
+	bool InGrid = FM.update_plasmadata();
 	CM.Charge(1e-100);	// Charge instantaneously as soon as we start.
 	Sample->update();	// Need to manually update the first time as first step is not necessarily heating
 	while( InGrid ){
@@ -133,6 +133,11 @@ int DTOKSU::Run(){
 					// Check that time scales haven't changed significantly whilst looping... 
 				}else if( MinTimeStep == ForceTime ){
 					FM.Force(MinTimeStep);	
+					if( FM.new_cell() ){
+						D1_Debug("\nWe have stepped into a new cell!");
+						j ++;
+						break;
+					}
 					D1_Debug("\nForce Step Taken.");
 					// Check that time scales haven't changed significantly whilst looping... 
 				}else{
@@ -179,7 +184,7 @@ int DTOKSU::Run(){
 			<< "\n\tForceTime = " << ForceTime << "\n\tHeatTime = " << HeatTime << "\n");
 
 		// Update the plasma data from the plasma grid for all models...
-		InGrid = FM.update_plasmadata(Sample->get_position());
+		InGrid = FM.update_plasmadata();
 		Print();
 		// ***** START OF : DETERMINE IF END CONDITION HAS BEEN REACHED ***** //
 		if( Sample->is_gas() && Sample->is_split() ){

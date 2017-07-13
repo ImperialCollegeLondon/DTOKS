@@ -20,7 +20,8 @@ struct PlasmaData PlasmaDefaults = {
 
 Model::Model():Sample(new Tungsten),Pgrid(new PlasmaGrid('h','m',0.01)),Pdata(&PlasmaDefaults),Accuracy(1.0),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
 	Mo_Debug("\n\nIn Model::Model():Sample(new Tungsten),Pgrid('h','m',0.01)Pdata(PlasmaDefaults),Accuracy(1.0),ContinuousPlasma(true)\n\n");
-	update_plasmadata(Sample->get_position());
+	i = 0; k = 0;
+	update_plasmadata();
 }
 
 // Constructor for Matter sample sitting in a constant plasma background given by PlasmaData (pdata) with a Default grid
@@ -28,6 +29,7 @@ Model::Model( Matter *&sample, PlasmaData *&pdata, double accuracy )
 		:Sample(sample),Pgrid(new PlasmaGrid('h','m',0.01)),Pdata(pdata),Accuracy(accuracy),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
 	Mo_Debug("\n\nIn Model::Model( Matter *& sample, PlasmaData *&pdata, double accuracy ):Sample(sample),Pgrid(new PlasmaGrid('h','m',0.01)),Pdata(pdata),Accuracy(accuracy),ContinuousPlasma(true)\n\n");
 	assert(Accuracy > 0);
+	i = 0; k = 0;
 	update_plasmadata(pdata);
 //	std::cout << "\nAccuracy = " << Accuracy;
 }
@@ -38,8 +40,16 @@ Model::Model( Matter *&sample, PlasmaGrid &pgrid, double accuracy )
 		:Sample(sample),Pgrid(&pgrid),Pdata(&PlasmaDefaults),Accuracy(accuracy),ContinuousPlasma(false),TimeStep(0.0),TotalTime(0.0){
 	Mo_Debug("\n\nIn Model::Model( Matter *& sample, PlasmaGrid &pgrid, double accuracy ):Sample(sample),Pgrid(pgrid),Pdata(PlasmaDefaults),Accuracy(accuracy), ContinuousPlasma(false)\n\n");
 	assert(Accuracy > 0);
-	update_plasmadata(sample->get_position());
+	i = 0; k = 0;
+	update_plasmadata();
 	//	std::cout << "\nAccuracy = " << Accuracy;
+}
+
+bool Model::new_cell()const{
+	int j(0), p(0);
+	Pgrid->locate(j,p,Sample->get_position());
+	if( j != i || p != k )	return true;
+	return false;
 }
 
 void Model::update_plasmadata(PlasmaData *&pdata){
@@ -47,11 +57,10 @@ void Model::update_plasmadata(PlasmaData *&pdata){
 	Pdata = pdata;
 }
 
-bool Model::update_plasmadata(threevector pos){
-	Mo_Debug( "\tIn Model::update_plasmadata(" << pos << ")\n\n");
+bool Model::update_plasmadata(){
+	Mo_Debug( "\tIn Model::update_plasmadata()\n\n");
 	double ConvertJtoK(7.24297166e22);		// Conversion factor from ev to K
-	int i(0), k(0);
-	bool InGrid = Pgrid->locate(i,k,pos);
+	bool InGrid = Pgrid->locate(i,k,Sample->get_position());
 	if( !InGrid ) return InGrid;			// Particle has escaped simulation domain
 	update_fields(i,k);
 	Pdata->NeutralDensity 	= Pgrid->getna0(i,k);  	// NEUTRAL DENSITY EQUALS ION DENSITY
