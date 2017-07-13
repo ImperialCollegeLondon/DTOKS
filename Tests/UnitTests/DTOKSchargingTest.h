@@ -9,7 +9,7 @@ void DTOKSchargingTest(){
 
 	double converteVtoK(11600);
 	// TEST TO COMPARE TWO DIFFERENT WAYS OF APPROACHING THE DTOKS OML PROBLEM
-/*
+
 	double Potential = 2;
 	double Potential2 = 2;
 
@@ -50,10 +50,10 @@ void DTOKSchargingTest(){
 			}
 		}
 	}
-*/
+
 
 	// TEST TO CALCULATE THE DTOKS FLOATING POTENTIAL FOR CONSTANT DUST TEMPERATURE, ELECTRON DENSITY AND ELECTRON TEMPERATURE
-
+/*
 	double Te = 1; 		// Electron Temp in ev
 	double Td = 300; 	// Dust Temp in K
 	double ne = 1e18; 	// Electron Density in m^-3
@@ -79,16 +79,15 @@ void DTOKSchargingTest(){
 			double gammae = ne*exp(Potential)*sqrt(echarge*Te/(2*PI*Me));
 			double Therm = Richardson*pow(Td,2)*exp(-(4.55*echarge)/(Kb*Td))/(echarge*gammae);
 			// BEGINING STRUCTURE ONE : NEW CODE
-/*
-			if( (Sec + Therm) < 1.0 ){ // DTOKSsolveOML3 only defined for deltatot < 1.0
-				Potential = DTOKSsolveOML3( Sec + Therm, TiTe, Potential); 
-			}else{ // If the grain is in fact positive ...
-				Potential = DTOKSsolveOML3( Sec + Therm, TiTe, Potential);
-				if( Potential < 0.0 ){
-					Potential = DTOKSsolveOML3(0.0, TiTe, Potential)-Kb*Td/(echarge*Te);
-				}
-			}
-*/
+//			if( (Sec + Therm) < 1.0 ){ // DTOKSsolveOML3 only defined for deltatot < 1.0
+//				Potential = DTOKSsolveOML3( Sec + Therm, TiTe, Potential); 
+//			}else{ // If the grain is in fact positive ...
+//				Potential = DTOKSsolveOML3( Sec + Therm, TiTe, Potential);
+//				if( Potential < 0.0 ){
+//					Potential = DTOKSsolveOML3(0.0, TiTe, Potential)-Kb*Td/(echarge*Te);
+//				}
+//			}
+
 			// BEGINNING STRUCTURE TWO : OLD CODE
 			if( (Sec + Therm) >= 1.0 ){ 
 				Potential = DTOKSsolveOML3( 0.0, TiTe, Potential) - Td*Kb/(echarge*Te);
@@ -101,10 +100,10 @@ void DTOKSchargingTest(){
 				}
 			}
 
-			std::cout << "\n" << Td << "\t" << TiTe << "\t" << (Sec+Therm) << "\t" << Potential;
+//			std::cout << "\n" << Td << "\t" << TiTe << "\t" << (Sec+Therm) << "\t" << Potential;
 		}
 	}
-
+*/
 	clock_t end = clock();
 	double elapsd_secs = double(end-begin)/CLOCKS_PER_SEC;
 		

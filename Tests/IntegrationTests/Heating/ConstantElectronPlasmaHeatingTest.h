@@ -17,7 +17,7 @@ int ConstantElectronPlasmaHeatingTest(char Element){
 	std::string Name="constant";	// Describes heating model
 
  	// Parameters describing the heating model
-	double Power=1e-8;		// Kilo-Watts power in addition to heating model powers
+	double Power=1e-9;		// Kilo-Watts power in addition to heating model powers
 	double Size=5e-8; 		// m
 	double Temp=280;		// K
 	double TimeStep=1e-12;		// s
@@ -94,7 +94,6 @@ int ConstantElectronPlasmaHeatingTest(char Element){
 	double a = Power+ElectronFluxPower+NeutralFluxPower;
 
 
-	std::cout << "\nPower = " << Power << "\nElectronFluxPower = " << ElectronFluxPower << "\nNeutralFluxPower " << NeutralFluxPower;
 
 	double b = Sample->get_emissivity()*Sample->get_surfacearea()*Sigma/1000;
 	std::cout << "\nSample->get_surfacearea() : " << Sample->get_surfacearea() << "\nb : " << b;

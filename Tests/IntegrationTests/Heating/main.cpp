@@ -36,7 +36,7 @@ int main(){
 		if( out == 2 ) std::cout << "\n# WARNING! DEVIATION OF < 1%";
 		if( out == -1 ) std::cout << "\n# FAILED!";
 
-		// Test bout 3,
+		// Test bout 3, NOTE THIS DEVIATES AND I DON'T KNOW WHY EXACTLY! 
 		// Integration test four for all materials
 		// Test if constant heating with plasma heating and thermal radiation is comparable to analytic result
 		// Note, emissivity is once again a const
@@ -48,7 +48,7 @@ int main(){
 		if( out == 2 ) std::cout << "\n# WARNING! DEVIATION OF < 1%";
 		if( out == -1 ) std::cout << "\n# FAILED!";
 
-		// Test bout 4, NOTE THIS DEVIATES AND I DON'T KNOW WHY EXACTLY! PRETTY SURE IT's THE CHARGING MODEL
+		// Test bout 4, NOTE THIS DEVIATES AND I DON'T KNOW WHY EXACTLY! 
 		// Integration test four for all materials
 		// Test if constant heating with plasma heating and thermal radiation
 		// Note, emissivity is once again a const
@@ -80,7 +80,7 @@ int main(){
 		double Emissivs[4]={0.98397,9.73852e-06,0.240571,0.33886}; // Final temperature (TEST 3) Emissivities
 		//		double Emissivs[4]={0.04,0.18,0.2,0.70}; // DTOKS emissivities
 		std::cout << "\nRunning Test 6...\n";
-		out = CompareConstEmissivTest(Element[i],Emissivs[i]);
+//		out = CompareConstEmissivTest(Element[i],Emissivs[i]);
 		std::cout << "\nFinished Running Test 6!\n";
 		
 		if( out == 1 ) std::cout << "\n# PASSED!";

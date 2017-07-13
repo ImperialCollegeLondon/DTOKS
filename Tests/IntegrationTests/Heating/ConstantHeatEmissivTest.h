@@ -17,7 +17,7 @@ int ConstantHeatEmissivTest(char Element){
 	std::string Name="constant";	// Describes heating model
 
  	// Parameters describing the heating model
-	double Power=1e-3;		// Kilo-Watts power in addition to heating model powers
+	double Power=1e-4;		// Kilo-Watts power in addition to heating model powers
 	double Size=1e-6; 		// m
 	double Temp=300;		// K
 	double TimeStep=1e-9;		// s
@@ -28,10 +28,10 @@ int ConstantHeatEmissivTest(char Element){
 	bool EvaporativeCooling = false;
 	bool NewtonCooling = false;		// This model is equivalent to Electron and Ion heat flux terms
 	// Plasma heating terms
-	bool NeutralHeatFlux = true;
-	bool ElectronHeatFlux = true;
-	bool IonHeatFlux = true;
-	bool NeutralRecomb = true;
+	bool NeutralHeatFlux = false;
+	bool ElectronHeatFlux = false;
+	bool IonHeatFlux = false;
+	bool NeutralRecomb = false;
 	// Electron Emission terms
 	bool TEE = false;
 	bool SEE = false;
@@ -83,45 +83,45 @@ int ConstantHeatEmissivTest(char Element){
 	MyModel.Vapourise();
 	double ModelTime = MyModel.get_totaltime();
 	
-
 	double a = Power;
-	double b = Sample->get_emissivity()*SA*Sigma;
-	double ti(0), tf(0), t1(0), t3(0);
+	double b = Sample->get_emissivity()*SA*Sigma/1000;
+
+	double FinalTemp = pow(a/b,1.0/4.0)-0.000000001;
+
+	double ti(0), tf(0), t1(0), t2(0), t3(0), t4(0);
+	if( FinalTemp >= Sample->get_boilingtemp() ){
+		FinalTemp = Sample->get_boilingtemp();
+		t4 = Sample->get_latentvapour()*Mass/(a-b*pow(Sample->get_boilingtemp(),4));
+	}
 	if( Element != 'G' ){
-		tf=(atan(Sample->get_meltingtemp()*pow(b/a,0.25))+atanh(Sample->get_meltingtemp()*pow(b/a,0.25)))
-					/(2*pow(pow(a,3)*b,0.25));
-		ti=(atan(Temp*pow(b/a,0.25))+atanh(Temp*pow(b/a,0.25)))
-					/(2*pow(pow(a,3)*b,0.25));
-		t1 = Mass*Sample->get_heatcapacity()*(tf-ti);
-
+		if( FinalTemp < Sample->get_meltingtemp() ){
+			tf=(atan(FinalTemp*pow(b/a,1.0/4.0))+atanh(FinalTemp*pow(b/a,1.0/4.0)))
+						/(2*pow(pow(a,3)*b,1.0/4.0));
+			ti=(atan(Temp*pow(b/a,1.0/4.0))+atanh(Temp*pow(b/a,1.0/4.0)))
+						/(2*pow(pow(a,3)*b,1.0/4.0));
+			t1 = Mass*Sample->get_heatcapacity()*(tf-ti);
+		}else{
+			tf=(atan(Sample->get_meltingtemp()*pow(b/a,1.0/4.0))+atanh(Sample->get_meltingtemp()*pow(b/a,1.0/4.0)))
+						/(2*pow(pow(a,3)*b,1.0/4.0));
+			ti=(atan(Temp*pow(b/a,1.0/4.0))+atanh(Temp*pow(b/a,1.0/4.0)))
+						/(2*pow(pow(a,3)*b,1.0/4.0));
+			t1 = Mass*Sample->get_heatcapacity()*(tf-ti);
 	
+			t2 = Sample->get_latentfusion()*Mass/(a-b*Sample->get_meltingtemp());
 
-		double p1 = atan(Sample->get_boilingtemp()*pow(b/a,0.25));
-		double p2 = atanh(Sample->get_boilingtemp()*pow(b/a,0.25));
-		double p3 = 2*pow(pow(a,3)*b,0.25);
-
-		tf = (p1 + p2)/p3;
-		p1 = atan(Sample->get_meltingtemp()*pow(b/a,0.25));
-		p2 = atanh(Sample->get_meltingtemp()*pow(b/a,0.25));
-		p3 = 2*pow(pow(a,3)*b,0.25);
-		ti= (p1 + p2)/p3;
-
-		t3 = Mass*Sample->get_heatcapacity()*(tf-ti);
-
+			tf=(atan(FinalTemp*pow(b/a,1.0/4.0))+atanh(FinalTemp*pow(b/a,1.0/4.0)))
+						/(2*pow(pow(a,3)*b,1.0/4.0));
+			ti=(atan(Sample->get_meltingtemp()*pow(b/a,1.0/4.0))+atanh(Sample->get_meltingtemp()*pow(b/a,1.0/4.0)))
+						/(2*pow(pow(a,3)*b,1.0/4.0));	
+	
+			t3 = Mass*Sample->get_heatcapacity()*(tf-ti);
+		}
 	}else{
-		
-		// Only one phase transition
-                double p1 = atan(Sample->get_boilingtemp()*pow(b/a,0.25));
-                double p2 = atanh(Sample->get_boilingtemp()*pow(b/a,0.25));
-                double p3 = 2*pow(pow(a,3)*b,0.25);
-                tf = (p1 + p2)/p3;
-
-
-		ti=(atan(Temp*pow(b/a,0.25))+atanh(Temp*pow(b/a,0.24)))
-					/(2*pow(pow(a,3)*b,0.25));
+		tf=(atan(FinalTemp*pow(b/a,1.0/4.0))+atanh(FinalTemp*pow(b/a,1.0/4.0)))
+					/(2*pow(pow(a,3)*b,1.0/4.0));
+		ti=(atan(Temp*pow(b/a,1.0/4.0))+atanh(Temp*pow(b/a,1.0/4.0)))
+					/(2*pow(pow(a,3)*b,1.0/4.0));
 		t1 = Mass*Sample->get_heatcapacity()*(tf-ti);
-
-
 	}
 
 	if( t1 != t1 || t3 != t3 ){
@@ -129,8 +129,7 @@ int ConstantHeatEmissivTest(char Element){
 		return -1;
 	}
 
-	double t2 = Sample->get_latentfusion()*Mass/(Power-b*Sample->get_meltingtemp()); 
-	double t4 = Sample->get_latentvapour()*Mass/(Power-b*Sample->get_boilingtemp());
+//	std::cout << "\nt1 = " << t1 << "\nt2 = " << t2 << "\nt3 = " << t3 << "\nt4 = " << t4;
 	
 	double AnalyticTime = t1 + t2 + t3 + t4;	
 
@@ -146,41 +145,10 @@ int ConstantHeatEmissivTest(char Element){
 	std::cout << "\n\n*****\n\nIntegrationTest 1 completed in " << elapsd_secs << "s\n";
 	std::cout << "\n\n*****\nModelTime = " << ModelTime << "s : AnalyticTime = " << AnalyticTime << "s";
 	std::cout << "\nPercentage Deviation = " << fabs(100-100*ModelTime/AnalyticTime) <<"%\n*****\n\n";
+	std::cout << "\n\n*****\nModel Temp = " << Sample->get_temperature() << "K : Analytic Temp = " << FinalTemp << "K";
+	std::cout << "\nPercentage Deviation = " << fabs(100-100*Sample->get_temperature()/FinalTemp) <<"%\n*****\n\n";
+
 
 	return ReturnVal;
 }
-
-
-/*
-//		std::cout << "\n\np1 = " << atan(Sample->get_meltingtemp()*pow(b/a,0.25)) << "\np2 = " << atanh(Sample->get_meltingtemp()*pow(b/a,0.25)) << "\np3 = " << (2*pow(pow(a,3)*b,0.25));
-//		std::cout << "\n\nSample->get_boilingtemp() = " << Sample->get_boilingtemp();
-
-//		std::cout << "\nARG = " << Sample->get_boilingtemp()*pow(b/a,0.25);
-//		std::cout << "\n\np1 = " << p1 << "\np2 = " << p2 << "\np3 = " << p3;
-//		std::cout << "\n\nSample->get_boilingtemp() = " << Sample->get_boilingtemp();
-
-
-//		std::cout << "\n\ntf = " << tf;
-//		std::cout << "\n\nti = " << ti;
-	
-//		std::cout << "\n\np1 = " << p1 << "\np2 = " << p2 << "\np3 = " << p3;
-//		std::cout << "\n\nSample->get_boilingtemp() = " << Sample->get_meltingtemp();
-
-
-
-		tf = (log10((pow(a,0.25)+pow(b,0.25)*Sample->get_meltingtemp())/(pow(a,0.25)-pow(b,0.25)*Sample->get_meltingtemp()))+2*atan(pow(b/a,0.25)*Sample->get_meltingtemp()))/(4*pow(a,0.75)*pow(b,0.25));
-		
-		ti = (log10((pow(a,0.25)+pow(b,0.25)*Temp)/(pow(a,0.25)-pow(b,0.25)*Temp))+2*atan(pow(b/a,0.25)*Temp))/(4*pow(a,0.75)*pow(b,0.25));
-		t1 = Sample->get_mass()*Sample->get_heatcapacity()*(tf-ti);
-		tf = (log10((pow(a,0.25)+pow(b,0.25)*Sample->get_boilingtemp()))+2*atan(pow(b/a,0.25)*Sample->get_boilingtemp()))/(4*pow(a,0.75)*pow(b,0.25));
-		ti = (log10((pow(a,0.25)+pow(b,0.25)*Sample->get_meltingtemp()))-log10((pow(a,0.25)-pow(b,0.25)*Sample->get_meltingtemp()))+2*atan(pow(b/a,0.25)*Sample->get_meltingtemp()))/(4*pow(a,0.75)*pow(b,0.25));
-		t3 = Sample->get_mass()*Sample->get_heatcapacity()*(tf-ti);
-*/
-
-
-/*
-		ti = (log10((pow(a,0.25)+pow(b,0.25)*Temp)/(pow(a,0.25)-pow(b,0.25)*Temp))+2*atan(pow(b/a,0.25)*Temp))/(4*pow(a,0.75)*pow(b,0.25));
-		tf = (log10((pow(a,0.25)+pow(b,0.25)*Sample->get_boilingtemp()))+2*atan(pow(b/a,0.25)*Sample->get_boilingtemp()))/(4*pow(a,0.75)*pow(b,0.25));
-		t3 = Sample->get_mass()*Sample->get_heatcapacity()*(tf-ti);
-*/
 

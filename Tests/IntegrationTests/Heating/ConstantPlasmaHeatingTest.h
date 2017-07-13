@@ -17,7 +17,7 @@ int ConstantPlasmaHeatingTest(char Element){
 	std::string Name="constant";	// Describes heating model
 
  	// Parameters describing the heating model
-	double Power=1e-8;		// Kilo-Watts power in addition to heating model powers
+	double Power=1e-5;		// Kilo-Watts power in addition to heating model powers
 	double Size=1e-6; 		// m
 	double Temp=280;		// K
 	double TimeStep=1e-9;		// s
@@ -40,9 +40,9 @@ int ConstantPlasmaHeatingTest(char Element){
 	Pdata->NeutralDensity = 3e19;		// m^-3, Neutral density
 	Pdata->ElectronDensity = 8e17;	 	// m^-3, Electron density
 	double Potential = 1;			// arb, assumed negative, potential normalised to dust temperature, (-e*phi)/(Kb*Td)
-	Pdata->IonTemp = 10*1.16e4;	 	// K, Ion Temperature
-	Pdata->ElectronTemp = 10*1.16e4;	// K, Electron Temperature, convert from eV
-	Pdata->NeutralTemp = 10*1.16e4; 	// K, Neutral Temperature, convert from eV
+	Pdata->IonTemp = 1*1.16e4;	 	// K, Ion Temperature
+	Pdata->ElectronTemp = 1*1.16e4;	// K, Electron Temperature, convert from eV
+	Pdata->NeutralTemp = 1*1.16e4; 	// K, Neutral Temperature, convert from eV
 	Pdata->AmbientTemp = 0;
 
 	// Models and ConstModels are placed in an array in this order:
@@ -74,6 +74,7 @@ int ConstantPlasmaHeatingTest(char Element){
 
 	Sample->set_potential(Potential);
 	double mass = Sample->get_mass();
+	double SA = Sample->get_surfacearea();
 	HeatingModel MyModel("out_ConstantHeatingTest.txt",1.0,Models,Sample,Pdata);
 	MyModel.set_PowerIncident(Power);
 	MyModel.UpdateTimeStep();
@@ -88,15 +89,14 @@ int ConstantPlasmaHeatingTest(char Element){
 	double NeutralFlux = Pdata->NeutralDensity*sqrt(Kb*Pdata->NeutralTemp/(2*PI*Mp));
 	double IonFlux = ElectronFlux;
 
-	double ElectronFluxPower = Sample->get_surfacearea()*2*ElectronFlux*Pdata->ElectronTemp*Kb/1000; // Convert from Joules to KJ
-	double NeutralFluxPower = Sample->get_surfacearea()*2*NeutralFlux*Pdata->NeutralTemp*Kb/1000; // Convert from Joules to KJ
-	double IonFluxPower = (Sample->get_surfacearea()*IonFlux*Pdata->IonTemp*Kb/1000) // Convert from Joules to KJ
+	double ElectronFluxPower = SA*2*ElectronFlux*Pdata->ElectronTemp*Kb/1000; // Convert from Joules to KJ
+	double NeutralFluxPower = SA*2*NeutralFlux*Pdata->NeutralTemp*Kb/1000; // Convert from Joules to KJ
+	double IonFluxPower = (SA*IonFlux*Pdata->IonTemp*Kb/1000) // Convert from Joules to KJ
 	*(2+2*Potential*(Pdata->ElectronTemp/Pdata->IonTemp)+pow(Potential*(Pdata->ElectronTemp/Pdata->IonTemp),2))/(1+Potential*(Pdata->ElectronTemp/Pdata->IonTemp));
 
 	double a = Power+ElectronFluxPower+NeutralFluxPower+IonFluxPower;
 
-//	std::cout << "Emiss = " << Sample->get_emissivity();
-	double b = Sample->get_emissivity()*Sample->get_surfacearea()*Sigma/1000;
+	double b = Sample->get_emissivity()*SA*Sigma/1000;
 	double ti(0), tf(0), t1(0), t2(0), t3(0), t4(0);
 	double FinalTemp = pow(a/b,0.25)-0.000000001;
 //	std::cout << "\nFinalTemp = " << FinalTemp; std::cin.get();
@@ -125,6 +125,7 @@ int ConstantPlasmaHeatingTest(char Element){
 			t4 = Sample->get_latentvapour()*mass/(a-b*Sample->get_boilingtemp());
 		}
 
+		std::cout << "\nt1 = " << t1 << "\nt2 = " << t2 << "\nt3 = " << t3 << "\nt4 = " << t4; 
 	}
 
 	if( Element == 'G' ){
@@ -132,20 +133,20 @@ int ConstantPlasmaHeatingTest(char Element){
 			FinalTemp = Sample->get_boilingtemp();
 	
 		// Only one phase transition
-//double p1 = atan(FinalTemp*pow(b/a,0.25));
-//double p2 = atanh(FinalTemp*pow(b/a,0.25));
-//double p3 = 2*pow(pow(a,3)*b,0.25);
+		//double p1 = atan(FinalTemp*pow(b/a,0.25));
+		//double p2 = atanh(FinalTemp*pow(b/a,0.25));
+		//double p3 = 2*pow(pow(a,3)*b,0.25);
                 tf = (atan(FinalTemp*pow(b/a,0.25)) + atanh(FinalTemp*pow(b/a,0.25)))/(2*pow(pow(a,3)*b,0.25));
-		ti=(atan(Temp*pow(b/a,0.25))+atanh(Temp*pow(b/a,0.25)))/(2*pow(pow(a,3)*b,0.25));
+		ti = (atan(Temp*pow(b/a,0.25))+atanh(Temp*pow(b/a,0.25)))/(2*pow(pow(a,3)*b,0.25));
 		t1 = mass*Sample->get_heatcapacity()*(tf-ti);
 
-		if( Sample->get_temperature() >= Sample->get_boilingtemp() ){
+		if( FinalTemp >= Sample->get_boilingtemp() ){
                         t4 = Sample->get_latentvapour()*mass/(a-b*Sample->get_boilingtemp());
-                }
+		}
 		t2 = 0;
 		t3 = 0;
-		std::cout << "\nt1 = " << t1 << "\nt2 = " << t2 << "\nt3 = " << t3 << "\nt4 = " << t4; 
-
+//		std::cout << "\nt1 = " << t1 << "\nt2 = " << t2 << "\nt3 = " << t3 << "\nt4 = " << t4; 
+//		std::cout << "\ntf = " << tf << "\nti = " << ti << "\nFinalTemp = " << FinalTemp; 
 	}
 
 	if( t1 != t1 && t3 != t3 ){

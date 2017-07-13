@@ -28,10 +28,10 @@ int ConstantHeatingTest(char Element){
 	bool EvaporativeCooling = false;
 	bool NewtonCooling = false;		// This model is equivalent to Electron and Ion heat flux terms
 	// Plasma heating terms
-	bool NeutralHeatFlux = true;
-	bool ElectronHeatFlux = true;
-	bool IonHeatFlux = true;
-	bool NeutralRecomb = true;
+	bool NeutralHeatFlux = false;
+	bool ElectronHeatFlux = false;
+	bool IonHeatFlux = false;
+	bool NeutralRecomb = false;
 	// Electron Emission terms
 	bool TEE = false;
 	bool SEE = false;
