@@ -36,8 +36,10 @@ void HeatingModel::Defaults(){
 	UseModel = {false,false,false,false,false,false,false};
 	PowerIncident = 0;			// kW, Power Incident
 	OldTemp = Sample->get_temperature();	// Set default OldTemp
-	ForceNegative = true;			// Force the sample to behave as negatively charged
+	ForceNegative = false;			// Force the sample to behave as negatively charged
 	ThermalEquilibrium = false;
+	RE = 0.0;
+	RN = 0.0;
 }
 
 void HeatingModel::CreateFile(std::string filename, bool PrintPhaseData){
@@ -192,6 +194,7 @@ void HeatingModel::Heat(double timestep){
 
 	assert( Sample->get_mass() > 0 );
 
+//	backscatter(Pdata->ElectronTemp,Pdata->IonTemp,Mp,Sample->get_potential(),Sample->get_elem(),RE,RN);
 	double TotalEnergy = RungeKutta4();                     // Calculate total energy through RungeKutta4 method
 	H1_Debug( "\tTotalEnergy = " << TotalEnergy << "\n");
         Sample->update_temperature(TotalEnergy);                // Update Temperature
@@ -213,6 +216,7 @@ void HeatingModel::Heat(){
 double HeatingModel::CalculatePower(double DustTemperature)const{
 	H_Debug( "\tIn HeatingModel::CalculatePower(double DustTemperature = " << DustTemperature << ")\n\n");
 	double TotalPower = PowerIncident*1000; // This looks weird, but doing operations like this reduces the number of divisions
+	
 	if( UseModel[0] )				TotalPower -= EmissivityModel		(DustTemperature);
 	if( UseModel[1] && Sample->is_liquid() )	TotalPower -= EvaporationModel		(DustTemperature)*1000;
 	if( UseModel[2] )				TotalPower -= NewtonCooling		(DustTemperature);
@@ -234,6 +238,7 @@ double HeatingModel::CalculatePower(double DustTemperature)const{
 	H1_Debug("\nNeutralRecombination() = \t"<< NeutralRecombination(DustTemperature)	<< "W");
 	H1_Debug("\nSEE() = \t" 		<< -SEE(DustTemperature) 			<< "W");
 	H1_Debug("\nTEE() = \t" 		<< -TEE(DustTemperature) 			<< "W\n");
+	//std::cin.get();
 	H1_Debug("\nTotalPower = \t" 		<< TotalPower 			<< "kW\n");
 	return TotalPower;
 }
@@ -334,15 +339,14 @@ const double HeatingModel::NeutralRecombination(double DustTemperature)const{
 //	H1_Debug("\n14.7*echarge - 2*Kb*DustTemperature*NeutralFlux()\n");
 //	H1_Debug("\nIonFlux = " << IonFlux());
 //	H1_Debug("\nReturn = " << (14.7*echarge*IonFlux()));
-	double RN(0), RE(0);
-//	backscatter(Pdata->ElectronTemp,Pdata->IonTemp,Mp,Sample->get_potential(),Element,RE,RN);
 //	H1_Debug( "\nRN = " << RN );
-/*	if( RN > 0.1 ){ // Uncomment when RN is calculated
-		static bool runOnce = true;
-		WarnOnce(runOnce,"In HeatingModel::NeutralRecombination(double DustTemperature)\nRN > 0.1. Neutral Recombination affected by backscattering by more than 10%!");
-	}
-*/
-	return Sample->get_surfacearea()*(1-RN)*(14.7*echarge*IonFlux(DustTemperature) - 2*Kb*DustTemperature*NeutralFlux()); 
+//	if( RN > 0.1 ){ // Uncomment when RN is calculated
+//		static bool runOnce = true;
+//		WarnOnce(runOnce,"In HeatingModel::NeutralRecombination(double DustTemperature)\nRN > 0.1. Neutral Recombination affected by backscattering by more than 10%!");
+//	}
+
+	if( Sample->is_positive() ) 	return Sample->get_surfacearea()*(14.7*echarge*IonFlux(DustTemperature) - 2*Kb*DustTemperature*NeutralFlux()); 
+	else				return  Sample->get_surfacearea()*(1-RN)*(14.7*echarge*IonFlux(DustTemperature) - 2*Kb*DustTemperature*NeutralFlux()); 
 }
 
 const double HeatingModel::SEE(double DustTemperature)const{
@@ -352,10 +356,10 @@ const double HeatingModel::SEE(double DustTemperature)const{
 //			<< "\nSample->get_bondenergy() = " << Sample->get_bondenergy());
 //	H1_Debug("\nReturn = " << eFlux*Sample->get_deltasec()*(3*echarge+Sample->get_bondenergy()));
 	double SEE=0; double deltatot = Sample->get_deltatot();
-	if( ForceNegative || deltatot <= 1 )
+	if( ForceNegative || !Sample->is_positive() )
 		SEE = Sample->get_surfacearea()*ElectronFlux(DustTemperature)*Sample->get_deltasec()*echarge*
                                         (3+Sample->get_workfunction()); 
-	else if( deltatot > 1 ) 	SEE = 0; // Electrons captured by positive grain
+	else 	SEE = 0; // Electrons captured by positive grain
 	return SEE;
 }
 
@@ -366,25 +370,21 @@ const double HeatingModel::TEE(double DustTemperature)const{
 //			<< 2*Kb*DustTemperature << "\nSample->get_bondenergy() = " << Sample->get_bondenergy());
 //	H1_Debug("\nReturn = " << eFlux*Sample->get_deltatherm()*(2*Kb*DustTemperature+Sample->get_bondenergy()));
 	double TEE=0; double deltatot = Sample->get_deltatot();
-	if( ForceNegative || deltatot <= 1 )
+	if( ForceNegative || !Sample->is_positive() )
 		TEE = Sample->get_surfacearea()*Sample->get_deltatherm()*
 			(2*Kb*DustTemperature+echarge*Sample->get_workfunction()); 
 	else if( deltatot > 1 ) 	TEE = 0; // Electrons captured by positive grain
-	if( Sample->get_deltatherm() < 1e-10 ) 	return -0;
-	else 					return TEE;
 }
 
 const double HeatingModel::IonHeatFlux(double DustTemperature)const{ // Assuming Re = 0
 	H_Debug("\n\tIn HeatingModel::IonHeatFlux(double DustTemperature):\n\n");
 //	H1_Debug("\nIonFlux() = " << IonFlux(DustTemperature) << "\nSample->get_potential() = " << Sample->get_potential());
 
-	double RN(0), RE(0);
-//	backscatter(Pdata->ElectronTemp,Pdata->IonTemp,Mp,Sample->get_potential(),Element,RE,RN);
 //	H1_Debug( "\nRE = " << RE );
-/*	if( RE > 0.1 ){ // Uncomment when RE is calculated
-		static bool runOnce = true;
-		WarnOnce(runOnce,"In HeatingModel::IonHeatFlux(double DustTemperature)\nRE > 0.1. Ion Heat Flux affected by backscattering by more than 10%!");
-	}*/
+//	if( RE > 0.1 ){ // Uncomment when RE is calculated
+//		static bool runOnce = true;
+//		WarnOnce(runOnce,"In HeatingModel::IonHeatFlux(double DustTemperature)\nRE > 0.1. Ion Heat Flux affected by backscattering by more than 10%!");
+//	}
 //	H1_Debug("\nPdata->IonTemp = " << Pdata->IonTemp << "\nSample->get_potential() = " << Sample->get_potential() << "\nPdata->ElectronTemp = " << Pdata->ElectronTemp << "\n\n");
 //	std::cout << "\n\n***** Ions = " << (Sample->get_surfacearea()*(1-RE)*IonFlux(DustTemperature)*Pdata->IonTemp*Kb/1000)
 //	*(2+2*Sample->get_potential()*(Pdata->ElectronTemp/Pdata->IonTemp)+pow(Sample->get_potential()*(Pdata->ElectronTemp/Pdata->IonTemp),2))/(1+Sample->get_potential()*(Pdata->ElectronTemp/Pdata->IonTemp));
@@ -400,8 +400,6 @@ const double HeatingModel::IonHeatFlux(double DustTemperature)const{ // Assuming
 const double HeatingModel::ElectronHeatFlux(double DustTemperature)const{ // Only for a negative grain
 	H_Debug("\n\tIn HeatingModel::ElectronHeatFlux():\n\n");
 //	H1_Debug("\nSample->get_surfacearea()*2*ElectronFlux()*Pdata->ElectronTemp*Kb/1000\n");
-//	std::cout << "\n\n***** Electrons = " 
-//		<< Sample->get_surfacearea()*2*ElectronFlux(DustTemperature)*Pdata->ElectronTemp*Kb/1000;
 	return Sample->get_surfacearea()*2*ElectronFlux(DustTemperature)*Pdata->ElectronTemp*Kb;
 }
 
@@ -419,8 +417,9 @@ const double HeatingModel::IonFlux(double DustTemperature)const{
 //	H1_Debug("\nReturn = " << ElectronFlux()*(1-Sample->get_deltatherm()-Sample->get_deltasec()));
 	double IonFlux=0;
 
-	if( ForceNegative || Sample->get_deltatot() > 1 ) IonFlux = ElectronFlux(DustTemperature); //Positive grain, DeltaTot() > 1
+	if( ForceNegative || Sample->is_positive() ) IonFlux = ElectronFlux(DustTemperature); //Positive grain, DeltaTot() > 1
 	else	IonFlux = ElectronFlux(DustTemperature)*(1-Sample->get_deltatot());
+	assert(IonFlux >= 0);
 	return IonFlux;
 }
 

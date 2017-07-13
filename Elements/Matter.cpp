@@ -380,4 +380,7 @@ void Matter::update_charge(double charge, double potential, double deltat, doubl
 		St.Gas = true;
 		St.Breakup = true;
 	}
+	if( (St.DeltaSec + St.DeltaTherm) >= 1.0 && !St.Positive ){
+		std::cout << "\nHuston, we have a proble; : " << (St.DeltaSec + St.DeltaTherm);
+	}
 }

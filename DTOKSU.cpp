@@ -1,6 +1,6 @@
 //#define PAUSE
 //#define DTOKSU_DEBUG
-#define DTOKSU_DEEP_DEBUG
+//#define DTOKSU_DEEP_DEBUG
 #include "DTOKSU.h"
 
 // CONSIDER DEFINING A DEFAULT SAMPLE

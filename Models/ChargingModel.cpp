@@ -82,7 +82,7 @@ void ChargingModel::Charge(double timestep){
 	// Assume the grain is negative and calculate potential
 	if( UseModel[0] ){
 		double Potential;
-		if( (DSec + DTherm) < 1.0 ){ // solveOML only defined for deltatot < 1.0
+/*		if( (DSec + DTherm) < 1.0 ){ // solveOML only defined for deltatot < 1.0
 			Potential = solveOML( DSec + DTherm,Sample->get_potential()); 
 		}else{ // If the grain is in fact positive ...
 			Potential = solveOML( DSec + DTherm,Sample->get_potential());
@@ -91,14 +91,10 @@ void ChargingModel::Charge(double timestep){
 						/(echarge*Pdata->ElectronTemp);
 			}
 		}
-		// Have to do it this way since grain doesn't know about the Electron Temp and since potential is normalised.
-		// This information has to be passed to the grain.
-		double ChargeOfGrain = -(4.0*PI*epsilon0*Sample->get_radius()*Potential*Kb*Pdata->ElectronTemp)/echarge;
-		Sample->update_charge(ChargeOfGrain,Potential,DTherm,DSec);
-//		std::cout << "\nPotential = " << Potential << "\nDeltaSec = " << Sample->get_deltasec() << "\nDeltatherm = " 
-//			<< Sample->get_deltatherm() << "\nCharge = " << ChargeOfGrain; std::cin.get();
-
-	/*	if( Pdata->ElectronTemp > 0 ){ // Avoid dividing by zero
+*/
+//		WARNING! THIS SCHEME FOR THE CHARGING MODEL CREATES DISCONTINUITIES!
+//		NOT EXACTLY SURE HOW BUT THIS IS DANGEROUS
+		if( Pdata->ElectronTemp > 0 ){ // Avoid dividing by zero
 			if( (DSec + DTherm) >= 1.0 ){ 	// If electron emission yield exceeds unity, we have potential well...
 							// Take away factor of temperature ratios for depth of well
 							// This is not explained further...
@@ -116,7 +112,15 @@ void ChargingModel::Charge(double timestep){
 			}
 		}else{
 			Potential = 0.0;
-		}*/
+		}
+		// Have to do it this way since grain doesn't know about the Electron Temp and since potential is normalised.
+		// This information has to be passed to the grain.
+		double ChargeOfGrain = -(4.0*PI*epsilon0*Sample->get_radius()*Potential*Kb*Pdata->ElectronTemp)/echarge;
+		Sample->update_charge(ChargeOfGrain,Potential,DTherm,DSec);
+//		std::cout << "\nPotential = " << Potential << "\nDeltaSec = " << Sample->get_deltasec() << "\nDeltatherm = " 
+//			<< Sample->get_deltatherm() << "\nCharge = " << ChargeOfGrain; std::cin.get();
+
+
 	}
 	TotalTime += timestep;
 
@@ -136,12 +140,8 @@ double ChargingModel::solveOML(double a, double guess){
 		a = 1.0;
 	}
 	double b(0);
-	try{
-		b = Pdata->IonTemp/Pdata->ElectronTemp;
-	}catch(std::overflow_error e){
-		std::cout << e.what();
-		b = 0;
-	}
+	if( Pdata->ElectronTemp != 0 ) b = Pdata->IonTemp/Pdata->ElectronTemp;
+
 	double C = Me/Mp;
 
 	double x1 = guess - ( (( 1-a)*exp(-guess) - sqrt(b*C)*(1+guess/b))/((a-1)*exp(-guess) - sqrt(C/b) ) );

@@ -9,6 +9,8 @@ class HeatingModel : public Model{
 		// Parameters defining the Heating equation
 		double PowerIncident;			// Kilo-Watts, 
 		double OldTemp;				// Kelvin, temperature last step, used to determine TE
+		double RE;				// Fraction of backscattered energy
+		double RN;				// Fraction of backscattered particles
 		bool ForceNegative;			// If we want to force the dust grain to be negative
 		bool ThermalEquilibrium;		// If the Dust grain is in Thermal Equilibrium (Constant Plasma only)
 
