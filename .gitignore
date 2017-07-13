@@ -3,6 +3,7 @@ Models/PlasmaData/*.dat
 Models/PlasmaData/*.vtk
 Models/PlasmaData/regulardataITER
 Models/PlasmaData/MASTDexp
+Models/PlasmaData/regulardata
 
 Tests/TemperatureVariationOfConstants
 main

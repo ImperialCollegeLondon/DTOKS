@@ -123,10 +123,6 @@ double HeatingModel::UpdateTimeStep(){
 	if( TimeStep == 1 ) 	ThermalEquilibrium = true;
 	OldTemp = Sample->get_temperature();
 
-	H1_Debug("\nSample->get_mass() = " << Sample->get_mass() << "\nSample->get_heatcapacity() = " << 
-		Sample->get_heatcapacity() << "\nTotalPower = " << TotalPower << "\nAccuracy = " << Accuracy);
-	assert(TimeStep > 0 && TimeStep != INFINITY && TimeStep == TimeStep);
-
 	return TimeStep;
 }
 
@@ -216,8 +212,7 @@ void HeatingModel::Heat(){
 
 double HeatingModel::CalculatePower(double DustTemperature)const{
 	H_Debug( "\tIn HeatingModel::CalculatePower(double DustTemperature = " << DustTemperature << ")\n\n");
-	double TotalPower = PowerIncident;
-	TotalPower = TotalPower * 1000; // This looks weird, but doing operations like this reduces the number of divisions
+	double TotalPower = PowerIncident*1000; // This looks weird, but doing operations like this reduces the number of divisions
 	if( UseModel[0] )				TotalPower -= EmissivityModel		(DustTemperature);
 	if( UseModel[1] && Sample->is_liquid() )	TotalPower -= EvaporationModel		(DustTemperature)*1000;
 	if( UseModel[2] )				TotalPower -= NewtonCooling		(DustTemperature);
@@ -229,7 +224,7 @@ double HeatingModel::CalculatePower(double DustTemperature)const{
 	if( UseModel[8] )				TotalPower -= TEE			(DustTemperature);	
 	TotalPower = TotalPower/1000;
 
-	H1_Debug("\n\nPowerIncident = \t" 	<< PowerIncident				<< "W");
+	H1_Debug("\n\nPowerIncident = \t" 	<< PowerIncident*1000				<< "W");
 	H1_Debug("\nEmissivityModel() = \t" 	<< -EmissivityModel(DustTemperature) 		<< "W");
 	H1_Debug("\nEvaporationModel() = \t" 	<< -EvaporationModel(DustTemperature)*1000 	<< "W");
 	H1_Debug("\nNewtonCooling() = \t" 	<< -NewtonCooling(DustTemperature) 		<< "W");
@@ -239,6 +234,7 @@ double HeatingModel::CalculatePower(double DustTemperature)const{
 	H1_Debug("\nNeutralRecombination() = \t"<< NeutralRecombination(DustTemperature)	<< "W");
 	H1_Debug("\nSEE() = \t" 		<< -SEE(DustTemperature) 			<< "W");
 	H1_Debug("\nTEE() = \t" 		<< -TEE(DustTemperature) 			<< "W\n");
+	H1_Debug("\nTotalPower = \t" 		<< TotalPower 			<< "kW\n");
 	return TotalPower;
 }
 

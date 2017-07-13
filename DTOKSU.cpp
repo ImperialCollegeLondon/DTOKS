@@ -96,7 +96,7 @@ int DTOKSU::Run(){
 		// Resolve region where the Total Power is zero for a Plasma Grid.
 		// This typically occurs when plasma parameters are zero in a cell and other models are off (or zero)... 
 		// Even in No Plasma Region, cooling processes can still occur, but this is specifically for zero power
-		if( HeatTime == 10 || ChargeTime == 1 ){
+		if( HeatTime == 10 ){
 			D1_Debug("\nNo Net Power Region...");
 			FM.Force();
 			HM.AddTime(ForceTime);
@@ -108,6 +108,7 @@ int DTOKSU::Run(){
 			// it is going through that region in the for loop below...
 			D1_Debug("\n\nPotential Focus Region, steps taken at 0.01*MinTimeStep\n");
 			D1_Debug("Potential = " << Sample->get_potential() << "\nDeltaTot = " << Sample->get_deltatot() << "\n\n");
+			assert(ChargeTime != 1);
 			HM.Heat  (ChargeTime);
 			FM.Force (ChargeTime);
 			CM.Charge(ChargeTime);
