@@ -3,6 +3,7 @@
 #include "DeltaThermTest.h"
 #include "ChargingTimescales.h"
 #include "DTOKSchargingTest.h"
+#include "FlippedOMLTest.h"
 int main(){
 	// Backscatter Unit Test
 //	BackscatterTest();
@@ -17,6 +18,9 @@ int main(){
 //	ChargingTimescales();
 	
 	// DTOKS Charging Test
-	DTOKSchargingTest();
+//	DTOKSchargingTest();
+	
+	// Flipped OML Charging Test
+	FlippedOMLTest();
 	return 0;
 }
