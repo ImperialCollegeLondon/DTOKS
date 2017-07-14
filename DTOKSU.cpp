@@ -1,6 +1,6 @@
 //#define PAUSE
 //#define DTOKSU_DEBUG
-//#define DTOKSU_DEEP_DEBUG
+#define DTOKSU_DEEP_DEBUG
 #include "DTOKSU.h"
 
 // CONSIDER DEFINING A DEFAULT SAMPLE
@@ -108,7 +108,9 @@ int DTOKSU::Run(){
 			// it is going through that region in the for loop below...
 			D1_Debug("\n\nPotential Focus Region, steps taken at 0.01*MinTimeStep\n");
 			D1_Debug("Potential = " << Sample->get_potential() << "\nDeltaTot = " << Sample->get_deltatot() << "\n\n");
-			assert(ChargeTime != 1);
+			if(ChargeTime == 1){	// Current mitigation for this problem.... I never said it was a good solution
+				ChargeTime = MinTimeStep;
+			};
 			HM.Heat  (ChargeTime);
 			FM.Force (ChargeTime);
 			CM.Charge(ChargeTime);
