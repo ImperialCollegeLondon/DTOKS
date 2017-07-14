@@ -12,7 +12,7 @@ void FlippedOMLTest(){
 
 	double ne(1e18), ni(1e18);
 
-	for(double Td(300); Td < 5e3; Td ++){ // Loop over temperatures
+	for(double Td(300); Td < 5500; Td ++){ // Loop over temperatures
 		double Sec = sec(Td/converteVtoK,'w'); 
 		for( double Ti(10e4); Ti < 10e6; Ti *= 1.1 ){
 			for( double Te(10e4); Te < 10e6; Te *= 1.1 ){
