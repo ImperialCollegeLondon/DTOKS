@@ -4,6 +4,10 @@
 #include "ChargingTimescales.h"
 #include "DTOKSchargingTest.h"
 #include "SchottkyOMLTest.h"
+#include "OMLTest.h"
+#include "MOMLTest.h"
+#include "SOMLTest.h"
+
 int main(){
 
 	// Backscatter Unit Test:
@@ -50,8 +54,21 @@ int main(){
 	// dust grain is accounted for. The minimisation of the positive solution in C++ is not stable and gives an incorrect 
 	// answer. Switching to matlab minimisation function, some weird things happen but, in principle, I showed that the 
 	// function could be minimised.
-	SchottkyOMLTest();
+//	SchottkyOMLTest();
 
+	// OML Charging Test:
+	// This test is designed to find the floating potential for small dust grains in a stationary plasma following OML theory.
+	// This employs an approximate series expansion to the Lambert W function to find the floating potential
+//	OMLTest();
 
+	// MOML Charging Test:
+	// This test is designed to find the floating potential for large dust grains in a stationary plasma following MOML theory.
+	// This employs an approximate series expansion to the Lambert W function to find the floating potential
+//	MOMLTest();
+
+	// SOML Charging Test:
+	// This test is designed to find the floating potential for small dust grains in a flowing plasma following SOML theory.
+	// This employs an approximate series expansion to the Lambert W function to find the floating potential
+	SOMLTest();
 	return 0;
 }

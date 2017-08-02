@@ -23,12 +23,12 @@ void ChargingTimescales(){
 			for( double Ti(1); Ti < 100; Ti *= 1.1 ){ // Loop over Ion Temperature
                                 for( double a(1e-7); a < 1e-6; a *= 1.1 ){ // Loop over radius
 					timestep = sqrt(2*PI)*((DebyeLength)/a)*(1/
-					(ePlasmaFreq*(1+Te/Ti+fabs(DTOKSsolveOML(Ti,Te,-0.5)))));
+					(ePlasmaFreq*(1+Te/Ti+fabs(DTOKSsolveOML(0.0,Ti,Te,-0.5)))));
 					// Proof that ePlasmaFreq is never quicker than timestep (i.e, we expect no output)...
 					if( 1/ePlasmaFreq > timestep ){
 						// Proof that timestep is always smaller than ePlasmaFreq
 						std::cout << "\n" << 1/ePlasmaFreq << "\t" << Te/Ti << "\t" 
-							<< DTOKSsolveOML(Ti,Te,-0.5) << "\t" <<  DebyeLength/a << "\t" << timestep;
+							<< DTOKSsolveOML(0.0,Ti,Te,-0.5) << "\t" <<  DebyeLength/a << "\t" << timestep;
 					}
 				}
 			}
@@ -38,5 +38,5 @@ void ChargingTimescales(){
 	clock_t end = clock();
 	double elapsd_secs = double(end-begin)/CLOCKS_PER_SEC;
 		
-//	std::cout << "\n\n*****\n\nUnitTest 4 completed in " << elapsd_secs << "s\n";
+	std::cout << "\n\n*****\n\nChargingTimescales UnitTest completed in " << elapsd_secs << "s\n";
 }

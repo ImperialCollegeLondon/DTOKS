@@ -1,7 +1,8 @@
+#ifndef __DTOKSSOLVEOML_H_INCLUDED__   // if DTOKSsolveOML.h hasn't been included yet...
+#define __DTOKSSOLVEOML_H_INCLUDED__
 
-double DTOKSsolveOML(double Ti, double Te, double guess){
+double DTOKSsolveOML(double a, double Ti, double Te, double guess){
         C_Debug("\tIn ChargingModel::solveOML(double a, double guess)\n\n");
-	double a(0.0);
 	double b(0);
 	try{
 		b = Ti/Te;
@@ -19,3 +20,4 @@ double DTOKSsolveOML(double Ti, double Te, double guess){
 	}
 	return guess;
 }
+#endif
