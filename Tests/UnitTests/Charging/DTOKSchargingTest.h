@@ -3,7 +3,10 @@
 #include "DTOKSsolveOML3.h"
 #include <iostream>
 
-// Plot results using something
+// This test output the potential as calculated by the DTOKS solution to the OML equation.
+// The form of this is such that it depends on the sign of the potential and the magnitude of the total electron emission.
+// This test was used to show the discontinuity in the potential when the total electron emission yield approaches 1
+// Two different conditional formulations of the problem are made and their differences highlighted by this test
 void DTOKSchargingTest(){
 	clock_t begin = clock();
 
@@ -52,7 +55,7 @@ void DTOKSchargingTest(){
 	}
 
 
-	// TEST TO CALCULATE THE DTOKS FLOATING POTENTIAL FOR CONSTANT DUST TEMPERATURE, ELECTRON DENSITY AND ELECTRON TEMPERATURE
+	// TEST TO CALCULATE THE DTOKS FLOATING POTENTIAL FOR CONSTANT ELECTRON DENSITY AND ELECTRON TEMPERATURE
 /*
 	double Te = 1; 		// Electron Temp in ev
 	double Td = 300; 	// Dust Temp in K

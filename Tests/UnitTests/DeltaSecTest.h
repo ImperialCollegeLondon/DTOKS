@@ -2,6 +2,9 @@
 #include "Constants.h"
 #include <iostream>
 
+// This test prints the value of the empirical function calculating the yield due to secondary electron emission.
+// The result can be readily compared to the publication
+
 // Replicating work of "Dust in tokamaks: An overview of the physical model of the dust in tokamaks code"
 // Bacharis, Minas Coppins, Michael Allen, John E.
 // Page 2 & 3

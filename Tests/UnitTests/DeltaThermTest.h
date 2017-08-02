@@ -3,6 +3,8 @@
 #include <iostream>
 #include <math.h>
 
+// This test prints the value of the 'effective yield' from the Richardson-Dushmann formula (Without Schottky correction).
+// This can also be readily compared to the publication
 // Replicating work of "Dust in tokamaks: An overview of the physical model of the dust in tokamaks code"
 // Bacharis, Minas Coppins, Michael Allen, John E.
 // Page 3

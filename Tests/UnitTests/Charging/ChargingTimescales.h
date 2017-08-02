@@ -2,7 +2,13 @@
 #include "DTOKSsolveOML.h"
 #include <iostream>
 
-// Plot results using something
+// This test is used to verify that the timestep as calculated by Krasheninnikovs is always smaller
+// than the electron plasma frequency. In practice, this is found to not be perfectly true, there exist
+// extreme conditions where this is not the case.
+// Time step based on the formulation by Krasheninnikov
+// Smirnov, R. D., Pigarov, A. Y., Rosenberg, M., Krasheninnikov, S. I., & Mendis, D. a. (2007). 
+// Modelling of dynamics and transport of carbon dust particles in tokamaks. 
+// Plasma Physics and Controlled Fusion, 49(4), 347–371.
 void ChargingTimescales(){
 	clock_t begin = clock();
 

@@ -5,6 +5,9 @@
 #include <math.h>
 
 // Investigate the influence of fraction of backscattered ions and and fraction of backscattered energy
+// This test prints the values of the fraction of backscattered energy and the fraction of back scattered particles
+// as calculated by the backscatter function from DTOKS. This can be readily compared to the results published in
+// the DTOKS papers
 void BackscatterTest(){
 	clock_t begin = clock();
 
