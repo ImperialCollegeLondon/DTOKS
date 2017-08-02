@@ -46,7 +46,12 @@ int main(){
 //	DTOKSchargingTest();
 	
 	// Schottky OML Charging Test:
-
+	// This test was made to see what the solution is for electron emission with Schottky correction where the potential of the
+	// dust grain is accounted for. The minimisation of the positive solution in C++ is not stable and gives an incorrect 
+	// answer. Switching to matlab minimisation function, some weird things happen but, in principle, I showed that the 
+	// function could be minimised.
 	SchottkyOMLTest();
+
+
 	return 0;
 }

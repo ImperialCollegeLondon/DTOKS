@@ -28,7 +28,7 @@ double solvePosSchottkyOML(double Ti, double Te, double Td, double ni, double ne
 //	std::cout << "\nT1 = " << C << "\tT2 = " << A*exp(K*guess) << "\tT3 = " << B*guess*exp(K*guess) << "\tT4 = " << D*guess << "\tT5 = " << H*exp(-guess) << "\tT6 = " << I*exp(guess-f); 
 //	std::cout << "\nK = " << K << "\tguess = " << guess << "\tK*guess = " << K*guess; std::cin.get();
 
-/*
+
 	while(fabs(guess-x1)>1e-4){// >1e-2){
 
 		guess = x1;
@@ -43,7 +43,6 @@ double solvePosSchottkyOML(double Ti, double Te, double Td, double ni, double ne
 
 	}
 
-*/
 	return guess;
 }
 
