@@ -1,4 +1,4 @@
-#include <boost/math/tools/roots.hpp>
+//#include <boost/math/tools/roots.hpp>
 
 double solvePosSchottkyOML(double Ti, double Te, double Td, double ni, double ne, double Dsec, double guess){
         C_Debug("\tIn ChargingModel::solveOML(double a, double guess)\n\n");

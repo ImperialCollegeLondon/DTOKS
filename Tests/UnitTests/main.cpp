@@ -7,7 +7,8 @@
 #include "OMLTest.h"
 #include "MOMLTest.h"
 #include "SOMLTest.h"
-
+#include "SMOMLTest.h"
+#include "SchottkyMOMLTest.h"
 int main(){
 
 	// Backscatter Unit Test:
@@ -49,13 +50,6 @@ int main(){
 	// Two different conditional formulations of the problem are made and their differences highlighted by this test
 //	DTOKSchargingTest();
 	
-	// Schottky OML Charging Test:
-	// This test was made to see what the solution is for electron emission with Schottky correction where the potential of the
-	// dust grain is accounted for. The minimisation of the positive solution in C++ is not stable and gives an incorrect 
-	// answer. Switching to matlab minimisation function, some weird things happen but, in principle, I showed that the 
-	// function could be minimised.
-//	SchottkyOMLTest();
-
 	// OML Charging Test:
 	// This test is designed to find the floating potential for small dust grains in a stationary plasma following OML theory.
 	// This employs an approximate series expansion to the Lambert W function to find the floating potential
@@ -69,6 +63,26 @@ int main(){
 	// SOML Charging Test:
 	// This test is designed to find the floating potential for small dust grains in a flowing plasma following SOML theory.
 	// This employs an approximate series expansion to the Lambert W function to find the floating potential
-	SOMLTest();
+//	SOMLTest();
+
+	// SMOML Charging Test:
+	// This test is designed to find the floating potential for large dust grains in a flowing plasma following SMOML theory.
+	// This employs an approximate series expansion to the Lambert W function to find the floating potential
+//	SMOMLTest();
+
+	// Schottky OML Charging Test:
+	// This test was made to see what the solution is for electron emission with Schottky correction where the potential of the
+	// dust grain is accounted for. The minimisation of the positive solution in C++ is not stable and gives an incorrect 
+	// answer. Switching to matlab minimisation function, some weird things happen but, in principle, I showed that the 
+	// function could be minimised.
+	SchottkyOMLTest();
+
+	// SchottkyMOML Charging Test:
+	// This test is designed to find the floating potential for large negative dust grains with electron emission 
+	// This employs an approximate series expansion to the Lambert W function to find the floating potential
+//	SchottkyMOMLTest();
+
+
+
 	return 0;
 }

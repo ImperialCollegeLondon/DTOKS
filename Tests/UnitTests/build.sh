@@ -4,7 +4,7 @@ cd ../..
 DTOKSUDIR=$PWD
 CHARGINGDIR=$PWD/Tests/UnitTests/Charging
 UNITTESTDIR=$PWD/Tests/UnitTests/
-BOOSTDIR=/home/ls5115/Software/boost_1_64_0/
+BOOSTDIR=$PWD/boost_1_64_0/
 cd $DTOKSUDIR
 
 g++ -c -std=c++14 $DTOKSUDIR/Constants.cpp $DTOKSUDIR/Functions.cpp $DTOKSUDIR/threevector.cpp -I$DTOKSUDIR

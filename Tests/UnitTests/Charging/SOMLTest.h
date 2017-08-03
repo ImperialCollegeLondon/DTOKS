@@ -6,9 +6,9 @@ void SOMLTest(){
 	clock_t begin = clock();
 
 //	double U = 1.0; // Plasma Flow speed
-	for( double TiTe(0.01); TiTe < 50; TiTe *= 1.5 ){ // Loop over temperature ratios
-		for( double U(0.1); U < 5; U *= 1.5 ){ // Loop over plasma flow speed
-			double Potential = solveOML(TiTe,U,Mp/Me);
+	for( double TiTe(0.01); TiTe < 10; TiTe *= 1.5 ){ // Loop over temperature ratios
+		for( double U(0.1); U < 5; U *= 1.2 ){ // Loop over plasma flow speed
+			double Potential = solveSOML(TiTe,U,Mp/Me);
 			std::cout << "\n" << TiTe << "\t" << U << "\t" << Mp/Me << "\t" << Potential;
 		}
 	}
