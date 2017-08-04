@@ -363,7 +363,7 @@ const double HeatingModel::TEE(double DustTemperature)const{
 
 	double TEE=0; double deltatot = Sample->get_deltatot();
 	if( ForceNegative || !Sample->is_positive() )
-		TEE = Sample->get_surfacearea()*Sample->get_deltatherm()*
+		TEE = Sample->get_surfacearea()*Sample->get_deltatherm()*ElectronFlux(Sample->get_temperature())*
 			(2*Kb*DustTemperature+echarge*Sample->get_workfunction()); 
 	else if( deltatot > 1 ) 	TEE = 0; // Electrons captured by positive grain
 }
