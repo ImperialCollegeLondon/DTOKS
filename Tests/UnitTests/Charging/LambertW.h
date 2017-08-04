@@ -35,7 +35,7 @@ double LambertWTaylorSeries(double x){
      gcc -O3 -c LambertW.c 
 */
 
-
+#include <cmath>
 #include <math.h>
 #include <stdio.h>
 

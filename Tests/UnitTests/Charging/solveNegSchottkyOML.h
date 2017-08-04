@@ -1,17 +1,18 @@
+// Solve the orbital motion limited potential for small dust grains accounting for electron emission.
+// WARNING: This is only valid for negatively charged dust grains.
+
 double solveNegSchottkyOML(double Ti, double Te, double Td, double ni, double ne, double Dsec, double guess){
-        C_Debug("\tIn ChargingModel::solveOML(double a, double guess)\n\n");
 
 	double WorkFunction = 3.4*echarge;
-	double Phi = guess*Kb*Td/echarge;
-	double Ve = sqrt(Kb*Te/Me);
-	double Vi = sqrt(Kb*Ti/Mp);
+	double Vi = sqrt(Kb*Ti/(2*PI*Mp));
+	double Ve = sqrt(Kb*Te/(2*PI*Me));
 
 	// For a negative dust grain...
 //	Dsec = 0.0;
 	double a = ne*Ve*(Dsec-1);
 	double b = ni*Vi*(Te/Ti);
 	double C = ni*Vi;
-	double d = 4*Richardson*pow(Td,2)/echarge;
+	double d = Richardson*pow(Td,2)/echarge;
 	double f = WorkFunction/(Kb*Td);
 
 	double fx 	= a*exp(-guess)+b*guess+C+d*exp(guess-f);
