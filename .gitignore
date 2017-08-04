@@ -9,3 +9,4 @@ Tests/TemperatureVariationOfConstants
 main
 *.txt
 *.o
+*.png
