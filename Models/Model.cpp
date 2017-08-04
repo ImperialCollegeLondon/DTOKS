@@ -21,6 +21,7 @@ struct PlasmaData PlasmaDefaults = {
 Model::Model():Sample(new Tungsten),Pgrid(new PlasmaGrid('h','m',0.01)),Pdata(&PlasmaDefaults),Accuracy(1.0),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
 	Mo_Debug("\n\nIn Model::Model():Sample(new Tungsten),Pgrid('h','m',0.01)Pdata(PlasmaDefaults),Accuracy(1.0),ContinuousPlasma(true)\n\n");
 	i = 0; k = 0;
+	PlasmaDataFile.open("pd.txt");
 	update_plasmadata();
 }
 
@@ -30,6 +31,7 @@ Model::Model( Matter *&sample, PlasmaData *&pdata, double accuracy )
 	Mo_Debug("\n\nIn Model::Model( Matter *& sample, PlasmaData *&pdata, double accuracy ):Sample(sample),Pgrid(new PlasmaGrid('h','m',0.01)),Pdata(pdata),Accuracy(accuracy),ContinuousPlasma(true)\n\n");
 	assert(Accuracy > 0);
 	i = 0; k = 0;
+	PlasmaDataFile.open("pd.txt");
 	update_plasmadata(pdata);
 //	std::cout << "\nAccuracy = " << Accuracy;
 }
@@ -41,6 +43,7 @@ Model::Model( Matter *&sample, PlasmaGrid &pgrid, double accuracy )
 	Mo_Debug("\n\nIn Model::Model( Matter *& sample, PlasmaGrid &pgrid, double accuracy ):Sample(sample),Pgrid(pgrid),Pdata(PlasmaDefaults),Accuracy(accuracy), ContinuousPlasma(false)\n\n");
 	assert(Accuracy > 0);
 	i = 0; k = 0;
+	PlasmaDataFile.open("pd.txt");
 	update_plasmadata();
 	//	std::cout << "\nAccuracy = " << Accuracy;
 }
@@ -125,6 +128,13 @@ void Model::update_fields(int i, int k){
 	Pdata->Gravity 		= threevector(0.0,0.0,-9.8);
         Pdata->ElectricField     = E;
         Pdata->MagneticField     = B;
+}
+
+void Model::RecordPlasmadata(){
+	PlasmaDataFile << "\n" << Pdata->NeutralDensity << "\t" << Pdata->ElectronDensity << "\t" << Pdata->IonDensity
+			<< "\t" << Pdata->IonTemp << "\t" << Pdata->ElectronTemp << "\t" << Pdata->NeutralTemp
+			<< "\t" << Pdata->AmbientTemp << "\t" << Pdata->PlasmaVel << "\t" << Pdata->Gravity 
+			<< "\t" << Pdata->ElectricField << "\t" << Pdata->MagneticField;
 }
 
 const double Model::IonFlux(double DustTemperature)const{

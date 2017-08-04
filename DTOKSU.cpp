@@ -187,6 +187,7 @@ int DTOKSU::Run(){
 
 		// Update the plasma data from the plasma grid for all models...
 		InGrid = FM.update_plasmadata();
+		FM.RecordPlasmadata();
 		Print();
 		// ***** START OF : DETERMINE IF END CONDITION HAS BEEN REACHED ***** //
 		if( Sample->is_gas() && Sample->is_split() ){
