@@ -103,7 +103,9 @@ int main(int argc, char* argv[]){
         bool NeutralDrag = 1;	
 
 	// ------------------- CHARGING MODELS ------------------- //
+	// ONLY ONE SHOULD BE ON
         bool DTOKSOML = true;
+        bool SchottkyOML = false;
 
 	// Plasma Data
 	// NOTE: 16/06/17, current plasma data matches DTOKS initial plasma data for debugging purposes.
@@ -145,7 +147,7 @@ int main(int argc, char* argv[]){
 		{RadiativeCooling, EvaporativeCooling, NewtonCooling, IonHeatFlux, ElectronHeatFlux, NeutralHeatFlux, 
 		NeutralRecomb, SEE, TEE };
 	std::array<bool,5> ForceModels  = {Gravity,Centrifugal,Lorentz,IonDrag,NeutralDrag};
-	std::array<bool,1> ChargeModels = {DTOKSOML};
+	std::array<bool,2> ChargeModels = {DTOKSOML,SchottkyOML};
 	ConstModels  = {EmissivityModel,ExpansionModel,HeatCapacityModel,BoilingModel};
 	
 	// Accuracy Levels correspond to Charging, Heating and Forcing respectively

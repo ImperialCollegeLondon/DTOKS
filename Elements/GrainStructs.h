@@ -39,7 +39,7 @@ struct GrainData{
 	// Charging Data
 	double DeltaSec;		// Secondary Electron Emission Yield (Arb)
 	double DeltaTherm;		// Thermionic Electron Emission Yield (Arb)
-	double Potential;		// Normalised Grain potential (Arb), Potential = (e*phi) / (kB * Te)
+	double Potential;		// Normalised Grain potential (Arb), Potential = -(e*phi) / (kB * Te)
 	bool Positive;			// Defines the sign of the grain charge.
 
 	// Force/Motion Data
@@ -60,7 +60,7 @@ struct ElementConsts{
 	double MeltingTemp;	// Kelvin
 	double BoilingTemp;	// Kelvin
 	double BondEnergy; 	// kJ/mol Amount of energy required to break a single atomic bond
-	double WorkFunction;	// kJ, Amount of energy required to remove an electron
+	double WorkFunction;	// eV, Amount of energy required to remove an electron
 	double HeatTransAir; 	// W/m^2 K 
 	double AtomicMass;	// kg/mol
 	double LatentFusion;	// kJ/kg, Energy required to melt 1kg of solid

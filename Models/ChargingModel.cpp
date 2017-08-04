@@ -5,28 +5,34 @@
 
 ChargingModel::ChargingModel():Model(){
 	C_Debug("\n\nIn ChargingModel::ChargingModel():Model()\n\n");
-	UseModel[0] = true;				// Charging Models turned on of possibly 9
+	UseModel[0] = true;				// Charging Models turned on of possibly 2
+	UseModel[1] = false;				// Charging Models turned on of possibly 2
+	ChargeOfGrain = 0;
 	CreateFile("Default_Charging_Filename.txt");
 }
 
-ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<bool,1> models,
+ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<bool,2> models,
 				Matter *& sample, PlasmaData *&pdata) : Model(sample,pdata,accuracy){
 	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename,double accuracy,std::array<bool,1> models,Matter *& sample, PlasmaData const& pdata) : Model(sample,pdata,accuracy)\n\n");
 	UseModel = models;
 	CreateFile(filename);
+	ChargeOfGrain = 0;
 }
 
-ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<bool,1> models,
+ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<bool,2> models,
 				Matter *& sample, PlasmaGrid &pgrid) : Model(sample,pgrid,accuracy){
 	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename,double accuracy,std::array<bool,1> models,Matter *& sample, PlasmaGrid const& pgrid) : Model(sample,pgrid,accuracy)\n\n");
 	UseModel = models;
 	CreateFile(filename);
+	ChargeOfGrain = 0;
 }
 
 void ChargingModel::CreateFile(std::string filename){
 	C_Debug("\tIn ChargingModel::CreateFile(std::string filename)\n\n");
 	ModelDataFile.open(filename);
-	if( UseModel[0] ) ModelDataFile << "Positive\tPotential";
+
+	ModelDataFile << "Time\tChargeOfGrain";
+	ModelDataFile << "\tPositive\tPotential";
 
 
 	ModelDataFile << "\n";
@@ -34,9 +40,11 @@ void ChargingModel::CreateFile(std::string filename){
 
 void ChargingModel::Print(){
 	C_Debug("\tIn ChargingModel::Print()\n\n");
-	if( Sample->is_positive() )  ModelDataFile << "Pos\t";
-	if( !Sample->is_positive() ) ModelDataFile << "Neg\t";
-	if( UseModel[0] ) ModelDataFile << Sample->get_potential();
+	ModelDataFile << TotalTime << "\t" << ChargeOfGrain;
+	if( Sample->is_positive() )  ModelDataFile << "\tPos";
+	if( !Sample->is_positive() ) ModelDataFile << "\tNeg";
+	ModelDataFile << "\t" << Sample->get_potential();
+
 	ModelDataFile << "\n";
 }
 
@@ -84,22 +92,20 @@ void ChargingModel::Charge(double timestep){
 	assert(timestep > 0);// && timestep <= TimeStep );
 	double DSec = DeltaSec();
 	double DTherm = DeltaTherm();
-	// Assume the grain is negative and calculate potential
-	if( UseModel[0] ){
-		double Potential;
-/*		if( (DSec + DTherm) < 1.0 ){ // solveOML only defined for deltatot < 1.0
-			Potential = solveOML( DSec + DTherm,Sample->get_potential()); 
-		}else{ // If the grain is in fact positive ...
-			Potential = solveOML( DSec + DTherm,Sample->get_potential());
-			if( Potential < 0.0 ){
-				Potential = solveOML(0.0,Sample->get_potential())-Kb*Sample->get_temperature()
-						/(echarge*Pdata->ElectronTemp);
-			}
+	double Potential;
+	if( Pdata->ElectronTemp <= 0 ){ // Avoid dividing by zero
+		if( UseModel [0] ){
+			ChargeOfGrain = ChargeOfGrain + 4*PI*pow(Sample->get_radius()*Sample->get_temperature(),2)*Richardson*
+			exp(-Sample->get_workfunction()*echarge/(Kb*Sample->get_temperature()))*timestep;
+		}else if( UseModel [1] ){
+			ChargeOfGrain += 4*PI*pow(Sample->get_radius()*Sample->get_temperature(),2)*Richardson*
+			exp(Sample->get_potential()-Sample->get_workfunction()*echarge/(Kb*Sample->get_temperature()))*TimeStep;
 		}
-*/
+		Potential = 0.0;
+	}else if( UseModel[0] ){
 //		WARNING! THIS SCHEME FOR THE CHARGING MODEL CREATES DISCONTINUITIES!
 //		NOT EXACTLY SURE HOW BUT THIS IS DANGEROUS
-		if( Pdata->ElectronTemp > 0 ){ // Avoid dividing by zero
+
 			if( (DSec + DTherm) >= 1.0 ){ 	// If electron emission yield exceeds unity, we have potential well...
 							// Take away factor of temperature ratios for depth of well
 							// This is not explained further...
@@ -115,18 +121,21 @@ void ChargingModel::Charge(double timestep){
 							/Pdata->ElectronTemp;
 				}
 			}
-		}else{
-			Potential = 0.0;
-		}
-		// Have to do it this way since grain doesn't know about the Electron Temp and since potential is normalised.
-		// This information has to be passed to the grain.
-		double ChargeOfGrain = -(4.0*PI*epsilon0*Sample->get_radius()*Potential*Kb*Pdata->ElectronTemp)/echarge;
-		Sample->update_charge(ChargeOfGrain,Potential,DTherm,DSec);
+		ChargeOfGrain = -(4.0*PI*epsilon0*Sample->get_radius()*Potential*Kb*Pdata->ElectronTemp)/echarge;
 //		std::cout << "\nPotential = " << Potential << "\nDeltaSec = " << Sample->get_deltasec() << "\nDeltatherm = " 
 //			<< Sample->get_deltatherm() << "\nCharge = " << ChargeOfGrain; std::cin.get();
-
-
+	}else if( UseModel[1] ){
+		// Assume the grain is negative and calculate potential
+		Potential = solveNegSchottkyOML(Potential);
+		ChargeOfGrain = -(4.0*PI*epsilon0*Sample->get_radius()*Potential*Kb*Pdata->ElectronTemp)/echarge;
+		if ( Potential < 0 ){ // If dust grain is actually positive, (negative normalised potential) recalculate it...
+			Potential = solvePosSchottkyOML(); // Quasi-neutrality assumed, we take ni as ni=ne
+			ChargeOfGrain = (4.0*PI*epsilon0*Sample->get_radius()*Potential*Kb*Pdata->ElectronTemp)/echarge;
+		}
 	}
+	// Have to calculate charge of grain here since it doesn't know about the Electron Temp and since potential is normalised.
+	// This information has to be passed to the grain.
+	Sample->update_charge(ChargeOfGrain,Potential,DTherm,DSec);
 	TotalTime += timestep;
 
 	C_Debug("\t"); Print();
@@ -158,11 +167,54 @@ double ChargingModel::solveOML(double a, double guess){
 	return guess;
 }
 
+// Solve the orbital motion limited potential for small dust grains accounting for electron emission.
+// WARNING: This is only valid for positively charged dust grains.
+// See drews Thesis, pg 52
+// https://spiral.imperial.ac.uk/bitstream/10044/1/32003/1/Thomas-D-2016-PhD-thesis.pdf
+double ChargingModel::solvePosSchottkyOML(){
+
+	double Wf = echarge*Sample->get_workfunction();
+	double TemperatureRatio = Pdata->IonTemp/Pdata->ElectronTemp;
+	double Z = 1.0; 		// Ionization
+	double vi = sqrt(Kb*Pdata->IonTemp/(2*PI*Mp));
+	double ve = sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
+
+	double Arg = TemperatureRatio*exp(TemperatureRatio)*(vi+Richardson*pow(Sample->get_temperature(),2)*exp(-Wf/(Kb*Sample->get_temperature()))/(Z*echarge*Pdata->IonDensity))/(ve*(1-DeltaSec()));
+	double Coeff = TemperatureRatio;
+	return +Coeff - LambertW(Arg); 	// NOTE! Should be "return -Coeff + LambertW(Arg);" but we've reversed sign as equation
+					// as potential definition is reversed ( Positive potential for positive dust in this case)
+}
+
+// Solve the orbital motion limited potential for small dust grains accounting for electron emission.
+// WARNING: This is only valid for negatively charged dust grains.
+double ChargingModel::solveNegSchottkyOML(double guess){
+        double Vi = sqrt(Kb*Pdata->IonTemp/(2*PI*Mp));
+        double Ve = sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
+
+        double a = Pdata->ElectronDensity*Ve*(DeltaSec()-1);
+        double b = Pdata->IonDensity*Vi*(Pdata->ElectronTemp/Pdata->IonTemp);
+        double C = Pdata->IonDensity*Vi;
+        double d = Richardson*pow(Sample->get_temperature(),2)/echarge;
+        double f = (echarge*Sample->get_workfunction())/(Kb*Sample->get_temperature());
+
+	double x1 = guess;
+	do{
+		guess = x1;
+
+		double fx = a*exp(-guess)+b*guess+C+d*exp(guess-f);	
+		double fxprime = (-a*exp(-guess)+b+d*exp(guess-f));
+		x1 = guess - fx/fxprime;
+
+	}while(fabs(guess-x1)>1e-4);// >1e-2){
+
+        return guess;
+}
+
 double ChargingModel::DeltaTherm()const{
 	C_Debug("\tIn ChargingModel::DeltaTherm()\n\n");
 
 	return (Richardson*pow(Sample->get_temperature(),2)*exp(-(Sample->get_workfunction()*echarge)
-				/(Kb*Sample->get_temperature())))/echarge;
+				/(Kb*Sample->get_temperature())))/(echarge*ElectronFlux(Sample->get_temperature()));
 }
 
 double ChargingModel::DeltaSec()const{

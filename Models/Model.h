@@ -36,6 +36,9 @@ class Model{
 		virtual void Print()=0;			// Write to output data file
 		virtual double UpdateTimeStep()=0;	// Update Time Scale of development, returns the time step
 		virtual double ProbeTimeStep()const=0;	// Check Time Scale of development, returns the time step
+		const double IonFlux(double DustTemperature)const;
+		const double ElectronFlux(double DustTemperature)const;
+		const double NeutralFlux()const;
 
 	public:
 		// Constructors

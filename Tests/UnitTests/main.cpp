@@ -8,7 +8,6 @@
 #include "MOMLTest.h"
 #include "SOMLTest.h"
 #include "SMOMLTest.h"
-#include "SchottkyMOMLTest.h"
 int main(){
 
 	// Backscatter Unit Test:

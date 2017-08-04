@@ -1,16 +1,16 @@
 //#define PAUSE
 //#define DTOKSU_DEBUG
-#define DTOKSU_DEEP_DEBUG
+//#define DTOKSU_DEEP_DEBUG
 #include "DTOKSU.h"
 
 // CONSIDER DEFINING A DEFAULT SAMPLE
-std::array<bool, 9> DefaultHeatModels = {false,false,false,false,false,false, false,false,false};
+std::array<bool,9> DefaultHeatModels = {false,false,false,false,false,false, false,false,false};
 std::array<bool,5> DefaultForceModels = {false,false,false,false,false};
-std::array<bool,1> DefaultChargeModels = {false};
+std::array<bool,2> DefaultChargeModels = {true,false};
 std::array<char,4> DefaultConstModels = { 'c','c','c','c'};
 
 DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample, PlasmaData *&pdata,
-				std::array<bool,9> &heatmodels, std::array<bool,5> &forcemodels, std::array<bool,1> &chargemodels)
+				std::array<bool,9> &heatmodels, std::array<bool,5> &forcemodels, std::array<bool,2> &chargemodels)
 			: Sample(sample),
 				CM("cf.txt",acclvls[0],chargemodels,sample,pdata),
 				HM("hf.txt",acclvls[1],heatmodels,sample,pdata),
@@ -24,7 +24,7 @@ DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample,
 }
 
 DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample, PlasmaGrid &pgrid,
-				std::array<bool,9> &heatmodels, std::array<bool,5> &forcemodels, std::array<bool,1> &chargemodels)
+				std::array<bool,9> &heatmodels, std::array<bool,5> &forcemodels, std::array<bool,2> &chargemodels)
 				: Sample(sample),
 				CM("cf.txt",acclvls[0],chargemodels,sample,pgrid),
 				HM("hf.txt",acclvls[1],heatmodels,sample,pgrid),
@@ -87,7 +87,7 @@ int DTOKSU::Run(){
 		if( ChargeTime > MinTimeStep && ChargeTime != 1){
 			static bool runOnce = true;
 			WarnOnce(runOnce,"*** Charging Time scale is not the shortest timescale!! ***\n");
-			std::cout << "\nChargeTime = " << ChargeTime;
+			std::cout << "\nChargeTime = " << ChargeTime << "\t:\tMinTime = " << MinTimeStep;
 		}
 	
 		// ***** END OF : DETERMINE TIMESCALES OF PROCESSES ***** //	

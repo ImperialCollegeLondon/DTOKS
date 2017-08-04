@@ -127,3 +127,27 @@ void Model::update_fields(int i, int k){
         Pdata->MagneticField     = B;
 }
 
+const double Model::IonFlux(double DustTemperature)const{
+	H_Debug("\n\tIn Model::IonFlux():");
+
+	double IonFlux=0;
+
+	if( Sample->is_positive() ) IonFlux = ElectronFlux(DustTemperature); //Positive grain, DeltaTot() > 1
+	else	IonFlux = ElectronFlux(DustTemperature)*(1-Sample->get_deltatot());
+	assert(IonFlux >= 0);
+	return IonFlux;
+}
+
+const double Model::ElectronFlux(double DustTemperature)const{
+	H_Debug("\n\tIn Model::ElectronFlux():\n\n");
+
+	return Pdata->ElectronDensity*exp(-Sample->get_potential())*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
+}
+
+const double Model::NeutralFlux()const{
+	H_Debug("\n\tIn Model::NeutralFlux():\n\n");
+
+	return Pdata->NeutralDensity*sqrt(Kb*Pdata->NeutralTemp/(2*PI*Mp));
+}
+
+

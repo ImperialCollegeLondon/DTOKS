@@ -34,10 +34,6 @@ class HeatingModel : public Model{
 
 		// Fluxes of particles and coefficients
 		const double EvaporationFlux		(double DustTemperature)const;
-		const double IonFlux			(double DustTemperature)const;
-		const double ElectronFlux		(double DustTemperature)const;
-		const double NeutralFlux		()			const;
-
 
 	public:
 		// Constructors

@@ -8,6 +8,7 @@ Models/PlasmaData/regulardata
 Tests/TemperatureVariationOfConstants
 main
 *.txt
+*.dat
 *.o
 *.png
 Backups

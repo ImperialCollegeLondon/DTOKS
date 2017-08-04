@@ -31,9 +31,9 @@ class DTOKSU{
 	public:
 //		DTOKSU();
 		DTOKSU( double timestep, std::array<double,3> alvls, Matter *& sample, PlasmaData *&pdata,
-				std::array<bool,9> &heatmodels, std::array<bool,5> &forcemodels, std::array<bool,1> &chargemodels);
+				std::array<bool,9> &heatmodels, std::array<bool,5> &forcemodels, std::array<bool,2> &chargemodels);
 		DTOKSU( double timestep, std::array<double,3> alvls, Matter *& sample, PlasmaGrid &pgrid,
-				std::array<bool,9> &heatmodels, std::array<bool,5> &forcemodels, std::array<bool,1> &chargemodels);
+				std::array<bool,9> &heatmodels, std::array<bool,5> &forcemodels, std::array<bool,2> &chargemodels);
 
 		~DTOKSU(){
 		};
