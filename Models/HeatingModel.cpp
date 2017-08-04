@@ -137,8 +137,9 @@ void HeatingModel::Print(){
 //	bool PrintPhaseData = false; // Lol
 //	if( PrintPhaseData )	ModelDataFile 	<< "\t" << Sample->get_fusionenergy() << "\t" << Sample->get_vapourenergy();
 
-	if( UseModel[0] ) 	ModelDataFile 	<< "\t" << EmissivityModel(Sample->get_temperature()) << "\t" 
-						<< Sample->get_emissivity();
+	if( UseModel[0] ) 	ModelDataFile 	<< "\t" << EmissivityModel(Sample->get_temperature());
+	if( UseModel[0] && Sample->get_c(3) == 'v' )
+				ModelDataFile	<< "\t" << Sample->get_emissivity();
 	if( UseModel[1] && Sample->is_liquid() )	
 				ModelDataFile 	<< "\t" << EvaporationFlux(Sample->get_temperature()) 
 					<< "\t" << EvaporationModel(Sample->get_temperature())*1000
