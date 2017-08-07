@@ -1,4 +1,4 @@
-#include "LambertW.h"
+#include "Functions.h"
 #include "Constants.h"
 
 // Solve the orbital motion limited potential for large dust grains.

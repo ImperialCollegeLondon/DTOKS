@@ -57,7 +57,7 @@ int main(){
 	// MOML Charging Test:
 	// This test is designed to find the floating potential for large dust grains in a stationary plasma following MOML theory.
 	// This employs an approximate series expansion to the Lambert W function to find the floating potential
-//	MOMLTest();
+	MOMLTest();
 
 	// SOML Charging Test:
 	// This test is designed to find the floating potential for small dust grains in a flowing plasma following SOML theory.
@@ -74,9 +74,9 @@ int main(){
 	// dust grain is accounted for. The minimisation of the positive solution in C++ is not stable and gives an incorrect 
 	// answer. Switching to matlab minimisation function, some weird things happen but, in principle, I showed that the 
 	// function could be minimised.
-	SchottkyOMLTest();
+//	SchottkyOMLTest();
 
-	// SchottkyMOML Charging Test:
+	// SchottkyMOML Charging Test: DOESN'T WORK!
 	// This test is designed to find the floating potential for large negative dust grains with electron emission 
 	// This employs an approximate series expansion to the Lambert W function to find the floating potential
 //	SchottkyMOMLTest();
