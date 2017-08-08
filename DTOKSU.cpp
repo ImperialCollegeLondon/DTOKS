@@ -68,7 +68,7 @@ int DTOKSU::Run(){
 	double HeatTime(0),ForceTime(0),ChargeTime(0);
 
 	bool InGrid = FM.update_plasmadata();
-	CM.Charge(1e-100);	// Charge instantaneously as soon as we start.
+	CM.Charge(1e-100);	// Charge instantaneously as soon as we start, have to add a time though...
 	Sample->update();	// Need to manually update the first time as first step is not necessarily heating
 	while( InGrid ){
 
@@ -131,10 +131,12 @@ int DTOKSU::Run(){
 				// Take the time step in the faster time process
 				if( MinTimeStep == HeatTime ){
 					HM.Heat(MinTimeStep);
+					CM.Charge(MinTimeStep); // This has to go here, Think break; statement
 					D1_Debug("\nHeat Step Taken.");
 					// Check that time scales haven't changed significantly whilst looping... 
 				}else if( MinTimeStep == ForceTime ){
 					FM.Force(MinTimeStep);	
+					CM.Charge(MinTimeStep);	// This has to go here, Think break; statement
 					if( FM.new_cell() ){
 						D1_Debug("\nWe have stepped into a new cell!");
 						j ++;
@@ -145,7 +147,7 @@ int DTOKSU::Run(){
 				}else{
 					std::cerr << "\nUnexpected Timescale Behaviour (1)!";
 				}
-				CM.Charge(MinTimeStep);
+
 
 
 				// Check that time scales haven't changed significantly whilst looping...
@@ -178,7 +180,7 @@ int DTOKSU::Run(){
 			TotalTime += (j-1)*MinTimeStep;
 			// This is effectively 'an extra step' which is necessary because we need the last step to be charging
 			// So we set the time step to be arbitrarily small... Not the best practice ever but okay.
-			CM.Charge(1e-100);	
+			CM.Charge(1e-100);
 		}
 		// ***** END OF : NUMERICAL METHOD BASED ON TIME SCALES ***** //	
 		D_Debug("\nTemperature = " << Sample->get_temperature() << "\n\n"); 

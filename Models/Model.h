@@ -17,6 +17,11 @@ class Model{
 		int i;					// x Position
 		int k;					// y Position
 
+		const double DTOKSIonFlux(double DustTemperature)const;
+		const double OMLIonFlux(double DustTemperature)const;
+		const double DTOKSElectronFlux(double DustTemperature)const;
+		const double OMLElectronFlux(double DustTemperature)const;
+
 
 // 	This next section could also be private but this requires changing access methods in derived classes.
 //	This should be done at some later stage to ensure security in protection of Matter* Sample and Pdata.

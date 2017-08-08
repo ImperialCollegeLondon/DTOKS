@@ -67,7 +67,7 @@ int main(int argc, char* argv[]){
  	// Parameters describing the heating model
 	char Element='W';		// Element, (W) : Tungsten, (G) : Graphite, (B) : Beryllium or (F) : Iron.
 //	double Power=0;			// Kilo-Watts power in addition to heating model powers
-	double Size=1e-6; 		// m
+	double Size=5e-5; 		// m
 	double Temp=300;		// K
 	double TimeStep=1e-5;		// s
 //	std::shared_ptr<Matter> Sample;	// Define the sample matter type
@@ -167,7 +167,8 @@ int main(int argc, char* argv[]){
 
 	threevector xinit(1.15,0.0,-1.99);// default injection right hand side
 	threevector vinit(0.0,0.0,100.0);
-	Sample->update_motion(xinit,vinit);
+	double InitRotationalFreq(0.0);
+	Sample->update_motion(xinit,vinit,InitRotationalFreq);
 
 	std::cout << "\n\n * GENERATE DTOKS * \n\n";
 //	DTOKSU MyDtoks1(TimeStep, AccuracyLevels, Sample, Pdata, HeatModels, ForceModels, ChargeModels);

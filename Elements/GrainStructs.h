@@ -45,6 +45,7 @@ struct GrainData{
 	// Force/Motion Data
 	threevector DustPosition;	// Dust position (m)
 	threevector DustVelocity;	// Dust velocity (I guess this should be normalised to Cs, but for now: (m/s) )
+	double RotationalFrequency;     // Rotational Frequency (s^-1), This is the rate of rotation of the dust.
 
 	// Latent Heat
 	double FusionEnergy;		// kJ, Energy put into the material to break bonds of solid

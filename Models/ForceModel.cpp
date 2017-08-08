@@ -30,7 +30,7 @@ ForceModel::ForceModel(std::string filename, double accuracy, std::array<bool,5>
 void ForceModel::CreateFile(std::string filename){
 	F_Debug("\tIn ForceModel::CreateFile(std::string filename)\n\n");
 	ModelDataFile.open(filename);
-	ModelDataFile << "Position\tVelocity";
+	ModelDataFile << "Position\tVelocity\tRotationFreq";
 	bool PrintGravity = false; // Lol
 	if( UseModel[0] && PrintGravity ) 	ModelDataFile << "\tGravity";
        	if( UseModel[1] ) 			ModelDataFile << "\tCentrifugal";
@@ -43,7 +43,7 @@ void ForceModel::CreateFile(std::string filename){
 
 void ForceModel::Print(){
 	F_Debug("\tIn ForceModel::Print()\n\n");
-	ModelDataFile << Sample->get_position() << "\t" << Sample->get_velocity();
+	ModelDataFile << Sample->get_position() << "\t" << Sample->get_velocity() << "\t" << Sample->get_rotationalfreq();
 
 	bool PrintGravity = false; // Lol
 	if( UseModel[0] && PrintGravity ) 	ModelDataFile << "\t0.0 0.0 -9.81"; // Maybe this should be coded better...
@@ -117,7 +117,26 @@ void ForceModel::Force(double timestep){
 	// Assert change in absolute vel less than ten times accuracy
 	assert( ChangeInVelocity.mag3() < 0.1*Accuracy ); // Assert change in velocity less than 10* TimeStep accuracy
 
-	Sample->update_motion(ChangeInPosition,ChangeInVelocity);
+	// So having issues with spin up time, it should be of order ~1s. In Krashinennikovs paper, it's not clear
+	// Which mass he is refering to or what plasma conditions he uses to obtain this value...
+	// For this reason, currently I'm just setting the Spin Up time to 1s by default.
+	// Krasheninnikov, S. I. (2006). On dust spin up in uniform magnetized plasma. Physics of Plasmas, 13(11), 2004–2007.
+	double TimeOfSpinUp = Sample->get_radius()*sqrt(Mp/(Kb*Pdata->IonTemp))*Sample->get_density()/(Mp*Pdata->IonDensity);
+	TimeOfSpinUp = 1;
+
+	double RotationalSpeedUp = timestep*sqrt(Kb*Pdata->IonTemp/Mp)/(TimeOfSpinUp*Sample->get_radius());
+	F1_Debug( "\nRho_{Ti} = " << sqrt(Kb*Pdata->IonTemp*Mp)/(echarge*Pdata->MagneticField.mag3()) <<
+		 "\nV_{Ti} = " << sqrt(Kb*Pdata->IonTemp/Mp) << "\nOmega_{i} = " 
+		<< echarge*Pdata->MagneticField.mag3()/Mp << "\ntimestep = " << timestep );
+	if( Sample->get_radius() < sqrt(Kb*Pdata->IonTemp*Mp)/(echarge*Pdata->MagneticField.mag3()) ){
+	      	RotationalSpeedUp = (timestep*echarge*Pdata->MagneticField.mag3()/(TimeOfSpinUp*Mp));
+		F1_Debug( "\nREGIME TWO!" );
+	}
+
+	F1_Debug( "\nBfield.mag = " << Pdata->MagneticField.mag3() << "\nTimeOfSpinUp = " << TimeOfSpinUp
+		 << "\nSpeedUp = " << RotationalSpeedUp << "\n" );
+
+	Sample->update_motion(ChangeInPosition,ChangeInVelocity,RotationalSpeedUp);
 
 	F1_Debug( "ChangeInVelocity : " << ChangeInVelocity << "\nAcceleration : " << Acceleration << "\nTimeStep : " << TimeStep);
 	F_Debug("\t"); Print();
@@ -136,22 +155,25 @@ threevector ForceModel::CalculateAcceleration()const{
 	// Forces: Lorentz + ion drag + gravity
 	threevector Accel;
 	if( UseModel[0] ) Accel += threevector(0.0,0.0,-9.81);
- 	if( UseModel[1] ) Accel += Centrifugal(); // Centrifugal terms. CHECK THESE TWO LINES AT SOME POINT
- 	if( UseModel[2] ) Accel += LorentzForce();
+	if( UseModel[1] ) Accel += Centrifugal(); // Centrifugal terms. CHECK THESE TWO LINES AT SOME POINT
+	if( UseModel[2] ) Accel += LorentzForce();
 	if( UseModel[3] ) Accel += DTOKSIonDrag();
 	if( UseModel[4] ) Accel += NeutralDrag();
 	F1_Debug( "\n\t\tg = " << threevector(0.0,0.0,-9.81) );
 	F1_Debug( "\n\t\tcentrifugal = " << Centrifugal() );
 	F1_Debug( "\n\t\tlorentzforce = " << LorentzForce() << "\n\n" );
 	F1_Debug( "\n\t\tFid = " << DTOKSIonDrag() );
-        return Accel;
+	
+	return Accel;
 }
 
 // Calculations for ion drag: Mach number, shielding length with fitting function and thermal scattering parameter
 threevector ForceModel::NeutralDrag()const{
 	F_Debug("\tIn ForceModel::DTOKSIonDrag()\n\n");
-	return (Pdata->PlasmaVel-Sample->get_velocity())*Pdata->NeutralDensity*sqrt(2*Kb*Pdata->IonTemp*Mp)*PI
-			*pow(Sample->get_radius(),2);
+//	return (Pdata->PlasmaVel-Sample->get_velocity())*Pdata->NeutralDensity*sqrt(2*Kb*Pdata->IonTemp*Mp)*PI
+//			*pow(Sample->get_radius(),2);
+	return (Pdata->PlasmaVel-Sample->get_velocity())*Mp*sqrt(4*PI)*NeutralFlux()*PI*pow(Sample->get_radius(),2);
+
 }
 
 // Calculations for ion drag: Mach number, shielding length with fitting function and thermal scattering parameter

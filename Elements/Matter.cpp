@@ -20,14 +20,15 @@ struct GrainData MatterDefaults = {
 	1.0,		// Emissivity		should be updated
 	1.0,		// Linear Expansion	should be updated
 	0.5,		// Heat Capacity	should be updated
-	0,		// DeltaSec		should be updated
-	0,		// DeltaTherm		should be updated
-	0,		// Potential		should be updated
+	0,		    // DeltaSec		should be updated
+	0,		    // DeltaTherm		should be updated
+	0,		    // Potential		should be updated
 	false,		// Is Positive		should be updated
 	{0,0,0},	// Dust position	case dependant
 	{0,0,0},	// Dust Velocity	case dependant
-	0,		// FusionEnergy		fine
-	0		// VapourEnergy		fine
+	0,          // Rotational Freq  fine
+	0,		    // FusionEnergy		fine
+	0		    // VapourEnergy		fine
 };
 
 
@@ -44,7 +45,7 @@ Matter::Matter(double rad, const ElementConsts *elementconsts):Ec(*elementconsts
 	St.Radius = rad;			// m
 	St.UnheatedRadius = St.Radius;		// m
 	St.Volume = (4*PI*pow(St.Radius,3))/3;
-        St.SurfaceArea = 4*PI*pow(St.Radius,2);
+	St.SurfaceArea = 4*PI*pow(St.Radius,2);
 	St.Mass = Ec.RTDensity*St.Volume;
 	PreBoilMass = St.Mass;
 	assert(St.Radius > 0 && St.UnheatedRadius > 0);
@@ -57,7 +58,7 @@ Matter::Matter(double rad, double temp, const ElementConsts *elementconsts):Ec(*
 	St.Radius = rad;					// m
 	St.UnheatedRadius = St.Radius;				// m
 	St.Volume = (4*PI*pow(St.Radius,3))/3;
-        St.SurfaceArea = 4*PI*pow(St.Radius,2);
+	St.SurfaceArea = 4*PI*pow(St.Radius,2);
 	St.Temperature = temp;					// K
 	PreBoilMass = St.Mass;
 	if( ConstModels[1] != 'v' && ConstModels[1] != 'V' )	St.Mass = Ec.RTDensity*St.Volume;
@@ -73,7 +74,7 @@ Matter::Matter(double rad, double temp, const ElementConsts *elementconsts, std:
 	St.Radius = rad;					// m
 	St.UnheatedRadius = St.Radius;				// m
 	St.Volume = (4*PI*pow(St.Radius,3))/3;
-        St.SurfaceArea = 4*PI*pow(St.Radius,2);
+	St.SurfaceArea = 4*PI*pow(St.Radius,2);
 	St.Temperature = temp;					// K
 	PreBoilMass = St.Mass;
 	if( ConstModels[1] != 'v' && ConstModels[1] != 'V' )	St.Mass = Ec.RTDensity*St.Volume;
@@ -295,6 +296,13 @@ void Matter::update(){
                 assert( strchr("vVcCsS",ConstModels[1]) );	
 	}
 
+	double CriticalRotation = 0.56*sqrt(8*Ec.SurfaceTension/(St.Density*pow(St.Radius,3)));
+	if( St.RotationalFrequency > (0.56*sqrt(8*Ec.SurfaceTension/(St.Density*pow(St.Radius,3)))) && St.Liquid ){
+		std::cout << "\nRotational Breakup has occured!";
+		M1_Debug("\nCriticalRotation = " << CriticalRotation << "\n");
+		St.Gas = true;
+	}
+
 	M_Debug("\t"); update_emissivity();
 	M_Debug("\t"); update_vapourpressure();
 	M_Debug("\t"); update_boilingtemp();
@@ -304,7 +312,7 @@ void Matter::update(){
 // volume, surface area, density, heat capacity, emissivity and vapour pressure
 
 void Matter::update_models(char emissivmodel, char linexpanmodel, char heatcapacitymodel, char boilingmodel){
-        M_Debug("\tIn Matter::update_models(char emissivmodel, char linexpanmodel, char heatcapacitymodel, char boilingmodel)\n\n");
+	M_Debug("\tIn Matter::update_models(char emissivmodel, char linexpanmodel, char heatcapacitymodel, char boilingmodel)\n\n");
 	ConstModels[0] = emissivmodel;
 	ConstModels[1] = linexpanmodel;
 	ConstModels[2] = heatcapacitymodel;
@@ -353,11 +361,12 @@ void Matter::update_temperature(double EnergyIn){
 	if(!St.Gas)	assert(St.Temperature <= St.SuperBoilingTemp);
 };
 
-void Matter::update_motion(threevector &ChangeInPosition,threevector &ChangeInVelocity){
+void Matter::update_motion(threevector &ChangeInPosition,threevector &ChangeInVelocity, double Rotation){
 	M_Debug("\tIn Matter::update_motion(threevector &ChangeInPosition,threevector &ChangeInVelocity)\n\n");
 	// Calculate new position
 	St.DustPosition = St.DustPosition + ChangeInPosition;
 	St.DustVelocity = St.DustVelocity + ChangeInVelocity;
+	St.RotationalFrequency = St.RotationalFrequency + Rotation;
 };
 
 void Matter::update_charge(double charge, double potential, double deltat, double deltas){
