@@ -83,7 +83,7 @@ int DTOKSU::Run(){
 
 	double HeatTime(0),ForceTime(0),ChargeTime(0);
 
-	bool InGrid = FM.update_plasmadata(Sample->get_position());
+	bool InGrid = FM.update_plasmadata();
 	CM.Charge(1e-100);		// Charge instantaneously as soon as we start, have to add a time though...
 	Sample->update();		// Need to manually update the first time as first step is not necessarily heating
 	while( InGrid && !Sample->is_split() ){

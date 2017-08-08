@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------
 
-SOURCE= main.cpp Constants.cpp DTOKSU.cpp threevector.cpp Functions.cpp Models/Model.cpp Models/ChargingModel.cpp Models/HeatingModel.cpp Models/ForceModel.cpp  Models/PlasmaGrid.cpp Elements/Matter.cpp Elements/Iron.cpp Elements/Beryllium.cpp Elements/Tungsten.cpp Elements/Graphite.cpp
+SOURCE= main.cpp Breakup.cpp Constants.cpp DTOKSU.cpp threevector.cpp Functions.cpp Models/Model.cpp Models/ChargingModel.cpp Models/HeatingModel.cpp Models/ForceModel.cpp  Models/PlasmaGrid.cpp Elements/Matter.cpp Elements/Iron.cpp Elements/Beryllium.cpp Elements/Tungsten.cpp Elements/Graphite.cpp
 INC=-I. -I./Models -I./Elements
 CC=g++
 CFLAGS= -std=c++14
