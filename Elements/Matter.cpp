@@ -1,7 +1,7 @@
 //#define PAUSE
 //#define MATTER_DEBUG
 //#define MATTER_DEEP_DEBUG
-#define MinMass 10e-25
+
 
 #include "Matter.h"
 struct GrainData MatterDefaults = {
@@ -309,8 +309,14 @@ void Matter::update(){
 	if( St.RotationalFrequency > (0.56*sqrt(8*Ec.SurfaceTension/(St.Density*pow(St.Radius,3))))  && St.Liquid ){
 		std::cout << "\nRotational Breakup has occured!";
 		M2_Debug("\nCriticalRotation = " << CriticalRotation << "\n");
-		St.Gas = true;
-		St.Breakup = true;
+		if( St.Mass/2 < MinMass*10 ){
+			St.Gas = true;
+			std::cout << "\nMass too small to support breakup, vaporisation assumed...";
+		}else{
+			St.Mass = St.Mass/2;    // Assume mass is half of previous...
+			St.Breakup = true;
+			std::cout << "\nMass has split in two...";
+		}
 	}
 
 	M_Debug("\t"); update_emissivity();
@@ -396,7 +402,13 @@ void Matter::update_charge(double charge, double potential, double deltat, doubl
 		std::cout << "\nElectrostatic Breakup! Instantaneous vaporisation assumed.";
 //		std::cout << "\nQcrit = " << 8*PI*sqrt(epsilon0*Ec.SurfaceTension*pow(St.Radius,3));
 //		std::cout << "\nCharge = " << charge;
-		St.Gas = true;
-		St.Breakup = true;
+		if( St.Mass/2 < MinMass*10 ){
+			St.Gas = true;
+			std::cout << "\nMass too small to support breakup, vaporisation assumed...";
+		}else{
+			St.Mass = St.Mass/2;    // Assume mass is half of previous...
+			St.Breakup = true;
+			std::cout << "\nMass has split in two...";
+		}
 	}
 }

@@ -1,4 +1,5 @@
 #include "DTOKSU.h"
+#include "Breakup.h"
 #include <vector>
 
 static void show_usage(std::string name){
@@ -65,7 +66,7 @@ int main(int argc, char* argv[]){
 	std::string Name="constant";	// Describes heating model
 
  	// Parameters describing the heating model
-	char Element='W';		// Element, (W) : Tungsten, (G) : Graphite, (B) : Beryllium or (F) : Iron.
+	char Element='B';		// Element, (W) : Tungsten, (G) : Graphite, (B) : Beryllium or (F) : Iron.
 //	double Power=0;			// Kilo-Watts power in addition to heating model powers
 	double Size=5e-5; 		// m
 	double Temp=3500;		// K
@@ -172,11 +173,13 @@ int main(int argc, char* argv[]){
 
 	std::cout << "\n\n * GENERATE DTOKS * \n\n";
 //	DTOKSU MyDtoks1(TimeStep, AccuracyLevels, Sample, Pdata, HeatModels, ForceModels, ChargeModels);
-	DTOKSU MyDtoks2(TimeStep, AccuracyLevels, Sample, Pgrid, HeatModels, ForceModels, ChargeModels);
-	
+	DTOKSU *MyDtoks2 = new DTOKSU(TimeStep, AccuracyLevels, Sample, Pgrid, HeatModels, ForceModels, ChargeModels);
+
 	std::cout << "\n\n * RUN DTOKS * \n\n";
+	Breakup Break(MyDtoks2, Sample);
 //	int errcode1 = MyDtoks1.Run();
-	int errcode2 = MyDtoks2.Run();
+//	int errcode2 = MyDtoks2->Run();
+	Break.Run();
 
 	std::cout << "\n\n * MAIN SCRIPT COMPLETE * \n\n";
 	clock_t end = clock();

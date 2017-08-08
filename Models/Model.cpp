@@ -55,6 +55,10 @@ bool Model::new_cell()const{
 	return false;
 }
 
+void Model::CloseFile(){
+	ModelDataFile.close();
+}
+
 void Model::update_plasmadata(PlasmaData *&pdata){
 	Mo_Debug( "\tIn Model::update_plasmadata(PlasmaData *&pdata)\n\n");
 	Pdata = pdata;

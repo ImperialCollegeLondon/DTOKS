@@ -10,7 +10,6 @@ class ForceModel : public Model {
 		std::array<bool,5> UseModel; 		// Force Models turned on of possibly 4
 
 		void Print();			// Write to output data file
-		void CreateFile(std::string filename);
 
 		// Different Force terms
 		threevector CalculateAcceleration()const;	// Sum of Force terms
@@ -31,12 +30,12 @@ class ForceModel : public Model {
 		// Destructor
 		~ForceModel(){};
 		
+		void CreateFile(std::string filename);
+
 		double ProbeTimeStep()const;	// Verify time step
 		double UpdateTimeStep();	// Verify time step
 
 		// Functions which generate and save data from heating the Sample.
-
-
 		void Force();
 		void Force(double timestep);
 };

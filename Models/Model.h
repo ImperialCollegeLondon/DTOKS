@@ -53,6 +53,8 @@ class Model{
 		Model(Matter *& sample, PlasmaData *&pdata, double accuracy);
 		Model(Matter *& sample, PlasmaGrid &pgrid, double accuracy);
 
+		void CloseFile();
+
 		// Destructor
 		virtual ~Model(){};
 

@@ -10,7 +10,6 @@ class ChargingModel : public Model{
 		std::array<bool,2> UseModel; 		// Charging Models turned on of possible 1
 
 		void Print();			// Write to output data file
-		void CreateFile(std::string filename);
 
 		double solveOML(double a, double guess);
 		double solveNegSchottkyOML(double guess);
@@ -26,6 +25,8 @@ class ChargingModel : public Model{
 				Matter *& sample, PlasmaData *& pdata);
 		ChargingModel(std::string filename, double accuracy, std::array<bool,2> models, 
 				Matter *& sample, PlasmaGrid & pgrid);
+
+		void CreateFile(std::string filename);
 
 		// Destructor
 		~ChargingModel(){

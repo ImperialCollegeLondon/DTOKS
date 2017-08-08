@@ -17,7 +17,6 @@ class HeatingModel : public Model{
 		std::array<bool,9> UseModel; 		// Heating Models turned on of possibly 9
 
 		void Print();				// Write to output data file
-		void CreateFile(std::string filename, bool PrintPhaseData);
 		void Defaults(); // Sets default settings
 		double RungeKutta4();
 
@@ -47,6 +46,7 @@ class HeatingModel : public Model{
 		~HeatingModel(){
 		};
 		
+		void CreateFile(std::string filename, bool PrintPhaseData);
 
 		// Functions which generate and save data from heating the Sample.
 		const int Vapourise();

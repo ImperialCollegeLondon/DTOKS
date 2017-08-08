@@ -45,6 +45,22 @@ void DTOKSU::CreateFile( std::string filename ){
 	MyFile << "TotalTime\n";
 }
 
+void DTOKSU::OpenFiles( std::string filename, unsigned int i ){
+	D_Debug("\n\nIn DTOKSU::OpenFiles(std::string filename, unsigned int i)\n\n");
+	CreateFile(filename + "_df_" + std::to_string(i) + ".txt");
+	HM.CreateFile(filename + "_hm_" + std::to_string(i) + ".txt",false);
+	FM.CreateFile(filename + "_fm_" + std::to_string(i) + ".txt");
+	CM.CreateFile(filename + "_cm_" + std::to_string(i) + ".txt");
+}
+
+void DTOKSU::CloseFiles(){
+	D_Debug("\n\nIn DTOKSU::CloseFiles()\n\n");
+	MyFile.close();
+	HM.CloseFile();
+	FM.CloseFile();
+	CM.CloseFile();
+}
+
 void DTOKSU::CheckTimeStep(){
 	D_Debug( "\tIn DTOKSU::CheckTimeStep()\n\n");
 	
@@ -67,10 +83,10 @@ int DTOKSU::Run(){
 
 	double HeatTime(0),ForceTime(0),ChargeTime(0);
 
-	bool InGrid = FM.update_plasmadata();
-	CM.Charge(1e-100);	// Charge instantaneously as soon as we start, have to add a time though...
-	Sample->update();	// Need to manually update the first time as first step is not necessarily heating
-	while( InGrid ){
+	bool InGrid = FM.update_plasmadata(Sample->get_position());
+	CM.Charge(1e-100);		// Charge instantaneously as soon as we start, have to add a time though...
+	Sample->update();		// Need to manually update the first time as first step is not necessarily heating
+	while( InGrid && !Sample->is_split() ){
 
 		// ***** START OF : DETERMINE TIMESCALES OF PROCESSES ***** //	
 
@@ -89,7 +105,7 @@ int DTOKSU::Run(){
 			WarnOnce(runOnce,"*** Charging Time scale is not the shortest timescale!! ***\n");
 			std::cout << "\nChargeTime = " << ChargeTime << "\t:\tMinTime = " << MinTimeStep;
 		}
-	
+
 		// ***** END OF : DETERMINE TIMESCALES OF PROCESSES ***** //	
 		// ***** START OF : NUMERICAL METHOD BASED ON TIME SCALES ***** //	
 	
@@ -202,16 +218,17 @@ int DTOKSU::Run(){
 		}else if( Sample->is_gas() && Sample->get_superboilingtemp() > Sample->get_temperature() ){
 			std::cout << "\n\nSample has Evaporated!";
 			break;
+		}else if( Sample->is_split() ){
+			std::cout << "\n\nBreakup condition";
+			break; // Could replace with return 3; and leave off the end check?...
 		}else if( Sample->is_gas() ){
-			std::cout << "\nSample has Vapourised!";
+			std::cout << "\n\nSample has vapourised";
 			break;
 		
 		}
 		// ***** END OF : DETERMINE IF END CONDITION HAS BEEN REACHED ***** //
 	}
-	if( !InGrid ){
-		std::cout << "\nSample has left simulation domain";
-	}
+
 	if( fabs(1 - (HM.get_totaltime()/FM.get_totaltime())) > 0.001  
 		|| fabs(1 - (FM.get_totaltime()/CM.get_totaltime())) > 0.001 ){
 		std::cout << "\nWarning! Total Times recorded by processes don't match!";
@@ -219,7 +236,16 @@ int DTOKSU::Run(){
 			<< FM.get_totaltime() << "\nCM.get_totaltime() = " << CM.get_totaltime() << "\n\nTotalTime = " << TotalTime;
 
 	}
-	if( HeatTime == 1 ) std::cout << "\nEnd of Run, exiting due to Thermal Equilibrium being reached!\n\n";
+	if( !InGrid ){
+		std::cout << "\nSample has left simulation domain";
+		return 1;
+	}else if( HeatTime == 1 ){
+		std::cout << "\nEnd of Run, exiting due to Thermal Equilibrium being reached!\n\n";
+		return 2;
+	}else if( Sample->is_split() ){
+		return 3;	// Return status for Breakup condition
+	}
+
 	std::cout << "\nFinished DTOKS-U run.";
 	return 0;
 }
