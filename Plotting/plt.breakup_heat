@@ -1,0 +1,2 @@
+filename(n) = sprintf("Data/breakup_hm_%d.txt", n)
+plot for [i=1:31] filename(i) using 1:2 with lines

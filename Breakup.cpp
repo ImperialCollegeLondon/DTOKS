@@ -20,7 +20,7 @@ int Breakup::Run(){
 
 	for( unsigned int j(0);	j < i; j ++){
 		while( Sim->Run() == 3 ){ // Breakup has occured...
-			std::cout << "\ni : " << i << "\tj : " << j;
+//			std::cout << "\ni : " << i << "\tj : " << j;
 			// Close data files and open new ones
 			Sim->CloseFiles();
 			Sim->OpenFiles("Data/breakup",p);
@@ -29,14 +29,14 @@ int Breakup::Run(){
 			Sample->reset_breakup();
 
 			// Record dust end conditions
-			GDvector.push_back(Sample->get_graindata());			
+			GDvector.push_back(Sample->get_graindata());
 	
 			// Change the dust velocity, the mass has already been halved in Matter. 
 			Sample->update_motion(Zeros,dvPlus,0.0);
 
 
-//			std::cout << "\nSimulating Branch " << i << "\nStart Pos = " << Sample->get_position()
-//				<< "\nVelocity = " << Sample->get_velocity() << "\nMass = " << Sample->get_mass(); std::cin.get();
+			std::cout << "\nSimulating Branch " << i << " : " << j << "\nStart Pos = " << Sample->get_position()
+				<< "\nVelocity = " << Sample->get_velocity() << "\nMass = " << Sample->get_mass(); std::cin.get();
 			i = i + 1;
 			p = p + 1;
 			// Run the simulation again!
@@ -54,9 +54,10 @@ int Breakup::Run(){
 
 			Sample->update_graindata(GDvector[j]);
 			p = p + 1;
+			std::cout << "\nSimulating Branch " << i  << " : " << j+1 << "\nStart Pos = " << GDvector[j].DustPosition
+				<< "\nVelocity = " << Sample->get_velocity() << "\nMass = " << Sample->get_mass(); std::cin.get();
+
 		}
-		std::cout << "\nSimulating Branch " << j+1 << "\nStart Pos = " << GDvector[j].DustPosition
-			<< "\nVelocity = " << Sample->get_velocity() << "\nMass = " << Sample->get_mass(); std::cin.get();
 //		std::cout << "\n***** END OF : DUST DIDN'T BREAKUP *****\n!";
 	}
 	
