@@ -94,13 +94,13 @@ void ChargingModel::Charge(double timestep){
 	double DTherm = DeltaTherm();
 	double Potential;
 	if( Pdata->ElectronTemp <= 0 ){ // Avoid dividing by zero
-		if( UseModel [0] ){
+/*		if( UseModel [0] ){
 			ChargeOfGrain = ChargeOfGrain + 4*PI*pow(Sample->get_radius()*Sample->get_temperature(),2)*Richardson*
 			exp(-Sample->get_workfunction()*echarge/(Kb*Sample->get_temperature()))*timestep;
 		}else if( UseModel [1] ){
 			ChargeOfGrain += 4*PI*pow(Sample->get_radius()*Sample->get_temperature(),2)*Richardson*
 			exp(Sample->get_potential()-Sample->get_workfunction()*echarge/(Kb*Sample->get_temperature()))*TimeStep;
-		}
+		} */
 		Potential = 0.0;
 	}else if( UseModel[0] ){
 //		WARNING! THIS SCHEME FOR THE CHARGING MODEL CREATES DISCONTINUITIES!

@@ -122,8 +122,13 @@ void ForceModel::Force(double timestep){
 	// For this reason, currently I'm just setting the Spin Up time to 1s by default.
 	// Krasheninnikov, S. I. (2006). On dust spin up in uniform magnetized plasma. Physics of Plasmas, 13(11), 2004–2007.
 	double TimeOfSpinUp = Sample->get_radius()*sqrt(Mp/(Kb*Pdata->IonTemp))*Sample->get_density()/(Mp*Pdata->IonDensity);
-	TimeOfSpinUp = 1;
 
+	TimeOfSpinUp = 1;
+//	std::cout << "\nTimeOfSpinUp = " << TimeOfSpinUp;
+//	std::cout << "\nVti = " << sqrt((Kb*Pdata->IonTemp)/Mp);
+//	std::cout << "\nRho = " << Sample->get_density();
+//	std::cout << "\nMp*Pdata->IonDensity = " << Mp*Pdata->IonDensity;
+//	std::cout << "\nPdata->IonDensity = " << Pdata->IonDensity << "\n";
 	double RotationalSpeedUp = timestep*sqrt(Kb*Pdata->IonTemp/Mp)/(TimeOfSpinUp*Sample->get_radius());
 	F1_Debug( "\nRho_{Ti} = " << sqrt(Kb*Pdata->IonTemp*Mp)/(echarge*Pdata->MagneticField.mag3()) <<
 		 "\nV_{Ti} = " << sqrt(Kb*Pdata->IonTemp/Mp) << "\nOmega_{i} = " 

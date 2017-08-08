@@ -137,21 +137,51 @@ void Model::RecordPlasmadata(){
 			<< "\t" << Pdata->ElectricField << "\t" << Pdata->MagneticField;
 }
 
+const double Model::ElectronFlux(double DustTemperature)const{
+	return DTOKSElectronFlux(DustTemperature);
+//	return OMLElectronFlux(DustTemperature);
+}
+
 const double Model::IonFlux(double DustTemperature)const{
+	return DTOKSIonFlux(DustTemperature);
+//	return OMLIonFlux(DustTemperature);
+}
+
+const double Model::DTOKSIonFlux(double DustTemperature)const{
 	H_Debug("\n\tIn Model::IonFlux():");
 
 	double IonFlux=0;
 
-	if( Sample->is_positive() ) IonFlux = ElectronFlux(DustTemperature); //Positive grain, DeltaTot() > 1
-	else	IonFlux = ElectronFlux(DustTemperature)*(1-Sample->get_deltatot());
+	if( Sample->is_positive() ) IonFlux = DTOKSElectronFlux(DustTemperature); //Positive grain, DeltaTot() > 1
+	else	IonFlux = DTOKSElectronFlux(DustTemperature)*(1-Sample->get_deltatot());
 	assert(IonFlux >= 0);
 	return IonFlux;
 }
 
-const double Model::ElectronFlux(double DustTemperature)const{
+const double Model::DTOKSElectronFlux(double DustTemperature)const{
 	H_Debug("\n\tIn Model::ElectronFlux():\n\n");
 
 	return Pdata->ElectronDensity*exp(-Sample->get_potential())*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
+}
+
+const double Model::OMLIonFlux(double DustTemperature)const{
+	H_Debug("\n\tIn Model::IonFlux():");
+
+	double IonFlux=0;
+
+	if( Pdata->IonTemp <= 0 ) return 0.0;
+	if( Sample->is_positive() ) IonFlux = Pdata->IonDensity*sqrt(Kb*Pdata->IonTemp/(2*PI*Mp))*exp(Sample->get_potential());
+	else	IonFlux = Pdata->IonDensity*sqrt(Kb*Pdata->IonTemp/(2*PI*Mp))*(1+Sample->get_potential()*(Pdata->ElectronTemp/Pdata->IonTemp));
+	assert(IonFlux >= 0);
+	return IonFlux;
+}
+
+const double Model::OMLElectronFlux(double DustTemperature)const{
+	H_Debug("\n\tIn Model::ElectronFlux():\n\n");
+	if( Pdata->IonTemp <= 0 ) return 0.0;
+	if(Sample->is_positive()) return Pdata->ElectronDensity*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me))*(1-Sample->get_potential()*(Pdata->ElectronTemp/Pdata->IonTemp));
+
+	else 	return Pdata->ElectronDensity*exp(-Sample->get_potential())*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
 }
 
 const double Model::NeutralFlux()const{

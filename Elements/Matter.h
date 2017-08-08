@@ -56,7 +56,7 @@ class Matter{
 		// Takes argument of amount of energy lost in Kilo Joules and changes temperature in Degrees
 		void update_temperature(double EnergyIn);
 
-		void update_motion(threevector &changeinposition, threevector &changeinvelocity);
+		void update_motion(threevector &changeinposition, threevector &changeinvelocity, double Rotation);
 		// Resolve region of rapid charge variation
 		void update_charge(double charge, double potential, double deltas, double deltat);
 
@@ -68,6 +68,7 @@ class Matter{
 		double get_workfunction		()const{ return Ec.WorkFunction;		};
 		double get_heattransair		()const{ return Ec.HeatTransAir;		};
 		double get_atomicmass		()const{ return Ec.AtomicMass;			};
+		double get_surfacetension	()const{ return Ec.SurfaceTension;		};
 
 		bool is_gas			()const{ return St.Gas;				};
 		bool is_liquid			()const{ return St.Liquid;			};
@@ -81,7 +82,7 @@ class Matter{
 		double get_heatcapacity		()const{ return St.HeatCapacity;		};
 		double get_temperature		()const{ return St.Temperature; 		};
 		double get_fusionenergy		()const{ return St.FusionEnergy;		};
-                double get_vapourenergy         ()const{ return St.VapourEnergy;		};
+	        double get_vapourenergy         ()const{ return St.VapourEnergy;		};
 		double get_latentvapour		()const{ return Ec.LatentVapour;		};
 		double get_latentfusion		()const{ return Ec.LatentFusion;		};
 		double get_emissivity		()const{ return St.Emissivity; 			};
@@ -92,8 +93,10 @@ class Matter{
 		double get_deltatherm		()const{ return St.DeltaTherm;			};
 		double get_deltatot		()const{ return (St.DeltaTherm + St.DeltaSec);	};
 		double get_potential		()const{ return St.Potential;			};
+		double get_rotationalfreq	()const{ return St.RotationalFrequency;		};
 		threevector get_velocity	()const{ return St.DustVelocity;		};
 		threevector get_position	()const{ return St.DustPosition;		};
+
 
 		void set_potential		(double potential){ St.Potential = potential;	};
 };

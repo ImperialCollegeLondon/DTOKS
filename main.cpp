@@ -68,7 +68,7 @@ int main(int argc, char* argv[]){
 	char Element='W';		// Element, (W) : Tungsten, (G) : Graphite, (B) : Beryllium or (F) : Iron.
 //	double Power=0;			// Kilo-Watts power in addition to heating model powers
 	double Size=5e-5; 		// m
-	double Temp=300;		// K
+	double Temp=3500;		// K
 	double TimeStep=1e-5;		// s
 //	std::shared_ptr<Matter> Sample;	// Define the sample matter type
 

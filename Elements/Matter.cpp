@@ -62,12 +62,17 @@ Matter::Matter(double rad, double temp, const ElementConsts *elementconsts):Ec(*
 	St.Temperature = temp;					// K
 	PreBoilMass = St.Mass;
 	if( ConstModels[1] != 'v' && ConstModels[1] != 'V' )	St.Mass = Ec.RTDensity*St.Volume;
-	else							update_dim();
-	assert(St.Radius > 0 && St.UnheatedRadius > 0 && St.Temperature > 0);
+	else							update();
+	if( St.Temperature > Ec.MeltingTemp ){
+		St.FusionEnergy = Ec.LatentFusion*St.Mass;
+		St.Liquid = true;
+	}
+	assert(St.Radius > 0 && St.UnheatedRadius > 0 && St.Temperature > 0 && St.Temperature < St.SuperBoilingTemp );
 
 	M_Debug("\nSt.Radius = " << St.Radius << "\nSt.Mass = " << St.Mass << "\nSt.Temperature = " << St.Temperature);
 	M_Debug("\nEc.LatentVapour = " << Ec.LatentVapour << "\nEc.AtomicMass = " << Ec.AtomicMass);
 };
+
 Matter::Matter(double rad, double temp, const ElementConsts *elementconsts, std::array<char,4> &constmodels):Ec(*elementconsts),St(MatterDefaults){
 	M_Debug("\n\nIn Matter::Matter(double rad, double temp, const ElementConsts *elementconsts, std::array<char,4> &constmodels):Ec(*elementconsts),St(MatterDefaults)\n\n");
 	ConstModels = constmodels;
@@ -78,8 +83,12 @@ Matter::Matter(double rad, double temp, const ElementConsts *elementconsts, std:
 	St.Temperature = temp;					// K
 	PreBoilMass = St.Mass;
 	if( ConstModels[1] != 'v' && ConstModels[1] != 'V' )	St.Mass = Ec.RTDensity*St.Volume;
-	else							update_dim();
-	assert(St.Radius > 0 && St.UnheatedRadius > 0 && St.Temperature > 0);
+	else							update();
+	if( St.Temperature > Ec.MeltingTemp ){
+		St.FusionEnergy = Ec.LatentFusion*St.Mass;
+		St.Liquid = true;
+	}
+	assert(St.Radius > 0 && St.UnheatedRadius > 0 && St.Temperature > 0 && St.Temperature < St.SuperBoilingTemp );
 
 	M_Debug("\nSt.Radius = " << St.Radius << "\nSt.Mass = " << St.Mass << "\nSt.Temperature = " << St.Temperature);
 	M_Debug("\nEc.LatentVapour = " << Ec.LatentVapour << "\nEc.AtomicMass = " << Ec.AtomicMass);
@@ -297,10 +306,11 @@ void Matter::update(){
 	}
 
 	double CriticalRotation = 0.56*sqrt(8*Ec.SurfaceTension/(St.Density*pow(St.Radius,3)));
-	if( St.RotationalFrequency > (0.56*sqrt(8*Ec.SurfaceTension/(St.Density*pow(St.Radius,3)))) && St.Liquid ){
+	if( St.RotationalFrequency > (0.56*sqrt(8*Ec.SurfaceTension/(St.Density*pow(St.Radius,3))))  && St.Liquid ){
 		std::cout << "\nRotational Breakup has occured!";
-		M1_Debug("\nCriticalRotation = " << CriticalRotation << "\n");
+		M2_Debug("\nCriticalRotation = " << CriticalRotation << "\n");
 		St.Gas = true;
+		St.Breakup = true;
 	}
 
 	M_Debug("\t"); update_emissivity();
