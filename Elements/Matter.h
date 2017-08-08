@@ -104,7 +104,6 @@ class Matter{
 		threevector get_position	()const{ return St.DustPosition;		};
 		GrainData get_graindata		()const{ return St;				};
 
-
 		void set_potential		(double potential){ St.Potential = potential;	};
 		void set_mass			(double mass){ assert(mass > MinMass*10); St.Mass = mass;	};
 		void reset_breakup		(){	St.Breakup = false;			};
