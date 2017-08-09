@@ -1,3 +1,4 @@
 filename(n) = sprintf("Data/breakup_fm_%d.txt", n)
-splot for [i=1:31] filename(i) using 1:2:3 with lines
+splot for [i=0:7] filename(i) using 1:2:3 with lines
+#splot "Data/ff.txt" using 1:2:3 with lines
 #plot for [i=1:7] filename(i) using 3 with lines

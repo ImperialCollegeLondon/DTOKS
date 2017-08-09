@@ -41,6 +41,15 @@ class DTOKSU{
 		int Run();
 		void OpenFiles(std::string filename, unsigned int i);
 		void CloseFiles();			// Close all model files
+		void ResetModelTime(double HMTime, double FMTime, double CMTime);
+	
+		double get_HMTime()const{ return HM.get_totaltime(); }
+		double get_FMTime()const{ return FM.get_totaltime(); }
+		double get_CMTime()const{ return CM.get_totaltime(); }
+	
+		threevector get_bfielddir(){
+			return (FM.get_plasmadata()->MagneticField.getunit());
+		}
 };
 
 #endif

@@ -7,9 +7,13 @@ class Breakup{
 
 	private:
 		// Private member data
-		std::vector<GrainData> GDvector; 
+		std::vector<GrainData> GDvector;
+		std::vector<double> HMTime;
+		std::vector<double> FMTime;
+		std::vector<double> CMTime;
 		DTOKSU *Sim;
 		Matter *Sample;
+
 	public:
 //		Breakup();
 		Breakup( DTOKSU *& dtoksu, Matter *& sample );

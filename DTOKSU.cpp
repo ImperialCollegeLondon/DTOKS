@@ -12,9 +12,9 @@ std::array<char,4> DefaultConstModels = { 'c','c','c','c'};
 DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample, PlasmaData *&pdata,
 				std::array<bool,9> &heatmodels, std::array<bool,5> &forcemodels, std::array<bool,2> &chargemodels)
 			: Sample(sample),
-				CM("Data/cf.txt",acclvls[0],chargemodels,sample,pdata),
-				HM("Data/hf.txt",acclvls[1],heatmodels,sample,pdata),
-				FM("Data/ff.txt",acclvls[2],forcemodels,sample,pdata){
+				CM("Data/breakup_cm_0.txt",acclvls[0],chargemodels,sample,pdata),
+				HM("Data/breakup_hm_0.txt",acclvls[1],heatmodels,sample,pdata),
+				FM("Data/breakup_fm_0.txt",acclvls[2],forcemodels,sample,pdata){
         D_Debug("\n\nIn DTOKSU::DTOKSU( ... )\n\n");
         D_Debug("\n\n************************************* SETUP FINISHED ************************************* \n\n");
 //	std::cout << "\nacclvls[0] = " << acclvls[0];
@@ -26,9 +26,9 @@ DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample,
 DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample, PlasmaGrid &pgrid,
 				std::array<bool,9> &heatmodels, std::array<bool,5> &forcemodels, std::array<bool,2> &chargemodels)
 				: Sample(sample),
-				CM("Data/cf.txt",acclvls[0],chargemodels,sample,pgrid),
-				HM("Data/hf.txt",acclvls[1],heatmodels,sample,pgrid),
-				FM("Data/ff.txt",acclvls[2],forcemodels,sample,pgrid){
+				CM("Data/breakup_cm_0.txt",acclvls[0],chargemodels,sample,pgrid),
+				HM("Data/breakup_hm_0.txt",acclvls[1],heatmodels,sample,pgrid),
+				FM("Data/breakup_fm_0.txt",acclvls[2],forcemodels,sample,pgrid){
         D_Debug("\n\nIn DTOKSU::DTOKSU( ... )\n\n");
         D_Debug("\n\n************************************* SETUP FINISHED ************************************* \n\n");
 
@@ -59,6 +59,13 @@ void DTOKSU::CloseFiles(){
 	HM.CloseFile();
 	FM.CloseFile();
 	CM.CloseFile();
+}
+
+void DTOKSU::ResetModelTime(double HMTime, double FMTime, double CMTime){
+	HM.AddTime(HMTime);
+	FM.AddTime(FMTime);
+	CM.AddTime(CMTime);
+	
 }
 
 void DTOKSU::CheckTimeStep(){
