@@ -59,7 +59,7 @@ double ForceModel::ProbeTimeStep()const{
 	// Deal with case where power/time step causes large temperature change.
 	double timestep(0);
 	threevector Acceleration = CalculateAcceleration();
-	// For Accuracy = 1.0, requires change in velocity less than 0.01m or 1cm/s
+	// For Accuracy = 1.0, requires change in velocity less than 0.01m or 10cm/s
 	if( Acceleration.mag3() == 0 ){
 		static bool runOnce = true;
 		WarnOnce(runOnce,"Zero Acceleration!\ntimestep being set to unity");
@@ -172,7 +172,7 @@ threevector ForceModel::CalculateAcceleration()const{
 	return Accel;
 }
 
-// Calculations for ion drag: Mach number, shielding length with fitting function and thermal scattering parameter
+// Calculations for Neutral Drag
 threevector ForceModel::NeutralDrag()const{
 	F_Debug("\tIn ForceModel::DTOKSIonDrag()\n\n");
 //	return (Pdata->PlasmaVel-Sample->get_velocity())*Pdata->NeutralDensity*sqrt(2*Kb*Pdata->IonTemp*Mp)*PI
