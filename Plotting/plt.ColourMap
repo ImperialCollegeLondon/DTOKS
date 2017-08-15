@@ -1,0 +1,5 @@
+set view map
+set dgrid3d <row_size>,<col_size>,<norm>
+splot "filename" using 1:2:3 with pm3d
+#set pm3d interpolate 4,4
+
