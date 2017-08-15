@@ -69,7 +69,7 @@ int main(int argc, char* argv[]){
 	char Element='W';		// Element, (W) : Tungsten, (G) : Graphite, (B) : Beryllium or (F) : Iron.
 //	double Power=0;			// Kilo-Watts power in addition to heating model powers
 	double Size=5e-5; 		// m
-	double Temp=2000;		// K
+	double Temp=3500;		// K
 	double TimeStep=1e-5;		// s
 //	std::shared_ptr<Matter> Sample;	// Define the sample matter type
 
@@ -167,7 +167,11 @@ int main(int argc, char* argv[]){
 	}
 
 	threevector xinit(1.15,0.0,-1.99);// default injection right hand side
-	threevector vinit(0.0,0.0,100.0);
+	// Coordinates are r, theta, z.
+	// z is the vertical direction.
+	// r and theta map out the toroidal plane.
+	// Therefore a plot in r, z provides a poloidal cross section
+	threevector vinit(0.0,0.0,10.0);
 	double InitRotationalFreq(0.0);
 	Sample->update_motion(xinit,vinit,InitRotationalFreq);
 
