@@ -61,6 +61,7 @@ void HeatingModel::CreateFile(std::string filename, bool PrintPhaseData){
        	if( UseModel[7] )       					ModelDataFile << "\tSEE";
        	if( UseModel[8] )       					ModelDataFile << "\tTEE";
 	ModelDataFile << "\n";
+	Print();
 }
 
 // This model forces the time step to be the value which produces a change in temperature or 1*accuracy degree

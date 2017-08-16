@@ -36,6 +36,7 @@ void ChargingModel::CreateFile(std::string filename){
 
 
 	ModelDataFile << "\n";
+	Print();
 }
 
 void ChargingModel::Print(){

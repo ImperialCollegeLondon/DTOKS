@@ -2,6 +2,7 @@
 //#define FORCE_DEBUG
 //#define FORCE_DEEP_DEBUG
 
+//#include <math.h>
 #include "ForceModel.h"
 #include "MathHeader.h" // This is weird
 
@@ -39,12 +40,12 @@ void ForceModel::CreateFile(std::string filename){
        	if( UseModel[4] ) 			ModelDataFile << "\tNeutralDrag";
 		
 	ModelDataFile << "\n";
+	Print();
 }
 
 void ForceModel::Print(){
 	F_Debug("\tIn ForceModel::Print()\n\n");
 	ModelDataFile << Sample->get_position() << "\t" << Sample->get_velocity() << "\t" << Sample->get_rotationalfreq();
-
 	bool PrintGravity = false; // Lol
 	if( UseModel[0] && PrintGravity ) 	ModelDataFile << "\t0.0 0.0 -9.81"; // Maybe this should be coded better...
 	if( UseModel[1] ) 			ModelDataFile << "\t" << Centrifugal();
@@ -81,7 +82,7 @@ double ForceModel::ProbeTimeStep()const{
                 /(3.0*epsilon0*Pdata->ElectronTemp*fabs(Sample->get_potential())*Pdata->MagneticField.mag3());
 
 	if( GyromotionTimeStep < timestep ){
-		std::cout << "\ntimestep limited by magnetic field (Gyromotion)";
+		std::cout << "\ntimestep limited by magnetic field (Gyromotion)\n";
 		timestep = GyromotionTimeStep;
 	}
 
@@ -108,9 +109,13 @@ void ForceModel::Force(double timestep){
 	threevector Acceleration = CalculateAcceleration();
 
 	threevector ChangeInPosition(
-			Sample->get_velocity().getx()*timestep,
-			(Sample->get_velocity().gety()*timestep)/(Sample->get_position().getx()),
-			Sample->get_velocity().getz()*timestep);
+                        Sample->get_velocity().getx()*timestep,
+                        (Sample->get_velocity().gety()*timestep)/(Sample->get_position().getx()),
+                        Sample->get_velocity().getz()*timestep);
+	// WARNING! If Sample->get_position().getx() == 0, then we will get nans in the position element
+	if( Sample->get_position().getx() == 0.0 ){
+		ChangeInPosition.sety(0.0);
+	}
 
 	threevector ChangeInVelocity = Acceleration*timestep;
 	
@@ -122,28 +127,22 @@ void ForceModel::Force(double timestep){
 	// For this reason, currently I'm just setting the Spin Up time to 1s by default.
 	// Krasheninnikov, S. I. (2006). On dust spin up in uniform magnetized plasma. Physics of Plasmas, 13(11), 2004–2007.
 	double TimeOfSpinUp = Sample->get_radius()*sqrt(Mp/(Kb*Pdata->IonTemp))*Sample->get_density()/(Mp*Pdata->IonDensity);
-
 	TimeOfSpinUp = 1;
-//	std::cout << "\nTimeOfSpinUp = " << TimeOfSpinUp;
-//	std::cout << "\nVti = " << sqrt((Kb*Pdata->IonTemp)/Mp);
-//	std::cout << "\nRho = " << Sample->get_density();
-//	std::cout << "\nMp*Pdata->IonDensity = " << Mp*Pdata->IonDensity;
-//	std::cout << "\nPdata->IonDensity = " << Pdata->IonDensity << "\n";
+
 	double RotationalSpeedUp = timestep*sqrt(Kb*Pdata->IonTemp/Mp)/(TimeOfSpinUp*Sample->get_radius());
-	F1_Debug( "\nRho_{Ti} = " << sqrt(Kb*Pdata->IonTemp*Mp)/(echarge*Pdata->MagneticField.mag3()) <<
-		 "\nV_{Ti} = " << sqrt(Kb*Pdata->IonTemp/Mp) << "\nOmega_{i} = " 
-		<< echarge*Pdata->MagneticField.mag3()/Mp << "\ntimestep = " << timestep );
 	if( Sample->get_radius() < sqrt(Kb*Pdata->IonTemp*Mp)/(echarge*Pdata->MagneticField.mag3()) ){
 	      	RotationalSpeedUp = (timestep*echarge*Pdata->MagneticField.mag3()/(TimeOfSpinUp*Mp));
 		F1_Debug( "\nREGIME TWO!" );
 	}
-
-	F1_Debug( "\nBfield.mag = " << Pdata->MagneticField.mag3() << "\nTimeOfSpinUp = " << TimeOfSpinUp
-		 << "\nSpeedUp = " << RotationalSpeedUp << "\n" );
+//	F1_Debug( "\nRho_{Ti} = " << sqrt(Kb*Pdata->IonTemp*Mp)/(echarge*Pdata->MagneticField.mag3()) <<
+//		 "\nV_{Ti} = " << sqrt(Kb*Pdata->IonTemp/Mp) << "\nOmega_{i} = " 
+//		<< echarge*Pdata->MagneticField.mag3()/Mp << "\ntimestep = " << timestep );
+//	F1_Debug( "\nBfield.mag = " << Pdata->MagneticField.mag3() << "\nTimeOfSpinUp = " << TimeOfSpinUp
+//		 << "\nSpeedUp = " << RotationalSpeedUp << "\n" );
 
 	Sample->update_motion(ChangeInPosition,ChangeInVelocity,RotationalSpeedUp);
 
-	F1_Debug( "ChangeInVelocity : " << ChangeInVelocity << "\nAcceleration : " << Acceleration << "\nTimeStep : " << TimeStep);
+	F1_Debug( "\nChangeInPosition : " << ChangeInPosition << "\nChangeInVelocity : " << ChangeInVelocity << "\nAcceleration : " << Acceleration << "\nTimeStep : " << TimeStep << "\n");
 	F_Debug("\t"); Print();
 	TotalTime += timestep;
 }
@@ -166,8 +165,10 @@ threevector ForceModel::CalculateAcceleration()const{
 	if( UseModel[4] ) Accel += NeutralDrag();
 	F1_Debug( "\n\t\tg = " << threevector(0.0,0.0,-9.81) );
 	F1_Debug( "\n\t\tcentrifugal = " << Centrifugal() );
-	F1_Debug( "\n\t\tlorentzforce = " << LorentzForce() << "\n\n" );
+	F1_Debug( "\n\t\tlorentzforce = " << LorentzForce() );
 	F1_Debug( "\n\t\tFid = " << DTOKSIonDrag() );
+	F1_Debug( "\n\t\tNeutralDrag = " << NeutralDrag() );
+	F1_Debug( "\n\t\tAccel = " << Accel << "\n\n" );
 	
 	return Accel;
 }
@@ -230,7 +231,7 @@ threevector ForceModel::DTOKSIonDrag()const{
 			F_Debug("\nFidS = " << FidS << "\nFidC = " << FidC);
 		}else{	// Relative speed greater than twice the mach number, use just plain collection area
 //			double lambdadi = sqrt(epsilon0*Pdata->IonTemp*ConvertKelvsToeV)/sqrt(Pdata->IonDensity*echarge);
-			F_Debug("\nlambdadi = " << lambdadi);
+			//F_Debug("\nlambdadi = " << lambdadi);
 			Fid = Mt*Mt.mag3()*PI*Pdata->IonTemp*ConvertKelvsToeV*pow(Sample->get_radius(),2)*Pdata->IonDensity*echarge;
 		}
 	}
@@ -252,8 +253,6 @@ threevector ForceModel::LorentzForce()const{
 	//edo to eixa allaksei se ola ta runs sto After 28_Feb ara prepei na ksana ginoun
 	// Google Translate: Here I had changed it to all the brides in After 28_Feb so they have to be done again
 	threevector returnvec = (Pdata->ElectricField+(Sample->get_velocity()^Pdata->MagneticField))*qtom;
-	
-	
 	return returnvec;
 }
 
