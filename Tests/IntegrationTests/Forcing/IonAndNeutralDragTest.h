@@ -60,7 +60,7 @@ int IonAndNeutralDragTest(char Element){
 	threevector zeros(0.0,0.0,0.0);
 	Sample->update_motion(zeros,vinit,0.0);
 	// START NUMERICAL MODEL
-	ForceModel MyModel("out_ConstantForcingTest.txt",1.0,ForceModels,Sample,Pdata);
+	ForceModel MyModel("out_ConstantForcingTest.txt",0.1,ForceModels,Sample,Pdata);
 	double Mass = Sample->get_mass();
 	MyModel.UpdateTimeStep();
 	size_t imax(100);
@@ -73,8 +73,6 @@ int IonAndNeutralDragTest(char Element){
 
 	// START ANALYTICAL MODEL
 	double ConvertKelvsToeV(8.621738e-5);
-	Pdata->ElectronDensity*exp(-Sample->get_potential())*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
-
 
 	threevector Mt = (Pdata->PlasmaVel-Sample->get_velocity())*sqrt(Mp/(Kb*Pdata->IonTemp)); 
 	double lambda = sqrt(epsilon0/(Pdata->IonDensity*echarge*exp(-Mt.mag3()*Mt.mag3()/2)

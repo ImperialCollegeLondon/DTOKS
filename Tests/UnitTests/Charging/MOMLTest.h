@@ -1,7 +1,7 @@
 #include "solveMOML.h"
 #include <iostream>
 
-// Test orbital motion limited theory
+// Test Modified orbital motion limited theory
 void MOMLTest(){
 	clock_t begin = clock();
 

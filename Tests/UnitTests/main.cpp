@@ -8,6 +8,7 @@
 #include "MOMLTest.h"
 #include "SOMLTest.h"
 #include "SMOMLTest.h"
+#include "IonNeutralDragTest.h"
 int main(){
 
 	// Backscatter Unit Test:
@@ -31,6 +32,8 @@ int main(){
         // Bacharis, Minas Coppins, Michael Allen, John E.
         // Page 2 & 3
 //	DeltaThermTest();
+
+	// ***** CHARGING TESTS ***** //
 
 	// Charging Timescale Test:
 	// This test is used to verify that the timestep as calculated by Krasheninnikovs is always smaller
@@ -57,7 +60,7 @@ int main(){
 	// MOML Charging Test:
 	// This test is designed to find the floating potential for large dust grains in a stationary plasma following MOML theory.
 	// This employs an approximate series expansion to the Lambert W function to find the floating potential
-	MOMLTest();
+//	MOMLTest();
 
 	// SOML Charging Test:
 	// This test is designed to find the floating potential for small dust grains in a flowing plasma following SOML theory.
@@ -80,6 +83,17 @@ int main(){
 	// This test is designed to find the floating potential for large negative dust grains with electron emission 
 	// This employs an approximate series expansion to the Lambert W function to find the floating potential
 //	SchottkyMOMLTest();
+
+	// ***** ***** ***** ***** //
+
+	// ***** FORCE TESTS ***** //
+
+	// IonNeutralDrag Force Test: 
+	// This test is designed to compare the relative magnitudes of the ion and neutral drag force.
+	// The Ion Drag force is the one that was originally used in DTOKS while the neutral drag is from DUSTT,
+	// See Pigarov, A. Y., Krasheninnikov, S. I., Soboleva, T. K. and Rognlien, T. D. (2005) 
+	// ‘Dust-particle transport in tokamak edge plasmas’, Physics of Plasmas, 12(12), pp. 1–15. 
+	IonNeutralDragTest();
 
 
 
