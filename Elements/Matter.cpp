@@ -214,7 +214,7 @@ void Matter::update_boilingtemp(){
 	}
 	M2_Debug("\nR*log(CapillaryPressure)/(1000*Ec.LatentVapour*Ec.AtomicMass) = " 
 		<< R*log(CapillaryPressure)/(1000*Ec.LatentVapour*Ec.AtomicMass) << "\nSt.SuperBoilingTemp = " 
-		<< St.SuperBoilingTemp);
+		<< St.SuperBoilingTemp << "\n");
 }
 
 void Matter::update_state(double EnergyIn){
@@ -227,7 +227,7 @@ void Matter::update_state(double EnergyIn){
 		St.FusionEnergy += EnergyIn;
 		St.Temperature = Ec.MeltingTemp;
 		if( St.FusionEnergy < 0 ){ // If it has just re-frozen, St.Fusion Energy is negative, account for lost energy
-			St.Temperature = Ec.MeltingTemp+(St.FusionEnergy-EnergyIn)/(St.Mass*St.HeatCapacity);
+			St.Temperature = Ec.MeltingTemp+(St.FusionEnergy)/(St.Mass*St.HeatCapacity);
 			St.FusionEnergy = 0;
 			St.Liquid = false;
 		}

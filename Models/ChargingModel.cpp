@@ -33,9 +33,8 @@ void ChargingModel::CreateFile(std::string filename){
 
 	ModelDataFile << "Time\tChargeOfGrain";
 	ModelDataFile << "\tPositive\tPotential";
-
-
 	ModelDataFile << "\n";
+	Print();
 }
 
 void ChargingModel::Print(){

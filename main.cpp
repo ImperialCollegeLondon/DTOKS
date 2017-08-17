@@ -167,6 +167,10 @@ int main(int argc, char* argv[]){
 
 	threevector xinit(1.15,0.0,-1.99);// default injection right hand side
 	threevector vinit(0.0,0.0,100.0);
+	// Coordinates are r, theta, z.
+	// z is the vertical direction.
+	// r and theta map out the toroidal plane.
+	// Therefore a plot in r, z provides a poloidal cross section
 	double InitRotationalFreq(0.0);
 	Sample->update_motion(xinit,vinit,InitRotationalFreq);
 
