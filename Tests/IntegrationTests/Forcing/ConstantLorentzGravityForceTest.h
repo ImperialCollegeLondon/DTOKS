@@ -1,6 +1,6 @@
 #include "ForceModel.h"
 
-int ConstantMagneticForceTest(char Element){
+int ConstantLorentzGravityForceTest(char Element){
 	clock_t begin = clock();
 	// ********************************************************** //
 	// FIRST, define program default behaviour
@@ -20,7 +20,7 @@ int ConstantMagneticForceTest(char Element){
 	Matter *Sample;			// Define the sample matter type
 
 	// Set to true all Force models that are wanted
-	bool Gravity = false;		// IS ON!
+	bool Gravity = true;		// IS ON!
 	bool Centrifugal = false;	// IS OFF!
 	bool Lorentz = true;		// IS ON!
 	bool IonDrag = false;		// IS OFF!
@@ -28,10 +28,12 @@ int ConstantMagneticForceTest(char Element){
 
 	PlasmaData *Pdata = new PlasmaData();
 	Pdata->ElectronTemp = 10*1.16e4;	// K, Electron Temperature, convert from eV
-	threevector Efield(0.0, 0.0, 0.0);
+	threevector Efield(0.5, 2.0, 0.0);
 	Pdata->ElectricField = Efield;
 	threevector Bfield(0.0, 1.0, 0.0);
 	Pdata->MagneticField = Bfield;
+	threevector Gfield(0.0,0.0,-9.81);
+	Pdata->Gravity = Gfield;
 
 	std::array<bool,5> ForceModels  = {Gravity,Centrifugal,Lorentz,IonDrag,NeutralDrag};
 
@@ -60,7 +62,7 @@ int ConstantMagneticForceTest(char Element){
 
 	double Mass = Sample->get_mass();
 	MyModel.UpdateTimeStep();
-	size_t imax(800000);
+	size_t imax(1000);
 
 	for( size_t i(0); i < imax; i ++)
 		MyModel.Force();
@@ -69,21 +71,33 @@ int ConstantMagneticForceTest(char Element){
 	// END NUMERICAL MODEL
 
 	// START ANALYTICAL MODEL
-	threevector Vparr(Bfield.getx()*vinit.getx(),Bfield.gety()*vinit.gety(),Bfield.getz()*vinit.getz());
-	threevector Vperp = vinit - Vparr;
+
+	threevector Eparr(Bfield.getx()*Efield.getx(),Bfield.gety()*Efield.gety(),Bfield.getz()*Efield.getz());
+	threevector Eperp = Efield - Eparr;
+
 	double ConvertKelvsToeV(8.621738e-5);
 	// NOTE: this is the charge to mass ratio for a negative grain only...
-	double qtom = -3.0*epsilon0*Pdata->ElectronTemp*ConvertKelvsToeV*Sample->get_potential()
+	double qtom = -3.0*epsilon0*Pdata->ElectronTemp*ConvertKelvsToeV*Potential
 			/(pow(Sample->get_radius(),2)*Sample->get_density());
+
+	threevector vG = (Gfield^Bfield)*(1/(pow(Bfield.mag3(),2)*qtom));
+	threevector vE = (Eperp^Bfield)*(1/(pow(Bfield.mag3(),2)));
+
+
+	threevector Vparr(Bfield.getx()*vinit.getx(),Bfield.gety()*vinit.gety(),Bfield.getz()*vinit.getz());
+	threevector Vperp = vinit - Vparr - vE - vG;
+
 	double AngularVel = qtom*Bfield.mag3(); // Direction of this as vector is parallel to B
 
 	double vx = -Vperp.mag3()*sin(AngularVel*imax*MyModel.get_timestep());
 	double vz = Vperp.mag3()*cos(AngularVel*imax*MyModel.get_timestep());
 
 	std::cout << "\nVret = (" << vx << ", 0.0, " << vz << ")\n";
+	std::cout << "\nAngularVel = (" << AngularVel << ")\n";
 	std::cout << "\nimax*ModelTimeStep = " << imax*ModelTimeStep;
 	std::cout << "\nqtom = " << qtom;
-	threevector AnalyticVelocity = threevector(vx,0.0,vz) + Vparr;
+	std::cout << "\nvE = " << vE;
+	threevector AnalyticVelocity = Vparr + Eparr*qtom*imax*ModelTimeStep + vE - vG + threevector(vx,0.0,vz); // + vE;
 	// END ANALYTICAL MODEL
 
 	double ReturnVal = 0;

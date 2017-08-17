@@ -20,7 +20,7 @@ int ConstantLorentzForceTest(char Element){
 	Matter *Sample;			// Define the sample matter type
 
 	// Set to true all Force models that are wanted
-	bool Gravity = false;		// IS ON!
+	bool Gravity = false;		// IS OFF!
 	bool Centrifugal = false;	// IS OFF!
 	bool Lorentz = true;		// IS ON!
 	bool IonDrag = false;		// IS OFF!
@@ -28,9 +28,7 @@ int ConstantLorentzForceTest(char Element){
 
 	PlasmaData *Pdata = new PlasmaData();
 	Pdata->ElectronTemp = 10*1.16e4;	// K, Electron Temperature, convert from eV
-	threevector GravityForce(0, 0, -9.81);
-	Pdata->Gravity = GravityForce;
-	threevector Efield(1, -2, 3);
+	threevector Efield(0.5, 2.0, 0.0);
 	Pdata->ElectricField = Efield;
 	threevector Bfield(0.0, 1.0, 0.0);
 	Pdata->MagneticField = Bfield;
@@ -54,7 +52,7 @@ int ConstantLorentzForceTest(char Element){
 		return -1;
 	}
 	Sample->set_potential(Potential);
-	threevector vinit(0.0,0.0,1.0);
+	threevector vinit(0.0,0.0,1.0); // Initial velocity with component parallel and perpendicular
 	threevector zeros(0.0,0.0,0.0);
 	Sample->update_motion(zeros,vinit,0.0);
 	// START NUMERICAL MODEL
@@ -62,7 +60,7 @@ int ConstantLorentzForceTest(char Element){
 
 	double Mass = Sample->get_mass();
 	MyModel.UpdateTimeStep();
-	size_t imax(100);
+	size_t imax(800000);
 
 	for( size_t i(0); i < imax; i ++)
 		MyModel.Force();
@@ -71,33 +69,33 @@ int ConstantLorentzForceTest(char Element){
 	// END NUMERICAL MODEL
 
 	// START ANALYTICAL MODEL
+
 	threevector Eparr(Bfield.getx()*Efield.getx(),Bfield.gety()*Efield.gety(),Bfield.getz()*Efield.getz());
 	threevector Eperp = Efield - Eparr;
-	threevector Vparr(Bfield.getx()*ModelVelocity.getx(),Bfield.gety()*ModelVelocity.gety(),Bfield.getz()*ModelVelocity.getz());
+
+	threevector vE = (Eperp^Bfield)*(1/(pow(Bfield.mag3(),2)));
+
+	threevector Vparr(Bfield.getx()*vinit.getx(),Bfield.gety()*vinit.gety(),Bfield.getz()*vinit.getz());
+	threevector Vperp = vinit - Vparr - vE;
 	double ConvertKelvsToeV(8.621738e-5);
 	// NOTE: this is the charge to mass ratio for a negative grain only...
 	double qtom = -3.0*epsilon0*Pdata->ElectronTemp*ConvertKelvsToeV*Sample->get_potential()
 			/(pow(Sample->get_radius(),2)*Sample->get_density());
 	double AngularVel = qtom*Bfield.mag3(); // Direction of this as vector is parallel to B
-	threevector vE = (Eperp^Bfield)*(1/(pow(Bfield.mag3(),2)));
 
-	double rc = 0.0;//vinit.mag3()/AngularVel;
-	threevector Vperpprime(rc*AngularVel*cos(AngularVel*imax*MyModel.get_timestep()),0.0,rc*AngularVel*sin(AngularVel*imax*MyModel.get_timestep()));
+	double rc = 0.1; 
+	double Vperpprime = rc*AngularVel;
 
-	std::cout << "\nvE = " << vE;
-	std::cout << "\nEparr = " << qtom*Eparr*imax*ModelTimeStep;
-	std::cout << "\nvinit = " << vinit;
-	std::cout << "\nrc = " << rc;
-	std::cout << "\nAngularVel = " << AngularVel;
+	double vx = -Vperp.mag3()*sin(AngularVel*imax*MyModel.get_timestep());
+	double vz = Vperp.mag3()*cos(AngularVel*imax*MyModel.get_timestep());
 
-	double vx = (imax*ModelTimeStep*Efield.gety())/Bfield.mag3()+rc*AngularVel*sin(AngularVel*imax*MyModel.get_timestep());
-	double vy = -(imax*ModelTimeStep*Efield.getx())/Bfield.mag3()+rc*AngularVel*cos(AngularVel*imax*MyModel.get_timestep());
-	double vz = qtom*Efield.getz()*imax*ModelTimeStep+vinit.getz();
-
-	std::cout << "\nVret = (" << vx << ", " << vy << ", " << vz << ")\n";
+	std::cout << "\nVret = (" << vx << ", 0.0, " << vz << ")\n";
+	std::cout << "\nVperpprime = (" << Vperpprime << ")\n";
+	std::cout << "\nAngularVel = (" << AngularVel << ")\n";
 	std::cout << "\nimax*ModelTimeStep = " << imax*ModelTimeStep;
-	threevector AnalyticVelocity = threevector(vx,vy,vz);
-//	threevector AnalyticVelocity =  vE + qtom*Eparr*imax*ModelTimeStep+vinit;
+	std::cout << "\nqtom = " << qtom;
+	std::cout << "\nvE = " << vE;
+	threevector AnalyticVelocity = Vparr + Eparr*qtom*imax*ModelTimeStep + vE + threevector(vx,0.0,vz); // + vE;
 	// END ANALYTICAL MODEL
 
 	double ReturnVal = 0;
@@ -121,21 +119,3 @@ int ConstantLorentzForceTest(char Element){
 
 	return ReturnVal;
 }
-
-/*
-	threevector Eparr(Bfield.getx()*Efield.getx(),Bfield.gety()*Efield.gety(),Bfield.getz()*Efield.getz());
-	threevector Eperp = Efield - Eparr;
-	double ConvertKelvsToeV(8.621738e-5);
-	// NOTE: this is the charge to mass ratio for a negative grain only...
-	double qtom = -3.0*epsilon0*Pdata->ElectronTemp*ConvertKelvsToeV*Sample->get_potential()
-			/(pow(Sample->get_radius(),2)*Sample->get_density());
-	double AngularVel = qtom*Bfield.mag3();
-	double rc = 0.0;
-	threevector Vperp(rc*AngularVel*cos(AngularVel*imax*MyModel.get_timestep()),0.0,rc*AngularVel*sin(AngularVel*imax*MyModel.get_timestep()));
-//	threevector CrossParts = (GravityForce^Bfield + qtom*Eperp^Bfield)*(1.0/ sqrt(pow(Bfield.mag3(),2)))*imax*MyModel.get_timestep();
-	threevector CrossParts = (GravityForce + qtom*Eperp)*imax*MyModel.get_timestep();
-	threevector EPart = Eparr*qtom*imax*MyModel.get_timestep();
-	
-	std::cout << "\nLorentzForce = " << (qtom*(Efield+ModelVelocity^Bfield));
-
-*/

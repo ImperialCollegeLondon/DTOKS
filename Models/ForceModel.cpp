@@ -158,7 +158,7 @@ void ForceModel::Force(){
 threevector ForceModel::CalculateAcceleration()const{
 	F_Debug("\tIn ForceModel::CalculateAcceleration()const\n\n");
 	// Forces: Lorentz + ion drag + gravity
-	threevector Accel;
+	threevector Accel(0.0,0.0,0.0);
 	if( UseModel[0] ) Accel += threevector(0.0,0.0,-9.81);
 	if( UseModel[1] ) Accel += Centrifugal(); // Centrifugal terms. CHECK THESE TWO LINES AT SOME POINT
 	if( UseModel[2] ) Accel += LorentzForce();

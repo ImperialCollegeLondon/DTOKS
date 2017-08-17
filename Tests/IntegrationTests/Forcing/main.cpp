@@ -1,6 +1,9 @@
 #include <ctime>			// Time program
+#include "GravityTest.h"
 #include "ConstantForceTest.h"
+#include "ConstantMagneticForceTest.h"
 #include "ConstantLorentzForceTest.h"
+#include "ConstantLorentzGravityForceTest.h"
 
 int main(){
 
@@ -14,18 +17,42 @@ int main(){
 		// Integration test one for all materials
 		// Test if constant Lorentz force (Electric field with no magnetic field) and gravity
 		// Produce expected results over 100 or so steps
-		std::cout << "\nRunning Test 1...\n";
-		out = ConstantForceTest(Element[i]);	
-		std::cout << "\nFinished Running Test 1!\n";
+//		std::cout << "\nRunning Test 1...\n";
+//		out = GravityTest(Element[i]);	
+//		std::cout << "\nFinished Running Test 1!\n";
 
-		// Test bout 2, THIS TEST DOESN'T WORK YET
+		// Test bout 2,
 		// Integration test two for all materials
-		// Test if full Lorentz force (Electric field and magnetic field) and gravity
+		// Test if constant Lorentz force (Electric field with no magnetic field) and gravity
 		// Produce expected results over 100 or so steps
 //		std::cout << "\nRunning Test 2...\n";
-//		out = ConstantLorentzForceTest(Element[i]);	
+//		out = ConstantForceTest(Element[i]);	
 //		std::cout << "\nFinished Running Test 2!\n";
 
+		// Test bout 3,
+		// Integration test three for all materials
+		// Test if model of constant Magnetic field can be replicated analytically
+		// Produce expected results over 1000000 or so steps
+//		std::cout << "\nRunning Test 3...\n";
+//		out = ConstantMagneticForceTest(Element[i]);	
+//		std::cout << "\nFinished Running Test 3!\n";
+
+
+		// Test bout 4,
+		// Integration test four for all materials
+		// Test if full Lorentz force (Electric field and magnetic field)
+		// Produce expected results over 1000000 or so steps
+//		std::cout << "\nRunning Test 4...\n";
+//		out = ConstantLorentzForceTest(Element[i]);	
+//		std::cout << "\nFinished Running Test 4!\n";
+
+		// Test bout 5, THIS TEST DOESN'T WORK YET, Don't know why...
+		// Integration test five for all materials
+		// Test if full Lorentz force (Electric field and magnetic field) and gravity
+		// Produce expected results over 1000000 or so steps
+		std::cout << "\nRunning Test 5...\n";
+		out = ConstantLorentzGravityForceTest(Element[i]);	
+		std::cout << "\nFinished Running Test 5!\n";
 
 		if( out == 1 ) std::cout << "\n# PASSED!";
 		if( out == 2 ) std::cout << "\n# WARNING! DEVIATION OF < 1%";

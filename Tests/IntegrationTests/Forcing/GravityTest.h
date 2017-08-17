@@ -1,6 +1,6 @@
 #include "ForceModel.h"
 
-int ConstantMagneticForceTest(char Element){
+int GravityTest(char Element){
 	clock_t begin = clock();
 	// ********************************************************** //
 	// FIRST, define program default behaviour
@@ -20,7 +20,7 @@ int ConstantMagneticForceTest(char Element){
 	Matter *Sample;			// Define the sample matter type
 
 	// Set to true all Force models that are wanted
-	bool Gravity = false;		// IS ON!
+	bool Gravity = true;		// IS ON!
 	bool Centrifugal = false;	// IS OFF!
 	bool Lorentz = true;		// IS ON!
 	bool IonDrag = false;		// IS OFF!
@@ -30,8 +30,10 @@ int ConstantMagneticForceTest(char Element){
 	Pdata->ElectronTemp = 10*1.16e4;	// K, Electron Temperature, convert from eV
 	threevector Efield(0.0, 0.0, 0.0);
 	Pdata->ElectricField = Efield;
-	threevector Bfield(0.0, 1.0, 0.0);
+	threevector Bfield(0.0, 0.0, 0.0);
 	Pdata->MagneticField = Bfield;
+	threevector Gfield(0.0,0.0,-9.81);
+	Pdata->Gravity = Gfield;
 
 	std::array<bool,5> ForceModels  = {Gravity,Centrifugal,Lorentz,IonDrag,NeutralDrag};
 
@@ -52,7 +54,7 @@ int ConstantMagneticForceTest(char Element){
 		return -1;
 	}
 	Sample->set_potential(Potential);
-	threevector vinit(0.0,0.0,1.0); // Initial velocity with component parallel and perpendicular
+	threevector vinit(1.5,-0.1,3.0); // Initial velocity with component parallel and perpendicular
 	threevector zeros(0.0,0.0,0.0);
 	Sample->update_motion(zeros,vinit,0.0);
 	// START NUMERICAL MODEL
@@ -60,7 +62,7 @@ int ConstantMagneticForceTest(char Element){
 
 	double Mass = Sample->get_mass();
 	MyModel.UpdateTimeStep();
-	size_t imax(800000);
+	size_t imax(85);
 
 	for( size_t i(0); i < imax; i ++)
 		MyModel.Force();
@@ -69,21 +71,8 @@ int ConstantMagneticForceTest(char Element){
 	// END NUMERICAL MODEL
 
 	// START ANALYTICAL MODEL
-	threevector Vparr(Bfield.getx()*vinit.getx(),Bfield.gety()*vinit.gety(),Bfield.getz()*vinit.getz());
-	threevector Vperp = vinit - Vparr;
-	double ConvertKelvsToeV(8.621738e-5);
-	// NOTE: this is the charge to mass ratio for a negative grain only...
-	double qtom = -3.0*epsilon0*Pdata->ElectronTemp*ConvertKelvsToeV*Sample->get_potential()
-			/(pow(Sample->get_radius(),2)*Sample->get_density());
-	double AngularVel = qtom*Bfield.mag3(); // Direction of this as vector is parallel to B
 
-	double vx = -Vperp.mag3()*sin(AngularVel*imax*MyModel.get_timestep());
-	double vz = Vperp.mag3()*cos(AngularVel*imax*MyModel.get_timestep());
-
-	std::cout << "\nVret = (" << vx << ", 0.0, " << vz << ")\n";
-	std::cout << "\nimax*ModelTimeStep = " << imax*ModelTimeStep;
-	std::cout << "\nqtom = " << qtom;
-	threevector AnalyticVelocity = threevector(vx,0.0,vz) + Vparr;
+	threevector AnalyticVelocity = vinit + Gfield*imax*ModelTimeStep; // + vE;
 	// END ANALYTICAL MODEL
 
 	double ReturnVal = 0;
