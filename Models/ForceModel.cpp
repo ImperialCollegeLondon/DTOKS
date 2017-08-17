@@ -176,11 +176,13 @@ threevector ForceModel::CalculateAcceleration()const{
 
 // Calculations for Neutral Drag
 threevector ForceModel::NeutralDrag()const{
-	F_Debug("\tIn ForceModel::DTOKSIonDrag()\n\n");
+	F_Debug("\tIn ForceModel::NeutralDrag()\n\n");
 //	return (Pdata->PlasmaVel-Sample->get_velocity())*Pdata->NeutralDensity*sqrt(2*Kb*Pdata->IonTemp*Mp)*PI
 //			*pow(Sample->get_radius(),2);
-	return (Pdata->PlasmaVel-Sample->get_velocity())*Mp*sqrt(4*PI)*NeutralFlux()*PI*pow(Sample->get_radius(),2);
-
+//	The Factor of sqrt(4*PI) here has been introduced to match the definition of species velocity between
+//	DTOKS and DUSTT.
+	return (Pdata->PlasmaVel-Sample->get_velocity())*Mp*sqrt(4*PI)*NeutralFlux()*PI*pow(Sample->get_radius(),2)*(1.0/Sample->get_mass()); 
+//	return (Pdata->PlasmaVel-Sample->get_velocity())*Mp*NeutralFlux()*PI*pow(Sample->get_radius(),2)*(1.0/Sample->get_mass());
 }
 
 // Calculations for ion drag: Mach number, shielding length with fitting function and thermal scattering parameter

@@ -13,4 +13,4 @@ cd $UNITTESTDIR
 
 g++ -std=c++14 main.cpp Constants.o Functions.o threevector.o -I$DTOKSUDIR -I$CHARGINGDIR -I$BOOSTDIR -o main
 
-rm Functions.o
+rm Functions.o threevector.o Constants.o
