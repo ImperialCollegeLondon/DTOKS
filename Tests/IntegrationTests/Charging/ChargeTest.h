@@ -50,7 +50,7 @@ int ChargeTest(char Element){
 	threevector Bfield(0.0, 0.0, 0.0);
 	Pdata->MagneticField = Bfield;
 
-	std::array<bool,1> ChargeModels  = {true};
+	std::array<bool,2> ChargeModels  = {true,false};
 
 	// Models and ConstModels are placed in an array in this order:
 	std::array<char, 4> ConstModels =
@@ -70,17 +70,17 @@ int ChargeTest(char Element){
 	}
 	Sample->set_potential(Potential);
 	ChargingModel MyModel("out_ConstantChargingTest.txt",1.0,ChargeModels,Sample,Pdata);
-
+	MyModel.UpdateTimeStep();
 	MyModel.Charge();
 
 	double AnalyticPotential(0);
 	std::cout << "\nSample->get_deltatot() = " << Sample->get_deltatot();
 	if( Sample->get_deltatot() < 1.0 ){ // solveOML only defined for deltatot < 1.0
-		AnalyticPotential = solveOML(Sample->get_deltatot(),Sample->get_potential(),Pdata->IonTemp,Pdata->ElectronTemp);
+		AnalyticPotential = solveOML(Sample->get_deltatot(),Potential,Pdata->IonTemp,Pdata->ElectronTemp);
 	}else{ // If the grain is in fact positive ...
-		AnalyticPotential = solveOML(Sample->get_deltatot(),Sample->get_potential(),Pdata->IonTemp,Pdata->ElectronTemp);
+		AnalyticPotential = solveOML(Sample->get_deltatot(),Potential,Pdata->IonTemp,Pdata->ElectronTemp);
 		if( Potential < 0.0 ){
-			AnalyticPotential = solveOML(0.0,Sample->get_potential(),Pdata->IonTemp,Pdata->ElectronTemp)
+			AnalyticPotential = solveOML(0.0,Potential,Pdata->IonTemp,Pdata->ElectronTemp)
 					-Kb*Sample->get_temperature()/(echarge*Pdata->ElectronTemp);
 		}
 	}

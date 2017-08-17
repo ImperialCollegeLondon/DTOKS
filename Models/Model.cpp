@@ -186,7 +186,6 @@ const double Model::OMLElectronFlux(double DustTemperature)const{
 
 const double Model::NeutralFlux()const{
 	H_Debug("\n\tIn Model::NeutralFlux():\n\n");
-
 	return Pdata->NeutralDensity*sqrt(Kb*Pdata->NeutralTemp/(2*PI*Mp));
 }
 

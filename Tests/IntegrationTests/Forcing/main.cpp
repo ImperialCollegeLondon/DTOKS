@@ -4,6 +4,8 @@
 #include "ConstantMagneticForceTest.h"
 #include "ConstantLorentzForceTest.h"
 #include "ConstantLorentzGravityForceTest.h"
+#include "NeutralDragTest.h"
+#include "IonAndNeutralDragTest.h"
 
 int main(){
 
@@ -50,9 +52,26 @@ int main(){
 		// Integration test five for all materials
 		// Test if full Lorentz force (Electric field and magnetic field) and gravity
 		// Produce expected results over 1000000 or so steps
-		std::cout << "\nRunning Test 5...\n";
-		out = ConstantLorentzGravityForceTest(Element[i]);	
-		std::cout << "\nFinished Running Test 5!\n";
+//		std::cout << "\nRunning Test 5...\n";
+//		out = ConstantLorentzGravityForceTest(Element[i]);	
+//		std::cout << "\nFinished Running Test 5!\n";
+
+		// Test bout 6, 
+		// Integration test six for all materials
+		// Test if Neutral Drag force 
+		// Produce expected results over 100 or so steps
+//		std::cout << "\nRunning Test 6...\n";
+//		out = NeutralDragTest(Element[i]);	
+//		std::cout << "\nFinished Running Test 6!\n";
+
+		// Test bout 7, 
+		// Integration test seven for all materials
+		// Test if Neutral and Ion Drag forces
+		// Produce expected results over 100 or so steps
+		std::cout << "\nRunning Test 7...\n";
+		out = IonAndNeutralDragTest(Element[i]);	
+		std::cout << "\nFinished Running Test 7!\n";
+
 
 		if( out == 1 ) std::cout << "\n# PASSED!";
 		if( out == 2 ) std::cout << "\n# WARNING! DEVIATION OF < 1%";

@@ -72,7 +72,7 @@ int ConstantHeatEmissivTest(char Element){
 	}
 	threevector xinit(1.15,0.0,-1.99);// default injection right hand side
 	threevector vinit(0.0,0.0,0.0);
-	Sample->update_motion(xinit,vinit);
+	Sample->update_motion(xinit,vinit,0.0);
 	HeatingModel MyModel("out_ConstantHeatingTest.txt",1.0,Models,Sample,Pdata);
 //	MyModel.Vapourise("out_ConstantHeatingTest.txt",ConstModels,TimeStepType);
 	
