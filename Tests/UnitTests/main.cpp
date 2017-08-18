@@ -11,6 +11,7 @@
 #include "IonNeutralDragTest.h"
 #include "NeutralHeatingTest.h"
 #include "EvaporativeCoolingTest.h"
+#include "EvaporativeMassLossTest.h"
 int main(){
 
 	// Backscatter Unit Test:
@@ -104,12 +105,17 @@ int main(){
 	// Neutral Heating Test: 
 	// This test is designed to test the neutral heating and show the variation in magnitude for 
 	// the neutral heating term
-	NeutralHeatingTest();
+//	NeutralHeatingTest();
 
 	// Evaporative Cooling Test: 
 	// This test is designed to test the evaporative cooling as a function of temperature,
 	// Here it is shown only for Tungsten 
-	EvaporativeCoolingTest();
+//	EvaporativeCoolingTest();
+
+	// Evaporative Mass Loss Test: 
+	// This test is designed to test the evaporative mass loss as a function of temperature,
+	// Here it is shown only for Tungsten 
+	EvaporativeMassLossTest();
 
 
 	return 0;
