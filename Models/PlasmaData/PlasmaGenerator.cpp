@@ -1,6 +1,8 @@
 #include <fstream>
 #include <string>
 #include <iostream>
+#include <math.h>
+#include "Constants.h"
 
 #define xmin 0.2
 #define xmax 1.4
@@ -23,7 +25,7 @@ double LinearRamp(double fx_init, double fx_fin, double fy_init, double fy_fin, 
 	return (y_part + x_part);
 }
 
-void MagneticField(std::string magfieldtype){
+void MagneticField(std::string magfieldtype, double Bmax){
 	std::string filename((magfieldtype + ".dat").c_str());
 	std::ofstream fs;
 
@@ -36,16 +38,16 @@ void MagneticField(std::string magfieldtype){
 	double bbx_f(0.0), bby_f(0.0), bbz_f(0.0);
 
 	if	( magfieldtype == "Constant"	){
-		bbx = 1.0;
-		bby = 1.0;
-		bbz = 1.0;
+		bbx = 0.0;
+		bby = 0.0;
+		bbz = Bmax;
 	}else if( magfieldtype == "Linear"	){
 		bbx_i  = 0.0; 
-		bbx_f  = 5.0; 
+		bbx_f  = Bmax; 
 		bby_i  = 0.0; 
-		bby_f  = 5.0; 
+		bby_f  = Bmax; 
 		bbz_i  = 0.0; 
-		bbz_f  = 5.0; 
+		bbz_f  = Bmax; 
 
 		if( true ) {
 			bbx_f = bbx_i;
@@ -77,12 +79,23 @@ int main(){
 	double echarge(1.60217662e-19);
 	// Te: Electron Temperature, Ti: Ion Temperature, na0: Ion Density, na1: Electron Density
 	// po: Plasma Pressure, ua0: Ion Velocity, ua1: Electron Velocity
-	std::string PlasmaType = "Constant";	// Plasma Type, can be "Blank", "Constant", "Linear" or "Sinusoidal"
+	std::string PlasmaType = "TwoPointModel";	// Plasma Type, can be "Blank", "Constant", "Linear" or "TwoPointModel"
 
 	double Te(0.0), Ti(0.0), na0(0.0), na1(0.0), po(0.0), ua0(0.0), ua1(0.0);
 
 	double Te_i(0.0), Te_f(0.0), Ti_i(0.0), Ti_f(0.0), na0_i(0.0), na0_f(0.0);
 	double na1_i(0.0), na1_f(0.0), po_i(0.0), po_f(0.0), ua0_i(0.0), ua0_f(0.0), ua1_i(0.0), ua1_f(0.0);
+
+	double gamma = 7;		// 
+	double qParallel = 10e6; 	// Wm^-2, Power flux
+	double L = ymax-ymin;		// Length of System
+	double k0e = 2000;		// Heat conductivity of electrons
+
+	double Densityu = 1.0e17;	
+	double TwoPointModelTempTt = 4*Mp*pow(qParallel,2)*pow(7*qParallel*L/(2*k0e),-(4.0/7.0))/(2*pow(echarge,3)*pow(gamma*Densityu,2));
+	double TwoPointModelTempTu = pow(7*qParallel*L/(2*k0e),-(4.0/7.0));
+	double Densityt = pow(Densityu*echarge,2)*gamma*pow(7*qParallel*L/(2*k0e),-(4.0/7.0))/(2*qParallel*Mp);
+
 
 	if	( PlasmaType == "Constant"	){
 		Te  = 15*echarge;//1.5*echarge;	// Convert ev to joules
@@ -119,11 +132,20 @@ int main(){
 			ua1_f = ua1_i;
 		}
 
+	}else if( PlasmaType == "TwoPointModel"	){ // Constant part of two point model
+		na0 = Densityu;		// 3.8e18; 
+		na1 = Densityu;
+		Te  = Kb*TwoPointModelTempTt;	// Convert ev to joules
+		Ti  = Kb*TwoPointModelTempTt;	// Convert ev to joules
+		po  = 0.0;		// Varies between -20 and 20
+		ua0 = 0.0; 		// Varies between -10,000 and 10,000 (roughly), generally smaller than ua1
+		ua1 = 0.0; 		// Varies between -10,000 and 10,000 (roughly)
 	}else if( PlasmaType == "Blank" 	){
 	}else{
 		std::cout << "\nInvalid Plasma Type!\n";
  		return 1;
 	}
+
 
 	std::string filename((PlasmaType + ".dat").c_str());
 	std::ofstream fs;
@@ -143,6 +165,23 @@ int main(){
 				po  = LinearRamp(po_i,po_i,po_i,po_f,x,y);
 				ua0 = LinearRamp(ua0_i,ua0_i,ua0_i,ua0_f,x,y);
 				ua1 = LinearRamp(ua1_i,ua1_i,ua1_i,ua1_f,x,y);
+			}else if( PlasmaType == "TwoPointModel" ){
+				if( y < -1.6 ){
+					// LINEAR RAMPS ARE WRONG!
+					// THE DENOMINATOR IS THE ENTIRE Y RANGE!
+					Te  = Kb*LinearRamp(0.0,0.0,TwoPointModelTempTt,TwoPointModelTempTu,x,y);
+					Ti  = Kb*LinearRamp(0.0,0.0,TwoPointModelTempTt,TwoPointModelTempTu,x,y);
+					na0 = LinearRamp(0.0,0.0,Densityt,Densityu,x,y);
+					na1 = LinearRamp(0.0,0.0,Densityt,Densityu,x,y);
+					po  = 0; 
+					ua0 = sqrt(Ti/Mp);
+					ua1 = 0;
+				}else{
+			                na0 = Densityu;         // 3.8e18; 
+			                na1 = Densityu;
+			                Te  = Kb*TwoPointModelTempTt;   // Convert ev to joules
+			                Ti  = Kb*TwoPointModelTempTt;   // Convert ev to joules
+				}
 			}
 			fs << x << "\t" << y  << "\t" << Te << "\t" << Ti << "\t" << na0 << "\t" 
 				<< na1 << "\t" << po << "\t" << ua0 << "\t" << ua1 << "\n";
@@ -153,7 +192,7 @@ int main(){
 
 	std::cout << "\nFinished Generating Plasma\n!";
 
-//	MagneticField("Constant");
-//	std::cout << "\nFinished Generating Magnetic Field!\n";
+	MagneticField("Constant",1.0);
+	std::cout << "\nFinished Generating Magnetic Field!\n";
 	return 0;
 }
