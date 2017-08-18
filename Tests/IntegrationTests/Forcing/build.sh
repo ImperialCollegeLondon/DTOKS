@@ -7,7 +7,7 @@ MODELSDIR=$DTOKSUDIR/Models
 INTEGRATIONTESTDIR=$DTOKSUDIR/Tests/IntegrationTests/Forcing
 cd $DTOKSUDIR
 
-g++ -c -std=c++14 $INTEGRATIONTESTDIR/main.cpp MathHeader.cpp DTOKSU.cpp Constants.cpp threevector.cpp Functions.cpp Models/Model.cpp Models/ForceModel.cpp  Models/PlasmaGrid.cpp Models/Model.cpp Elements/Matter.cpp Elements/Iron.cpp Elements/Beryllium.cpp Elements/Tungsten.cpp Elements/Graphite.cpp -I. -I./Models -I./Elements
+g++ -c -std=c++14 $INTEGRATIONTESTDIR/main.cpp MathHeader.cpp Constants.cpp threevector.cpp Functions.cpp Models/Model.cpp Models/ForceModel.cpp  Models/PlasmaGrid.cpp Models/Model.cpp Elements/Matter.cpp Elements/Iron.cpp Elements/Beryllium.cpp Elements/Tungsten.cpp Elements/Graphite.cpp -I. -I./Models -I./Elements
 
 mv *.o $INTEGRATIONTESTDIR
 

@@ -9,6 +9,8 @@
 #include "SOMLTest.h"
 #include "SMOMLTest.h"
 #include "IonNeutralDragTest.h"
+#include "NeutralHeatingTest.h"
+#include "EvaporativeCoolingTest.h"
 int main(){
 
 	// Backscatter Unit Test:
@@ -93,8 +95,21 @@ int main(){
 	// The Ion Drag force is the one that was originally used in DTOKS while the neutral drag is from DUSTT,
 	// See Pigarov, A. Y., Krasheninnikov, S. I., Soboleva, T. K. and Rognlien, T. D. (2005) 
 	// ‘Dust-particle transport in tokamak edge plasmas’, Physics of Plasmas, 12(12), pp. 1–15. 
-	IonNeutralDragTest();
+//	IonNeutralDragTest();
 
+	// ***** ***** ***** ***** //
+
+	// ***** HEAT TESTS ***** //
+
+	// Neutral Heating Test: 
+	// This test is designed to test the neutral heating and show the variation in magnitude for 
+	// the neutral heating term
+	NeutralHeatingTest();
+
+	// Evaporative Cooling Test: 
+	// This test is designed to test the evaporative cooling as a function of temperature,
+	// Here it is shown only for Tungsten 
+	EvaporativeCoolingTest();
 
 
 	return 0;
