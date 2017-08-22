@@ -56,7 +56,7 @@ void HeatingModel::CreateFile(std::string filename, bool PrintPhaseData){
        	if( UseModel[2] )       					ModelDataFile << "\tNewton";
        	if( UseModel[3] )       					ModelDataFile << "\tIonFlux\tIonHeatFlux";
        	if( UseModel[4] )       					ModelDataFile << "\tElectronFlux\tElectronHeatFlux";
-       	if( UseModel[5] )       					ModelDataFile << "\tNeutronFlux\tNeutronHeatFlux";
+       	if( UseModel[5] )       					ModelDataFile << "\tNeutralFlux\tNeutralHeatFlux";
        	if( UseModel[6] )       					ModelDataFile << "\tNeutralRecomb";
        	if( UseModel[7] )       					ModelDataFile << "\tSEE";
        	if( UseModel[8] )       					ModelDataFile << "\tTEE";

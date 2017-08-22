@@ -20,15 +20,15 @@ struct GrainData MatterDefaults = {
 	1.0,		// Emissivity		should be updated
 	1.0,		// Linear Expansion	should be updated
 	0.5,		// Heat Capacity	should be updated
-	0,		    // DeltaSec		should be updated
-	0,		    // DeltaTherm		should be updated
-	0,		    // Potential		should be updated
+	0,		// DeltaSec		should be updated
+	0,		// DeltaTherm		should be updated
+	0,		// Potential		should be updated
 	false,		// Is Positive		should be updated
 	{0,0,0},	// Dust position	case dependant
 	{0,0,0},	// Dust Velocity	case dependant
-	0,          // Rotational Freq  fine
-	0,		    // FusionEnergy		fine
-	0		    // VapourEnergy		fine
+	0,		// Rotational Freq  	fine
+	0,		// FusionEnergy		fine
+	0		// VapourEnergy		fine
 };
 
 
