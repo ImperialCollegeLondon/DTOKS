@@ -19,16 +19,16 @@ int main(){
 //		out = NeutralDragTest(Element[i],true);
 
 //		Error Estimate Test 2:
-//		out = NeutralHeatingTest(Element[i],false);
-//		out = NeutralHeatingTest(Element[i],true);
+		out = NeutralHeatingTest(Element[i],false);
+		out = NeutralHeatingTest(Element[i],true);
 
 //		Error Estimate Test 3:
 //		out = EvaporativeCoolingTest(Element[i],false);
 //		out = EvaporativeCoolingTest(Element[i],true);
 
 //		Error Estimate Test 4:
-		out = VariableHeatCapacityTest(Element[i],false);
-		out = VariableHeatCapacityTest(Element[i],true);
+//		out = VariableHeatCapacityTest(Element[i],false);
+//		out = VariableHeatCapacityTest(Element[i],true);
 
 //		Error Estimate Test 5:
 //		out = VariableEmissivityTest(Element[i],false);

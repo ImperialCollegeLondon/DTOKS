@@ -20,7 +20,7 @@ int VariableEmissivityTest(char Element, bool VaryEmissivity){
 	std::string Name="constant";	// Describes heating model
 
  	// Parameters describing the heating model
-	double Size=1e-6; 		// m
+	double Size=5e-8; 		// m
 	double Temp=280;		// K
 	double TimeStep=1e-9;		// s
 	double Potential = 1;
