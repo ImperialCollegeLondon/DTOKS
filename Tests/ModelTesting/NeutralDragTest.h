@@ -28,14 +28,14 @@ int NeutralDragTest(char Element, bool DragSwitch){
 	bool NeutralDrag = DragSwitch;	// IS ON!
 
 	PlasmaData *Pdata = new PlasmaData();
-	Pdata->NeutralDensity	= 10e18; 	// m^-3, Neutral Density
+	Pdata->NeutralDensity	= 1e18; 	// m^-3, Neutral Density
 	Pdata->IonDensity	= 1e18; 	// m^-3, Ion Density
 	Pdata->ElectronDensity	= 1e18;		// m^-3, Electron Density
 	Pdata->NeutralTemp	= 10*1.16e4;	// K, Neutral Temperature, convert from eV
 	Pdata->IonTemp		= 10*1.16e4;	// K, Ion Temperature, convert from eV
 	Pdata->ElectronTemp	= 10*1.16e4;	// K, Electron Temperature, convert from eV
 	threevector PlasmaVel(0.0,0.0,0.5*sqrt(Kb*Pdata->NeutralTemp/Mp));
-	Pdata->PlasmaVel	= PlasmaVel;
+	Pdata->PlasmaVel	= PlasmaVel;	// ms^-1, Plasma Velocity
 
 	std::array<bool,5> ForceModels  = {Gravity,Centrifugal,Lorentz,IonDrag,NeutralDrag};
 

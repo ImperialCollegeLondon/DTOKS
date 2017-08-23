@@ -1,15 +1,18 @@
 #include "HeatingModel.h"
 
-int NeutralHeatingTest(char Element, bool HeatSwitch){
+int BeforeAfterHeatingTest(char Element, bool Old){
 	clock_t begin = clock();
 	// ********************************************************** //
 	// FIRST, define program default behaviour
 
 	// Define the behaviour of the models for the temperature dependant constants, the time step and the 'Name' variable.
-	char EmissivityModel = 'c'; 	// Possible values 'c', 'v' and 'f': Corresponding to (c)onstant, (v)ariable and from (f)ile
+	char EmissivityModel = 'f'; 	// Possible values 'c', 'v' and 'f': Corresponding to (c)onstant, (v)ariable and from (f)ile
+	if (Old) EmissivityModel = 'c';
 	char ExpansionModel = 'c'; 	// Possible values 'c', 'v' and 's': Corresponding to (c)onstant, (v)ariable, (s)et 
 													// and (z)ero expansion
-	char HeatCapacityModel = 'c'; 	// Possible values 'c', 'v' and 's': Corresponding to (c)onstant, (v)ariable and (s)et
+	char HeatCapacityModel = 'v'; 	// Possible values 'c', 'v' and 's': Corresponding to (c)onstant, (v)ariable and (s)et
+	if (Old) EmissivityModel = 'c';
+
 	char BoilingModel = 'y'; 	// Possible values 'y', 'n', 's' and 't': Corresponding to (y)es, (n)o, (s)uper 
 													// and (t)homson
 	char TimeStepType = 'f';	// Possible values 'o', 's' and 'f': Corresponding to (o)ne degree steps, (s)mall steps 
@@ -17,7 +20,7 @@ int NeutralHeatingTest(char Element, bool HeatSwitch){
 	std::string Name="constant";	// Describes heating model
 
  	// Parameters describing the heating model
-	double Size=1e-6; 		// m
+	double Size=5e-8; 		// m
 	double Temp=280;		// K
 	double TimeStep=1e-9;		// s
 	double Potential = 1;
@@ -25,10 +28,10 @@ int NeutralHeatingTest(char Element, bool HeatSwitch){
 
 	// Set to true all heating models that are wanted
 	bool RadiativeCooling = true;
-	bool EvaporativeCooling = false;
+	bool EvaporativeCooling = !Old;
 	bool NewtonCooling = false;		// This model is equivalent to Electron and Ion heat flux terms
 	// Plasma heating terms
-	bool NeutralHeatFlux = HeatSwitch;
+	bool NeutralHeatFlux = !Old;
 	bool ElectronHeatFlux = true;
 	bool IonHeatFlux = true;
 	bool NeutralRecomb = true;
@@ -75,8 +78,8 @@ int NeutralHeatingTest(char Element, bool HeatSwitch){
 	Sample->set_potential(Potential);
 
 	std::string filename;
-	if( HeatSwitch ) 	filename = "Data/NeutralHeatOn.txt";
-	else 			filename = "Data/NeutralHeatOff.txt";
+	if( Old ) 		filename = "Data/BeforeAfterHeatingOld.txt";
+	else 			filename = "Data/BeforeAfterHeatingNew.txt";
 
 	HeatingModel MyModel(filename,1.0,Models,Sample,Pdata);
 	MyModel.UpdateTimeStep();
@@ -85,7 +88,7 @@ int NeutralHeatingTest(char Element, bool HeatSwitch){
 	clock_t end = clock();
 	double elapsd_secs = double(end-begin)/CLOCKS_PER_SEC;
 
-	std::cout << "\n\n*****\n\nErrorEstimateTest 1 completed in " << elapsd_secs << "s\n";
+	std::cout << "\n\n*****\n\nErrorEstimateTest 5 completed in " << elapsd_secs << "s\n";
 
 	return 0.0;
 }
