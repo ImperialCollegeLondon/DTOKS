@@ -1,3 +1,12 @@
+// # UnitTests
+// This directory contains small independant scripts which are designed to calculate one
+// specific value or the value of an equation or function over a range of parameters. The
+// tests are split into three main categories.
+// Categories :            'Charging Tests', 'Force Tests', 'Heat Tests'
+// 
+// There is also one uncategorised test called 'BackscatterTest'.
+
+
 #include "BackscatterTest.h"
 #include "DeltaSecTest.h"
 #include "DeltaThermTest.h"
@@ -12,13 +21,17 @@
 #include "NeutralHeatingTest.h"
 #include "EvaporativeCoolingTest.h"
 #include "EvaporativeMassLossTest.h"
+
 int main(){
 
 	// Backscatter Unit Test:
 	// This test prints the values of the fraction of backscattered energy and the fraction of back scattered particles
 	// as calculated by the backscatter function from DTOKS. This can be readily compared to the results published in
-	// the DTOKS papers
+	// "Dust in tokamaks: An overview of the physical model of the dust in tokamaks code." Physics of Plasmas, 17(4).
+	// Bacharis, M., Coppins, M., & Allen, J. E. (2010). 
 //	BackscatterTest();
+
+	// ***** CHARGING TESTS ***** //
 
 	// Delta Sec Unit Test:
 	// This test prints the value of the empirical function calculating the yield due to secondary electron emission.
@@ -35,8 +48,6 @@ int main(){
         // Bacharis, Minas Coppins, Michael Allen, John E.
         // Page 2 & 3
 //	DeltaThermTest();
-
-	// ***** CHARGING TESTS ***** //
 
 	// Charging Timescale Test:
 	// This test is used to verify that the timestep as calculated by Krasheninnikovs is always smaller
