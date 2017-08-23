@@ -1,3 +1,12 @@
+//## Forcing:
+//This contains tests which aim to establish the position of the dust grain after a finite
+//number of time steps. Comparisons have been made to the expected analytical result where
+//possible. Those without analytical result have not been considered.
+//The dust is started with the following parameters:
+//Size = 5e-8;               // m
+//Potential = 1;             // Normalised Potential
+//A maximum number of time steps is set which is different for each term being tested.
+
 #include <ctime>			// Time program
 #include "GravityTest.h"
 #include "ConstantForceTest.h"
@@ -15,59 +24,62 @@ int main(){
 		std::cout << "\nElement["<<i<<"] is = ";
 		std::cout << Element[i];
 
-		// Test bout 1,
-		// Integration test one for all materials
-		// Test if constant Lorentz force (Electric field with no magnetic field) and gravity
-		// Produce expected results over 100 or so steps
+// 		Forcing test 1, GravityTest :
+		// Test if constant acceleration under gravity matches the analytical result
+		// Produce expected results over 85 or so steps. The equation being solved is:
+		// Velocity = InitialVelocity + gravity*Time
 //		std::cout << "\nRunning Test 1...\n";
 //		out = GravityTest(Element[i]);	
 //		std::cout << "\nFinished Running Test 1!\n";
 
-		// Test bout 2,
-		// Integration test two for all materials
+
+// 		Forcing test 2, ConstantForceTest :
 		// Test if constant Lorentz force (Electric field with no magnetic field) and gravity
-		// Produce expected results over 100 or so steps
+		// Produce expected results over 100 or so steps. The equation being solved is:
+		// Velocity = InitialVelocity + (Electricfield*chargetomassratio + gravity)*Time
 //		std::cout << "\nRunning Test 2...\n";
 //		out = ConstantForceTest(Element[i]);	
 //		std::cout << "\nFinished Running Test 2!\n";
 
-		// Test bout 3,
-		// Integration test three for all materials
+// 		Forcing test 3, ConstantMagneticForceTest :
 		// Test if model of constant Magnetic field can be replicated analytically
-		// Produce expected results over 1000000 or so steps
+		// Produce expected results over 1000000 or so steps. The equation being solved is:
+		// mass*dV/dt = (Velocity X MagneticField), Force equation!
 //		std::cout << "\nRunning Test 3...\n";
 //		out = ConstantMagneticForceTest(Element[i]);	
 //		std::cout << "\nFinished Running Test 3!\n";
 
 
-		// Test bout 4,
-		// Integration test four for all materials
+		// Test bout 4, DON'T THINK THIS TEST WORKS YET, don't know why...
+// 		Forcing test 4, ConstantLorentzForceTest :
 		// Test if full Lorentz force (Electric field and magnetic field)
-		// Produce expected results over 1000000 or so steps
+		// Produce expected results over 1000000 or so steps. The Equation being solved is:
+		// mass*dV/dt = (charge*ElectricField + velocity X MagneticField), Force equation!
 //		std::cout << "\nRunning Test 4...\n";
 //		out = ConstantLorentzForceTest(Element[i]);	
 //		std::cout << "\nFinished Running Test 4!\n";
 
 		// Test bout 5, THIS TEST DOESN'T WORK YET, Don't know why...
-		// Integration test five for all materials
+// 		Forcing test 5, ConstantLorentzGravityForceTest :
 		// Test if full Lorentz force (Electric field and magnetic field) and gravity
-		// Produce expected results over 1000000 or so steps
+		// Produce expected results over 1000000 or so steps. The equation being solved is:
+		// mass*dV/dt = (charge*ElectricField + velocity X MagneticField) + mass*gravity, Force equation!
 //		std::cout << "\nRunning Test 5...\n";
 //		out = ConstantLorentzGravityForceTest(Element[i]);	
 //		std::cout << "\nFinished Running Test 5!\n";
 
-		// Test bout 6, 
-		// Integration test six for all materials
+// 		Forcing test 6, NeutralDragTest :
 		// Test if Neutral Drag force 
-		// Produce expected results over 100 or so steps
+		// Produce expected results over 100 or so steps. The equation being solved is:
+		// Velocity = InitialVelocity + NeutralDragAcceleration*Time;
 //		std::cout << "\nRunning Test 6...\n";
 //		out = NeutralDragTest(Element[i]);	
 //		std::cout << "\nFinished Running Test 6!\n";
 
-		// Test bout 7, 
-		// Integration test seven for all materials
+// 		Forcing test 7, IonAndNeutralDragTest :
 		// Test if Neutral and Ion Drag forces
-		// Produce expected results over 100 or so steps
+		// Produce expected results over 100 or so steps. The equation being solved is:
+                // Velocity = InitialVelocity + (NeutralDragAcceleration + IonDragAcceleration)*Time;
 		std::cout << "\nRunning Test 7...\n";
 		out = IonAndNeutralDragTest(Element[i]);	
 		std::cout << "\nFinished Running Test 7!\n";

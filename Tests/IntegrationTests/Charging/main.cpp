@@ -1,3 +1,8 @@
+//## Charging
+//This contains tests which aim to establish the normalised potential of the dust grain at
+//equilibrium. Since no analytic solution exists for the charge on a dust grain (ignoring
+//the Lambert W function), the numerical solution is compared to a pre-calculated result
+
 #include <ctime>			// Time program
 #include "ChargeTest.h"
 
@@ -9,10 +14,9 @@ int main(){
 		std::cout << "\nElement["<<i<<"] is = ";
 		std::cout << Element[i];
 
-		// Test bout 1,
-		// Integration test one for all materials
-		// Test if the charging model is producing the expected result
-		// Note, this test is very rudimentary and just checks that the charging model matches DTOKS's original format
+// 		Charging test 1, ChargeTest :
+//		This test simply compares the DTOKS OML result as calculated by the code with the same
+//		expression coded identically to verify the results match
 		std::cout << "\nRunning Test 1...\n";
 		out = ChargeTest(Element[i]);	
 		std::cout << "\nFinished Running Test 1!\n";
