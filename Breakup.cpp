@@ -50,6 +50,7 @@ int Breakup::Run(){
 			Sample->update_motion(Zeros,dvPlus,0.0);
 
 
+
 //			std::cout << "\nSimulating POSITIVE Branch " << i << " : " << j << "\nStart Pos = " << Sample->get_position()
 //				<< "\nVelocity = " << Sample->get_velocity() << "\nMass = " << Sample->get_mass(); std::cin.get();
 			i = i + 1;
@@ -62,11 +63,11 @@ int Breakup::Run(){
 		// Close data files and open new ones
 		Sim->CloseFiles();
 		if( GDvector.size() > 0 ){
-			Sim->OpenFiles("Data/breakup",p);
-
 			// Re-initialise simulation with new Velocity... But we've already done this now when we saved the data previously...
 			// So we're good to go, just copy over the previous end conditions
 			Sample->update_graindata(GDvector[j]);
+
+			Sim->OpenFiles("Data/breakup",p);
 			// Reset Model Times, the only reason for this is to make the plotting work correctly...
 			Sim->ResetModelTime(HMTime[j]-Sim->get_HMTime(),FMTime[j]-Sim->get_FMTime(),CMTime[j]-Sim->get_CMTime());
 			p = p + 1;
