@@ -104,22 +104,26 @@ void ChargingModel::Charge(double timestep){
 	}else if( UseModel[0] ){
 //		WARNING! THIS SCHEME FOR THE CHARGING MODEL CREATES DISCONTINUITIES!
 //		NOT EXACTLY SURE HOW BUT THIS IS DANGEROUS
-
-			if( (DSec + DTherm) >= 1.0 ){ 	// If electron emission yield exceeds unity, we have potential well...
-							// Take away factor of temperature ratios for depth of well
-							// This is not explained further...
-				Potential = solveOML( 0.0, Sample->get_potential()) 
-						- Sample->get_temperature()/Pdata->ElectronTemp; 
-			}else{ // If the grain is negative...
-				// Calculate the potential with the normal current balance including electron emission
-				Potential = solveOML( DSec + DTherm,Sample->get_potential());
-				if( Potential < 0.0 ){
-					// But! If it's now positive, our assumptions must be wrong!
-					// So now we assume it's positive and calculate the potential with a well.
-					Potential = solveOML(0.0,Sample->get_potential())-Sample->get_temperature()
-							/Pdata->ElectronTemp;
-				}
+		double DebyeLength = sqrt(epsilon0*Kb*Pdata->ElectronTemp/(Pdata->ElectronDensity))/echarge;
+		if( DebyeLength > 0.5*Sample->get_radius() ){
+			static bool runOnce = true;
+			WarnOnce(runOnce,"DebyeLength > 0.5*Sample->get_radius()! OML Charging model invalid.");
+		}
+		if( (DSec + DTherm) >= 1.0 ){ 	// If electron emission yield exceeds unity, we have potential well...
+						// Take away factor of temperature ratios for depth of well
+						// This is not explained further...
+			Potential = solveOML( 0.0, Sample->get_potential()) 
+					- Sample->get_temperature()/Pdata->ElectronTemp; 
+		}else{ // If the grain is negative...
+			// Calculate the potential with the normal current balance including electron emission
+			Potential = solveOML( DSec + DTherm,Sample->get_potential());
+			if( Potential < 0.0 ){
+				// But! If it's now positive, our assumptions must be wrong!
+				// So now we assume it's positive and calculate the potential with a well.
+				Potential = solveOML(0.0,Sample->get_potential())-Sample->get_temperature()
+						/Pdata->ElectronTemp;
 			}
+		}
 		ChargeOfGrain = -(4.0*PI*epsilon0*Sample->get_radius()*Potential*Kb*Pdata->ElectronTemp)/echarge;
 //		std::cout << "\nPotential = " << Potential << "\nDeltaSec = " << Sample->get_deltasec() << "\nDeltatherm = " 
 //			<< Sample->get_deltatherm() << "\nCharge = " << ChargeOfGrain; std::cin.get();

@@ -99,6 +99,7 @@ double HeatingModel::ProbeTimeStep()const{
 	double DeltaTempTest = TotalPower*timestep/(Sample->get_mass()*Sample->get_heatcapacity());
 	// If we're not boiling	and in a continuous Plasma
 	if( Sample->get_temperature() != Sample->get_superboilingtemp() && ContinuousPlasma ){
+// 			&& (!UseModel[1] && Sample->is_liquid()) ){
 		static bool runOnce = true;
 		WarnOnce(runOnce,"THERMAL EQUILIBRIUM IN CONTINUOUS PLASMA MAY NOT WORK!\nOldTemp is only redefined inside UpdateTimeStep, not ProbeTimeStep! CAUTION!");
 		if( ((Sample->get_temperature()-OldTemp > 0 && DeltaTempTest < 0) // If temperature changed sign this step

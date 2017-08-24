@@ -40,9 +40,9 @@ int VariableEmissivityTest(char Element, bool VaryEmissivity){
 	bool SEE = true;
 
 	PlasmaData *Pdata = new PlasmaData;
-	Pdata->NeutralDensity	= 10e18; 	// m^-3, Neutral Density
-	Pdata->IonDensity	= 10e18; 	// m^-3, Ion Density
-	Pdata->ElectronDensity	= 10e18;	// m^-3, Electron Density
+	Pdata->NeutralDensity	= 1e18; 	// m^-3, Neutral Density
+	Pdata->IonDensity	= 1e18; 	// m^-3, Ion Density
+	Pdata->ElectronDensity	= 1e18;	// m^-3, Electron Density
 	Pdata->NeutralTemp	= 10*1.16e4;	// K, Neutral Temperature, convert from eV
 	Pdata->IonTemp		= 10*1.16e4;	// K, Ion Temperature, convert from eV
 	Pdata->ElectronTemp	= 10*1.16e4;	// K, Electron Temperature, convert from eV
