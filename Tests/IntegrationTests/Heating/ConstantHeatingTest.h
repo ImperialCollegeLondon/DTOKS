@@ -18,7 +18,7 @@ int ConstantHeatingTest(char Element){
 
  	// Parameters describing the heating model
 	double Power=1e-8;		// Kilo-Watts power in addition to heating model powers
-	double Size=5e-8; 		// m
+	double Size=1e-6; 		// m
 	double Temp=280;		// K
 	double TimeStep=1e-10;		// s
 	Matter *Sample;			// Define the sample matter type

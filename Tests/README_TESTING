@@ -37,11 +37,14 @@ expression coded identically to verify the results match
 
 ## Forcing:
 This contains tests which aim to establish the position of the dust grain after a finite
-number of time steps. Comparisons have been made to the expected analytical result where
-possible. Those without analytical result have not been considered.
+number of time steps. Comparisons have been made to the expected analytical result.
+Those without analytical result have not been considered.
 The dust is started with the following parameters:
-Size = 5e-8;               // m
-Potential = 1;             // Normalised Potential
+Size = 5e-8;				// m
+Potential = 1;				// Normalised Potential
+Temp = 280;				// K
+InitialPosition = (0.0,0.0,0.0) 	// m
+The initial velocity is different depending on the test being conducted.
 A maximum number of time steps is set which is different for each term being tested.
 
 # Gravity Test:
@@ -79,9 +82,70 @@ Test if Neutral and Ion Drag forces
 Produce expected results over 100 or so steps. The equation being solved is:
 Velocity = InitialVelocity + (NeutralDragAcceleration + IonDragAcceleration)*Time;
 
+
 ## Heating:
 This contains tests which aim to establish the Temperature of the dust grain after a finite
-number of time steps.  
+number of time steps.  Comparisons have been made to the expected analytic result.
+Those without analytical result have not been considered.
+The dust is started with the following parameters:
+Size = 1e-6;               // m
+Potential = 1;             // Normalised Potential
+Temp = 280;		   // K
+In each of these tests, the 'Vapourise()' Heating model command is called. This means the 
+heat equation is solved using a 4th order Runge-Kutta method until either:
+1) The sample reaches thermal equilibrium
+2) The sample vapourises (Mass < 10e-25)
+
+# Constant Heating Test:
+Test if constant heating power is comparable to analytic result
+The equation being solved is:
+dT/dt = Power / (Mass * HeatCapacity)
+where Power is a constant, C
+
+# Constant Heating Emissivity Test:
+Test if constant heating with thermal radiation is comparable to analytic result
+The equation being solved is:
+dT/dt = Power / (Mass * HeatCapacity)
+where Power is:
+Power = C - SurfaceArea*sigma*epsilon*(Temperature^4-AmbientTemperature^4)
+
+# Constant Electron Plasma Heating Test:
+Test if constant heating with plasma heating and thermal radiation is comparable to analytic result
+The equation being solved is:
+dT/dt = Power / (Mass * HeatCapacity)
+where Power is:
+Power = C + SurfaceArea*(2*ElectronFlux*ElectronTemperature*Kb+2*NeutralFlux*NeutralTemperature*Kb)
+
+# Constant Plasma Heating Test:
+Test if constant heating with plasma heating and thermal radiation is comparable to analytic result
+The equation being solved is:
+dT/dt = Power / (Mass * HeatCapacity)
+where Power is:
+Power = C + SurfaceArea*(2*ElectronFlux*ElectronTemperature*Kb+2*NeutralFlux*NeutralTemperature*Kb + IonFluxPower)
+
+# Constant Plasma Heating Neutral Recombination Test:
+Test if constant heating with plasma heating, thermal radiation and neutral recomb is comparable to analytic result
+The equation being solved is:
+dT/dt = Power / (Mass * HeatCapacity)
+where Power is:
+Power = C + SurfaceArea*(2*ElectronFlux*ElectronTemperature*Kb+2*NeutralFlux*NeutralTemperature*Kb + IonFluxPower 
+			+ echarge*IonFlux*14.7 )  
+
+# Compare Constant Emissivity Test:
+Test if constant heating with thermal radiation with non-const emissivity is comparable to analytic result
+The equation being solved is:
+dT/dt = Power / (Mass * HeatCapacity)
+where Power is:
+Power = C - SurfaceArea*sigma*epsilon*(Temperature^4-AmbientTemperature^4)
+
+# Other Tests:
+Explanation for Other missing tests of terms:
+TEE has no analytical solution as the solution involves exponential integrals
+SEE has no result in standard mathematical functions
+Qvap has extremely complicated analytical solutions involving the imaginary error function due to Antoinne eq.
+Since ion flux depends on electron yield (i.e TEE and SEE), no general analytical solution for negative grains
+For the case of constant potential, Q_(i) is constant
+
 
 ------------------------------------------------------------------------------------------
 

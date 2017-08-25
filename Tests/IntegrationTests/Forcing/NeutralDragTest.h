@@ -14,7 +14,7 @@ int NeutralDragTest(char Element){
 													// and (t)homson
 
  	// Parameters describing the heating model
-	double Size=1e-6; 		// m
+	double Size=5e-8; 		// m
 	double Temp=280;		// K
 	double Potential = 1;		// Normalised Potential
 	Matter *Sample;			// Define the sample matter type

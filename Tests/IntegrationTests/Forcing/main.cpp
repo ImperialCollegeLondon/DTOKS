@@ -1,11 +1,14 @@
 //## Forcing:
-//This contains tests which aim to establish the position of the dust grain after a finite
-//number of time steps. Comparisons have been made to the expected analytical result where
-//possible. Those without analytical result have not been considered.
-//The dust is started with the following parameters:
-//Size = 5e-8;               // m
-//Potential = 1;             // Normalised Potential
-//A maximum number of time steps is set which is different for each term being tested.
+// This contains tests which aim to establish the position of the dust grain after a finite
+// number of time steps. Comparisons have been made to the expected analytical result.
+// Those without analytical result have not been considered.
+// The dust is started with the following parameters:
+// Size = 5e-8;                            // m
+// Potential = 1;                          // Normalised Potential
+// Temp = 280;                             // K
+// InitialPosition = (0.0,0.0,0.0)         // m    
+// The initial velocity is different depending on the test being conducted.
+// A maximum number of time steps is set which is different for each term being tested.
 
 #include <ctime>			// Time program
 #include "GravityTest.h"
