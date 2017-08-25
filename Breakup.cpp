@@ -67,9 +67,11 @@ int Breakup::Run(){
 			// So we're good to go, just copy over the previous end conditions
 			Sample->update_graindata(GDvector[j]);
 
-			Sim->OpenFiles("Data/breakup",p);
+
 			// Reset Model Times, the only reason for this is to make the plotting work correctly...
 			Sim->ResetModelTime(HMTime[j]-Sim->get_HMTime(),FMTime[j]-Sim->get_FMTime(),CMTime[j]-Sim->get_CMTime());
+
+			Sim->OpenFiles("Data/breakup",p);
 			p = p + 1;
 //			std::cout << "\nSimulating Branch " << i  << " : " << j << "\nStart Pos = " << GDvector[j].DustPosition
 //				<< "\nVelocity = " << Sample->get_velocity() << "\nMass = " << Sample->get_mass(); std::cin.get();
