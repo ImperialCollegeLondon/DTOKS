@@ -36,6 +36,9 @@ struct GrainData MatterDefaults = {
 Matter::Matter(const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults){
 	M_Debug("\n\nIn Matter::Matter(const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults)\n\n");
 	ConstModels = {'c','c','c','y'};
+	St.Density = Ec.RTDensity;
+	St.Volume = (4*PI*pow(St.Radius,3))/3;
+        St.SurfaceArea = 4*PI*pow(St.Radius,2);
 	St.Mass = Ec.RTDensity*St.Volume;
 	PreBoilMass = St.Mass;
 };

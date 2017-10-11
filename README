@@ -1,0 +1,74 @@
+# README #
+=============
+
+## Author :	Luke Simons
+## Date :	25/08/2017
+## Description :
+This file describes the class structure and operation of DTOKSU code, 
+available at https://github.com/LukeSimons/DTOKS-U.
+Tests exist in local directory '/Tests' with a readme file available at '/Tests/README_TESTING'
+
+## Introduction
+At Imperial College, London the code Dust in TOKamaks (DTOKS) was developed in 2005 by James D. Martin, Michael Coppins and John Allen. Since, it has been further developed by Minas Bacharis and others. DTOKS represents a relatively independant and unique approach to computing dust tracks in tokamaks and has had some implementation modelling dust in MAST and radiofrequency discharges.
+For more information, see the Thesis of Dr. James Martin:
+Martin, J. D. (2006). Theory and Simulation of Dust in Tokamak Plasmas, (July).
+
+
+## How to Run DTOKSU
+
+./main -d <timestep> -t <Inital Temperature> -m <'w', 'g', 'b' or 'f'> -s <Initial Radius> -b <'y', 'n', 's' or 't'> -e <'true' or 'false'>
+	-p <PlasmaTemperature> -w <ExternalPower>
+
+Files Included With This Project:
+	main.cpp
+	PlasmaData.h	GrainStructs.h	Checks.h
+	Constants.cpp	DTOKSU.cpp	Functions.cpp	MathHeader.cpp	threevector.cpp
+	Constants.h	DTOKSU.h	Functions.h	MathHeader.h	threevector.h
+	Beryllium.cpp	Graphite.cpp	Iron.cpp 	Matter.cpp	Tungsten.cpp
+	Beryllium.h	Graphite.h	Iron.h		Matter.h	Tungsten.h
+	ChargingModel.cpp	ForceModel.cpp	HeatingModel.cpp	Model.cpp	PlasmaGrid.cpp
+	ChargingModel.h		ForceModel.h	HeatingModel.h		Model.h		PlasmaGrid.h
+	PlasmaGenerator.cpp
+	plt.all	plt.ColourMap	plt.forces	plt.pos	plt.vel	savepng
+	README	README_TESTING
+
+
+## DTOKSU Class Structure and Design
+DTOKSU follows an object oriented programing (oop) style with a few different class heirarchies and data structures being used to manage the information. These have been designed with simplicity and security in mind and with maximal modular capability.
+The two principal classes are the Matter.h class and the Model.h class.
+These classes and their children are used by the wrapper class DTOKSU to conduct the entire simulation.
+
+# Matter class
+The Matter class is used to contain all the information about the dust grain but also to simulate all the physical models 
+directly related to the information contained. It owns an instance of both the 'GrainData' and 'ElementConsts' which stores 
+the non-constant and constant information about the material. In addition to this, it stores information on what models are 
+being allowed to vary with temperature. The matter class requires that classes which inherit from it define the functions 
+"update_radius()", "update_heatcapacity()" and "update_vapourpressure()" which define the variation of radius, heat capacity
+and vapour pressure with temperature.
+It contains functions able to alter the description of a dust grain including it's motion, these are namely "update_temperature",
+"update_motion", "update_charge" and "update_mass"
+Finally, a range of getter and one setter methods exist for classes external to the heirarchy, mainly DTOKSU to access this 
+information. This class requires the definition of the "threevector.h" class, the "COnstants.h", additionaly "Functions.h" and 
+obviously the data structures in "GrainStructs.h"
+
+The class can be constructed simply by passing a pointer to the element constants data structure which contains all the unmutable
+information about a materials properties. The default values for it's variable properaties are set by default.
+
+Inforamtion about the plasma and dust particle are held within the PlasmaData.h and GrainStructs.h structures.
+Constants.h contains physical constants and preprocessor directives for debugging
+Functions.h contains a warning function, a rounding function and as well as methods used to calculate physical models.
+The PlasmaGrid.h class is used to read in and hold the information about a plasma background with spatial dependance over a cartesian grid.
+The PlasmaGenerator.cpp file is used to generate grids of data for different plasma backgrounds which can be fed to the PlasmaGrid class.
+
+
+
+
+# PlasmaBackground
+First, the dust particle is located within the Plasma grid and assigned integer coordinates giving it's position.
+The plasma velocity is defined by the direction of the magnetic field and the mean plasma velocity provided the densities sum is non-zero
+he value of the potential on the grid points are taken from input files for each machine type (MAST or ITER). The electric field in the radial direction is calculated from the difference in potential between two points.
+and similarly calculated for the other three dimensions in cylindrical coordinates.
+
+------------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------------------
