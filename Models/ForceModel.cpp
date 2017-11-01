@@ -122,23 +122,28 @@ void ForceModel::Force(double timestep){
 	// Assert change in absolute vel less than ten times accuracy
 	assert( ChangeInVelocity.mag3() < 0.1*Accuracy ); // Assert change in velocity less than 10* TimeStep accuracy
 
-	// So having issues with spin up time, it should be of order ~1s. In Krashinennikovs paper, it's not clear
-	// Which mass he is refering to or what plasma conditions he uses to obtain this value...
-	// For this reason, currently I'm just setting the Spin Up time to 1s by default.
 	// Krasheninnikov, S. I. (2006). On dust spin up in uniform magnetized plasma. Physics of Plasmas, 13(11), 2004–2007.
-	double TimeOfSpinUp = Sample->get_radius()*sqrt(Mp/(Kb*Pdata->IonTemp))*Sample->get_density()/(Mp*Pdata->IonDensity);
-	TimeOfSpinUp = 1;
-
-	double RotationalSpeedUp = timestep*sqrt(Kb*Pdata->IonTemp/Mp)/(TimeOfSpinUp*Sample->get_radius());
-	if( Sample->get_radius() < sqrt(Kb*Pdata->IonTemp*Mp)/(echarge*Pdata->MagneticField.mag3()) ){
-	      	RotationalSpeedUp = (timestep*echarge*Pdata->MagneticField.mag3()/(TimeOfSpinUp*Mp));
-		F1_Debug( "\nREGIME TWO!" );
-	}
+//	double TimeOfSpinUp = Sample->get_radius()*sqrt(Mp/(Kb*Pdata->IonTemp))*Sample->get_density()/(Mp*Pdata->IonDensity);
+//	TimeOfSpinUp = 1;
+//	double RotationalSpeedUp = timestep*sqrt(Kb*Pdata->IonTemp/Mp)/(TimeOfSpinUp*Sample->get_radius());
+//	if( Sample->get_radius() < sqrt(Kb*Pdata->IonTemp*Mp)/(echarge*Pdata->MagneticField.mag3()) ){
+//	      	RotationalSpeedUp = (timestep*echarge*Pdata->MagneticField.mag3()/(TimeOfSpinUp*Mp));
+//		F1_Debug( "\nREGIME TWO!" );
+//	}
 //	F1_Debug( "\nRho_{Ti} = " << sqrt(Kb*Pdata->IonTemp*Mp)/(echarge*Pdata->MagneticField.mag3()) <<
 //		 "\nV_{Ti} = " << sqrt(Kb*Pdata->IonTemp/Mp) << "\nOmega_{i} = " 
 //		<< echarge*Pdata->MagneticField.mag3()/Mp << "\ntimestep = " << timestep );
 //	F1_Debug( "\nBfield.mag = " << Pdata->MagneticField.mag3() << "\nTimeOfSpinUp = " << TimeOfSpinUp
 //		 << "\nSpeedUp = " << RotationalSpeedUp << "\n" );
+
+
+//	Introduced on 11/10/17, this is informed by over two months work on the theory and dynamics of dust rotation
+//	due to ion collection. Even with the full theory, we find values of B that are too small for tokamak conditions
+//	to lead to dust breakup. We need to find a way to increase the theoretical breakup speed.
+//	double B = (5*sqrt(2*PI)*Pdata->IonDensity*Mp*sqrt((Kb*Pdata->IonTemp)/Mp)*pow(Sample->get_radius(),2))
+//			/(2*Sample->get_mass()); 
+	double B = 1.0;
+	double RotationalSpeedUp = timestep*B*(2*(echarge*(Pdata->MagneticField.mag3())/Mp)-Sample->get_rotationalfreq());
 
 	Sample->update_motion(ChangeInPosition,ChangeInVelocity,RotationalSpeedUp);
 
