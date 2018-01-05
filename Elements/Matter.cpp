@@ -20,15 +20,15 @@ struct GrainData MatterDefaults = {
 	1.0,		// Emissivity		should be updated
 	1.0,		// Linear Expansion	should be updated
 	0.5,		// Heat Capacity	should be updated
-	0,		    // DeltaSec		should be updated
-	0,		    // DeltaTherm		should be updated
-	0,		    // Potential		should be updated
+	0,		// DeltaSec		should be updated
+	0,		// DeltaTherm		should be updated
+	0,		// Potential		should be updated
 	false,		// Is Positive		should be updated
 	{0,0,0},	// Dust position	case dependant
 	{0,0,0},	// Dust Velocity	case dependant
-	0,          // Rotational Freq  fine
-	0,		    // FusionEnergy		fine
-	0		    // VapourEnergy		fine
+	0,		// Rotational Freq  	fine
+	0,		// FusionEnergy		fine
+	0		// VapourEnergy		fine
 };
 
 
@@ -36,6 +36,9 @@ struct GrainData MatterDefaults = {
 Matter::Matter(const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults){
 	M_Debug("\n\nIn Matter::Matter(const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults)\n\n");
 	ConstModels = {'c','c','c','y'};
+	St.Density = Ec.RTDensity;
+	St.Volume = (4*PI*pow(St.Radius,3))/3;
+        St.SurfaceArea = 4*PI*pow(St.Radius,2);
 	St.Mass = Ec.RTDensity*St.Volume;
 	PreBoilMass = St.Mass;
 };
@@ -138,37 +141,40 @@ void Matter::update_emissivity(){
 		St.Emissivity = St.Emissivity;
 	}else if( ConstModels[0] == 'f' || ConstModels[0] == 'F' ){ // Get emissivity from file
 		if( St.Radius < 2e-8 || St.Radius > 1e-4 ){
-			std::cout << "\nError! In Matter::update_emissivity().\n"
-					<< "Radius = " << St.Radius << " outside limit of Emissivty model.\n";
-			assert(St.Radius > 2e-8);
-			assert(St.Radius < 1e-4);
-		}
-		assert(St.Temperature > 275);
-		std::string DirName, FileName("/Temp_"), TempString, txtstring(".txt");
-		if(Ec.Elem == 'w' || Ec.Elem == 'W' ) DirName = "EmissivityData/EmissivityDataTungsten";
-		else if(Ec.Elem == 'f' || Ec.Elem == 'F' ) DirName = "EmissivityData/EmissivityDataIron";
-		else if(Ec.Elem == 'g' || Ec.Elem == 'G' ) DirName = "EmissivityData/EmissivityDataGraphite";
-		else if(Ec.Elem == 'b' || Ec.Elem == 'B' ) DirName = "EmissivityData/EmissivityDataBeryllium";
-		std::ifstream TempFile;
-		std::stringstream ss;
+//			std::cout << "\nError! In Matter::update_emissivity().\n"
+//					<< "Radius = " << St.Radius << " outside limit of Emissivty model.\n";
+			static bool runOnce1 = true;
+			WarnOnce(runOnce1,"Radius outside limit of Emissivty model.");
+//			assert(St.Radius > 2e-8);
+//			assert(St.Radius < 1e-4);
+		}else{
+			assert(St.Temperature > 275);
+			std::string DirName, FileName("/Temp_"), TempString, txtstring(".txt");
+			if(Ec.Elem == 'w' || Ec.Elem == 'W' ) DirName = "Models/EmissivityData/EmissivityDataTungsten";
+			else if(Ec.Elem == 'f' || Ec.Elem == 'F' ) DirName = "Models/EmissivityData/EmissivityDataIron";
+			else if(Ec.Elem == 'g' || Ec.Elem == 'G' ) DirName = "Models/EmissivityData/EmissivityDataGraphite";
+			else if(Ec.Elem == 'b' || Ec.Elem == 'B' ) DirName = "Models/EmissivityData/EmissivityDataBeryllium";
+			std::ifstream TempFile;
+			std::stringstream ss;
 
-		ss << round(St.Temperature);
-		ss >> TempString;
-		TempFile.open((DirName+FileName+TempString+txtstring).c_str());
-		bool Found = false;
+			ss << round(St.Temperature);
+			ss >> TempString;
+			TempFile.open((DirName+FileName+TempString+txtstring).c_str());
+			bool Found = false;
 
-		char buffer;
-		double TestRad;
-		while( TempFile >> TestRad >> buffer >> St.Emissivity && Found != true ){
-			if(TestRad == round_to_digits(St.Radius,2)){ 
-				Found = true;
-				M_Debug( "\nround(St.Radius,9) = " << round_to_digits(St.Radius,2) 
-					<< "\nTestRad = " << TestRad );
-				//Pause();
+			char buffer;
+			double TestRad;
+			while( TempFile >> TestRad >> buffer >> St.Emissivity && Found != true ){
+				if(TestRad == round_to_digits(St.Radius,2)){ 
+					Found = true;
+					M_Debug( "\nround(St.Radius,9) = " << round_to_digits(St.Radius,2) 
+						<< "\nTestRad = " << TestRad );
+					//Pause();
+				}
 			}
+			ss.clear(); ss.str("");
+			TempFile.close();
 		}
-		ss.clear(); ss.str("");
-		TempFile.close();
 	}else{ // Invalid input for Emissivity model
 		std::cout << "\nError! In Matter::update_emissivity()\n"
 				<< "Invalid input for Emissivity Model.";
@@ -176,8 +182,8 @@ void Matter::update_emissivity(){
 	}
 
 	if(St.Emissivity > 1.0){
-		static bool runOnce = true;
-		WarnOnce(runOnce,"Emissivity > 1! Emissivity being forced equal to 1");
+		static bool runOnce2 = true;
+		WarnOnce(runOnce2,"Emissivity > 1! Emissivity being forced equal to 1");
 		St.Emissivity = 1.0;
 	}
 }

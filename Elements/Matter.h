@@ -15,6 +15,18 @@
 #include <limits>	// std::numeric_limits<double>::max()
 #include <string.h>	// strchr("",std::string)
 
+// # Matter class
+// The Matter class is used to contain all the information about the dust grain but also to simulate all the physical models 
+// directly related to the information contained. It owns an instance of both the 'GrainData' and 'ElementConsts' which stores 
+// the non-constant and constant information about the material. In addition to this, it stores information on what models are 
+// being allowed to vary with temperature. The matter class requires that classes which inherit from it define the functions 
+// "update_radius()", "update_heatcapacity()" and "update_vapourpressure()" which define the variation of radius, heat capacity
+// and vapour pressure with temperature.
+// It contains functions able to alter the description of a dust grain including it's motion, these are namely "update_temperature",
+// "update_motion", "update_charge" and "update_mass"
+// Finally, a range of getter and one setter methods exist for classes external to the heirarchy, mainly DTOKSU to access this 
+// information. This class requires the definition of the "threevector.h" class, the "COnstants.h", additionaly "Functions.h" and 
+// obviously the data structures in "GrainStructs.h"
 class Matter{
 
        	// Functions used by HeatingMatter.cpp

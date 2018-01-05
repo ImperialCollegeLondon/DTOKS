@@ -56,7 +56,7 @@ void HeatingModel::CreateFile(std::string filename, bool PrintPhaseData){
        	if( UseModel[2] )       					ModelDataFile << "\tNewton";
        	if( UseModel[3] )       					ModelDataFile << "\tIonFlux\tIonHeatFlux";
        	if( UseModel[4] )       					ModelDataFile << "\tElectronFlux\tElectronHeatFlux";
-       	if( UseModel[5] )       					ModelDataFile << "\tNeutronFlux\tNeutronHeatFlux";
+       	if( UseModel[5] )       					ModelDataFile << "\tNeutralFlux\tNeutralHeatFlux";
        	if( UseModel[6] )       					ModelDataFile << "\tNeutralRecomb";
        	if( UseModel[7] )       					ModelDataFile << "\tSEE";
        	if( UseModel[8] )       					ModelDataFile << "\tTEE";
@@ -99,6 +99,7 @@ double HeatingModel::ProbeTimeStep()const{
 	double DeltaTempTest = TotalPower*timestep/(Sample->get_mass()*Sample->get_heatcapacity());
 	// If we're not boiling	and in a continuous Plasma
 	if( Sample->get_temperature() != Sample->get_superboilingtemp() && ContinuousPlasma ){
+// 			&& (!UseModel[1] && Sample->is_liquid()) ){
 		static bool runOnce = true;
 		WarnOnce(runOnce,"THERMAL EQUILIBRIUM IN CONTINUOUS PLASMA MAY NOT WORK!\nOldTemp is only redefined inside UpdateTimeStep, not ProbeTimeStep! CAUTION!");
 		if( ((Sample->get_temperature()-OldTemp > 0 && DeltaTempTest < 0) // If temperature changed sign this step

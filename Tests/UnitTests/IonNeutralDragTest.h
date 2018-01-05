@@ -32,18 +32,20 @@ void IonNeutralDragTest(){
 	double ElectronTemp = 10/ConvertKelvsToeV;		// 10ev converted to Kelvin
 	double Radius = 1e-6;					// metres, radius of dust
 	double Potential = 1;
+	int i(0), j(0);
+	for( double Density(0.01e18); Density < 100e18; Density *= 1.5 ){
+		i = i + 1;
+		for( double Temp(0.1/ConvertKelvsToeV); Temp < 1000/ConvertKelvsToeV; Temp *= 1.5 ){
+			if( i == 1 ) j = j + 1;
 
-	for( double Density(0.01e18); Density < 100e18; Density *= 2 ){
-		for( double Temp(0.05/ConvertKelvsToeV); Temp < 100/ConvertKelvsToeV; Temp *= 2 ){
 			double Iondrag = IonDragForce(RelativeVelocity,Density,Temp,ElectronTemp,Radius,Potential);
 			double Neutraldrag = NeutralDragForce(RelativeVelocity,Density,Temp,Radius);
-			std::cout << RelativeVelocity.mag3() << "\t" << Density << "\t" << Temp*ConvertKelvsToeV << "\t"  << ElectronTemp*ConvertKelvsToeV << "\t" 
+			std::cout << RelativeVelocity.mag3() << "\t" << Density << "\t" << Temp*ConvertKelvsToeV << "\t"  << ElectronTemp << "\t" 
 				<< Radius << "\t" << Potential << "\t" << Iondrag << "\t" << Neutraldrag << "\t" << Iondrag/Neutraldrag << "\n";
 		}
 	}
-
 	clock_t end = clock();
 	double elapsd_secs = double(end-begin)/CLOCKS_PER_SEC;
 		
-	std::cout << "\n\n*****\n\nIonNeutralDrag UnitTest completed in " << elapsd_secs << "s\n";
+	std::cout << "\n\n*****\n\nIonNeutralDrag UnitTest completed in " << elapsd_secs << "s\n" << i << " : " << j << "\n";
 }

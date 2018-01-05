@@ -11,7 +11,7 @@ const struct ElementConsts IronConsts = {
 	4.5,			// ev, Work Function, http://hyperphysics.phy-astr.gsu.edu/hbase/tables/photoelec.html
 	0.0057, 		// kJ/(m^2 K), HeatTransfer coefficient, 
 					// http://www.engineeringtoolbox.com/overall-heat-transfer-coefficients-d_284.html
-	0.055845,		// AMU in kg mol^-1, (+/- 0.00001) Atomic Mass
+	0.055845,		// Atomic Mass in kg mol^-1, (+/- 0.00001)
 	13.810/0.055845, 	// kJ/kg, Latent Fusion Energy From Wikipedia
 	340/0.055845, 		// kJ/kg, Latent Vapour Energy From Wikipedia
 	3.29e16,		// rad s^-1, Plasma Frequency, Calculated from Robbies code with 4 electrons per atom
@@ -58,7 +58,7 @@ Iron::Iron(double radius, double tempin, std::array<char,4> &constmodels):Matter
 void Iron::set_defaults(){
 	E_Debug("\n\nIn Iron::set_defaults()");
 
-        St.HeatCapacity = 0.1;	  		// J/(gK) or kJ/(kgK)
+        St.HeatCapacity = 0.450;	 	// KJ/(kg K)
         St.Emissivity = 0.2;			// Arb, Emissivity
         St.SuperBoilingTemp =  Ec.BoilingTemp; 	// K, At any pressure
 	St.Density = 7874;			// kg/m^3 From wikipedia
