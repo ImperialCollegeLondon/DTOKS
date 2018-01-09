@@ -4,6 +4,8 @@ Models/PlasmaData/*.vtk
 Models/PlasmaData/regulardataITER
 Models/PlasmaData/MASTDexp
 Models/PlasmaData/regulardata
+Models/PlasmaData/MagnumPSI/
+Magnum-PSI_Experiment
 
 Tests/TemperatureVariationOfConstants
 main
