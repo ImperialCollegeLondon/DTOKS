@@ -14,7 +14,8 @@ double DTOKSsolveOML(double a, double Ti, double Te, double guess){
 
 	double x1 = guess - ( (( 1-a)*exp(-guess) - sqrt(b*C)*(1+guess/b))/((a-1)*exp(-guess) - sqrt(C/b) ) );
 
-	while(fabs(guess-x1)>1e-2){
+//	while(fabs(guess-x1)>1e-2){ // With 1e-2 as the limit, we see some discontinuous behaviour around deltatot = 1.0
+	while(fabs(guess-x1)>1e-3){
 		guess = x1;
 		x1 = guess - ( ( (1-a)*exp(-guess) - sqrt(b*C)*(1+guess/b) ) /( (a-1)*exp(-guess) - sqrt(C/b) ) );
 	}

@@ -6,11 +6,11 @@
 // CONSIDER DEFINING A DEFAULT SAMPLE
 std::array<bool,9> DefaultHeatModels = {false,false,false,false,false,false, false,false,false};
 std::array<bool,5> DefaultForceModels = {false,false,false,false,false};
-std::array<bool,2> DefaultChargeModels = {true,false};
+std::array<bool,3> DefaultChargeModels = {true,false,false};
 std::array<char,4> DefaultConstModels = { 'c','c','c','c'};
 
 DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample, PlasmaData *&pdata,
-				std::array<bool,9> &heatmodels, std::array<bool,5> &forcemodels, std::array<bool,2> &chargemodels)
+				std::array<bool,9> &heatmodels, std::array<bool,5> &forcemodels, std::array<bool,3> &chargemodels)
 			: Sample(sample),
 				CM("Data/breakup_cm_0.txt",acclvls[0],chargemodels,sample,pdata),
 				HM("Data/breakup_hm_0.txt",acclvls[1],heatmodels,sample,pdata),
@@ -24,7 +24,7 @@ DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample,
 }
 
 DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample, PlasmaGrid &pgrid,
-				std::array<bool,9> &heatmodels, std::array<bool,5> &forcemodels, std::array<bool,2> &chargemodels)
+				std::array<bool,9> &heatmodels, std::array<bool,5> &forcemodels, std::array<bool,3> &chargemodels)
 				: Sample(sample),
 				CM("Data/breakup_cm_0.txt",acclvls[0],chargemodels,sample,pgrid),
 				HM("Data/breakup_hm_0.txt",acclvls[1],heatmodels,sample,pgrid),

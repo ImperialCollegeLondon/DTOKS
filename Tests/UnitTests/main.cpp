@@ -3,6 +3,7 @@
 #include "DeltaThermTest.h"
 #include "ChargingTimescales.h"
 #include "DTOKSchargingTest.h"
+#include "DTOKSwellchargingTest.h"
 #include "SchottkyOMLTest.h"
 #include "OMLTest.h"
 #include "MOMLTest.h"
@@ -48,6 +49,10 @@ int main(){
 	// This test was used to show the discontinuity in the potential when the total electron emission yield approaches 1
 	// Two different conditional formulations of the problem are made and their differences highlighted by this test
 //	DTOKSchargingTest();
+
+	// This test outputs the potential as calculated by part of the DTOKS solution to the OML equation, considering only a 
+	// scenario with a potential well. This removes the discontinuities observed in the previous model.
+	DTOKSwellchargingTest();
 	
 	// OML Charging Test:
 	// This test is designed to find the floating potential for small dust grains in a stationary plasma following OML theory.
@@ -57,7 +62,7 @@ int main(){
 	// MOML Charging Test:
 	// This test is designed to find the floating potential for large dust grains in a stationary plasma following MOML theory.
 	// This employs an approximate series expansion to the Lambert W function to find the floating potential
-	MOMLTest();
+//	MOMLTest();
 
 	// SOML Charging Test:
 	// This test is designed to find the floating potential for small dust grains in a flowing plasma following SOML theory.
@@ -80,8 +85,6 @@ int main(){
 	// This test is designed to find the floating potential for large negative dust grains with electron emission 
 	// This employs an approximate series expansion to the Lambert W function to find the floating potential
 //	SchottkyMOMLTest();
-
-
 
 	return 0;
 }

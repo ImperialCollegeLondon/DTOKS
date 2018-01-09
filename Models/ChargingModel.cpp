@@ -5,13 +5,14 @@
 
 ChargingModel::ChargingModel():Model(){
 	C_Debug("\n\nIn ChargingModel::ChargingModel():Model()\n\n");
-	UseModel[0] = true;				// Charging Models turned on of possibly 2
-	UseModel[1] = false;				// Charging Models turned on of possibly 2
+	UseModel[0] = true;				// Charging Models turned on of possibl3 3
+	UseModel[1] = false;				// Charging Models turned on of possibl3 3
+	UseModel[2] = false;				// Charging Models turned on of possible 3
 	ChargeOfGrain = 0;
 	CreateFile("Default_Charging_Filename.txt");
 }
 
-ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<bool,2> models,
+ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<bool,3> models,
 				Matter *& sample, PlasmaData *&pdata) : Model(sample,pdata,accuracy){
 	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename,double accuracy,std::array<bool,1> models,Matter *& sample, PlasmaData const& pdata) : Model(sample,pdata,accuracy)\n\n");
 	UseModel = models;
@@ -19,7 +20,7 @@ ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<b
 	ChargeOfGrain = 0;
 }
 
-ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<bool,2> models,
+ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<bool,3> models,
 				Matter *& sample, PlasmaGrid &pgrid) : Model(sample,pgrid,accuracy){
 	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename,double accuracy,std::array<bool,1> models,Matter *& sample, PlasmaGrid const& pgrid) : Model(sample,pgrid,accuracy)\n\n");
 	UseModel = models;
@@ -133,6 +134,9 @@ void ChargingModel::Charge(double timestep){
 			Potential = solvePosSchottkyOML(); // Quasi-neutrality assumed, we take ni as ni=ne
 			ChargeOfGrain = (4.0*PI*epsilon0*Sample->get_radius()*Potential*Kb*Pdata->ElectronTemp)/echarge;
 		}
+	}else if( UseModel[2] ){	// In this case, maintain a potential well for entire temperature range
+		Potential = solveOML( 0.0, Sample->get_potential()) 
+			- Sample->get_temperature()/Pdata->ElectronTemp; 
 	}
 	// Have to calculate charge of grain here since it doesn't know about the Electron Temp and since potential is normalised.
 	// This information has to be passed to the grain.
@@ -161,7 +165,7 @@ double ChargingModel::solveOML(double a, double guess){
 
 	double x1 = guess - ( (( 1-a)*exp(-guess) - sqrt(b*C)*(1+guess/b))/((a-1)*exp(-guess) - sqrt(C/b) ) );
 
-	while(fabs(guess-x1)>1e-2){
+	while(fabs(guess-x1)>1e-3){
 		guess = x1;
 		x1 = guess - ( ( (1-a)*exp(-guess) - sqrt(b*C)*(1+guess/b) ) /( (a-1)*exp(-guess) - sqrt(C/b) ) );
 	}
