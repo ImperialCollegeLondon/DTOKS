@@ -15,17 +15,17 @@ HeatingModel::HeatingModel():Model(){
 
 
 // Constructor which specifies dust radius, by passing a pointer to a Matter reference.
-HeatingModel::HeatingModel(std::string filename, double accuracy, std::array<bool,9> &models,
+HeatingModel::HeatingModel(std::string filename, double accuracy, std::array<bool,NumModels> &models,
 				Matter *& sample, PlasmaData *&pdata) : Model(sample,pdata,accuracy){
-	H_Debug("\n\nIn HeatingModel::HeatingModel(std::string filename, double accuracy, std::array<bool,9> &models, Matter *& sample, PlasmaData const *&pdata) : Model(sample,pdata,accuracy)\n\n");
+	H_Debug("\n\nIn HeatingModel::HeatingModel(std::string filename, double accuracy, std::array<bool,NumModels> &models, Matter *& sample, PlasmaData const *&pdata) : Model(sample,pdata,accuracy)\n\n");
 	Defaults();
 	UseModel 		= models;
 	CreateFile(filename,false);
 }
 
-HeatingModel::HeatingModel(std::string filename, double accuracy, std::array<bool,9> &models,
+HeatingModel::HeatingModel(std::string filename, double accuracy, std::array<bool,NumModels> &models,
 				Matter *& sample, PlasmaGrid &pgrid) : Model(sample,pgrid,accuracy){
-	H_Debug("\n\nIn HeatingModel::HeatingModel(std::string filename,double accuracy, std::array<bool,9> &models, Matter *& sample, PlasmaGrid const &pgrid) : Model(sample,pgrid,accuracy)\n\n");
+	H_Debug("\n\nIn HeatingModel::HeatingModel(std::string filename,double accuracy, std::array<bool,NumModels> &models, Matter *& sample, PlasmaGrid const &pgrid) : Model(sample,pgrid,accuracy)\n\n");
 	Defaults();
 	UseModel 	= models;
 	CreateFile(filename,false);

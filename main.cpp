@@ -48,11 +48,11 @@ int main(int argc, char* argv[]){
 
 	// ***************************************** INITIALISE PLASMA ***************************************** //
 	char Plasma='h';
-	char Machine='p';	// Initialise plasma grid
-	double xSpacing =2.34375e-3;	// x-dimensional spacing (Radial) metres
-	double ySpacing =0.006;	// y-dimensional spacing (z) metres
-//	double xSpacing =0.01;	// x-dimensional spacing (Radial) metres
-//	double ySpacing =0.01;	// y-dimensional spacing (z) metres
+	char Machine='m';	// Initialise plasma grid
+//	double xSpacing =2.34375e-3;	// x-dimensional spacing (Radial) metres
+//	double ySpacing =0.006;	// y-dimensional spacing (z) metres
+	double xSpacing =0.01;	// x-dimensional spacing (Radial) metres
+	double ySpacing =0.01;	// y-dimensional spacing (z) metres
 
 	PlasmaGrid Pgrid(Plasma,Machine,xSpacing,ySpacing);
 
@@ -103,14 +103,15 @@ int main(int argc, char* argv[]){
         bool Gravity = 1;
         bool Centrifugal = 1;
         bool Lorentz = 1;
-        bool IonDrag = 1;	
+        bool IonDrag = 0;	
+        bool HybridDrag = 1;	
         bool NeutralDrag = 1;	
 
 	// ------------------- CHARGING MODELS ------------------- //
 	// ONLY ONE SHOULD BE ON
         bool DTOKSOML = false;
         bool SchottkyOML = false;
-//	bool DTOKSWell = true;
+	bool DTOKSWell = true;
 
 	// Plasma Data
 	// NOTE: 16/06/17, current plasma data matches DTOKS initial plasma data for debugging purposes.
@@ -151,7 +152,7 @@ int main(int argc, char* argv[]){
 	std::array<bool, 9> HeatModels = 
 		{RadiativeCooling, EvaporativeCooling, NewtonCooling, IonHeatFlux, ElectronHeatFlux, NeutralHeatFlux, 
 		NeutralRecomb, SEE, TEE };
-	std::array<bool,5> ForceModels  = {Gravity,Centrifugal,Lorentz,IonDrag,NeutralDrag};
+	std::array<bool,6> ForceModels  = {Gravity,Centrifugal,Lorentz,IonDrag,HybridDrag,NeutralDrag};
 	std::array<bool,3> ChargeModels = {DTOKSOML,SchottkyOML,DTOKSWell};
 	ConstModels  = {EmissivityModel,ExpansionModel,HeatCapacityModel,BoilingModel};
 	

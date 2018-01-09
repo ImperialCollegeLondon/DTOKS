@@ -6,14 +6,16 @@
 class ForceModel : public Model {
 
 	private:
-		// Parameters defining the Force equation
-		std::array<bool,5> UseModel; 		// Force Models turned on of possibly 4
+		// Models defining the Force equation
+		enum { NumModels = 6 };
+		std::array<bool,NumModels> UseModel; 		// Force Models turned on of possibly 4
 
 		void Print();			// Write to output data file
 
 		// Different Force terms
 		threevector CalculateAcceleration()const;	// Sum of Force terms
 		threevector DTOKSIonDrag()const;
+		threevector HybridIonDrag()const;
 		threevector NeutralDrag()const;
 		threevector LorentzForce()const;
 		threevector Centrifugal()const;
@@ -22,9 +24,9 @@ class ForceModel : public Model {
 	public:
 		// Constructors
 		ForceModel();
-		ForceModel(std::string filename, double accuracy, std::array<bool,5> models, 
+		ForceModel(std::string filename, double accuracy, std::array<bool,NumModels> models, 
 				Matter *& sample, PlasmaData *& pdata);
-		ForceModel(std::string filename, double accuracy, std::array<bool,5> models, 
+		ForceModel(std::string filename, double accuracy, std::array<bool,NumModels> models, 
 				Matter *& sample, PlasmaGrid & pgrid);
 
 		// Destructor

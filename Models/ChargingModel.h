@@ -6,8 +6,9 @@
 class ChargingModel : public Model{
 
 	private:
-		
-		std::array<bool,3> UseModel; 		// Charging Models turned on of possible 1
+		// Models defining the Force equation
+		enum { NumModels = 3 };
+		std::array<bool,NumModels> UseModel; 		// Charging Models turned on of possible 1
 
 		void Print();			// Write to output data file
 
@@ -21,9 +22,9 @@ class ChargingModel : public Model{
 	public:
 		// Constructors
 		ChargingModel();
-		ChargingModel(std::string filename, double accuracy, std::array<bool,3> models, 
+		ChargingModel(std::string filename, double accuracy, std::array<bool,NumModels> models, 
 				Matter *& sample, PlasmaData *& pdata);
-		ChargingModel(std::string filename, double accuracy, std::array<bool,3> models, 
+		ChargingModel(std::string filename, double accuracy, std::array<bool,NumModels> models, 
 				Matter *& sample, PlasmaGrid & pgrid);
 
 		void CreateFile(std::string filename);

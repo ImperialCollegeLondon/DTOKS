@@ -14,7 +14,9 @@ class HeatingModel : public Model{
 		bool ForceNegative;			// If we want to force the dust grain to be negative
 		bool ThermalEquilibrium;		// If the Dust grain is in Thermal Equilibrium (Constant Plasma only)
 
-		std::array<bool,9> UseModel; 		// Heating Models turned on of possibly 9
+		// Models defining the heating equation
+		enum { NumModels = 9 };
+		std::array<bool,NumModels> UseModel; 		// Heating Models turned on of possibly 9
 
 		void Print();				// Write to output data file
 		void Defaults(); // Sets default settings
@@ -37,9 +39,9 @@ class HeatingModel : public Model{
 	public:
 		// Constructors
 		HeatingModel();
-		HeatingModel( std::string filename, double accuracy, std::array<bool,9> &models, 
+		HeatingModel( std::string filename, double accuracy, std::array<bool,NumModels> &models, 
 				Matter *& sample, PlasmaData *& pdata);
-		HeatingModel( std::string filename, double accuracy, std::array<bool,9> &models, 
+		HeatingModel( std::string filename, double accuracy, std::array<bool,NumModels> &models, 
 				Matter *& sample, PlasmaGrid & pgrid);
 
 		// Destructor

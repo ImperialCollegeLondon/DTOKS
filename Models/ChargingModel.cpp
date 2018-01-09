@@ -5,14 +5,15 @@
 
 ChargingModel::ChargingModel():Model(){
 	C_Debug("\n\nIn ChargingModel::ChargingModel():Model()\n\n");
-	UseModel[0] = true;				// Charging Models turned on of possibl3 3
-	UseModel[1] = false;				// Charging Models turned on of possibl3 3
-	UseModel[2] = false;				// Charging Models turned on of possible 3
+	// Charging Models turned on of possibl3 3
+	UseModel[0] = true;
+	UseModel[1] = false;
+	UseModel[2] = false;
 	ChargeOfGrain = 0;
 	CreateFile("Default_Charging_Filename.txt");
 }
 
-ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<bool,3> models,
+ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<bool,NumModels> models,
 				Matter *& sample, PlasmaData *&pdata) : Model(sample,pdata,accuracy){
 	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename,double accuracy,std::array<bool,1> models,Matter *& sample, PlasmaData const& pdata) : Model(sample,pdata,accuracy)\n\n");
 	UseModel = models;
@@ -20,7 +21,7 @@ ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<b
 	ChargeOfGrain = 0;
 }
 
-ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<bool,3> models,
+ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<bool,NumModels> models,
 				Matter *& sample, PlasmaGrid &pgrid) : Model(sample,pgrid,accuracy){
 	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename,double accuracy,std::array<bool,1> models,Matter *& sample, PlasmaGrid const& pgrid) : Model(sample,pgrid,accuracy)\n\n");
 	UseModel = models;
@@ -34,7 +35,6 @@ void ChargingModel::CreateFile(std::string filename){
 
 	ModelDataFile << "Time\tChargeOfGrain";
 	ModelDataFile << "\tPositive\tPotential";
-
 
 	ModelDataFile << "\n";
 	Print();
@@ -96,7 +96,7 @@ void ChargingModel::Charge(double timestep){
 	double DTherm = DeltaTherm();
 	double Potential;
 	if( Pdata->ElectronTemp <= 0 ){ // Avoid dividing by zero
-/*		if( UseModel [0] ){
+/*		if( UseModel [0] ){	// This model is supposed to provide a steady loss of charge
 			ChargeOfGrain = ChargeOfGrain + 4*PI*pow(Sample->get_radius()*Sample->get_temperature(),2)*Richardson*
 			exp(-Sample->get_workfunction()*echarge/(Kb*Sample->get_temperature()))*timestep;
 		}else if( UseModel [1] ){
@@ -105,9 +105,7 @@ void ChargingModel::Charge(double timestep){
 		} */
 		Potential = 0.0;
 	}else if( UseModel[0] ){
-//		WARNING! THIS SCHEME FOR THE CHARGING MODEL CREATES DISCONTINUITIES!
-//		NOT EXACTLY SURE HOW BUT THIS IS DANGEROUS
-
+//		WARNING! THIS SCHEME FOR THE CHARGING MODEL CREATES DISCONTINUITIES WHEN FORMING A WELL!
 		if( (DSec + DTherm) >= 1.0 ){ 	// If electron emission yield exceeds unity, we have potential well...
 						// Take away factor of temperature ratios for depth of well
 						// This is not explained further...
@@ -124,8 +122,6 @@ void ChargingModel::Charge(double timestep){
 			}
 		}
 		ChargeOfGrain = -(4.0*PI*epsilon0*Sample->get_radius()*Potential*Kb*Pdata->ElectronTemp)/echarge;
-//		std::cout << "\nPotential = " << Potential << "\nDeltaSec = " << Sample->get_deltasec() << "\nDeltatherm = " 
-//			<< Sample->get_deltatherm() << "\nCharge = " << ChargeOfGrain; std::cin.get();
 	}else if( UseModel[1] ){
 		// Assume the grain is negative and calculate potential
 		Potential = solveNegSchottkyOML(Potential);

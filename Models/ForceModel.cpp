@@ -9,18 +9,18 @@
 // Default Constructor, no arguments
 ForceModel::ForceModel():Model(){
 	F_Debug("\n\nIn ForceModel::ForceModel():Model()\n\n");
-	UseModel = {false,false,false};
+	UseModel = {false,false,false,false,false,false};
 	CreateFile("Default_Force_filename.txt");
 }
 
-ForceModel::ForceModel(std::string filename, double accuracy, std::array<bool,5> models, 
+ForceModel::ForceModel(std::string filename, double accuracy, std::array<bool,NumModels> models, 
 			Matter *& sample, PlasmaData *& pdata) : Model(sample,pdata,accuracy){
 	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, std::array<bool,3> models, Matter *& sample, PlasmaData const *& pdata) : Model(sample,pdata,accuracy)\n\n");
 	UseModel = models;
 	CreateFile(filename);
 }
 
-ForceModel::ForceModel(std::string filename, double accuracy, std::array<bool,5> models, 
+ForceModel::ForceModel(std::string filename, double accuracy, std::array<bool,NumModels> models, 
 			Matter *& sample, PlasmaGrid & pgrid) : Model(sample,pgrid,accuracy){
 	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, std::array<bool,3> models, Matter *& sample, PlasmaGrid const& pgrid) : Model(sample,pgrid,accuracy)\n\n");
 	UseModel = models;
@@ -37,7 +37,8 @@ void ForceModel::CreateFile(std::string filename){
        	if( UseModel[1] ) 			ModelDataFile << "\tCentrifugal";
        	if( UseModel[2] ) 			ModelDataFile << "\tLorentz";
        	if( UseModel[3] ) 			ModelDataFile << "\tIonDrag";
-       	if( UseModel[4] ) 			ModelDataFile << "\tNeutralDrag";
+       	if( UseModel[4] ) 			ModelDataFile << "\tHybridIonDrag";
+       	if( UseModel[5] ) 			ModelDataFile << "\tNeutralDrag";
 		
 	ModelDataFile << "\n";
 	Print();
@@ -51,7 +52,8 @@ void ForceModel::Print(){
 	if( UseModel[1] ) 			ModelDataFile << "\t" << Centrifugal();
 	if( UseModel[2] ) 			ModelDataFile << "\t" << LorentzForce();
 	if( UseModel[3] ) 			ModelDataFile << "\t" << DTOKSIonDrag();
-	if( UseModel[4] ) 			ModelDataFile << "\t" << NeutralDrag();
+	if( UseModel[4] ) 			ModelDataFile << "\t" << HybridIonDrag();
+	if( UseModel[5] ) 			ModelDataFile << "\t" << NeutralDrag();
 	ModelDataFile << "\n";
 }
 
@@ -167,7 +169,8 @@ threevector ForceModel::CalculateAcceleration()const{
 	if( UseModel[1] ) Accel += Centrifugal(); // Centrifugal terms. CHECK THESE TWO LINES AT SOME POINT
 	if( UseModel[2] ) Accel += LorentzForce();
 	if( UseModel[3] ) Accel += DTOKSIonDrag();
-	if( UseModel[4] ) Accel += NeutralDrag();
+	if( UseModel[4] ) Accel += HybridIonDrag();
+	if( UseModel[5] ) Accel += NeutralDrag();
 	F1_Debug( "\n\t\tg = " << threevector(0.0,0.0,-9.81) );
 	F1_Debug( "\n\t\tcentrifugal = " << Centrifugal() );
 	F1_Debug( "\n\t\tlorentzforce = " << LorentzForce() );
@@ -178,13 +181,20 @@ threevector ForceModel::CalculateAcceleration()const{
 	return Accel;
 }
 
-// Calculations for Neutral Drag
-threevector ForceModel::NeutralDrag()const{
-	F_Debug("\tIn ForceModel::DTOKSIonDrag()\n\n");
-//	return (Pdata->PlasmaVel-Sample->get_velocity())*Pdata->NeutralDensity*sqrt(2*Kb*Pdata->IonTemp*Mp)*PI
-//			*pow(Sample->get_radius(),2);
-	return (Pdata->PlasmaVel-Sample->get_velocity())*Mp*sqrt(4*PI)*NeutralFlux()*PI*pow(Sample->get_radius(),2);
+threevector ForceModel::HybridIonDrag()const{
+	double IonThermalVelocity = sqrt(Kb*Pdata->IonTemp/Mp);
+	double u = Pdata->PlasmaVel.mag3()*(1.0/IonThermalVelocity); 	// Normalised ion flow velocity
+	double Tau = Pdata->ElectronTemp/Pdata->IonTemp;
+	
+	double z = Sample->get_potential()*4.0*PI*epsilon0;
+	double CoulombLogarithm = 17.0;		// Approximation of coulomb logarithm	
 
+
+	double Coefficient = sqrt(2*PI)*pow(Sample->get_radius(),2.0)*Pdata->IonDensity*Mp*Pdata->PlasmaVel.square();
+	double term1 = sqrt(PI/2.0)*erf(u/sqrt(2))*(1.0+u*u+(1.0-(1.0/(u*u)))*(1.0+2*Tau*z)+4*z*z*Tau*Tau*CoulombLogarithm/(u*u));
+	double term2 = (1.0/u)*exp(-u*u/2.0)*(1.0+2.0*Tau*z+u*u-4*z*z*Tau*Tau*CoulombLogarithm);	
+	
+	threevector HybridDrag = Coefficient*(term1+term2)*(Pdata->PlasmaVel-Sample->get_velocity()).getunit();
 }
 
 // Calculations for ion drag: Mach number, shielding length with fitting function and thermal scattering parameter
@@ -198,7 +208,7 @@ threevector ForceModel::DTOKSIonDrag()const{
 	if( Pdata->IonTemp != 0 ) Mt = (Pdata->PlasmaVel-Sample->get_velocity())*sqrt(Mp/(Kb*Pdata->IonTemp)); 
 	F_Debug("\nMt = " << Mt);
 
-        if( Pdata->IonDensity == 0 || Pdata->IonTemp*ConvertKelvsToeV == 0 || Pdata->ElectronTemp*ConvertKelvsToeV == 0  || Mt.mag3() == 0 ){ 
+        if( Pdata->IonDensity == 0 || Pdata->IonTemp == 0 || Pdata->ElectronTemp == 0  || Mt.mag3() == 0 ){ 
 		// || Mt.mag3() == 0 ){
                 F_Debug("\nWarning! IonDensity = " << Pdata->IonDensity << "\nIonTemp = " 
 			<< Pdata->IonTemp << "\nElectronTemp = " 
@@ -241,6 +251,15 @@ threevector ForceModel::DTOKSIonDrag()const{
 		}
 	}
 	return Fid*(3/(4*PI*pow(Sample->get_radius(),3)*Sample->get_density()));
+}
+
+// Calculations for Neutral Drag
+threevector ForceModel::NeutralDrag()const{
+	F_Debug("\tIn ForceModel::DTOKSIonDrag()\n\n");
+//	return (Pdata->PlasmaVel-Sample->get_velocity())*Pdata->NeutralDensity*sqrt(2*Kb*Pdata->IonTemp*Mp)*PI
+//			*pow(Sample->get_radius(),2);
+	return (Pdata->PlasmaVel-Sample->get_velocity())*Mp*sqrt(4*PI)*NeutralFlux()*PI*pow(Sample->get_radius(),2);
+
 }
 
 threevector ForceModel::LorentzForce()const{
