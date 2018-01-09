@@ -18,8 +18,8 @@ struct PlasmaData PlasmaDefaults = {
 };
 //PlasmaGrid *DefaultGrid = new PlasmaGrid('h','m',0.01);
 
-Model::Model():Sample(new Tungsten),Pgrid(new PlasmaGrid('h','m',0.01)),Pdata(&PlasmaDefaults),Accuracy(1.0),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
-	Mo_Debug("\n\nIn Model::Model():Sample(new Tungsten),Pgrid('h','m',0.01)Pdata(PlasmaDefaults),Accuracy(1.0),ContinuousPlasma(true)\n\n");
+Model::Model():Sample(new Tungsten),Pgrid(new PlasmaGrid('h','m',0.01,0.01)),Pdata(&PlasmaDefaults),Accuracy(1.0),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
+	Mo_Debug("\n\nIn Model::Model():Sample(new Tungsten),Pgrid('h','m',0.01,0.01),Pdata(PlasmaDefaults),Accuracy(1.0),ContinuousPlasma(true)\n\n");
 	i = 0; k = 0;
 	PlasmaDataFile.open("pd.txt");
 	update_plasmadata();
@@ -27,8 +27,8 @@ Model::Model():Sample(new Tungsten),Pgrid(new PlasmaGrid('h','m',0.01)),Pdata(&P
 
 // Constructor for Matter sample sitting in a constant plasma background given by PlasmaData (pdata) with a Default grid
 Model::Model( Matter *&sample, PlasmaData *&pdata, double accuracy )
-		:Sample(sample),Pgrid(new PlasmaGrid('h','m',0.01)),Pdata(pdata),Accuracy(accuracy),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
-	Mo_Debug("\n\nIn Model::Model( Matter *& sample, PlasmaData *&pdata, double accuracy ):Sample(sample),Pgrid(new PlasmaGrid('h','m',0.01)),Pdata(pdata),Accuracy(accuracy),ContinuousPlasma(true)\n\n");
+		:Sample(sample),Pgrid(new PlasmaGrid('h','m',0.01,0.01)),Pdata(pdata),Accuracy(accuracy),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
+	Mo_Debug("\n\nIn Model::Model( Matter *& sample, PlasmaData *&pdata, double accuracy ):Sample(sample),Pgrid(new PlasmaGrid('h','m',0.01,0.01)),Pdata(pdata),Accuracy(accuracy),ContinuousPlasma(true)\n\n");
 	assert(Accuracy > 0);
 	i = 0; k = 0;
 	PlasmaDataFile.open("pd.txt");
@@ -110,18 +110,18 @@ void Model::update_fields(int i, int k){
 
 	if(Pgrid->getgridflag(i,k)==1){
 		if( (Pgrid->getgridflag(i+1,k)==1) && (Pgrid->getgridflag(i-1,k)==1) ){
-			E.setx(-(Pgrid->getpo(i+1,k)-Pgrid->getpo(i-1,k))/(2.0*Pgrid->getdl()));
+			E.setx(-(Pgrid->getpo(i+1,k)-Pgrid->getpo(i-1,k))/(2.0*Pgrid->getdlx()));
 		}else if(Pgrid->getgridflag(i+1,k)==1){
-			E.setx(-(Pgrid->getpo(i+1,k)-Pgrid->getpo(i,k))/Pgrid->getdl());
+			E.setx(-(Pgrid->getpo(i+1,k)-Pgrid->getpo(i,k))/Pgrid->getdlx());
 		}else if(Pgrid->getgridflag(i-1,k)==1){
-			E.setx(-(Pgrid->getpo(i,k)-Pgrid->getpo(i-1,k))/Pgrid->getdl());
+			E.setx(-(Pgrid->getpo(i,k)-Pgrid->getpo(i-1,k))/Pgrid->getdlx());
 		}else E.setx(0.0);
 		if((Pgrid->getgridflag(i,k+1)==1)&&(Pgrid->getgridflag(i,k-1)==1)){
-			E.setz(-(Pgrid->getpo(i,k+1)-Pgrid->getpo(i,k-1))/(2.0*Pgrid->getdl()));
+			E.setz(-(Pgrid->getpo(i,k+1)-Pgrid->getpo(i,k-1))/(2.0*Pgrid->getdlz()));
 		}else if(Pgrid->getgridflag(i,k+1)==1){
-			E.setz(-(Pgrid->getpo(i,k+1)-Pgrid->getpo(i,k))/Pgrid->getdl());
+			E.setz(-(Pgrid->getpo(i,k+1)-Pgrid->getpo(i,k))/Pgrid->getdlz());
 		}else if(Pgrid->getgridflag(i,k-1)==1){
-			E.setz(-(Pgrid->getpo(i,k)-Pgrid->getpo(i,k-1))/Pgrid->getdl());
+			E.setz(-(Pgrid->getpo(i,k)-Pgrid->getpo(i,k-1))/Pgrid->getdlz());
 		}else E.sety(0.0);
 	}else{
 		E.setx(0.0);

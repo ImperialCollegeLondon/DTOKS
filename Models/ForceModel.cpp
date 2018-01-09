@@ -71,9 +71,9 @@ double ForceModel::ProbeTimeStep()const{
 
 	// Check if the timestep should be shortened such that particles don't cross many grid cells in a single step
 	// (This is often the case without this condition.)
-	if( Sample->get_velocity().mag3() != 0.0 && ( get_dl()/(2*Sample->get_velocity().mag3()) ) < timestep ){
+	if( Sample->get_velocity().mag3() != 0.0 && ( get_dlx()/(2*Sample->get_velocity().mag3()) ) < timestep ){
 		F_Debug("\ntimestep limited by grid size!");
-		timestep = get_dl()/(2*Sample->get_velocity().mag3());
+		timestep = get_dlx()/(2*Sample->get_velocity().mag3());
 	}
 	
 	// Check if the timestep is limited by the gyration of the particle in a magnetic field.

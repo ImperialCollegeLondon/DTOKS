@@ -60,7 +60,8 @@ class Model{
 
 		const Matter *get_sample		()const{ return Sample;		}
 		const PlasmaData *get_plasmadata	()const{ return Pdata; 		}
-		double get_dl				()const{ return Pgrid->getdl();	}
+		double get_dlx				()const{ return Pgrid->getdlx();}
+		double get_dlz				()const{ return Pgrid->getdlz();}
 		double get_totaltime			()const{ return TotalTime; 	}
 		double get_timestep			()const{ return TimeStep; 	}
 		bool new_cell				()const;

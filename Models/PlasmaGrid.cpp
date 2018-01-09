@@ -2,13 +2,14 @@
 
 #include "PlasmaGrid.h"
 
-PlasmaGrid::PlasmaGrid(char element, char machine, double spacing):mi(Mp),gamma(Me/mi),gas(element),device(machine),dl(spacing){
-	P_Debug( "\n\nIn PlasmaGrid::PlasmaGrid(char element, char machine, double spacing):mi(Mp),gamma(Me/mi),gas(element),device(machine),dl(spacing)\n\n");
+PlasmaGrid::PlasmaGrid(char element, char machine, double xspacing, double zspacing):mi(Mp),gamma(Me/mi),gas(element),device(machine),dlx(xspacing),dlz(zspacing){
+	P_Debug( "\n\nIn PlasmaGrid::PlasmaGrid(char element, char machine, double xspacing, double zspacing):mi(Mp),gamma(Me/mi),gas(element),device(machine),dlx(xspacing),dlz(zspacing)\n\n");
 	
 	// Plasma parameters
 	if(device=='m'){
 		gridx = 121;
 		gridz = 281;
+		gridtheta=0;
 		gridxmin = 0.2;
 		gridzmin = -2.0;
 		rmin = 0.2;
@@ -17,6 +18,7 @@ PlasmaGrid::PlasmaGrid(char element, char machine, double spacing):mi(Mp),gamma(
 	}else if(device=='i'){
 		gridx = 451;
 		gridz = 951;
+		gridtheta=0;
 		gridxmin = 4.0;
 		gridzmin = -4.7;
 		rmin = 4.1;
@@ -25,13 +27,25 @@ PlasmaGrid::PlasmaGrid(char element, char machine, double spacing):mi(Mp),gamma(
 	}else if(device=='d'){
 		gridx = 180;
 		gridz = 400;
+		gridtheta=0;
 		gridxmin = 0.2;
 		gridzmin = -2.0;
 		rmin = 0.2;
 		rmax = 2.0;
+
 		std::cout << "\tCalculation for Double Null MAST 17839files shot" << std::endl;
+	}else if(device=='p'){
+		gridx = 64;
+		gridz = 25;
+		gridtheta=64;
+		gridxmin = 0.0;
+		gridzmin = 0.0;
+		rmin = 0;
+		rmax = 0.15;
+		std::cout << "\tCalculation for Magnum-PSI: filename='Magnum-PSI_Prelim_B1.41_L1.0.nc'" << std::endl;
 	}
 	else std::cout << "Invalid tokamak" << std::endl;
+
 	Te	= std::vector<std::vector<double>>(gridx,std::vector<double>(gridz));
 	Ti 	= Te;
 	na0	= Te;
@@ -112,36 +126,119 @@ void PlasmaGrid::readgridflag(std::ifstream &input){
 	}
 }
 
+
+int PlasmaGrid::readMPSIdata(){
+	P_Debug("\tPlasmaGrid::readMPSIdata()\n\n");
+	
+	const int NC_ERR = 2;
+
+	float electron_dens_mat[gridx][gridz][gridtheta];
+	float electron_temp_mat[gridx][gridz][gridtheta];
+	float electron_Vele_mat[gridx][gridz][gridtheta];
+	float ion_dens_mat[gridx][gridz][gridtheta];
+	float ion_Veli_mat[gridx][gridz][gridtheta];
+	float Pres_mat[gridx][gridz][gridtheta];
+	float Bxy_mat[gridx][gridz];
+
+	// Change the error behavior of the netCDF C++ API by creating an
+	// NcError object. Until it is destroyed, this NcError object will
+	// ensure that the netCDF C++ API silently returns error codes on
+	// any failure, and leaves any other error handling to the calling
+	// program. In the case of this example, we just exit with an
+	// NC_ERR error code.
+	NcError err(NcError::silent_nonfatal);
+
+
+	NcFile dataFile("Models/PlasmaData/MagnumPSI/Magnum-PSI_Prelim_B1.41_L1.0.nc", NcFile::ReadOnly);
+	if(!dataFile.is_valid())
+		return NC_ERR;
+	
+	if (dataFile.num_dims() != 3 || dataFile.num_vars() != 8 ||
+		dataFile.num_atts() != 0 || dataFile.rec_dim() != 0)
+		return NC_ERR;
+	// We get back a pointer to each NcVar we request. Get the
+	// latitude and longitude coordinate variables.
+	NcVar *Ne, *Te, *Vel_e, *Ni, *Vel_i, *Pressure, *B_xy;
+	if (!(Ne = dataFile.get_var("Ne")))
+		return NC_ERR;
+	if (!(Te = dataFile.get_var("Te")))
+		return NC_ERR;
+	if (!(Vel_e = dataFile.get_var("Vel_e")))
+		return NC_ERR;
+	if (!(Ni = dataFile.get_var("Ni")))
+		return NC_ERR;
+	if (!(Vel_i = dataFile.get_var("Vel_i")))
+		return NC_ERR;
+	if (!(Pressure = dataFile.get_var("Pressure")))
+		return NC_ERR;
+	if (!(B_xy = dataFile.get_var("B_xy")))
+		return NC_ERR;
+
+	if (!Ne->get(&electron_dens_mat[0][0][0], gridx, gridz, gridtheta))
+		return NC_ERR;
+	if (!Te->get(&electron_temp_mat[0][0][0], gridx, gridz, gridtheta))
+		return NC_ERR;
+	if (!Vel_e->get(&electron_Vele_mat[0][0][0], gridx, gridz, gridtheta))
+		return NC_ERR;
+	if (!Ni->get(&ion_dens_mat[0][0][0], gridx, gridz, gridtheta))
+		return NC_ERR;
+	if (!Vel_i->get(&ion_Veli_mat[0][0][0], gridx, gridz, gridtheta))
+		return NC_ERR;
+	if (!Pressure->get(&Pres_mat[0][0][0], gridx, gridz, gridtheta))
+		return NC_ERR;
+	if (!B_xy->get(&Bxy_mat[0][0], gridx, gridz))
+		return NC_ERR;
+
+	for(unsigned int i=0; i< gridx; i++){
+		for(unsigned int k=0; k< gridz; k++){
+			Ti[i][k] = 1.0;
+//			Te[i][k] = electron_temp_mat[i][k][0];
+			na0[i][k] = ion_dens_mat[i][k][0];
+			na1[i][k] = electron_dens_mat[i][k][0];
+			po[i][k] = Pres_mat[i][k][0];
+			ua0[i][k] = ion_Veli_mat[i][k][0];
+			ua1[i][k] = electron_Vele_mat[i][k][0];
+			bz[i][k] = Bxy_mat[i][k];
+		}
+	}
+	return 0;
+
+}
+
 void PlasmaGrid::readdata(){
 	P_Debug("\tPlasmaGrid::readdata()\n\n");
 	// Input files
-	std::ifstream scalars,threevectors,gridflagfile;
-	if(device=='m'){
-		scalars.open("Models/PlasmaData/b2processed.dat");
-		threevectors.open("Models/PlasmaData/b2processed2.dat");
-		gridflagfile.open("Models/PlasmaData/locate.dat");
+	if(device=='p'){ // Note, grid flags will be empty 
+		readMPSIdata();
+	}else{
+		std::ifstream scalars,threevectors,gridflagfile;
+		if(device=='m'){
+			scalars.open("Models/PlasmaData/b2processed.dat");
+			threevectors.open("Models/PlasmaData/b2processed2.dat");
+			gridflagfile.open("Models/PlasmaData/locate.dat");
+		}
+		else if(device=='i')
+		{
+			scalars.open("Models/PlasmaData/regulardataITER/b2processed.dat");
+			threevectors.open("Models/PlasmaData/regulardataITER/b2processed2.dat");
+			gridflagfile.open("Models/PlasmaData/regulardataITER/locate.dat");
+		}
+		else if(device=='d')
+		{
+			scalars.open("Models/PlasmaData/MASTDexp/b2processed.dat");
+			threevectors.open("Models/PlasmaData/MASTDexp/b2processed2.dat");
+			gridflagfile.open("Models/PlasmaData/MASTDexp/locate.dat");
+		}
+		assert( scalars.is_open() );
+		assert( threevectors.is_open() );
+		assert( gridflagfile.is_open() );
+		readscalars(scalars);
+		readthreevectors(threevectors);
+		readgridflag(gridflagfile);
+		scalars.close();
+		threevectors.close();
+		gridflagfile.close();
 	}
-	else if(device=='i')
-	{
-		scalars.open("Models/PlasmaData/regulardataITER/b2processed.dat");
-		threevectors.open("Models/PlasmaData/regulardataITER/b2processed2.dat");
-		gridflagfile.open("Models/PlasmaData/regulardataITER/locate.dat");
-	}
-	else if(device=='d')
-	{
-		scalars.open("Models/PlasmaData/MASTDexp/b2processed.dat");
-		threevectors.open("Models/PlasmaData/MASTDexp/b2processed2.dat");
-		gridflagfile.open("Models/PlasmaData/MASTDexp/locate.dat");
-	}
-	assert( scalars.is_open() );
-	assert( threevectors.is_open() );
-	assert( gridflagfile.is_open() );
-	readscalars(scalars);
-	readthreevectors(threevectors);
-	readgridflag(gridflagfile);
-	scalars.close();
-	threevectors.close();
-	gridflagfile.close();
 }
 
 // *************************************** MUTATION FUNCTIONS *************************************** //
@@ -150,8 +247,8 @@ void PlasmaGrid::readdata(){
 bool PlasmaGrid::locate(int &i, int &k, const threevector xd)const{
 	P_Debug("\tIn PlasmaGrid::locate(int &" << i << ", int &" << k << ", " << xd << ")\n\n");
 	// Adding 0.5 makes the rounding work properly
-	i = int(0.5+(xd.getx()-gridxmin)/dl);
-	k = int(0.5+(xd.getz()-gridzmin)/dl);
+	i = int(0.5+(xd.getx()-gridxmin)/dlx);
+	k = int(0.5+(xd.getz()-gridzmin)/dlz);
 	return checkingrid(i,k);
 //	std::cout << "\ni = " << i << "\nk = " << k;
 }
@@ -225,8 +322,20 @@ void PlasmaGrid::impurityprint(double totalmass)
 	}
 }
 */
-void PlasmaGrid::datadump(double totalmass){
-	P_Debug("\tPlasmaGrid::datadump(double totalmass)\n\n");
-	vtktoroid();
+void PlasmaGrid::datadump(){
+	P_Debug("\tPlasmaGrid::datadump()\n\n");
+	if(device=='p'){
+		std::cout << "#i\tk\tr\tz\tna0\tna1\tpo\tua0\tua1\tbz\n";
+		for(unsigned int i=0; i< gridx; i++){
+			for(unsigned int k=0; k< gridz; k++){
+				std::cout << i << "\t" << k << "\t" << i*0.15/gridx << "\t" << k*1.0/gridz << "\t" << na0[i][k] 
+					<< "\t" << na1[i][k] << "\t" << po[i][k] << "\t" << ua0[i][k] << "\t" << ua1[i][k] 
+					<< "\t" << bz[i][k] << "\n";
+			}
+		}
+	}else{
+		vtktoroid();
+	}
 	//impurityprint(totalmass);
+
 }

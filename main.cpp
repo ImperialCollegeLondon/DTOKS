@@ -48,10 +48,13 @@ int main(int argc, char* argv[]){
 
 	// ***************************************** INITIALISE PLASMA ***************************************** //
 	char Plasma='h';
-	char Machine='m';	// Initialise plasma grid
-	double Spacing =0.01;	// metres
+	char Machine='p';	// Initialise plasma grid
+	double xSpacing =2.34375e-3;	// x-dimensional spacing (Radial) metres
+	double ySpacing =0.006;	// y-dimensional spacing (z) metres
+//	double xSpacing =0.01;	// x-dimensional spacing (Radial) metres
+//	double ySpacing =0.01;	// y-dimensional spacing (z) metres
 
-	PlasmaGrid Pgrid(Plasma,Machine,Spacing);
+	PlasmaGrid Pgrid(Plasma,Machine,xSpacing,ySpacing);
 
 	// ********************************************************** //
 	// FIRST, define program default behaviour
@@ -105,8 +108,9 @@ int main(int argc, char* argv[]){
 
 	// ------------------- CHARGING MODELS ------------------- //
 	// ONLY ONE SHOULD BE ON
-        bool DTOKSOML = true;
+        bool DTOKSOML = false;
         bool SchottkyOML = false;
+//	bool DTOKSWell = true;
 
 	// Plasma Data
 	// NOTE: 16/06/17, current plasma data matches DTOKS initial plasma data for debugging purposes.
@@ -148,7 +152,7 @@ int main(int argc, char* argv[]){
 		{RadiativeCooling, EvaporativeCooling, NewtonCooling, IonHeatFlux, ElectronHeatFlux, NeutralHeatFlux, 
 		NeutralRecomb, SEE, TEE };
 	std::array<bool,5> ForceModels  = {Gravity,Centrifugal,Lorentz,IonDrag,NeutralDrag};
-	std::array<bool,2> ChargeModels = {DTOKSOML,SchottkyOML};
+	std::array<bool,3> ChargeModels = {DTOKSOML,SchottkyOML,DTOKSWell};
 	ConstModels  = {EmissivityModel,ExpansionModel,HeatCapacityModel,BoilingModel};
 	
 	// Accuracy Levels correspond to Charging, Heating and Forcing respectively
@@ -166,12 +170,13 @@ int main(int argc, char* argv[]){
 		return -1;
 	}
 
-	threevector xinit(1.15,0.0,-1.99);// default injection right hand side
+//	threevector xinit(1.15,0.0,-1.99);// default injection right hand side
+	threevector xinit(0.01,0.01,0.0);// default injection right hand side
 	// Coordinates are r, theta, z.
 	// z is the vertical direction.
 	// r and theta map out the toroidal plane.
 	// Therefore a plot in r, z provides a poloidal cross section
-	threevector vinit(0.0,0.0,10.0);
+	threevector vinit(0.0,10.0,0.0);
 	double InitRotationalFreq(0.0);
 	Sample->update_motion(xinit,vinit,InitRotationalFreq);
 
@@ -191,5 +196,6 @@ int main(int argc, char* argv[]){
 		
 	std::cout << "\n\n*****\n\nCOMPLETED IN : " << elapsd_secs << "s\n\n";
 
+//	Pgrid.datadump();
 	return 0;
 }

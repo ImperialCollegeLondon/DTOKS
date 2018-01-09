@@ -8,6 +8,7 @@
 #include <iostream>
 #include <assert.h>
 #include <vector>
+#include <netcdfcpp.h>
 
 class PlasmaGrid{
 	// Plasma variables
@@ -17,11 +18,11 @@ class PlasmaGrid{
 		// ua0 is the ion drift velocity and ua1 is the electron drift velocity! po is the potential. You're welcome.
 		std::vector<std::vector<double>> Te, Ti, na0, na1, po, ua0, ua1, bx, by, bz, x, z, mevap;
 		std::vector<std::vector<int>> gridflag;
-		int gridx, gridz;  
+		int gridx, gridz, gridtheta;  
 		double gridxmin, gridzmin, rmin, rmax;
 
 		// Material type
-		const double mi, gamma, dl;
+		const double mi, gamma, dlx, dlz;
 		const char gas, device;
 
 		// Files
@@ -29,7 +30,7 @@ class PlasmaGrid{
 	public:
 
 		// Constructor: input the plasma gas and the tokamak with the grid spacing
-		PlasmaGrid(char element, char machine, double spacing);
+		PlasmaGrid(char element, char machine, double xspacing, double yspacing);
 		~PlasmaGrid(){};		// Destructor - frees up the memory
 
 		// TO ALLOW FOR THIS CLASS TO BE CONST LIKE IT SHOULD BE:
@@ -39,6 +40,7 @@ class PlasmaGrid{
 		void readscalars(std::ifstream &input); // Read an input file
 		void readthreevectors(std::ifstream &input);
 		void readgridflag(std::ifstream &input);
+		int readMPSIdata();
 		void readdata();
 
 		// functions to locate dust, update electromagnetic fields, calculate mass loss and check position
@@ -156,13 +158,14 @@ class PlasmaGrid{
 		}	
 		double getmi		()		const{return mi;}
 		double getgamma		()		const{return gamma;}
-		double getdl		()		const{return dl;}
+		double getdlx		()		const{return dlx;}
+		double getdlz		()		const{return dlz;}
 
 		// Functions for printing
 		void vtkcircle(double r, std::ofstream &fout); // Print the inside and the outside of the tokamak 
 		void vtktoroid();
 		void impurityprint(double totalmass);
-		void datadump(double totalmass);
+		void datadump();
 };
 
 #endif
