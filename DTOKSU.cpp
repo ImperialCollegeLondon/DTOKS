@@ -3,14 +3,8 @@
 //#define DTOKSU_DEEP_DEBUG
 #include "DTOKSU.h"
 
-// CONSIDER DEFINING A DEFAULT SAMPLE
-std::array<bool,9> DefaultHeatModels = {false,false,false,false,false,false, false,false,false};
-std::array<bool,5> DefaultForceModels = {false,false,false,false,false};
-std::array<bool,3> DefaultChargeModels = {true,false,false};
-std::array<char,4> DefaultConstModels = { 'c','c','c','c'};
-
 DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample, PlasmaData *&pdata,
-				std::array<bool,9> &heatmodels, std::array<bool,5> &forcemodels, std::array<bool,3> &chargemodels)
+				std::array<bool,9> &heatmodels, std::array<bool,6> &forcemodels, std::array<bool,3> &chargemodels)
 			: Sample(sample),
 				CM("Data/breakup_cm_0.txt",acclvls[0],chargemodels,sample,pdata),
 				HM("Data/breakup_hm_0.txt",acclvls[1],heatmodels,sample,pdata),
@@ -24,7 +18,7 @@ DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample,
 }
 
 DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample, PlasmaGrid &pgrid,
-				std::array<bool,9> &heatmodels, std::array<bool,5> &forcemodels, std::array<bool,3> &chargemodels)
+				std::array<bool,9> &heatmodels, std::array<bool,6> &forcemodels, std::array<bool,3> &chargemodels)
 				: Sample(sample),
 				CM("Data/breakup_cm_0.txt",acclvls[0],chargemodels,sample,pgrid),
 				HM("Data/breakup_hm_0.txt",acclvls[1],heatmodels,sample,pgrid),
@@ -65,23 +59,18 @@ void DTOKSU::ResetModelTime(double HMTime, double FMTime, double CMTime){
 	HM.AddTime(HMTime);
 	FM.AddTime(FMTime);
 	CM.AddTime(CMTime);
-	
 }
 
 void DTOKSU::CheckTimeStep(){
 	D_Debug( "\tIn DTOKSU::CheckTimeStep()\n\n");
-	
 	assert(MinTimeStep > 0);
-
 	D_Debug( "\nMinTimeStep = " << MinTimeStep );
 	TotalTime += MinTimeStep;
 }
 
 void DTOKSU::Print(){
 	D_Debug("\tIn DTOKSU::Print()\n\n");
-
 	MyFile 	<< TotalTime;
-
 	MyFile << "\n";
 }
 
@@ -218,8 +207,7 @@ int DTOKSU::Run(){
 		// ***** START OF : DETERMINE IF END CONDITION HAS BEEN REACHED ***** //
 		if( Sample->is_gas() && Sample->is_split() ){
 			std::cout << "\nSample has undergone electrostatic breakup!";
-			break;
-		
+			break;	
 		}else if( Sample->is_gas() && Sample->get_superboilingtemp() <= Sample->get_temperature() ){
 			std::cout << "\n\nSample has Boiled!";
 			break;
@@ -245,7 +233,6 @@ int DTOKSU::Run(){
 		std::cout << "\nWarning! Total Times recorded by processes don't match!";
 		std::cout << "\nHM.get_totaltime() = " << HM.get_totaltime() << "\nFM.get_totaltime() = " 
 			<< FM.get_totaltime() << "\nCM.get_totaltime() = " << CM.get_totaltime() << "\n\nTotalTime = " << TotalTime;
-
 	}
 	if( !InGrid ){
 		std::cout << "\nSample has left simulation domain";
