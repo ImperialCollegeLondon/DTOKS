@@ -156,10 +156,15 @@ class PlasmaGrid{
                                 return 0;
                         }
 		}	
-		double getmi		()		const{return mi;}
-		double getgamma		()		const{return gamma;}
-		double getdlx		()		const{return dlx;}
-		double getdlz		()		const{return dlz;}
+		double get_machine	()		const{return device;}
+		double get_gas		()		const{return gas;}
+		double get_mi		()		const{return mi;}
+		double get_gamma	()		const{return gamma;}
+		double get_gridx	()		const{return gridx;}
+		double get_gridz	()		const{return gridz;}
+		double get_gridtheta	()		const{return gridtheta;}
+		double get_dlx		()		const{return dlx;}
+		double get_dlz		()		const{return dlz;}
 
 		// Functions for printing
 		void vtkcircle(double r, std::ofstream &fout); // Print the inside and the outside of the tokamak 

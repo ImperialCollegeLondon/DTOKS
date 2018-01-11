@@ -21,7 +21,7 @@ struct PlasmaData PlasmaDefaults = {
 Model::Model():Sample(new Tungsten),Pgrid(new PlasmaGrid('h','m',0.01,0.01)),Pdata(&PlasmaDefaults),Accuracy(1.0),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
 	Mo_Debug("\n\nIn Model::Model():Sample(new Tungsten),Pgrid('h','m',0.01,0.01),Pdata(PlasmaDefaults),Accuracy(1.0),ContinuousPlasma(true)\n\n");
 	i = 0; k = 0;
-	PlasmaDataFile.open("pd.txt");
+	PlasmaDataFile.open("Data/pd.txt");
 	update_plasmadata();
 }
 
@@ -31,7 +31,7 @@ Model::Model( Matter *&sample, PlasmaData *&pdata, double accuracy )
 	Mo_Debug("\n\nIn Model::Model( Matter *& sample, PlasmaData *&pdata, double accuracy ):Sample(sample),Pgrid(new PlasmaGrid('h','m',0.01,0.01)),Pdata(pdata),Accuracy(accuracy),ContinuousPlasma(true)\n\n");
 	assert(Accuracy > 0);
 	i = 0; k = 0;
-	PlasmaDataFile.open("pd.txt");
+	PlasmaDataFile.open("Data/pd.txt");
 	update_plasmadata(pdata);
 //	std::cout << "\nAccuracy = " << Accuracy;
 }
@@ -43,7 +43,7 @@ Model::Model( Matter *&sample, PlasmaGrid &pgrid, double accuracy )
 	Mo_Debug("\n\nIn Model::Model( Matter *& sample, PlasmaGrid &pgrid, double accuracy ):Sample(sample),Pgrid(pgrid),Pdata(PlasmaDefaults),Accuracy(accuracy), ContinuousPlasma(false)\n\n");
 	assert(Accuracy > 0);
 	i = 0; k = 0;
-	PlasmaDataFile.open("pd.txt");
+	PlasmaDataFile.open("Data/pd.txt");
 	update_plasmadata();
 	//	std::cout << "\nAccuracy = " << Accuracy;
 }
@@ -76,13 +76,9 @@ bool Model::update_plasmadata(){
 	Pdata->IonTemp		= Pgrid->getTi(i,k)*ConvertJtoK;
 	Pdata->ElectronTemp 	= Pgrid->getTe(i,k)*ConvertJtoK;
 	Pdata->NeutralTemp 	= Pgrid->getTi(i,k)*ConvertJtoK; 	// NEUTRAL TEMP EQUAL TO ION TEMP
-//	std::cout << "\nTi = " << Pdata->IonTemp;
-//	std::cout << "\nTe = " << Pdata->ElectronTemp;
-//	std::cout << "\nTn = " << Pdata->NeutralTemp; std::cin.get();
 	Pdata->AmbientTemp 	= 300; 			// NOTE THIS IS HARD CODED OHMEINGOD
 
 	return true;
-//	std::cout << "\t\tPdata->MagneticField = " << Pdata->MagneticField << "\n";
 }
 
 // CHECK THIS FUNCTION IS THE SAME AS IT WAS BEFORE!
@@ -110,18 +106,18 @@ void Model::update_fields(int i, int k){
 
 	if(Pgrid->getgridflag(i,k)==1){
 		if( (Pgrid->getgridflag(i+1,k)==1) && (Pgrid->getgridflag(i-1,k)==1) ){
-			E.setx(-(Pgrid->getpo(i+1,k)-Pgrid->getpo(i-1,k))/(2.0*Pgrid->getdlx()));
+			E.setx(-(Pgrid->getpo(i+1,k)-Pgrid->getpo(i-1,k))/(2.0*Pgrid->get_dlx()));
 		}else if(Pgrid->getgridflag(i+1,k)==1){
-			E.setx(-(Pgrid->getpo(i+1,k)-Pgrid->getpo(i,k))/Pgrid->getdlx());
+			E.setx(-(Pgrid->getpo(i+1,k)-Pgrid->getpo(i,k))/Pgrid->get_dlx());
 		}else if(Pgrid->getgridflag(i-1,k)==1){
-			E.setx(-(Pgrid->getpo(i,k)-Pgrid->getpo(i-1,k))/Pgrid->getdlx());
+			E.setx(-(Pgrid->getpo(i,k)-Pgrid->getpo(i-1,k))/Pgrid->get_dlx());
 		}else E.setx(0.0);
 		if((Pgrid->getgridflag(i,k+1)==1)&&(Pgrid->getgridflag(i,k-1)==1)){
-			E.setz(-(Pgrid->getpo(i,k+1)-Pgrid->getpo(i,k-1))/(2.0*Pgrid->getdlz()));
+			E.setz(-(Pgrid->getpo(i,k+1)-Pgrid->getpo(i,k-1))/(2.0*Pgrid->get_dlz()));
 		}else if(Pgrid->getgridflag(i,k+1)==1){
-			E.setz(-(Pgrid->getpo(i,k+1)-Pgrid->getpo(i,k))/Pgrid->getdlz());
+			E.setz(-(Pgrid->getpo(i,k+1)-Pgrid->getpo(i,k))/Pgrid->get_dlz());
 		}else if(Pgrid->getgridflag(i,k-1)==1){
-			E.setz(-(Pgrid->getpo(i,k)-Pgrid->getpo(i,k-1))/Pgrid->getdlz());
+			E.setz(-(Pgrid->getpo(i,k)-Pgrid->getpo(i,k-1))/Pgrid->get_dlz());
 		}else E.sety(0.0);
 	}else{
 		E.setx(0.0);

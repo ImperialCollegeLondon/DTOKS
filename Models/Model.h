@@ -58,12 +58,12 @@ class Model{
 		// Destructor
 		virtual ~Model(){};
 
-		const Matter *get_sample		()const{ return Sample;		}
-		const PlasmaData *get_plasmadata	()const{ return Pdata; 		}
-		double get_dlx				()const{ return Pgrid->getdlx();}
-		double get_dlz				()const{ return Pgrid->getdlz();}
-		double get_totaltime			()const{ return TotalTime; 	}
-		double get_timestep			()const{ return TimeStep; 	}
+		const Matter *get_sample		()const{ return Sample;			}
+		const PlasmaData *get_plasmadata	()const{ return Pdata; 			}
+		double get_dlx				()const{ return Pgrid->get_dlx();	}
+		double get_dlz				()const{ return Pgrid->get_dlz();	}
+		double get_totaltime			()const{ return TotalTime; 		}
+		double get_timestep			()const{ return TimeStep; 		}
 		bool new_cell				()const;
 
 		void RecordPlasmadata();				// Record the plasma Data	
