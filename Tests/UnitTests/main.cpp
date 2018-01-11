@@ -1,4 +1,6 @@
 #include "BackscatterTest.h"
+
+// CHARGING TESTS
 #include "DeltaSecTest.h"
 #include "DeltaThermTest.h"
 #include "ChargingTimescales.h"
@@ -9,6 +11,11 @@
 #include "MOMLTest.h"
 #include "SOMLTest.h"
 #include "SMOMLTest.h"
+
+// FORCE TESTS
+#include "HybridIonDrag.h"
+#include "FortovIonDrag.h"
+
 int main(){
 
 	// Backscatter Unit Test:
@@ -16,6 +23,8 @@ int main(){
 	// as calculated by the backscatter function from DTOKS. This can be readily compared to the results published in
 	// the DTOKS papers
 //	BackscatterTest();
+
+	// ***** 	CHARGING TESTS		***** //
 
 	// Delta Sec Unit Test:
 	// This test prints the value of the empirical function calculating the yield due to secondary electron emission.
@@ -52,12 +61,12 @@ int main(){
 
 	// This test outputs the potential as calculated by part of the DTOKS solution to the OML equation, considering only a 
 	// scenario with a potential well. This removes the discontinuities observed in the previous model.
-	DTOKSwellchargingTest();
+//	DTOKSwellchargingTest();
 	
 	// OML Charging Test:
 	// This test is designed to find the floating potential for small dust grains in a stationary plasma following OML theory.
 	// This employs an approximate series expansion to the Lambert W function to find the floating potential
-//	OMLTest();
+	OMLTest();
 
 	// MOML Charging Test:
 	// This test is designed to find the floating potential for large dust grains in a stationary plasma following MOML theory.
@@ -85,6 +94,25 @@ int main(){
 	// This test is designed to find the floating potential for large negative dust grains with electron emission 
 	// This employs an approximate series expansion to the Lambert W function to find the floating potential
 //	SchottkyMOMLTest();
+
+
+	// ***** 	FORCE TESTS		***** //
+	// Hybrid Ion Drag Test
+	// This test is designed to test the magnitude of the HybridIonDrag force as formulated in the paper given below.
+	// The Hybrid Ion Drag model is a function of the plasma species temperature ratio, the ion mach number, ion density,
+	// the dust grain potential and the dust grain radius
+	// Khrapak, S. A., Ivlev, A. V., Zhdanov, S. K., & Morfill, G. E. (2005). Hybrid approach to the ion drag force. 
+	// Physics of Plasmas, 12(4), 1–8. https://doi.org/10.1063/1.1867995 
+//	HybridIonDragTest();
+
+	// Fortov et al./DTOKS Ion Drag Test
+	// This test is designed to test the magnitude of the drag force as formulated in the paper given below by fortov.
+	// The Hybrid Ion Drag model is a function of the temperature of electrons and ions, the ion mach number, ion density,
+	// the dust grain potential and the dust grain radius
+	// Fortov, V. E., Ivlev, A. V., Khrapak, S. A., Khrapak, A. G., & Morfill, G. E. (2005).
+	//  Complex (dusty) plasmas: Current status, open issues, perspectives. Physics Reports, 421(1–2), 1–103. 
+	// https://doi.org/10.1016/j.physrep.2005.08.007
+//	FortovIonDragTest();
 
 	return 0;
 }
