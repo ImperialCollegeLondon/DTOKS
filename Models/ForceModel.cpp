@@ -30,31 +30,39 @@ ForceModel::ForceModel(std::string filename, double accuracy, std::array<bool,Nu
 
 void ForceModel::CreateFile(std::string filename){
 	F_Debug("\tIn ForceModel::CreateFile(std::string filename)\n\n");
-	ModelDataFile.open(filename);
-	ModelDataFile << "Position\tVelocity\tRotationFreq";
-	bool PrintGravity = false; // Lol
+	FileName=filename;
+	ModelDataFile.open(FileName);
+	ModelDataFile << std::fixed << std::setprecision(16) << std::endl;
+	ModelDataFile << "Time\tPosition\tVelocity\tRotationFreq";
+	bool PrintGravity = true; // Lol
 	if( UseModel[0] && PrintGravity ) 	ModelDataFile << "\tGravity";
-       	if( UseModel[1] ) 			ModelDataFile << "\tCentrifugal";
-       	if( UseModel[2] ) 			ModelDataFile << "\tLorentz";
-       	if( UseModel[3] ) 			ModelDataFile << "\tIonDrag";
-       	if( UseModel[4] ) 			ModelDataFile << "\tHybridIonDrag";
-       	if( UseModel[5] ) 			ModelDataFile << "\tNeutralDrag";
-		
+	if( UseModel[1] ) 			ModelDataFile << "\tCentrifugal";
+	if( UseModel[2] ) 			ModelDataFile << "\tLorentz";
+	if( UseModel[3] ) 			ModelDataFile << "\tIonDrag";
+	if( UseModel[4] ) 			ModelDataFile << "\tHybridIonDrag";
+	if( UseModel[5] ) 			ModelDataFile << "\tNeutralDrag";
+	
 	ModelDataFile << "\n";
+	ModelDataFile.close();
+	ModelDataFile.clear();
 	Print();
 }
 
 void ForceModel::Print(){
 	F_Debug("\tIn ForceModel::Print()\n\n");
-	ModelDataFile << Sample->get_position() << "\t" << Sample->get_velocity() << "\t" << Sample->get_rotationalfreq();
-	bool PrintGravity = false; // Lol
-	if( UseModel[0] && PrintGravity ) 	ModelDataFile << "\t0.0 0.0 -9.81"; // Maybe this should be coded better...
+	ModelDataFile.open(FileName,std::ofstream::app);
+	ModelDataFile << TotalTime << "\t" 
+			<< Sample->get_position() << "\t" << Sample->get_velocity() << "\t" << Sample->get_rotationalfreq();
+	bool PrintGravity = true; // Lol
+	if( UseModel[0] && PrintGravity ) 	ModelDataFile << "\t" << Gravity(); 
 	if( UseModel[1] ) 			ModelDataFile << "\t" << Centrifugal();
 	if( UseModel[2] ) 			ModelDataFile << "\t" << LorentzForce();
 	if( UseModel[3] ) 			ModelDataFile << "\t" << DTOKSIonDrag();
 	if( UseModel[4] ) 			ModelDataFile << "\t" << HybridIonDrag();
 	if( UseModel[5] ) 			ModelDataFile << "\t" << NeutralDrag();
 	ModelDataFile << "\n";
+	ModelDataFile.close();
+	ModelDataFile.clear();
 }
 
 double ForceModel::ProbeTimeStep()const{
@@ -73,17 +81,17 @@ double ForceModel::ProbeTimeStep()const{
 
 	// Check if the timestep should be shortened such that particles don't cross many grid cells in a single step
 	// (This is often the case without this condition.)
-	if( Sample->get_velocity().mag3() != 0.0 && ( get_dlx()/(2*Sample->get_velocity().mag3()) ) < timestep ){
+	if( Sample->get_velocity().mag3() != 0.0 && ( get_dlx()*Accuracy/(2*Sample->get_velocity().mag3()) ) < timestep ){
 		F_Debug("\ntimestep limited by grid size!");
-		timestep = get_dlx()/(2*Sample->get_velocity().mag3());
+		timestep = get_dlx()*Accuracy/(2*Sample->get_velocity().mag3());
 	}
 	
 	// Check if the timestep is limited by the gyration of the particle in a magnetic field.
 	double GyromotionTimeStep = 0.1*pow(Sample->get_radius(),2)*Sample->get_density()
-                *sqrt(1-(Pdata->MagneticField.getunit()*Sample->get_velocity().getunit()))
-                /(3.0*epsilon0*Pdata->ElectronTemp*fabs(Sample->get_potential())*Pdata->MagneticField.mag3());
+			*sqrt(1-(Pdata->MagneticField.getunit()*Sample->get_velocity().getunit()))
+			/(3.0*epsilon0*Pdata->ElectronTemp*fabs(Sample->get_potential())*Pdata->MagneticField.mag3());
 
-	if( GyromotionTimeStep < timestep ){
+	if( GyromotionTimeStep < timestep && GyromotionTimeStep > 0.0 ){
 		std::cout << "\ntimestep limited by magnetic field (Gyromotion)\n";
 		timestep = GyromotionTimeStep;
 	}
@@ -97,6 +105,7 @@ double ForceModel::ProbeTimeStep()const{
 double ForceModel::UpdateTimeStep(){
 	F_Debug( "\tIn ForceModel::UpdateTimeStep()\n\n" );
 	TimeStep = ProbeTimeStep();
+	
 	return TimeStep;
 }
 
@@ -107,20 +116,19 @@ void ForceModel::Force(double timestep){
 	// Make sure timestep input time is valid. Shouldn't exceed the timescale of the process.
 	assert(timestep > 0 && timestep <= TimeStep );
 
-	// Forces: Lorentz + ion drag + gravity
 	threevector Acceleration = CalculateAcceleration();
 
 	threevector ChangeInPosition(
-                        Sample->get_velocity().getx()*timestep,
-                        (Sample->get_velocity().gety()*timestep)/(Sample->get_position().getx()),
-                        Sample->get_velocity().getz()*timestep);
+					Sample->get_velocity().getx()*timestep,
+					(Sample->get_velocity().gety()*timestep)/Sample->get_position().getx(),
+					Sample->get_velocity().getz()*timestep);
 	// WARNING! If Sample->get_position().getx() == 0, then we will get nans in the position element
 	if( Sample->get_position().getx() == 0.0 ){
 		ChangeInPosition.sety(0.0);
 	}
 
 	threevector ChangeInVelocity = Acceleration*timestep;
-	
+
 	// Assert change in absolute vel less than ten times accuracy
 	assert( ChangeInVelocity.mag3() < 0.1*Accuracy ); // Assert change in velocity less than 10* TimeStep accuracy
 
@@ -164,28 +172,45 @@ void ForceModel::Force(){
 threevector ForceModel::CalculateAcceleration()const{
 	F_Debug("\tIn ForceModel::CalculateAcceleration()const\n\n");
 	// Forces: Lorentz + ion drag + gravity
-	threevector Accel;
-	if( UseModel[0] ) Accel += threevector(0.0,0.0,-9.81);
+	threevector Accel(0.0,0.0,0.0);
+	if( UseModel[0] ) Accel += Gravity();
 	if( UseModel[1] ) Accel += Centrifugal(); // Centrifugal terms. CHECK THESE TWO LINES AT SOME POINT
 	if( UseModel[2] ) Accel += LorentzForce();
 	if( UseModel[3] ) Accel += DTOKSIonDrag();
 	if( UseModel[4] ) Accel += HybridIonDrag();
 	if( UseModel[5] ) Accel += NeutralDrag();
-	F1_Debug( "\n\t\tg = " << threevector(0.0,0.0,-9.81) );
+
+	F1_Debug( "\n\t\tg = " << Gravity() );
 	F1_Debug( "\n\t\tcentrifugal = " << Centrifugal() );
 	F1_Debug( "\n\t\tlorentzforce = " << LorentzForce() );
-	F1_Debug( "\n\t\tFid = " << DTOKSIonDrag() );
+	F1_Debug( "\n\t\tDTOKSIonDrag = " << DTOKSIonDrag() );
+	F1_Debug( "\n\t\tHybridIonDrag = " << HybridIonDrag() );
 	F1_Debug( "\n\t\tNeutralDrag = " << NeutralDrag() );
 	F1_Debug( "\n\t\tAccel = " << Accel << "\n\n" );
-	
+
 	return Accel;
+}
+
+threevector ForceModel::Gravity()const{
+	threevector gravity(0.0,0.0,0.0);
+
+	double Theta = Sample->get_position().gety();
+	// Setup for Magnum-PSI
+	gravity.setx(-Pdata->Gravity.mag3()*cos(Theta));
+	gravity.sety(Pdata->Gravity.mag3()*sin(Theta));
+	return gravity;
 }
 
 threevector ForceModel::HybridIonDrag()const{
 	double IonThermalVelocity = sqrt(Kb*Pdata->IonTemp/Mp);
 	double u = Pdata->PlasmaVel.mag3()*(1.0/IonThermalVelocity); 	// Normalised ion flow velocity
 	double Tau = Pdata->ElectronTemp/Pdata->IonTemp;
-	
+
+	if( Pdata->IonTemp == 0.0 || u == 0.0 ){
+		threevector Zero(0.0,0.0,0.0);
+		return Zero;
+	}
+
 	double z = Sample->get_potential()*4.0*PI*epsilon0;
 	double CoulombLogarithm = 17.0;		// Approximation of coulomb logarithm	
 
@@ -195,12 +220,13 @@ threevector ForceModel::HybridIonDrag()const{
 	double term2 = (1.0/u)*exp(-u*u/2.0)*(1.0+2.0*Tau*z+u*u-4*z*z*Tau*Tau*CoulombLogarithm);	
 	
 	threevector HybridDrag = Coefficient*(term1+term2)*(Pdata->PlasmaVel-Sample->get_velocity()).getunit();
+	return HybridDrag*(1.0/Sample->get_mass());
 }
 
 // Calculations for ion drag: Mach number, shielding length with fitting function and thermal scattering parameter
 threevector ForceModel::DTOKSIonDrag()const{
 	F_Debug("\tIn ForceModel::DTOKSIonDrag()\n\n");
-	threevector Fid;
+	threevector Fid(0.0,0.0,0.0);
 
 // ION TEMPERATURE IN THIS FUNCTION IS IN ev.
 	double ConvertKelvsToeV(8.621738e-5);
@@ -225,7 +251,7 @@ threevector ForceModel::DTOKSIonDrag()const{
 
 			if(beta>13.0) std::cout << "nonlinear drag parameter" << std::endl;
 
-			threevector FidC,FidS;
+			threevector FidS(0.0,0.0,0.0);
 			if( Sample->get_potential() == 0 || beta == 0 ){
 				FidS = threevector(0.0,0.0,0.0);
 			}else{
@@ -233,8 +259,8 @@ threevector ForceModel::DTOKSIonDrag()const{
 				FidS = Mt*(sqrt(32*PI)/3.0*epsilon0*pow(Pdata->IonTemp*ConvertKelvsToeV,2)*Lambda*pow(beta,2));
 			}
 
-			FidC =(Pdata->PlasmaVel-Sample->get_velocity())*4.0*PI*pow(Sample->get_radius(),2)*Pdata->IonDensity*Mp
-				*sqrt(Kb*Pdata->ElectronTemp/(2.0*PI*Me))*exp(-Sample->get_potential()); 
+			threevector FidC =(Pdata->PlasmaVel-Sample->get_velocity())*4.0*PI*pow(Sample->get_radius(),2)
+				*Pdata->IonDensity*Mp*sqrt(Kb*Pdata->ElectronTemp/(2.0*PI*Me))*exp(-Sample->get_potential()); 
 			//for John's ion drag... I assume here and in other places in the 
 			//calculation that the given potential is normalised to kTe/e
 	    
@@ -258,24 +284,25 @@ threevector ForceModel::NeutralDrag()const{
 	F_Debug("\tIn ForceModel::DTOKSIonDrag()\n\n");
 //	return (Pdata->PlasmaVel-Sample->get_velocity())*Pdata->NeutralDensity*sqrt(2*Kb*Pdata->IonTemp*Mp)*PI
 //			*pow(Sample->get_radius(),2);
-	return (Pdata->PlasmaVel-Sample->get_velocity())*Mp*sqrt(4*PI)*NeutralFlux()*PI*pow(Sample->get_radius(),2);
-
+	return (Pdata->PlasmaVel-Sample->get_velocity())*Mp*sqrt(4*PI)*NeutralFlux()*PI*pow(Sample->get_radius(),2)*(1.0/Sample->get_mass());
 }
 
 threevector ForceModel::LorentzForce()const{
 	F_Debug("\tIn ForceModel::LorentzForce()\n\n");
 	// Dust grain charge to mass ratio
-	double qtom(0);
-	double ConvertKelvsToeV(8.621738e-5);
-	// Estimate charge from potential difference
+	double Charge = 4.0*PI*epsilon0*Sample->get_radius()*Kb*Pdata->ElectronTemp*Sample->get_potential()/echarge;
+	double qtom = Charge/Sample->get_mass();
 
-	if( Sample->is_positive() ) (qtom = 3.0*epsilon0*Kb*Sample->get_temperature())
-					/(echarge*pow(Sample->get_radius(),2)*Sample->get_density());
-	else qtom = -3.0*epsilon0*Pdata->ElectronTemp*ConvertKelvsToeV*Sample->get_potential()
-			/(pow(Sample->get_radius(),2)*Sample->get_density());	
+//	double ConvertKelvsToeV(8.621738e-5);
+	// Estimate charge from potential difference
+//	if( Sample->is_positive() ) (qtom = 3.0*epsilon0*Kb*Sample->get_temperature())
+//					/(echarge*pow(Sample->get_radius(),2)*Sample->get_density());
+//	else qtom = -3.0*epsilon0*Pdata->ElectronTemp*ConvertKelvsToeV*Sample->get_potential()
+//			/(pow(Sample->get_radius(),2)*Sample->get_density());	
 	//else qtom = -1000.0*3.0*epsilon0*V/(a*a*rho);//why it had Te???????
 	//edo to eixa allaksei se ola ta runs sto After 28_Feb ara prepei na ksana ginoun
 	// Google Translate: Here I had changed it to all the brides in After 28_Feb so they have to be done again
+	
 	threevector returnvec = (Pdata->ElectricField+(Sample->get_velocity()^Pdata->MagneticField))*qtom;
 	return returnvec;
 }

@@ -9,11 +9,13 @@ class ForceModel : public Model {
 		// Models defining the Force equation
 		enum { NumModels = 6 };
 		std::array<bool,NumModels> UseModel; 		// Force Models turned on of possibly 4
+		std::string FileName;				// Variable to hold data file name
 
 		void Print();			// Write to output data file
 
 		// Different Force terms
 		threevector CalculateAcceleration()const;	// Sum of Force terms
+		threevector Gravity()const;
 		threevector DTOKSIonDrag()const;
 		threevector HybridIonDrag()const;
 		threevector NeutralDrag()const;

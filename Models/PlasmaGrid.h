@@ -14,12 +14,14 @@ class PlasmaGrid{
 	// Plasma variables
 	protected:
 
-		// Oh by the way, na0 is the ion density and na1 is the electron density,
-		// ua0 is the ion drift velocity and ua1 is the electron drift velocity! po is the potential. You're welcome.
+		// Te & Ti are the electron and ion temperatures stored in units of (J)
+		// na0 & na1 are the ion and electron densities stored in units of (m^-3)
+		// po is the potential
+		// ua0 & ua1 are the ion and electron drift velocities stored in units of (m s^-1)
 		std::vector<std::vector<double>> Te, Ti, na0, na1, po, ua0, ua1, bx, by, bz, x, z, mevap;
 		std::vector<std::vector<int>> gridflag;
 		int gridx, gridz, gridtheta;  
-		double gridxmin, gridzmin, rmin, rmax;
+		double gridxmin, gridxmax, gridzmin, gridzmax;
 
 		// Material type
 		const double mi, gamma, dlx, dlz;
@@ -53,7 +55,7 @@ class PlasmaGrid{
 		const PlasmaData &get_plasmadata(const threevector pos)const;
 		double getTe		(int i, int k)const{
 			checkingrid(i,k);
-			if(Te[i][k] == Te[i][k] ){
+			if(Te[i][k] == Te[i][k] && Te[i][k] > 0.0 ){
 				return Te[i][k];
 			}else{
 				return 0;
@@ -61,7 +63,7 @@ class PlasmaGrid{
 		}
 		double getTi		(int i, int k)const{
 			checkingrid(i,k);
-			if(Ti[i][k] == Ti[i][k] ){
+			if(Ti[i][k] == Ti[i][k] && Ti[i][k] > 0.0 ){
 				return Ti[i][k];
 			}else{
 				return 0;
@@ -69,7 +71,7 @@ class PlasmaGrid{
 		}
 		double getna0		(int i, int k)const{
 			checkingrid(i,k);
-                        if(na0[i][k] == na0[i][k] ){
+                        if(na0[i][k] == na0[i][k] && na0[i][k] > 0.0 ){
                                 return na0[i][k];
                         }else{
                                 return 0;
@@ -126,7 +128,7 @@ class PlasmaGrid{
 
 		double getna1		(int i, int k)const{
 			checkingrid(i,k);
-                        if(na1[i][k] == na1[i][k] ){
+                        if(na1[i][k] == na1[i][k] && na1[i][k] > 0.0 ){
                                 return na1[i][k];
                         }else{
                                 return 0;
@@ -134,7 +136,7 @@ class PlasmaGrid{
 		}
 		double getna1mi		(int i, int k)const{
 			checkingrid(i,k);
-                        if(na1[i][k]*mi == na1[i][k]*mi ){
+                        if(na1[i][k]*mi == na1[i][k]*mi && na1[i][k] > 0.0 ){
                                 return na1[i][k]*mi;
                         }else{
                                 return 0;
@@ -160,6 +162,10 @@ class PlasmaGrid{
 		double get_gas		()		const{return gas;}
 		double get_mi		()		const{return mi;}
 		double get_gamma	()		const{return gamma;}
+		double get_gridxmin	()		const{return gridxmin;}
+		double get_gridxmax	()		const{return gridxmax;}
+		double get_gridzmin	()		const{return gridzmin;}
+		double get_gridzmax	()		const{return gridzmax;}
 		double get_gridx	()		const{return gridx;}
 		double get_gridz	()		const{return gridz;}
 		double get_gridtheta	()		const{return gridtheta;}

@@ -2,6 +2,7 @@
 #define __MODEL_H_INCLUDED__
 
 #include <memory>
+#include <iomanip>     // std::ofstream::setprecision(), This allows for precision to be set for output
 
 #include "PlasmaGrid.h"
 #include "Iron.h"

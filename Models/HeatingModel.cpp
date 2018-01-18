@@ -20,7 +20,7 @@ HeatingModel::HeatingModel(std::string filename, double accuracy, std::array<boo
 	H_Debug("\n\nIn HeatingModel::HeatingModel(std::string filename, double accuracy, std::array<bool,NumModels> &models, Matter *& sample, PlasmaData const *&pdata) : Model(sample,pdata,accuracy)\n\n");
 	Defaults();
 	UseModel 		= models;
-	CreateFile(filename,false);
+	CreateFile(FileName,false);
 }
 
 HeatingModel::HeatingModel(std::string filename, double accuracy, std::array<bool,NumModels> &models,
@@ -28,7 +28,7 @@ HeatingModel::HeatingModel(std::string filename, double accuracy, std::array<boo
 	H_Debug("\n\nIn HeatingModel::HeatingModel(std::string filename,double accuracy, std::array<bool,NumModels> &models, Matter *& sample, PlasmaGrid const &pgrid) : Model(sample,pgrid,accuracy)\n\n");
 	Defaults();
 	UseModel 	= models;
-	CreateFile(filename,false);
+	CreateFile(FileName,false);
 }
 
 void HeatingModel::Defaults(){
@@ -44,24 +44,28 @@ void HeatingModel::Defaults(){
 
 void HeatingModel::CreateFile(std::string filename, bool PrintPhaseData){
 	H_Debug("\tIn HeatingModel::CreateFile(std::string filename, bool PrintPhaseData)\n\n");
-	ModelDataFile.open(filename);
+	FileName=filename;
+	ModelDataFile.open(FileName);
+	ModelDataFile << std::fixed << std::setprecision(16) << std::endl;
 	ModelDataFile << "Time\tTemp\tMass\tDensity";
-	if( PrintPhaseData ) 						ModelDataFile << "\tFusionE\tVapourE";
+	if( PrintPhaseData ) 				ModelDataFile << "\tFusionE\tVapourE";
 	if( Sample->get_c(0) == 'v' || Sample->get_c(0) == 'V' ) 	ModelDataFile << "\tCv";
 	if( Sample->get_c(1) == 'v' || Sample->get_c(1) == 'V' ) 	ModelDataFile << "\tVapourP";
 	if( Sample->get_c(2) == 'v' || Sample->get_c(2) == 'V' ) 	ModelDataFile << "\tLinearExpansion";
-       	if( UseModel[0] )       					ModelDataFile << "\tEmissLoss";
-       	if( UseModel[0] && Sample->get_c(3) == 'v' )   			ModelDataFile << "\tEmissiv";
-       	if( UseModel[1] )       					ModelDataFile << "\tEvapRate\tEvapLoss\tEvapMassLoss";
-       	if( UseModel[2] )       					ModelDataFile << "\tNewton";
-       	if( UseModel[3] )       					ModelDataFile << "\tIonFlux\tIonHeatFlux";
-       	if( UseModel[4] )       					ModelDataFile << "\tElectronFlux\tElectronHeatFlux";
-       	if( UseModel[5] )       					ModelDataFile << "\tNeutralFlux\tNeutralHeatFlux";
-       	if( UseModel[6] )       					ModelDataFile << "\tNeutralRecomb";
-       	if( UseModel[7] )       					ModelDataFile << "\tSEE";
-       	if( UseModel[8] )       					ModelDataFile << "\tTEE";
+	if( UseModel[0] )					ModelDataFile << "\tEmissLoss";
+	if( UseModel[0] && Sample->get_c(3) == 'v' )   			ModelDataFile << "\tEmissiv";
+	if( UseModel[1] )					ModelDataFile << "\tEvapRate\tEvapLoss\tEvapMassLoss";
+	if( UseModel[2] )					ModelDataFile << "\tNewton";
+	if( UseModel[3] )					ModelDataFile << "\tIonFlux\tIonHeatFlux";
+	if( UseModel[4] )					ModelDataFile << "\tElectronFlux\tElectronHeatFlux";
+	if( UseModel[5] )					ModelDataFile << "\tNeutralFlux\tNeutralHeatFlux";
+	if( UseModel[6] )					ModelDataFile << "\tNeutralRecomb";
+	if( UseModel[7] )					ModelDataFile << "\tSEE";
+	if( UseModel[8] )					ModelDataFile << "\tTEE";
 	ModelDataFile << "\n";
 	Print();
+	ModelDataFile.close();
+	ModelDataFile.clear();
 }
 
 // This model forces the time step to be the value which produces a change in temperature or 1*accuracy degree
@@ -131,7 +135,8 @@ double HeatingModel::UpdateTimeStep(){
 
 void HeatingModel::Print(){
 	H_Debug("\tIn HeatingModel::Print()\n\n");
-
+	
+	ModelDataFile.open(FileName,std::ofstream::app);
 	ModelDataFile 	<< TotalTime << "\t" << Sample->get_temperature() << "\t" << Sample->get_mass() 
 		<< "\t" << Sample->get_density();
 
@@ -156,6 +161,8 @@ void HeatingModel::Print(){
 	if( UseModel[7] )	ModelDataFile 	<< "\t" << SEE(Sample->get_temperature());
 	if( UseModel[8] )	ModelDataFile 	<< "\t" << TEE(Sample->get_temperature());
 	ModelDataFile << "\n";
+	ModelDataFile.close();
+	ModelDataFile.clear();
 }
 
 
@@ -191,22 +198,24 @@ void HeatingModel::Heat(double timestep){
 	
 
 	// Make sure timestep input time is valid. Shouldn't exceed the timescale of the process.
-//	std::cout << "\nTimeStep = " << TimeStep << "\ntimestep = " << timestep; std::cin.get();
 	assert(timestep > 0 && timestep <= TimeStep );
 
 	assert( Sample->get_mass() > 0 );
 
 //	backscatter(Pdata->ElectronTemp,Pdata->IonTemp,Mp,Sample->get_potential(),Sample->get_elem(),RE,RN);
-	double TotalEnergy = RungeKutta4();                     // Calculate total energy through RungeKutta4 method
+	double TotalEnergy = RungeKutta4(timestep);// Calculate total energy through RungeKutta4 method
 	H1_Debug( "\tTotalEnergy = " << TotalEnergy << "\n");
-        Sample->update_temperature(TotalEnergy);                // Update Temperature
+	Sample->update_temperature(TotalEnergy);  // Update Temperature
 
+//	std::cout << "\nTemperature = " << Sample->get_temperature();
 	// Account for evaporative mass loss, if model is turned on, if it's a liquid and not boiling!
 	if( UseModel[1] && Sample->is_liquid() && (Sample->get_temperature() != Sample->get_boilingtemp()) )
 		Sample->update_mass( (timestep*EvaporationFlux(Sample->get_temperature())*Sample->get_atomicmass())/AvNo );
 	H1_Debug("\tMass Loss = " << (timestep*EvaporationFlux(Sample->get_temperature())*Sample->get_atomicmass())/AvNo);
 	Sample->update();
-        H_Debug("\t"); Print();                // Print data to file
+	Print();  // Print data to file
+	H_Debug("\t"); 
+
 	TotalTime += timestep;
 }
 
@@ -245,7 +254,7 @@ double HeatingModel::CalculatePower(double DustTemperature)const{
 	return TotalPower;
 }
 
-double HeatingModel::RungeKutta4(){
+double HeatingModel::RungeKutta4(double timestep){
 	H_Debug( "\tIn HeatingModel::RungeKutta4()\n\n");
 	double k1 = CalculatePower(Sample->get_temperature()); 
 	if(k1<0 && fabs(k1/2) > Sample->get_temperature()){
@@ -257,26 +266,36 @@ double HeatingModel::RungeKutta4(){
 	if( k2<0 && fabs(k2/2) > Sample->get_temperature() ){
 		std::cout << "\n\nThermal Equilibrium reached on condition (4): k2 step negative and larger than Td!";
 		ThermalEquilibrium = true;
-		return (TimeStep/6)*k1;
+		return (timestep/6)*k1;
 	}
 	double k3 = CalculatePower(Sample->get_temperature()+k2/2);
 	if( k3<0 && fabs(k3) > Sample->get_temperature() ){
 		std::cout << "\n\nThermal Equilibrium reached on condition (4): k3 step negative and larger than Td!";
 		ThermalEquilibrium = true;
-		return (TimeStep/6)*(k1+2*k2);
+		return (timestep/6)*(k1+2*k2);
 	}
 	double k4 = CalculatePower(Sample->get_temperature()+k3);
 	if( k4<0 && fabs(k4/2) > Sample->get_temperature() ){
 		std::cout << "\n\nThermal Equilibrium reached on condition (4): k4 step negative and larger than Td!";
 		ThermalEquilibrium = true;
-		return (TimeStep/6)*(k1+2*k2+2*k3);
+		return (timestep/6)*(k1+2*k2+2*k3);
 	}
-	H1_Debug( "\nTimeStep = " << TimeStep << "\nk1 = " << k1 << "\nk2 =" << k2 << "\nk3 = " << k3 << "\nk4 = " << k4);
-	return (TimeStep/6)*(k1+2*k2+2*k3+k4);
+	H1_Debug( "\ntimestep = " << timestep << "\nk1 = " << k1 << "\nk2 =" << k2 << "\nk3 = " << k3 << "\nk4 = " << k4);
+	return (timestep/6)*(k1+2*k2+2*k3+k4);
 };
 
 
 // *************************************************** HEATING MODELS *************************************************** //
+
+// Using Stefan-Boltzmann Law, returns Energy lost per second in Kila Joules
+const double HeatingModel::EmissivityModel(double DustTemperature)const{
+	H_Debug("\n\tIn HeatingModel::EmissivityModel(double DustTemperature):");
+//	H1_Debug("\nSample->get_surfacearea() = " << Sample->get_surfacearea() << "\nEmissiv = " << Sample->get_emissivity()
+//		<< "\nDustTemperature = " << DustTemperature << "\nAmbTemp = " << Pdata->AmbientTemp);
+//	H1_Debug("\nreturn = " << Sample->get_emissivity()*Sample->get_surfacearea()*Sigma*(pow(DustTemperature,4)-pow(Pdata->AmbientTemp,4))/1000);
+	// Energy emitted from a sample converted to kJ
+	return Sample->get_emissivity()*Sample->get_surfacearea()*Sigma*(pow(DustTemperature,4)-pow(Pdata->AmbientTemp,4));
+}
 
 // http://users.wfu.edu/ucerkb/Nan242/L06-Vacuum_Evaporation.pdf, 
 // https://en.wikipedia.org/wiki/Hertz%E2%80%93Knudsen_equation
@@ -315,16 +334,6 @@ const double HeatingModel::EvaporationFlux(double DustTemperature)const{
 			sqrt(2*PI*Sample->get_atomicmass()*R*DustTemperature);
 }
 
-// Using Stefan-Boltzmann Law, returns Energy lost per second in Kila Joules
-const double HeatingModel::EmissivityModel(double DustTemperature)const{
-	H_Debug("\n\tIn HeatingModel::EmissivityModel(double DustTemperature):");
-//	H1_Debug("\nSample->get_surfacearea() = " << Sample->get_surfacearea() << "\nEmissiv = " << Sample->get_emissivity()
-//		<< "\nDustTemperature = " << DustTemperature << "\nAmbTemp = " << Pdata->AmbientTemp);
-//	H1_Debug("\nreturn = " << Sample->get_emissivity()*Sample->get_surfacearea()*Sigma*(pow(DustTemperature,4)-pow(Pdata->AmbientTemp,4))/1000);
-	// Energy emitted from a sample converted to kJ
-	return Sample->get_emissivity()*Sample->get_surfacearea()*Sigma*(pow(DustTemperature,4)-pow(Pdata->AmbientTemp,4));
-}
-
 // VERY APPROXIMATE MODEL: Atmosphere assumed to be 300 degrees always, rough heat transfer coefficient is use
 // https://en.wikipedia.org/wiki/Newton%27s_law_of_cooling
 const double HeatingModel::NewtonCooling(double DustTemperature)const{
@@ -355,7 +364,7 @@ const double HeatingModel::SEE(double DustTemperature)const{
 	double SEE=0; double deltatot = Sample->get_deltatot();
 	if( ForceNegative || !Sample->is_positive() )
 		SEE = Sample->get_surfacearea()*ElectronFlux(DustTemperature)*Sample->get_deltasec()*echarge*
-                                        (3+Sample->get_workfunction()); 
+     (3+Sample->get_workfunction()); 
 	else 	SEE = 0; // Electrons captured by positive grain
 	return SEE;
 }
@@ -368,6 +377,7 @@ const double HeatingModel::TEE(double DustTemperature)const{
 		TEE = Sample->get_surfacearea()*Sample->get_deltatherm()*ElectronFlux(Sample->get_temperature())*
 			(2*Kb*DustTemperature+echarge*Sample->get_workfunction()); 
 	else if( deltatot > 1 ) 	TEE = 0; // Electrons captured by positive grain
+	return TEE;
 }
 
 const double HeatingModel::IonHeatFlux(double DustTemperature)const{ // Assuming Re = 0

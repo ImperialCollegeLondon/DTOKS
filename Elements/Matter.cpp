@@ -4,7 +4,8 @@
 
 
 #include "Matter.h"
-struct GrainData MatterDefaults = {
+// Default values describe Tungsten
+struct GrainData MatterDefaults = { 
 	false,		// Is Liquid,		fine
 	false,		// Is Gas,		fine
 	false,		// Breakup,		fine
@@ -20,15 +21,15 @@ struct GrainData MatterDefaults = {
 	1.0,		// Emissivity		should be updated
 	1.0,		// Linear Expansion	should be updated
 	0.5,		// Heat Capacity	should be updated
-	0,		    // DeltaSec		should be updated
-	0,		    // DeltaTherm		should be updated
-	0,		    // Potential		should be updated
+	0,		// DeltaSec		should be updated
+	0,		// DeltaTherm		should be updated
+	0,		// Potential		should be updated
 	false,		// Is Positive		should be updated
 	{0,0,0},	// Dust position	case dependant
 	{0,0,0},	// Dust Velocity	case dependant
-	0,          // Rotational Freq  fine
-	0,		    // FusionEnergy		fine
-	0		    // VapourEnergy		fine
+	0,		// Rotational Freq  	fine
+	0,		// FusionEnergy		fine
+	0		// VapourEnergy		fine
 };
 
 
@@ -68,7 +69,7 @@ Matter::Matter(double rad, double temp, const ElementConsts *elementconsts):Ec(*
 		St.Liquid = true;
 	}
 	assert(St.Radius > 0 && St.UnheatedRadius > 0 && St.Temperature > 0 && St.Temperature < St.SuperBoilingTemp );
-
+	
 	M_Debug("\nSt.Radius = " << St.Radius << "\nSt.Mass = " << St.Mass << "\nSt.Temperature = " << St.Temperature);
 	M_Debug("\nEc.LatentVapour = " << Ec.LatentVapour << "\nEc.AtomicMass = " << Ec.AtomicMass);
 };
@@ -85,6 +86,7 @@ Matter::Matter(double rad, double temp, const ElementConsts *elementconsts, std:
 	if( ConstModels[1] != 'v' && ConstModels[1] != 'V' )	St.Mass = Ec.RTDensity*St.Volume;
 	else							update();
 	if( St.Temperature > Ec.MeltingTemp ){
+		// This is a fix to avoid numerical errors
 		St.FusionEnergy = Ec.LatentFusion*St.Mass;
 		St.Liquid = true;
 	}
@@ -221,21 +223,20 @@ void Matter::update_state(double EnergyIn){
 	M_Debug("\tIn Matter::update_state(double EnergyIn)\n\n");
 
 	St.Temperature += EnergyIn/(St.Mass*St.HeatCapacity); // HeatCapacity in Units of kJ/(kg K)
-
+	double Epsilon(1e-15);	// This factor avoids numerical errors.
 	// Account for latent heat of melted solid that needs to be re-frozen
 	if( St.FusionEnergy > 0 && St.Temperature < Ec.MeltingTemp && EnergyIn < 0 ){
 		St.FusionEnergy += EnergyIn;
 		St.Temperature = Ec.MeltingTemp;
-		if( St.FusionEnergy < 0 ){ // If it has just re-frozen, St.Fusion Energy is negative, account for lost energy
+		if( St.FusionEnergy < Epsilon ){ // If it has just re-frozen, St.Fusion Energy is negative, account for lost energy
 			St.Temperature = Ec.MeltingTemp+(St.FusionEnergy)/(St.Mass*St.HeatCapacity);
 			St.FusionEnergy = 0;
 			St.Liquid = false;
 		}
-
 	}
 	if( St.Temperature < St.SuperBoilingTemp && St.Temperature >= Ec.MeltingTemp ){ // Melting or Liquid
-		if( St.FusionEnergy < Ec.LatentFusion*St.Mass ){ // Must be melting
-
+		// Factor of 1e-10 is to avoid numerical errors in comparison
+		if( St.FusionEnergy < Ec.LatentFusion*St.Mass-1e-10*Ec.LatentFusion*St.Mass ){ // Must be melting
 			// Add energy to Latent heat and set Temperature to Melting Temperature
 			St.FusionEnergy += EnergyIn;
 			St.Temperature = Ec.MeltingTemp;
@@ -317,7 +318,7 @@ void Matter::update(){
 			St.Breakup = true;
 			std::cout << "\nMass has split in two...";
 		}
-	}
+	} 
 
 	M_Debug("\t"); update_emissivity();
 	M_Debug("\t"); update_vapourpressure();
@@ -347,7 +348,8 @@ void Matter::update_mass(double LostMass){
 	M2_Debug("\nMassLoss = " << LostMass  << "\nSt.Mass = " << St.Mass << "\nRadius = " << St.Radius 
 			<< "\nDensity = " << St.Density);
 	St.Mass -= LostMass;
-		
+	St.FusionEnergy -= LostMass*Ec.LatentFusion;
+
 	//Pause();
 	if(St.Mass < 0){ 
 		std::cout << "\n\nSt.Mass = " << St.Mass << "\nSample mass is Negative! Evaporation assumed\n\n";

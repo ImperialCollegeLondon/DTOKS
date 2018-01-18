@@ -32,14 +32,7 @@ template<typename T> int InputFunction(int &argc, char* argv[], int &i, std::str
 	}
 
 }
-/*
-	std::cout << "\n\n************************************* BEGIN SETUP (1) ************************************* \n\n";
 
-	DTOKSU MyDtoks;
-	int errcode = MyDtoks.Run();
-
-	std::cout << "\n\n************************************* BEGIN SETUP (2) ************************************* \n\n";
-*/
 int main(int argc, char* argv[]){
 
 	clock_t begin = clock();
@@ -47,17 +40,16 @@ int main(int argc, char* argv[]){
 
         // ------------------- INITIALISE PLASMA ------------------- //
 	char Plasma='h';
-	char Machine='m';	// Initialise plasma grid
-//	double xSpacing =2.34375e-3;	// x-dimensional spacing (Radial) metres
-//	double ySpacing =0.006;		// y-dimensional spacing (z) metres
-	double xSpacing =0.01;	// x-dimensional spacing (Radial) metres
-	double ySpacing =0.01;	// y-dimensional spacing (z) metres
+	char Machine='p';	// Initialise plasma grid
+	double xSpacing = 0.00234375;	// 0.15/64.0; x-dimensional spacing (Radial) metres
+	double zSpacing = 0.04; 	// 1.0/25.0;  y-dimensional spacing (z) metres
+//	double xSpacing =0.01;	// x-dimensional spacing (Radial) metres
+//	double zSpacing =0.01;	// y-dimensional spacing (z) metres
 
-	PlasmaGrid Pgrid(Plasma,Machine,xSpacing,ySpacing);
+	PlasmaGrid Pgrid(Plasma,Machine,xSpacing,zSpacing);
 
 
         // ------------------- INITIALISE META_DATA FILE ------------------- //
-
 	std::string filename = "Data/DTOKSU.txt";
 	std::ofstream MetaDataFile;	// Data file for containing the run information
 	time_t now = time(0);		// Get the time of simulation
@@ -68,39 +60,35 @@ int main(int argc, char* argv[]){
 
 
         // ------------------- DEFINE MODELS ------------------- //
-
 	// Define the behaviour of the models for the temperature dependant constants, the time step and the 'Name' variable.
 	char EmissivityModel = 'c'; 	// Possible values 'c', 'v' and 'f': Corresponding to (c)onstant, (v)ariable and from (f)ile
 	char ExpansionModel = 'c'; 	// Possible values 'c', 'v' and 's': Corresponding to (c)onstant, (v)ariable, (s)et 
 													// and (z)ero expansion
-	char HeatCapacityModel = 'c'; 	// Possible values 'c', 'v' and 's': Corresponding to (c)onstant, (v)ariable and (s)et
-	char BoilingModel = 'y'; 	// Possible values 'y', 'n', 's' and 't': Corresponding to (y)es, (n)o, (s)uper 
+	char HeatCapacityModel = 'v'; 	// Possible values 'c', 'v' and 's': Corresponding to (c)onstant, (v)ariable and (s)et
+	char BoilingModel = 't'; 	// Possible values 'y', 'n', 's' and 't': Corresponding to (y)es, (n)o, (s)uper 
 													// and (t)homson
 	std::string Name="constant";	// Describes heating model
 
 
         // ------------------- INITIALISE DUST ------------------- //
-
  	// Parameters describing the heating model
 	char Element='W';		// Element, (W) : Tungsten, (G) : Graphite, (B) : Beryllium or (F) : Iron.
 //	double Power=0;			// Kilo-Watts power in addition to heating model powers
-	double Size=5e-5; 		// m
-	double Temp=3500;		// K
+	double Size=0.5e-6; 		// m
+	double Temp=300;		// K
 	double TimeStep=1e-5;		// s
-
-	Matter * Sample;		// Define the sample matter type
 
 
 	// ------------------- HEATING MODELS ------------------- //
 	// Set to true all heating models that are wanted
-	bool RadiativeCooling = 0;
-	bool EvaporativeCooling = 0;
+	bool RadiativeCooling = 1;
+	bool EvaporativeCooling = 1;
 	bool NewtonCooling = 0;			// This model is equivalent to Electron and Ion heat flux terms
-	bool NeutralHeatFlux = 0; 		// Plasma heating terms
-	bool ElectronHeatFlux = 0;
+	bool NeutralHeatFlux = 1; 		// Plasma heating terms
+	bool ElectronHeatFlux = 1;
 	bool IonHeatFlux = 0;
 	bool NeutralRecomb = 0;
-	bool TEE = 0;				// Electron Emission terms
+	bool TEE = 1;				// Electron Emission terms
 	bool SEE = 0;
 	bool PlasmaHeating = 1; 		// If we want plasma heating terms turned off
 	// NOTE: For Negative dust with RE=0 and Te = Ti, the Ion and Electron heat flux will be identical!
@@ -111,13 +99,15 @@ int main(int argc, char* argv[]){
 		NeutralRecomb = false;
 	}
 
+
 	// ------------------- FORCING MODELS ------------------- //
-        bool Gravity = 0;
-        bool Centrifugal = 0;
-        bool Lorentz = 0;
+        bool Gravity = 1;
+        bool Centrifugal = 1;
+        bool Lorentz = 1;
         bool IonDrag = 0;	
         bool HybridDrag = 1;
-        bool NeutralDrag = 0;
+        bool NeutralDrag = 1;
+
 
 	// ------------------- CHARGING MODELS ------------------- //
 	// ONLY ONE SHOULD BE ON
@@ -125,6 +115,8 @@ int main(int argc, char* argv[]){
         bool SchottkyOML = false;
 	bool DTOKSWell = true;
 
+
+	// ------------------- INITIALISE PLASMA DATA ------------------- //
 	// Plasma Data
 	// NOTE: 16/06/17, current plasma data matches DTOKS initial plasma data for debugging purposes.
 
@@ -143,6 +135,8 @@ int main(int argc, char* argv[]){
 	threevector Bfield(0.0226868, 0.328923, 0.0414043);
 	Pdata->MagneticField = Bfield;
 
+
+	// ------------------- PROCESS USER-INPUT ------------------- //
 	std::vector <std::string> sources;
 	std::stringstream ss0;
 	for (int i = 1; i < argc; ++i){ // Read command line input
@@ -160,6 +154,9 @@ int main(int argc, char* argv[]){
 			sources.push_back(argv[i]);
 		}
 	}
+
+
+	// ------------------- GROUP MODELS ------------------- //
 	// Models and ConstModels are placed in an array in this order:
 	std::array<bool, 9> HeatModels = 
 		{RadiativeCooling, EvaporativeCooling, NewtonCooling, IonHeatFlux, ElectronHeatFlux, NeutralHeatFlux, 
@@ -169,8 +166,11 @@ int main(int argc, char* argv[]){
 	ConstModels  = {EmissivityModel,ExpansionModel,HeatCapacityModel,BoilingModel};
 	
 	// Accuracy Levels correspond to Charging, Heating and Forcing respectively
-	std::array<double,3> AccuracyLevels = {1.0,1.0,1.0};
+	std::array<double,3> AccuracyLevels = {1.0,1.0,0.1};
 
+
+	// ------------------- INITIALISE DUST ------------------- //
+	Matter * Sample;		// Define the sample matter type
 	if 	(Element == 'W') Sample = new Tungsten(Size,Temp,ConstModels);
 	else if (Element == 'B') Sample = new Beryllium(Size,Temp,ConstModels);
 	else if (Element == 'F') Sample = new Iron(Size,Temp,ConstModels);
@@ -180,17 +180,19 @@ int main(int argc, char* argv[]){
 		return -1;
 	}
 
-	threevector xinit(1.15,0.0,-1.99);// default injection right hand side
-//	threevector xinit(0.01,0.01,0.0);
 	// Coordinates are r, theta, z.
 	// z is the vertical direction.
 	// r and theta map out the toroidal plane.
 	// Therefore a plot in r, z provides a poloidal cross section
-	threevector vinit(0.0,0.0,10.0);
+//	CAUTION! WHEN THETA IS SET TO 0.0, WE CAN GET NEGATIVE RADII
+	threevector xinit(0.145,0.01,0.05);	// Coordinates are r,theta,z
+//	threevector xinit(1.15,0.0,-1.99);// default injection right hand side
+	threevector vinit(0.0,0.0,0.0);
 	double InitRotationalFreq(0.0);
 	Sample->update_motion(xinit,vinit,InitRotationalFreq);
 
 
+	// ------------------- PRINT METADATA ------------------- //
 	MetaDataFile << "\n\n#DUST PARAMETERS" 
 		<<"\nElem (arb)\tSize (m)\tTemp (K)\txinit (m s^-1)\tvinit (m s^-1)\n"
 		<<Element<<"\t\t"<<Size<<"\t\t"<<Temp<<"\t\t"<<xinit<<"\t"<<vinit<<"\n"
@@ -198,6 +200,8 @@ int main(int argc, char* argv[]){
 		<<"\nMachine\tgas\tgridx\tgridz\tgridtheta\tdlx\tdlz\n"
 		<<Pgrid.get_machine()<<"\t"<<Pgrid.get_gas()<<"\t"<<Pgrid.get_gridx()<<"\t"<<Pgrid.get_gridz()<<"\t"
 		<<Pgrid.get_gridtheta()<<"\t"<<Pgrid.get_dlx()<<"\t"<<Pgrid.get_dlz()<<"\n"
+		<<"\nxmin\txmax\tzmin\tzmax\n"
+		<<Pgrid.get_gridxmin()<<"\t"<<Pgrid.get_gridxmax()<<"\t"<<Pgrid.get_gridzmin()<<"\t"<<Pgrid.get_gridzmax()<<"\n"
 		<<"\nNn (m^-3)\tNi (m^-3)\tNe (m^-3)\n"
 		<<Pdata->NeutralDensity<<"\t\t"<<Pdata->IonDensity<<"\t\t"<<Pdata->ElectronDensity
 		<<"\n\nTn (K)\t\tTi (K)\t\tTe (K)\n"
@@ -216,26 +220,23 @@ int main(int argc, char* argv[]){
 		<<"HybridDrag:\t\t" << HybridDrag << "\n"<<"NeutralDrag:\t\t" << NeutralDrag << "\n"
 		<<"\n#CHARGING MODELS\n"
 		<<"DTOKSOML:\t\t" << DTOKSOML << "\n"<<"SchottkyOML:\t\t" << SchottkyOML << "\n" << "DTOKSWell:\t\t" << DTOKSWell;
-		
+
 
 	std::cout << "\n\n * GENERATE DTOKS * \n\n";
-//	DTOKSU MyDtoks1(TimeStep, AccuracyLevels, Sample, Pdata, HeatModels, ForceModels, ChargeModels);
+//	DTOKSU *MyDtoks1 = new DTOKSU(TimeStep, AccuracyLevels, Sample, Pdata, HeatModels, ForceModels, ChargeModels);
 	DTOKSU *MyDtoks2 = new DTOKSU(TimeStep, AccuracyLevels, Sample, Pgrid, HeatModels, ForceModels, ChargeModels);
 
 	std::cout << "\n\n * RUN DTOKS * \n\n";
 	Breakup Break(MyDtoks2, Sample);
-//	int errcode1 = MyDtoks1.Run();
-//	int errcode2 = MyDtoks2->Run();
 	Break.Run();
+//	MyDtoks2->Run();
 
 	std::cout << "\n\n * MAIN SCRIPT COMPLETE * \n\n";
 	clock_t end = clock();
-	double elapsd_secs = double(end-begin)/CLOCKS_PER_SEC;
-
-	
+	double elapsd_secs = double(end-begin)/CLOCKS_PER_SEC;	
 	MetaDataFile << "\n\n*****\n\nCompleted in " << elapsd_secs << "s\n";
 	MetaDataFile.close();
 
-//	Pgrid.datadump();
+//	Pgrid.datadump(); // Print the plasma grid data
 	return 0;
 }

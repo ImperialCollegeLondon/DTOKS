@@ -31,23 +31,28 @@ ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<b
 
 void ChargingModel::CreateFile(std::string filename){
 	C_Debug("\tIn ChargingModel::CreateFile(std::string filename)\n\n");
-	ModelDataFile.open(filename);
-
+	FileName = filename;
+	ModelDataFile.open(FileName);
+	ModelDataFile << std::fixed << std::setprecision(16) << std::endl;
 	ModelDataFile << "Time\tChargeOfGrain";
 	ModelDataFile << "\tPositive\tPotential";
 
 	ModelDataFile << "\n";
+	ModelDataFile.close();
+	ModelDataFile.clear();
 	Print();
 }
 
 void ChargingModel::Print(){
 	C_Debug("\tIn ChargingModel::Print()\n\n");
+	ModelDataFile.open(FileName,std::ofstream::app);
 	ModelDataFile << TotalTime << "\t" << ChargeOfGrain;
 	if( Sample->is_positive() )  ModelDataFile << "\tPos";
 	if( !Sample->is_positive() ) ModelDataFile << "\tNeg";
 	ModelDataFile << "\t" << Sample->get_potential();
-
 	ModelDataFile << "\n";
+	ModelDataFile.close();
+	ModelDataFile.clear();
 }
 
 double ChargingModel::ProbeTimeStep()const{

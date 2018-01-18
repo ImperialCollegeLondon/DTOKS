@@ -4,28 +4,26 @@
 #include "Breakup.h"
 
 // Parameterised constructor
-Breakup::Breakup( DTOKSU *&dtoksu, Matter *&sample ) : Sample(sample){
-	Sim = dtoksu;
+Breakup::Breakup( DTOKSU *&dtoksu, Matter *&sample ) : Sample(sample),Sim(dtoksu){
 }
 
 //
 int Breakup::Run(){
 	threevector Zeros(0.0,0.0,0.0);
 
-	threevector VelocityUnitVec(1.0,0.0,0.0);
-
 	unsigned int p(1);
 	unsigned int i(1);
 
+	// Loop over the number of broken paths.
 	for( unsigned int j(0);	j < i; j ++){
 //		std::cout << "\nSimulating NEGATIVE Branch " << i << " : " << j << "\nStart Pos = " << Sample->get_position()
 //			<< "\nVelocity = " << Sample->get_velocity() << "\nMass = " << Sample->get_mass(); std::cin.get();
 
+		// When breakup occurs and a path forks, track it. If it breaks up, track the subsequent particle
+		// Repeat until the end condition is no-longer breakup
 		while( Sim->Run() == 3 ){ // Breakup has occured...
-//			std::cout << "\nEnd Pos = " << Sample->get_position();
-//			std::cout << "\ni : " << i << "\tj : " << j;
 
-			// Close data files and open new ones
+			// Close data files and open new ones, with new names based off index
 			Sim->CloseFiles();
 			Sim->OpenFiles("Data/breakup",p);
 			
@@ -35,6 +33,8 @@ int Breakup::Run(){
 			// Reset the end point data with the same position, no rotation and heading off in negative direction
 			// Rotation occurs in same direction as Ion Gyromotion
 			double VelocityMag = 2*PI*(Sample->get_radius())*Sample->get_rotationalfreq();
+
+			threevector VelocityUnitVec = (Sample->get_velocity().getunit()^Sim->get_bfielddir());
 			threevector dvMinus = -VelocityMag*VelocityUnitVec;
 			Sample->update_motion(Zeros,dvMinus,-Sample->get_rotationalfreq());
 

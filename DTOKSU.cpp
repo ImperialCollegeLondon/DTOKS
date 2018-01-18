@@ -115,20 +115,6 @@ int DTOKSU::Run(){
 			HM.AddTime(ForceTime);
 			CM.Charge(ForceTime);
 			TotalTime += ForceTime;
-		}else if( Sample->get_deltatot() > 0.5 && Sample->get_deltatot() < 1.0 ){ // Region of rapid charge variation
-			// WARNING, CURRENT TESTING SHOWS DTOKSU DOESN'T ENTER HERE AT ALL WITH PGRID.
-			// I'm pretty sure that the grain does become positive at some point so this is likely because
-			// it is going through that region in the for loop below...
-			D1_Debug("\n\nPotential Focus Region, steps taken at 0.01*MinTimeStep\n");
-			D1_Debug("Potential = " << Sample->get_potential() << "\nDeltaTot = " << Sample->get_deltatot() << "\n\n");
-			if(ChargeTime == 1){	// Current mitigation for this problem.... I never said it was a good solution
-				ChargeTime = MinTimeStep;
-			};
-			HM.Heat  (ChargeTime);
-			FM.Force (ChargeTime);
-			CM.Charge(ChargeTime);
-			TotalTime += ChargeTime;
-		// Else If the timescales of the processes are comparable, step through each at the faster timescale
 		}else if( MinTimeStep*2.0 > MaxTimeStep){
 			D1_Debug("\nComparable Timescales, taking time steps through both processes at shorter time scale");
 			HM.Heat(MinTimeStep);
@@ -167,12 +153,12 @@ int DTOKSU::Run(){
 				// NOTE the FM.ProbeTimeStep() command takes a significant amount of time and has been found
 				// to be rarely activated. This could still be a nice/necessary check in some circumstances.
 				// However, I can't see a way to make this faster right now
-//				if( ForceTime/FM.ProbeTimeStep() > 2 ){
-//					D1_Debug("\nForce TimeStep Has Changed Significantly whilst taking small steps...");
+				if( ForceTime/FM.ProbeTimeStep() > 2 ){
+					D1_Debug("\nForce TimeStep Has Changed Significantly whilst taking small steps...");
 //					std::cin.get();
-//					j ++;
-//					break; // Can't do this: MaxTimeStep = j*MinTimeStep; as we change MaxTimeStep...
-//				}
+					j ++;
+					break; // Can't do this: MaxTimeStep = j*MinTimeStep; as we change MaxTimeStep...
+				}
 				if( HeatTime/HM.ProbeTimeStep() > 2 ){
 					D1_Debug("\nHeat TimeStep Has Changed Significantly whilst taking small steps...");
 					j ++;
@@ -223,7 +209,6 @@ int DTOKSU::Run(){
 		}else if( Sample->is_gas() ){
 			std::cout << "\n\nSample has vapourised";
 			break;
-		
 		}
 		// ***** END OF : DETERMINE IF END CONDITION HAS BEEN REACHED ***** //
 	}
@@ -247,4 +232,3 @@ int DTOKSU::Run(){
 	std::cout << "\nFinished DTOKS-U run.";
 	return 0;
 }
-

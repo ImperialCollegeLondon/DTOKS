@@ -22,6 +22,9 @@ Model::Model():Sample(new Tungsten),Pgrid(new PlasmaGrid('h','m',0.01,0.01)),Pda
 	Mo_Debug("\n\nIn Model::Model():Sample(new Tungsten),Pgrid('h','m',0.01,0.01),Pdata(PlasmaDefaults),Accuracy(1.0),ContinuousPlasma(true)\n\n");
 	i = 0; k = 0;
 	PlasmaDataFile.open("Data/pd.txt");
+	PlasmaDataFile << "#i\tk\tNn\tNe\tNi\tTi\tTe\tTn\tT0\tPvel\tgravity\tE\tB";
+	PlasmaDataFile.close();
+	PlasmaDataFile.clear();
 	update_plasmadata();
 }
 
@@ -32,8 +35,10 @@ Model::Model( Matter *&sample, PlasmaData *&pdata, double accuracy )
 	assert(Accuracy > 0);
 	i = 0; k = 0;
 	PlasmaDataFile.open("Data/pd.txt");
+	PlasmaDataFile << "#i\tk\tNn\tNe\tNi\tTi\tTe\tTn\tT0\tPvel\tgravity\tE\tB";
+	PlasmaDataFile.close();
+	PlasmaDataFile.clear();
 	update_plasmadata(pdata);
-//	std::cout << "\nAccuracy = " << Accuracy;
 }
 
 // Constructor for Matter sample moving in a varying plasma background given by PlasmaGrid (pgrid) with the current information 
@@ -44,8 +49,10 @@ Model::Model( Matter *&sample, PlasmaGrid &pgrid, double accuracy )
 	assert(Accuracy > 0);
 	i = 0; k = 0;
 	PlasmaDataFile.open("Data/pd.txt");
+	PlasmaDataFile << "#i\tk\tNn\tNe\tNi\tTi\tTe\tTn\tT0\tPvel\tgravity\tE\tB\n\n";
+	PlasmaDataFile.close();
+	PlasmaDataFile.clear();
 	update_plasmadata();
-	//	std::cout << "\nAccuracy = " << Accuracy;
 }
 
 bool Model::new_cell()const{
@@ -131,10 +138,13 @@ void Model::update_fields(int i, int k){
 }
 
 void Model::RecordPlasmadata(){
-	PlasmaDataFile << "\n" << Pdata->NeutralDensity << "\t" << Pdata->ElectronDensity << "\t" << Pdata->IonDensity
-			<< "\t" << Pdata->IonTemp << "\t" << Pdata->ElectronTemp << "\t" << Pdata->NeutralTemp
-			<< "\t" << Pdata->AmbientTemp << "\t" << Pdata->PlasmaVel << "\t" << Pdata->Gravity 
-			<< "\t" << Pdata->ElectricField << "\t" << Pdata->MagneticField;
+	PlasmaDataFile.open("Data/pd.txt",std::ofstream::app);
+	PlasmaDataFile << "\n" << i << "\t" << k << "\t" << Pdata->NeutralDensity << "\t" << Pdata->ElectronDensity 
+			<< "\t" << Pdata->IonDensity << "\t" << Pdata->IonTemp << "\t" << Pdata->ElectronTemp 
+			<< "\t" << Pdata->NeutralTemp << "\t" << Pdata->AmbientTemp << "\t" << Pdata->PlasmaVel 
+			<< "\t" << Pdata->Gravity << "\t" << Pdata->ElectricField << "\t" << Pdata->MagneticField;
+	PlasmaDataFile.close();
+	PlasmaDataFile.clear();
 }
 
 const double Model::ElectronFlux(double DustTemperature)const{
@@ -160,7 +170,6 @@ const double Model::DTOKSIonFlux(double DustTemperature)const{
 
 const double Model::DTOKSElectronFlux(double DustTemperature)const{
 	H_Debug("\n\tIn Model::ElectronFlux():\n\n");
-
 	return Pdata->ElectronDensity*exp(-Sample->get_potential())*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
 }
 

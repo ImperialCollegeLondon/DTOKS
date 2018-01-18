@@ -12,8 +12,8 @@ PlasmaGrid::PlasmaGrid(char element, char machine, double xspacing, double zspac
 		gridtheta=0;
 		gridxmin = 0.2;
 		gridzmin = -2.0;
-		rmin = 0.2;
-		rmax = 1.4;
+		gridxmax = 1.4;
+		gridzmax = 0.80;
 		std::cout << "\tCalculation for MAST" << std::endl;
 	}else if(device=='i'){
 		gridx = 451;
@@ -21,8 +21,8 @@ PlasmaGrid::PlasmaGrid(char element, char machine, double xspacing, double zspac
 		gridtheta=0;
 		gridxmin = 4.0;
 		gridzmin = -4.7;
-		rmin = 4.1;
-		rmax = 8.25;
+		gridxmax = 8.25;
+		gridzmax = 4.80;
 		std::cout << "\tCalculation for ITER" << std::endl;
 	}else if(device=='d'){
 		gridx = 180;
@@ -30,8 +30,8 @@ PlasmaGrid::PlasmaGrid(char element, char machine, double xspacing, double zspac
 		gridtheta=0;
 		gridxmin = 0.2;
 		gridzmin = -2.0;
-		rmin = 0.2;
-		rmax = 2.0;
+		gridxmax = 2.0;
+		gridzmax = 4.0;
 
 		std::cout << "\tCalculation for Double Null MAST 17839files shot" << std::endl;
 	}else if(device=='p'){
@@ -40,8 +40,8 @@ PlasmaGrid::PlasmaGrid(char element, char machine, double xspacing, double zspac
 		gridtheta=64;
 		gridxmin = 0.0;
 		gridzmin = 0.0;
-		rmin = 0;
-		rmax = 0.15;
+		gridxmax = 0.15;
+		gridzmax = 1.0;
 		std::cout << "\tCalculation for Magnum-PSI: filename='Magnum-PSI_Prelim_B1.41_L1.0.nc'" << std::endl;
 	}
 	else std::cout << "Invalid tokamak" << std::endl;
@@ -137,7 +137,7 @@ int PlasmaGrid::readMPSIdata(){
 	float electron_Vele_mat[gridx][gridz][gridtheta];
 	float ion_dens_mat[gridx][gridz][gridtheta];
 	float ion_Veli_mat[gridx][gridz][gridtheta];
-	float Pres_mat[gridx][gridz][gridtheta];
+	float Potential_mat[gridx][gridz][gridtheta];
 	float Bxy_mat[gridx][gridz];
 
 	// Change the error behavior of the netCDF C++ API by creating an
@@ -158,10 +158,10 @@ int PlasmaGrid::readMPSIdata(){
 		return NC_ERR;
 	// We get back a pointer to each NcVar we request. Get the
 	// latitude and longitude coordinate variables.
-	NcVar *Ne, *Te, *Vel_e, *Ni, *Vel_i, *Pressure, *B_xy;
+	NcVar *Ne, *e_Temp, *Vel_e, *Ni, *Vel_i, *Potential, *B_xy;
 	if (!(Ne = dataFile.get_var("Ne")))
 		return NC_ERR;
-	if (!(Te = dataFile.get_var("Te")))
+	if (!(e_Temp = dataFile.get_var("Te")))
 		return NC_ERR;
 	if (!(Vel_e = dataFile.get_var("Vel_e")))
 		return NC_ERR;
@@ -169,14 +169,14 @@ int PlasmaGrid::readMPSIdata(){
 		return NC_ERR;
 	if (!(Vel_i = dataFile.get_var("Vel_i")))
 		return NC_ERR;
-	if (!(Pressure = dataFile.get_var("Pressure")))
+	if (!(Potential = dataFile.get_var("Potential")))
 		return NC_ERR;
 	if (!(B_xy = dataFile.get_var("B_xy")))
 		return NC_ERR;
 
 	if (!Ne->get(&electron_dens_mat[0][0][0], gridx, gridz, gridtheta))
 		return NC_ERR;
-	if (!Te->get(&electron_temp_mat[0][0][0], gridx, gridz, gridtheta))
+	if (!e_Temp->get(&electron_temp_mat[0][0][0], gridx, gridz, gridtheta))
 		return NC_ERR;
 	if (!Vel_e->get(&electron_Vele_mat[0][0][0], gridx, gridz, gridtheta))
 		return NC_ERR;
@@ -184,18 +184,18 @@ int PlasmaGrid::readMPSIdata(){
 		return NC_ERR;
 	if (!Vel_i->get(&ion_Veli_mat[0][0][0], gridx, gridz, gridtheta))
 		return NC_ERR;
-	if (!Pressure->get(&Pres_mat[0][0][0], gridx, gridz, gridtheta))
+	if (!Potential->get(&Potential_mat[0][0][0], gridx, gridz, gridtheta))
 		return NC_ERR;
 	if (!B_xy->get(&Bxy_mat[0][0], gridx, gridz))
 		return NC_ERR;
 
 	for(unsigned int i=0; i< gridx; i++){
 		for(unsigned int k=0; k< gridz; k++){
-			Ti[i][k] = 1.0;
-//			Te[i][k] = electron_temp_mat[i][k][0];
+			Ti[i][k] = 1.0*echarge;
+			Te[i][k] = electron_temp_mat[i][k][0];
 			na0[i][k] = ion_dens_mat[i][k][0];
 			na1[i][k] = electron_dens_mat[i][k][0];
-			po[i][k] = Pres_mat[i][k][0];
+			po[i][k] = Potential_mat[i][k][0];
 			ua0[i][k] = ion_Veli_mat[i][k][0];
 			ua1[i][k] = electron_Vele_mat[i][k][0];
 			bz[i][k] = Bxy_mat[i][k];
@@ -249,8 +249,12 @@ bool PlasmaGrid::locate(int &i, int &k, const threevector xd)const{
 	// Adding 0.5 makes the rounding work properly
 	i = int(0.5+(xd.getx()-gridxmin)/dlx);
 	k = int(0.5+(xd.getz()-gridzmin)/dlz);
+	if( xd.getx() < gridxmin )
+		i = -1;
+	if( xd.getz() < gridzmin )
+		k = -1;
 	return checkingrid(i,k);
-//	std::cout << "\ni = " << i << "\nk = " << k;
+
 }
 
 bool PlasmaGrid::checkingrid(const int i, const int k)const{
@@ -290,8 +294,8 @@ void PlasmaGrid::vtkcircle(double r, std::ofstream &fout){
 void PlasmaGrid::vtktoroid(){
 	P_Debug("\tPlasmaGrid::vtktoroid()\n\n");
 	std::ofstream inner("output/innerplasma.vtk"),outer("output/outerplasma.vtk");
-	vtkcircle(rmin,inner);
-	vtkcircle(rmax,outer);
+	vtkcircle(gridxmin,inner);
+	vtkcircle(gridxmax,outer);
 	inner.close();
 	outer.close();
 }

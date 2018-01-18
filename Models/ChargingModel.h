@@ -9,7 +9,8 @@ class ChargingModel : public Model{
 		// Models defining the Force equation
 		enum { NumModels = 3 };
 		std::array<bool,NumModels> UseModel; 		// Charging Models turned on of possible 1
-
+		std::string FileName;						// Variable to hold data file name
+		
 		void Print();			// Write to output data file
 
 		double solveOML(double a, double guess);

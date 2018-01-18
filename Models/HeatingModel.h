@@ -13,6 +13,7 @@ class HeatingModel : public Model{
 		double RN;				// Fraction of backscattered particles
 		bool ForceNegative;			// If we want to force the dust grain to be negative
 		bool ThermalEquilibrium;		// If the Dust grain is in Thermal Equilibrium (Constant Plasma only)
+		std::string FileName;			// Variable to hold data file name
 
 		// Models defining the heating equation
 		enum { NumModels = 9 };
@@ -20,7 +21,7 @@ class HeatingModel : public Model{
 
 		void Print();				// Write to output data file
 		void Defaults(); // Sets default settings
-		double RungeKutta4();
+		double RungeKutta4(double timestep);
 
 		// Heating Models
 		const double EmissivityModel		(double DustTemperature)const;
