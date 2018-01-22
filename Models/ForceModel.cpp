@@ -13,16 +13,16 @@ ForceModel::ForceModel():Model(){
 	CreateFile("Default_Force_filename.txt");
 }
 
-ForceModel::ForceModel(std::string filename, double accuracy, std::array<bool,NumModels> models, 
+ForceModel::ForceModel(std::string filename, float accuracy, std::array<bool,NumModels> models, 
 			Matter *& sample, PlasmaData *& pdata) : Model(sample,pdata,accuracy){
-	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, std::array<bool,3> models, Matter *& sample, PlasmaData const *& pdata) : Model(sample,pdata,accuracy)\n\n");
+	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, float accuracy, std::array<bool,3> models, Matter *& sample, PlasmaData const *& pdata) : Model(sample,pdata,accuracy)\n\n");
 	UseModel = models;
 	CreateFile(filename);
 }
 
-ForceModel::ForceModel(std::string filename, double accuracy, std::array<bool,NumModels> models, 
+ForceModel::ForceModel(std::string filename, float accuracy, std::array<bool,NumModels> models, 
 			Matter *& sample, PlasmaGrid & pgrid) : Model(sample,pgrid,accuracy){
-	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, std::array<bool,3> models, Matter *& sample, PlasmaGrid const& pgrid) : Model(sample,pgrid,accuracy)\n\n");
+	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, float accuracy, std::array<bool,3> models, Matter *& sample, PlasmaGrid const& pgrid) : Model(sample,pgrid,accuracy)\n\n");
 	UseModel = models;
 	CreateFile(filename);
 }
@@ -91,10 +91,10 @@ double ForceModel::ProbeTimeStep()const{
 			*sqrt(1-(Pdata->MagneticField.getunit()*Sample->get_velocity().getunit()))
 			/(3.0*epsilon0*Pdata->ElectronTemp*fabs(Sample->get_potential())*Pdata->MagneticField.mag3());
 
-	if( GyromotionTimeStep < timestep && GyromotionTimeStep > 0.0 ){
+/*	if( GyromotionTimeStep < timestep && GyromotionTimeStep > 0.0 ){
 		std::cout << "\ntimestep limited by magnetic field (Gyromotion)\n";
 		timestep = GyromotionTimeStep;
-	}
+	}*/
 
 	F1_Debug( "\t\tAcceleration = " << Acceleration << "\n\t\ttimestep = " << timestep << "\n");
 	assert(timestep == timestep);

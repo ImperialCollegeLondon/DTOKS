@@ -23,9 +23,9 @@ class ChargingModel : public Model{
 	public:
 		// Constructors
 		ChargingModel();
-		ChargingModel(std::string filename, double accuracy, std::array<bool,NumModels> models, 
+		ChargingModel(std::string filename, float accuracy, std::array<bool,NumModels> models, 
 				Matter *& sample, PlasmaData *& pdata);
-		ChargingModel(std::string filename, double accuracy, std::array<bool,NumModels> models, 
+		ChargingModel(std::string filename, float accuracy, std::array<bool,NumModels> models, 
 				Matter *& sample, PlasmaGrid & pgrid);
 
 		void CreateFile(std::string filename);

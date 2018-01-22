@@ -1,10 +1,10 @@
-//#define PLASMAGRID_Debug
+#define PLASMAGRID_Debug
 
 #include "PlasmaGrid.h"
 
 PlasmaGrid::PlasmaGrid(char element, char machine, double xspacing, double zspacing):mi(Mp),gamma(Me/mi),gas(element),device(machine),dlx(xspacing),dlz(zspacing){
 	P_Debug( "\n\nIn PlasmaGrid::PlasmaGrid(char element, char machine, double xspacing, double zspacing):mi(Mp),gamma(Me/mi),gas(element),device(machine),dlx(xspacing),dlz(zspacing)\n\n");
-	
+
 	// Plasma parameters
 	if(device=='m'){
 		gridx = 121;
@@ -62,7 +62,14 @@ PlasmaGrid::PlasmaGrid(char element, char machine, double xspacing, double zspac
 	gridflag= std::vector<std::vector<int>>(gridx,std::vector<int>(gridz));
 
 	//impurity.open("output///impurity///impurity.vtk");
-	readdata();	// Read data
+	try{ // Read data
+		int readstatus = readdata();
+		if(readstatus != 0)
+			throw readstatus;
+	}	
+	catch( int e ){
+		std::cerr << "Exception opening/reading/closing file\nError status: " << e;
+	}
 	// Everything should now be initialised correctly...
 }
 
@@ -131,7 +138,7 @@ int PlasmaGrid::readMPSIdata(){
 	P_Debug("\tPlasmaGrid::readMPSIdata()\n\n");
 	
 	const int NC_ERR = 2;
-
+	
 	float electron_dens_mat[gridx][gridz][gridtheta];
 	float electron_temp_mat[gridx][gridz][gridtheta];
 	float electron_Vele_mat[gridx][gridz][gridtheta];
@@ -148,7 +155,7 @@ int PlasmaGrid::readMPSIdata(){
 	// NC_ERR error code.
 	NcError err(NcError::silent_nonfatal);
 
-
+	
 	NcFile dataFile("Models/PlasmaData/MagnumPSI/Magnum-PSI_Prelim_B1.41_L1.0.nc", NcFile::ReadOnly);
 	if(!dataFile.is_valid())
 		return NC_ERR;
@@ -158,6 +165,7 @@ int PlasmaGrid::readMPSIdata(){
 		return NC_ERR;
 	// We get back a pointer to each NcVar we request. Get the
 	// latitude and longitude coordinate variables.
+
 	NcVar *Ne, *e_Temp, *Vel_e, *Ni, *Vel_i, *Potential, *B_xy;
 	if (!(Ne = dataFile.get_var("Ne")))
 		return NC_ERR;
@@ -169,7 +177,7 @@ int PlasmaGrid::readMPSIdata(){
 		return NC_ERR;
 	if (!(Vel_i = dataFile.get_var("Vel_i")))
 		return NC_ERR;
-	if (!(Potential = dataFile.get_var("Potential")))
+	if (!(Potential = dataFile.get_var("Pressure")))
 		return NC_ERR;
 	if (!(B_xy = dataFile.get_var("B_xy")))
 		return NC_ERR;
@@ -188,7 +196,7 @@ int PlasmaGrid::readMPSIdata(){
 		return NC_ERR;
 	if (!B_xy->get(&Bxy_mat[0][0], gridx, gridz))
 		return NC_ERR;
-
+	
 	for(unsigned int i=0; i< gridx; i++){
 		for(unsigned int k=0; k< gridz; k++){
 			Ti[i][k] = 1.0*echarge;
@@ -205,11 +213,11 @@ int PlasmaGrid::readMPSIdata(){
 
 }
 
-void PlasmaGrid::readdata(){
+int PlasmaGrid::readdata(){
 	P_Debug("\tPlasmaGrid::readdata()\n\n");
 	// Input files
 	if(device=='p'){ // Note, grid flags will be empty 
-		readMPSIdata();
+		return readMPSIdata();
 	}else{
 		std::ifstream scalars,threevectors,gridflagfile;
 		if(device=='m'){
@@ -239,6 +247,7 @@ void PlasmaGrid::readdata(){
 		threevectors.close();
 		gridflagfile.close();
 	}
+	return 0;
 }
 
 // *************************************** MUTATION FUNCTIONS *************************************** //

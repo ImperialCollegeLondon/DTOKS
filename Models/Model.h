@@ -33,7 +33,7 @@ class Model{
 		// Hah, good luck with that.
 		Matter *Sample;				// Tungsten, Beryllium, Iron or Graphite
 		PlasmaData *Pdata;			// Const Plasma Data structure
-		const double Accuracy;			// Accuracy of model, normalised to one.
+		const float Accuracy;			// Accuracy of model, normalised to one.
 		const bool ContinuousPlasma;		// Is the plasma background is constant in space.
 		double TimeStep;			// Current time step (s)
 		double TotalTime;			// Total Time taken by model (s)
@@ -51,8 +51,8 @@ class Model{
 	public:
 		// Constructors
 		Model();
-		Model(Matter *& sample, PlasmaData *&pdata, double accuracy);
-		Model(Matter *& sample, PlasmaGrid &pgrid, double accuracy);
+		Model(Matter *& sample, PlasmaData *&pdata, float accuracy);
+		Model(Matter *& sample, PlasmaGrid &pgrid, float accuracy);
 
 		void CloseFile();
 

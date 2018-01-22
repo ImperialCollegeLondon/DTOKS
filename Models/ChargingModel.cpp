@@ -13,17 +13,17 @@ ChargingModel::ChargingModel():Model(){
 	CreateFile("Default_Charging_Filename.txt");
 }
 
-ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<bool,NumModels> models,
+ChargingModel::ChargingModel(std::string filename, float accuracy, std::array<bool,NumModels> models,
 				Matter *& sample, PlasmaData *&pdata) : Model(sample,pdata,accuracy){
-	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename,double accuracy,std::array<bool,1> models,Matter *& sample, PlasmaData const& pdata) : Model(sample,pdata,accuracy)\n\n");
+	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename,float accuracy,std::array<bool,1> models,Matter *& sample, PlasmaData const& pdata) : Model(sample,pdata,accuracy)\n\n");
 	UseModel = models;
 	CreateFile(filename);
 	ChargeOfGrain = 0;
 }
 
-ChargingModel::ChargingModel(std::string filename, double accuracy, std::array<bool,NumModels> models,
+ChargingModel::ChargingModel(std::string filename, float accuracy, std::array<bool,NumModels> models,
 				Matter *& sample, PlasmaGrid &pgrid) : Model(sample,pgrid,accuracy){
-	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename,double accuracy,std::array<bool,1> models,Matter *& sample, PlasmaGrid const& pgrid) : Model(sample,pgrid,accuracy)\n\n");
+	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename,float accuracy,std::array<bool,1> models,Matter *& sample, PlasmaGrid const& pgrid) : Model(sample,pgrid,accuracy)\n\n");
 	UseModel = models;
 	CreateFile(filename);
 	ChargeOfGrain = 0;
@@ -136,8 +136,9 @@ void ChargingModel::Charge(double timestep){
 			ChargeOfGrain = (4.0*PI*epsilon0*Sample->get_radius()*Potential*Kb*Pdata->ElectronTemp)/echarge;
 		}
 	}else if( UseModel[2] ){	// In this case, maintain a potential well for entire temperature range
-		Potential = solveOML( 0.0, Sample->get_potential()) 
-			- Sample->get_temperature()/Pdata->ElectronTemp; 
+		Potential = 2.5;
+//		Potential = solveOML( 0.0, Sample->get_potential()) 
+//			- Sample->get_temperature()/Pdata->ElectronTemp; 
 	}
 	// Have to calculate charge of grain here since it doesn't know about the Electron Temp and since potential is normalised.
 	// This information has to be passed to the grain.

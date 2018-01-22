@@ -29,9 +29,9 @@ Model::Model():Sample(new Tungsten),Pgrid(new PlasmaGrid('h','m',0.01,0.01)),Pda
 }
 
 // Constructor for Matter sample sitting in a constant plasma background given by PlasmaData (pdata) with a Default grid
-Model::Model( Matter *&sample, PlasmaData *&pdata, double accuracy )
+Model::Model( Matter *&sample, PlasmaData *&pdata, float accuracy )
 		:Sample(sample),Pgrid(new PlasmaGrid('h','m',0.01,0.01)),Pdata(pdata),Accuracy(accuracy),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
-	Mo_Debug("\n\nIn Model::Model( Matter *& sample, PlasmaData *&pdata, double accuracy ):Sample(sample),Pgrid(new PlasmaGrid('h','m',0.01,0.01)),Pdata(pdata),Accuracy(accuracy),ContinuousPlasma(true)\n\n");
+	Mo_Debug("\n\nIn Model::Model( Matter *& sample, PlasmaData *&pdata, float accuracy ):Sample(sample),Pgrid(new PlasmaGrid('h','m',0.01,0.01)),Pdata(pdata),Accuracy(accuracy),ContinuousPlasma(true)\n\n");
 	assert(Accuracy > 0);
 	i = 0; k = 0;
 	PlasmaDataFile.open("Data/pd.txt");
@@ -43,9 +43,9 @@ Model::Model( Matter *&sample, PlasmaData *&pdata, double accuracy )
 
 // Constructor for Matter sample moving in a varying plasma background given by PlasmaGrid (pgrid) with the current information 
 // stored in pdata.
-Model::Model( Matter *&sample, PlasmaGrid &pgrid, double accuracy )
+Model::Model( Matter *&sample, PlasmaGrid &pgrid, float accuracy )
 		:Sample(sample),Pgrid(&pgrid),Pdata(&PlasmaDefaults),Accuracy(accuracy),ContinuousPlasma(false),TimeStep(0.0),TotalTime(0.0){
-	Mo_Debug("\n\nIn Model::Model( Matter *& sample, PlasmaGrid &pgrid, double accuracy ):Sample(sample),Pgrid(pgrid),Pdata(PlasmaDefaults),Accuracy(accuracy), ContinuousPlasma(false)\n\n");
+	Mo_Debug("\n\nIn Model::Model( Matter *& sample, PlasmaGrid &pgrid, float accuracy ):Sample(sample),Pgrid(pgrid),Pdata(PlasmaDefaults),Accuracy(accuracy), ContinuousPlasma(false)\n\n");
 	assert(Accuracy > 0);
 	i = 0; k = 0;
 	PlasmaDataFile.open("Data/pd.txt");
@@ -79,12 +79,12 @@ bool Model::update_plasmadata(){
 	update_fields(i,k);
 	Pdata->NeutralDensity 	= Pgrid->getna0(i,k);  	// NEUTRAL DENSITY EQUALS ION DENSITY
 	Pdata->ElectronDensity 	= Pgrid->getna1(i,k);  
-	Pdata->IonDensity 	= Pgrid->getna0(i,k);
-	Pdata->IonTemp		= Pgrid->getTi(i,k)*ConvertJtoK;
+	Pdata->IonDensity 		= Pgrid->getna0(i,k);
+	Pdata->IonTemp			= Pgrid->getTi(i,k)*ConvertJtoK;
 	Pdata->ElectronTemp 	= Pgrid->getTe(i,k)*ConvertJtoK;
-	Pdata->NeutralTemp 	= Pgrid->getTi(i,k)*ConvertJtoK; 	// NEUTRAL TEMP EQUAL TO ION TEMP
-	Pdata->AmbientTemp 	= 300; 			// NOTE THIS IS HARD CODED OHMEINGOD
-
+	Pdata->NeutralTemp 		= Pgrid->getTi(i,k)*ConvertJtoK; 	// NEUTRAL TEMP EQUAL TO ION TEMP
+	Pdata->AmbientTemp 		= 300; 			// NOTE THIS IS HARD CODED OHMEINGOD
+	
 	return true;
 }
 

@@ -43,7 +43,7 @@ class PlasmaGrid{
 		void readthreevectors(std::ifstream &input);
 		void readgridflag(std::ifstream &input);
 		int readMPSIdata();
-		void readdata();
+		int readdata();
 
 		// functions to locate dust, update electromagnetic fields, calculate mass loss and check position
 		void setfields(int i, int k);
@@ -158,8 +158,8 @@ class PlasmaGrid{
                                 return 0;
                         }
 		}	
-		double get_machine	()		const{return device;}
-		double get_gas		()		const{return gas;}
+		char get_machine	()		const{return device;}
+		char get_gas		()		const{return gas;}
 		double get_mi		()		const{return mi;}
 		double get_gamma	()		const{return gamma;}
 		double get_gridxmin	()		const{return gridxmin;}

@@ -40,9 +40,9 @@ class HeatingModel : public Model{
 	public:
 		// Constructors
 		HeatingModel();
-		HeatingModel( std::string filename, double accuracy, std::array<bool,NumModels> &models, 
+		HeatingModel( std::string filename, float accuracy, std::array<bool,NumModels> &models, 
 				Matter *& sample, PlasmaData *& pdata);
-		HeatingModel( std::string filename, double accuracy, std::array<bool,NumModels> &models, 
+		HeatingModel( std::string filename, float accuracy, std::array<bool,NumModels> &models, 
 				Matter *& sample, PlasmaGrid & pgrid);
 
 		// Destructor
