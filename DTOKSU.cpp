@@ -3,7 +3,7 @@
 //#define DTOKSU_DEEP_DEBUG
 #include "DTOKSU.h"
 
-DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample, PlasmaData *&pdata,
+DTOKSU::DTOKSU( std::array<float,3> acclvls, Matter *& sample, PlasmaData *&pdata,
 				std::array<bool,9> &heatmodels, std::array<bool,6> &forcemodels, std::array<bool,3> &chargemodels)
 			: Sample(sample),
 				CM("Data/breakup_cm_0.txt",acclvls[0],chargemodels,sample,pdata),
@@ -12,12 +12,12 @@ DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample,
         D_Debug("\n\nIn DTOKSU::DTOKSU( ... )\n\n");
         D_Debug("\n\n************************************* SETUP FINISHED ************************************* \n\n");
 //	std::cout << "\nacclvls[0] = " << acclvls[0];
-	MinTimeStep = timestep;
+
 	TotalTime = 0;
 	CreateFile("Data/df.txt");
 }
 
-DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample, PlasmaGrid &pgrid,
+DTOKSU::DTOKSU( std::array<float,3> acclvls, Matter *& sample, PlasmaGrid &pgrid,
 				std::array<bool,9> &heatmodels, std::array<bool,6> &forcemodels, std::array<bool,3> &chargemodels)
 				: Sample(sample),
 				CM("Data/breakup_cm_0.txt",acclvls[0],chargemodels,sample,pgrid),
@@ -28,7 +28,6 @@ DTOKSU::DTOKSU( double timestep, std::array<double,3> acclvls, Matter *& sample,
 
 //	D_Debug("\nHeatModels = " << heatmodels[0]);
 //	std::cout << "\nacclvls[0] = " << acclvls[0];
-	MinTimeStep = timestep;
 	TotalTime = 0;
 	CreateFile("Data/df.txt");
 }
@@ -61,13 +60,6 @@ void DTOKSU::ResetModelTime(double HMTime, double FMTime, double CMTime){
 	CM.AddTime(CMTime);
 }
 
-void DTOKSU::CheckTimeStep(){
-	D_Debug( "\tIn DTOKSU::CheckTimeStep()\n\n");
-	assert(MinTimeStep > 0);
-	D_Debug( "\nMinTimeStep = " << MinTimeStep );
-	TotalTime += MinTimeStep;
-}
-
 void DTOKSU::Print(){
 	D_Debug("\tIn DTOKSU::Print()\n\n");
 	MyFile 	<< TotalTime;
@@ -93,7 +85,7 @@ int DTOKSU::Run(){
 
 		// We will assume Charging Time scale is much faster than either heating or moving, but check for the other case.
 		double MaxTimeStep = std::max(ForceTime,HeatTime);
-		MinTimeStep = std::min(ForceTime,HeatTime);
+		double MinTimeStep = std::min(ForceTime,HeatTime);
 
 		// Check Charging timescale isn't the fastest timescale.
 		if( ChargeTime > MinTimeStep && ChargeTime != 1){

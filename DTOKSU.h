@@ -12,7 +12,6 @@ class DTOKSU{
 
 	private:
 		// Private member data
-		double MinTimeStep;			// Seconds, the length of a particular time step
 		double TotalTime;			// Seconds, total time taken to perform simulation
 
 		Matter *Sample;				// Matter sample can be either Tungsten, Beryllium, Graphite or Iron
@@ -24,15 +23,14 @@ class DTOKSU{
 		std::ofstream MyFile;			// Output data file
 	
 		// Private Functions
-		void CheckTimeStep();			// Verify time step
 		void Print();				// Write to output data file
 		void CreateFile(std::string filename);
 
 	public:
 //		DTOKSU();
-		DTOKSU( double timestep, std::array<double,3> alvls, Matter *& sample, PlasmaData *&pdata,
+		DTOKSU( std::array<float,3> alvls, Matter *& sample, PlasmaData *&pdata,
 				std::array<bool,9> &heatmodels, std::array<bool,6> &forcemodels, std::array<bool,3> &chargemodels);
-		DTOKSU( double timestep, std::array<double,3> alvls, Matter *& sample, PlasmaGrid &pgrid,
+		DTOKSU( std::array<float,3> alvls, Matter *& sample, PlasmaGrid &pgrid,
 				std::array<bool,9> &heatmodels, std::array<bool,6> &forcemodels, std::array<bool,3> &chargemodels);
 
 		~DTOKSU(){
