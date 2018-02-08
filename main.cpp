@@ -178,15 +178,15 @@ int main(int argc, char* argv[]){
 
 	// ------------------- PRINT METADATA ------------------- //
 	MetaDataFile << "\n\n#DUST PARAMETERS" 
-		<<"\nElem (arb)\tsize (m)\tTemp (K)\txinit (m s^-1)\tvinit (m s^-1)\n"
-		<<Element<<"\t\t"<<size<<"\t\t"<<Temp<<"\t\t"<<xinit<<"\t"<<vinit<<"\n"
+		<<"\nElem (arb)\tRadius (m)\tTemp (K)\txinit (m s^-1)\t\tvinit (m s^-1)\n"
+		<<Element<<"\t\t"<<size<<"\t\t"<<Temp<<"\t\t"<<xinit<<"\t\t"<<vinit<<"\n"
 		<<"\n\n#PLASMA PARAMETERS"
 		<<"\nMachine\tgas\tgridx\tgridz\tgridtheta\tdlx\tdlz\n"
 		<<Pgrid.get_machine()<<"\t"<<Pgrid.get_gas()<<"\t"<<Pgrid.get_gridx()<<"\t"<<Pgrid.get_gridz()<<"\t"
 		<<Pgrid.get_gridtheta()<<"\t"<<Pgrid.get_dlx()<<"\t"<<Pgrid.get_dlz()<<"\n"
-		<<"\nxmin\txmax\tzmin\tzmax\n"
-		<<Pgrid.get_gridxmin()<<"\t"<<Pgrid.get_gridxmax()<<"\t"<<Pgrid.get_gridzmin()<<"\t"<<Pgrid.get_gridzmax()<<"\n"
-		<<"\nNn (m^-3)\tNi (m^-3)\tNe (m^-3)\n"
+		<<"\nxmin (m)\txmax (m)\tzmin (m)\tzmax (m)\n"
+		<<Pgrid.get_gridxmin()<<"\t\t"<<Pgrid.get_gridxmax()<<"\t\t"<<Pgrid.get_gridzmin()<<"\t\t"<<Pgrid.get_gridzmax()
+		<<"\n\nNn (m^-3)\tNi (m^-3)\tNe (m^-3)\n"
 		<<Pdata->NeutralDensity<<"\t\t"<<Pdata->IonDensity<<"\t\t"<<Pdata->ElectronDensity
 		<<"\n\nTn (K)\t\tTi (K)\t\tTe (K)\n"
 		<<Pdata->NeutralTemp<<"\t\t"<<Pdata->IonTemp<<"\t\t"<<Pdata->ElectronTemp<<"\t"
