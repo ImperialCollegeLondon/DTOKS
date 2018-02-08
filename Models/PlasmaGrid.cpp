@@ -206,6 +206,8 @@ int PlasmaGrid::readMPSIdata(){
 			po[i][k] = Potential_mat[i][k][0];
 			ua0[i][k] = ion_Veli_mat[i][k][0];
 			ua1[i][k] = electron_Vele_mat[i][k][0];
+                        bx[i][k] = 0.0;
+                        by[i][k] = 0.0;
 			bz[i][k] = Bxy_mat[i][k];
 		}
 	}
@@ -221,9 +223,9 @@ int PlasmaGrid::readdata(){
 	}else{
 		std::ifstream scalars,threevectors,gridflagfile;
 		if(device=='m'){
-			scalars.open("Models/PlasmaData/b2processed.dat");
-			threevectors.open("Models/PlasmaData/b2processed2.dat");
-			gridflagfile.open("Models/PlasmaData/locate.dat");
+			scalars.open("Models/PlasmaData/MAST/b2processed.dat");
+			threevectors.open("Models/PlasmaData/MAST/b2processed2.dat");
+			gridflagfile.open("Models/PlasmaData/MAST/locate.dat");
 		}
 		else if(device=='i')
 		{
