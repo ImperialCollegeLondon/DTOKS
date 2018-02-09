@@ -71,7 +71,7 @@ int DTOKSU::Run(){
 
 	double HeatTime(0),ForceTime(0),ChargeTime(0);
 
-	bool InGrid = FM.update_plasmadata();
+	bool InGrid = CM.update_plasmadata();
 	CM.Charge(1e-100);		// Charge instantaneously as soon as we start, have to add a time though...
 	Sample->update();		// Need to manually update the first time as first step is not necessarily heating
 	while( InGrid && !Sample->is_split() ){
@@ -179,8 +179,8 @@ int DTOKSU::Run(){
 			<< "\n\tForceTime = " << ForceTime << "\n\tHeatTime = " << HeatTime << "\n");
 
 		// Update the plasma data from the plasma grid for all models...
-		InGrid = FM.update_plasmadata();
-		FM.RecordPlasmadata();
+		InGrid = CM.update_plasmadata();
+		CM.RecordPlasmadata();
 		Print();
 		// ***** START OF : DETERMINE IF END CONDITION HAS BEEN REACHED ***** //
 		if( Sample->is_gas() && Sample->is_split() ){

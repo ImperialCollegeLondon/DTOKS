@@ -11,7 +11,13 @@ static void show_usage(std::string name){
 	<< "\t-t,--temperature TEMPERATURE\tdouble variable defining the initial temperature\n"
 	<< "\t-m,--material MATERIAL\t\tchar variable giving the dust grain element, possible values 'w', 'g', 'b' and 'f'\n"
 	<< "\t\t\t\t\t(W): Tungsten, (G): Graphite, (B): Beryllium or (F): Iron\n\n"
-	<< "\t-s,--size SIZE\t\t\tdouble variable giving the radius of the grain\n\n";
+	<< "\t-s,--size SIZE\t\t\tdouble variable giving the radius of the grain\n\n"
+	<< "\t-vr,--rvel RVEL\t\t\tfloat variable defining radial velocity\n\n"
+	<< "\t-vt,--thetavel THETAVEL\tfloat variable defining angular velocity\n\n"
+	<< "\t-vz,--zvel ZVEL\t\t\tfloat variable defining lognitudinal velocity\n\n"
+	<< "\t-rr,--rpos RPOS\t\t\tfloat variable defining radial position\n\n"
+	<< "\t-rt,--thetapos THETAPOS\tfloat variable defining angular position\n\n"
+	<< "\t-rz,--zpos ZPOS\t\t\tfloat variable defining longitudinal position\n\n";
 }
 
 template<typename T> int InputFunction(int &argc, char* argv[], int &i, std::stringstream &ss0, T &Temp){
@@ -39,11 +45,28 @@ int main(int argc, char* argv[]){
 	float xSpacing = 0.00234375;	// 0.15/64.0; x-dimensional spacing (Radial) metres
 	float zSpacing = 0.04; 	// 1.0/25.0;  y-dimensional spacing (z) metres
 	
+
+	// Coordinates are r, theta, z.
+	// z is the vertical direction.
+	// r and theta map out the toroidal plane.
+	// Therefore a plot in r, z provides a poloidal cross section
+//	threevector xinit(0.147,0.01,0.1575);	// MAGNUM-PSI: Coordinates are r,theta,z
+//	threevector xinit(1.15,0.0,-1.99);// default injection right hand side
+//	threevector vinit(-1.4,0.0,0.0);		// MAGNUM-PSI
+//	threevector vinit(0.0,0.0,100.0);
+
 	char Element='W';
 	float size=0.5e-6;
 	float Temp=300;
+	float InitRotationalFreq(0.0);
+	float rpos(0.147);
+	float thetapos(0.01);
+	float zpos(0.1575);
+	float rvel(-1.4);
+	float thetavel(0.0);
+	float zvel(0.0);
 
-	char EmissivityModel = 'c';
+	char EmissivityModel = 'v';
 	char ExpansionModel = 'c';
 	char HeatCapacityModel = 'v'; 
 	char BoilingModel = 't';
@@ -58,7 +81,7 @@ int main(int argc, char* argv[]){
 
 // ------------------- PROCESS USER-INPUT ------------------- //
 	std::vector <std::string> sources;
-	std::string Config_Filename = "DTOKSU_Config.cfg";
+	std::string Config_Filename = "DTOKSU_Config_Magnum-PSI.cfg";
 	std::stringstream ss0;
 	for (int i = 1; i < argc; ++i){ // Read command line input
 		std::string arg = argv[i];
@@ -74,6 +97,7 @@ int main(int argc, char* argv[]){
 	Pdata->ElectricField 	= Efield;
 	Pdata->MagneticField 	= Bfield;
 	config4cpp::Configuration *  cfg = config4cpp::Configuration::create();
+	std::cout << "\n* Reading configuration file: " << Config_Filename << " *";
 	try {
         cfg->parse(Config_Filename.c_str());
         Filename = cfg->lookupString("", "Filename");
@@ -84,6 +108,13 @@ int main(int argc, char* argv[]){
 		Element  = cfg->lookupString("dust", "Element")[0];
         size     = cfg->lookupFloat("dust", "size");
         Temp     = cfg->lookupFloat("dust", "Temp");
+		rpos = cfg->lookupFloat("dust", "dynamics.rpos");
+		thetapos = cfg->lookupFloat("dust", "dynamics.thetapos");
+		zpos = cfg->lookupFloat("dust", "dynamics.zpos");
+		rvel = cfg->lookupFloat("dust", "dynamics.rvel");
+		thetavel = cfg->lookupFloat("dust", "dynamics.thetavel");
+		zvel = cfg->lookupFloat("dust", "dynamics.zvel");
+		InitRotationalFreq = cfg->lookupFloat("dust", "dynamics.InitRotationalFreq");
         ConstModels = 
 			{
 				cfg->lookupString("variablemodels", "EmissivityModel")[0], cfg->lookupString("variablemodels", "ExpansionModel")[0], 
@@ -126,25 +157,34 @@ int main(int argc, char* argv[]){
         cfg->destroy();
         return 1;
     }
+    std::cout << "\n* Configuration file read successfully! *\n\n* Creating PlasmaGrid Object *";
+    std::cout << "\n\t* Plasma:\t" << Plasma << "\n\t* Machine:\t" << Machine;
+    std::cout << "\n\t* xSpacing:\t" << xSpacing << "\n\t* zSpacing:\t" << zSpacing;
 
-//	PlasmaGrid Pgrid(Plasma,Machine,xSpacing,zSpacing);
-    PlasmaGrid Pgrid('h','p',0.00234375,0.04);
-
+    PlasmaGrid Pgrid(Plasma,Machine,xSpacing,zSpacing);
+    std::cout << "\n* PlasmaGrid created successfully! *\n\n* Processing command line input *";
 
 // ------------------- PROCESS USER-INPUT ------------------- //
 	for (int i = 1; i < argc; ++i){ // Read command line input
 		std::string arg = argv[i];
-		if     ( arg == "--help" 		|| arg == "-h" ){	show_usage( argv[0]); return 0; 		}
-		else if( arg == "--temperature" || arg == "-t" )	InputFunction(argc,argv,i,ss0,Temp);
-		else if( arg == "--material" 	|| arg == "-m" ) 	InputFunction(argc,argv,i,ss0,Element);
-		else if( arg == "--size" 		|| arg == "-s" )	InputFunction(argc,argv,i,ss0,size);
+		if     ( arg == "--help" 		|| arg == "-h"  ){	show_usage( argv[0]); return 0; 		}
+		else if( arg == "--temperature" || arg == "-t"  )	InputFunction(argc,argv,i,ss0,Temp);
+		else if( arg == "--material" 	|| arg == "-m"  ) 	InputFunction(argc,argv,i,ss0,Element);
+		else if( arg == "--size" 		|| arg == "-s"  )	InputFunction(argc,argv,i,ss0,size);
+		else if( arg == "--rvel" 		|| arg == "-vr"  )	InputFunction(argc,argv,i,ss0,rvel);
+		else if( arg == "--thetavel"    || arg == "-vt"  )	InputFunction(argc,argv,i,ss0,thetavel);
+		else if( arg == "--zvel" 		|| arg == "-vz"  )	InputFunction(argc,argv,i,ss0,zvel);
+		else if( arg == "--rpos" 		|| arg == "-rr" )	InputFunction(argc,argv,i,ss0,rpos);
+		else if( arg == "--thetapos"    || arg == "-rt"  )	InputFunction(argc,argv,i,ss0,thetapos);
+		else if( arg == "--zpos" 		|| arg == "-rz"  )	InputFunction(argc,argv,i,ss0,zvel);
 		else{
 			sources.push_back(argv[i]);
 		}
 	}
-
+	std::cout << "\n* Command line input processed successfully! *\n\n";
 
     // ------------------- INITIALISE META_DATA FILE ------------------- //
+    std::cout << "* Creating MetaDataFile: " << Filename << " *\n\n";
     std::ofstream MetaDataFile;	// Data file for containing the run information
     time_t now = time(0);		// Get the time of simulation
 	char * dt = ctime(&now);
@@ -154,6 +194,7 @@ int main(int argc, char* argv[]){
 
 
 	// ------------------- INITIALISE DUST ------------------- //
+	std::cout << "* Creating Matter object *\n\t* Element:\t" << Element;
 	Matter * Sample;		// Define the sample matter type
 	if 	(Element == 'W')     Sample = new Tungsten(size,Temp,ConstModels);
 	else if (Element == 'B') Sample = new Beryllium(size,Temp,ConstModels);
@@ -163,18 +204,11 @@ int main(int argc, char* argv[]){
 		std::cerr << "\nInvalid Option entered";
 		return -1;
 	}
-
-	// Coordinates are r, theta, z.
-	// z is the vertical direction.
-	// r and theta map out the toroidal plane.
-	// Therefore a plot in r, z provides a poloidal cross section
-//	CAUTION! WHEN THETA IS SET TO 0.0, WE CAN GET NEGATIVE RADII
-	threevector xinit(0.145,0.01,0.05);	// Coordinates are r,theta,z
-//	threevector xinit(1.15,0.0,-1.99);// default injection right hand side
-	threevector vinit(0.0,0.0,0.0);
-	double InitRotationalFreq(0.0);
+	threevector xinit(rpos,thetapos,zpos);
+	threevector vinit(rvel,thetavel,zvel);
 	Sample->update_motion(xinit,vinit,InitRotationalFreq);
-
+	std::cout << "\n\t* xinit:\t" << xinit << "\n\t* vinit:\t" << vinit;
+	std::cout << "\n\t* InitRotation:\t" << InitRotationalFreq << "\n";
 
 	// ------------------- PRINT METADATA ------------------- //
 	MetaDataFile << "\n\n#DUST PARAMETERS" 
@@ -206,16 +240,17 @@ int main(int argc, char* argv[]){
 		<<"DTOKSOML:\t\t" << ChargeModels[0] << "\n"<<"SchottkyOML:\t\t" << ChargeModels[1] << "\n" << "DTOKSWell:\t\t" << ChargeModels[2];
 
 
-	std::cout << "\n\n * GENERATE DTOKS * \n\n";
+	std::cout << "\n\n * CREATING DTOKS * \n";
 //	DTOKSU *MyDtoks1 = new DTOKSU(AccuracyLevels, Sample, Pdata, HeatModels, ForceModels, ChargeModels);
 	DTOKSU *MyDtoks2 = new DTOKSU(AccuracyLevels, Sample, Pgrid, HeatModels, ForceModels, ChargeModels);
+	std::cout << "\n * DTOKS SUCCESSFULLY INITIALISED * \n";
 
-	std::cout << "\n\n * RUN DTOKS * \n\n";
+	std::cout << "\n * RUNNING DTOKS * \n";
 	Breakup Break(MyDtoks2, Sample);
 	Break.Run();
 //	MyDtoks2->Run();
 
-	std::cout << "\n\n * MAIN SCRIPT COMPLETE * \n\n";
+	std::cout << "\n\n * DTOKS COMPLETED SUCCESSFULLY * \n\n";
 	clock_t end = clock();
 	double elapsd_secs = double(end-begin)/CLOCKS_PER_SEC;	
 	MetaDataFile << "\n\n*****\n\nCompleted in " << elapsd_secs << "s\n";

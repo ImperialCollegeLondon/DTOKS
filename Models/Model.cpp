@@ -22,7 +22,7 @@ Model::Model():Sample(new Tungsten),Pgrid(new PlasmaGrid('h','m',0.01,0.01)),Pda
 	Mo_Debug("\n\nIn Model::Model():Sample(new Tungsten),Pgrid('h','m',0.01,0.01),Pdata(PlasmaDefaults),Accuracy(1.0),ContinuousPlasma(true)\n\n");
 	i = 0; k = 0;
 	PlasmaDataFile.open("Data/pd.txt");
-	PlasmaDataFile << "#i\tk\tNn\tNe\tNi\tTi\tTe\tTn\tT0\tPvel\tgravity\tE\tB";
+	PlasmaDataFile << "#t\ti\tk\tNn\tNe\tNi\tTi\tTe\tTn\tT0\tPvel\tgravity\tE\tB";
 	PlasmaDataFile.close();
 	PlasmaDataFile.clear();
 	update_plasmadata();
@@ -35,7 +35,7 @@ Model::Model( Matter *&sample, PlasmaData *&pdata, float accuracy )
 	assert(Accuracy > 0);
 	i = 0; k = 0;
 	PlasmaDataFile.open("Data/pd.txt");
-	PlasmaDataFile << "#i\tk\tNn\tNe\tNi\tTi\tTe\tTn\tT0\tPvel\tgravity\tE\tB";
+	PlasmaDataFile << "#t\ti\tk\tNn\tNe\tNi\tTi\tTe\tTn\tT0\tPvel\tgravity\tE\tB";
 	PlasmaDataFile.close();
 	PlasmaDataFile.clear();
 	update_plasmadata(pdata);
@@ -49,7 +49,7 @@ Model::Model( Matter *&sample, PlasmaGrid &pgrid, float accuracy )
 	assert(Accuracy > 0);
 	i = 0; k = 0;
 	PlasmaDataFile.open("Data/pd.txt");
-	PlasmaDataFile << "#i\tk\tNn\tNe\tNi\tTi\tTe\tTn\tT0\tPvel\tgravity\tE\tB\n\n";
+	PlasmaDataFile << "#t\ti\tk\tNn\tNe\tNi\tTi\tTe\tTn\tT0\tPvel\tgravity\tE\tB\n\n";
 	PlasmaDataFile.close();
 	PlasmaDataFile.clear();
 	update_plasmadata();
@@ -77,13 +77,13 @@ bool Model::update_plasmadata(){
 	bool InGrid = Pgrid->locate(i,k,Sample->get_position());
 	if( !InGrid ) return InGrid;			// Particle has escaped simulation domain
 	update_fields(i,k);
-	Pdata->NeutralDensity 	= Pgrid->getna0(i,k);  	// NEUTRAL DENSITY EQUALS ION DENSITY
+	Pdata->NeutralDensity 	= 10e19;  	// NEUTRAL DENSITY EQUALS 10e19
 	Pdata->ElectronDensity 	= Pgrid->getna1(i,k);  
 	Pdata->IonDensity 		= Pgrid->getna0(i,k);
 	Pdata->IonTemp			= Pgrid->getTi(i,k)*ConvertJtoK;
 	Pdata->ElectronTemp 	= Pgrid->getTe(i,k)*ConvertJtoK;
-	Pdata->NeutralTemp 		= Pgrid->getTi(i,k)*ConvertJtoK; 	// NEUTRAL TEMP EQUAL TO ION TEMP
-	Pdata->AmbientTemp 		= 300; 			// NOTE THIS IS HARD CODED OHMEINGOD
+	Pdata->NeutralTemp 		= 0.025e-19*ConvertJtoK; 	// NEUTRAL TEMP EQUAL TO ION TEMP
+	Pdata->AmbientTemp 		= 300; 						// NOTE THIS IS HARD CODED OHMEINGOD
 	
 	return true;
 }
@@ -139,7 +139,8 @@ void Model::update_fields(int i, int k){
 
 void Model::RecordPlasmadata(){
 	PlasmaDataFile.open("Data/pd.txt",std::ofstream::app);
-	PlasmaDataFile << "\n" << i << "\t" << k << "\t" << Pdata->NeutralDensity << "\t" << Pdata->ElectronDensity 
+	PlasmaDataFile << "\n" << TotalTime 
+			<< "\t" << i << "\t" << k << "\t" << Pdata->NeutralDensity << "\t" << Pdata->ElectronDensity 
 			<< "\t" << Pdata->IonDensity << "\t" << Pdata->IonTemp << "\t" << Pdata->ElectronTemp 
 			<< "\t" << Pdata->NeutralTemp << "\t" << Pdata->AmbientTemp << "\t" << Pdata->PlasmaVel 
 			<< "\t" << Pdata->Gravity << "\t" << Pdata->ElectricField << "\t" << Pdata->MagneticField;

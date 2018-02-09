@@ -14,7 +14,7 @@ PlasmaGrid::PlasmaGrid(char element, char machine, double xspacing, double zspac
 		gridzmin = -2.0;
 		gridxmax = 1.4;
 		gridzmax = 0.80;
-		std::cout << "\tCalculation for MAST" << std::endl;
+		std::cout << "\n\n\tCalculation for MAST" << std::endl;
 	}else if(device=='i'){
 		gridx = 451;
 		gridz = 951;
@@ -23,7 +23,7 @@ PlasmaGrid::PlasmaGrid(char element, char machine, double xspacing, double zspac
 		gridzmin = -4.7;
 		gridxmax = 8.25;
 		gridzmax = 4.80;
-		std::cout << "\tCalculation for ITER" << std::endl;
+		std::cout << "\n\n\tCalculation for ITER" << std::endl;
 	}else if(device=='d'){
 		gridx = 180;
 		gridz = 400;
@@ -33,7 +33,7 @@ PlasmaGrid::PlasmaGrid(char element, char machine, double xspacing, double zspac
 		gridxmax = 2.0;
 		gridzmax = 4.0;
 
-		std::cout << "\tCalculation for Double Null MAST 17839files shot" << std::endl;
+		std::cout << "\n\n\tCalculation for Double Null MAST 17839files shot" << std::endl;
 	}else if(device=='p'){
 		gridx = 64;
 		gridz = 25;
@@ -42,7 +42,7 @@ PlasmaGrid::PlasmaGrid(char element, char machine, double xspacing, double zspac
 		gridzmin = 0.0;
 		gridxmax = 0.15;
 		gridzmax = 1.0;
-		std::cout << "\tCalculation for Magnum-PSI: filename='Magnum-PSI_Prelim_B1.41_L1.0.nc'" << std::endl;
+		std::cout << "\n\n\t* Calculation for Magnum-PSI *\n";
 	}
 	else std::cout << "Invalid tokamak" << std::endl;
 
@@ -60,7 +60,7 @@ PlasmaGrid::PlasmaGrid(char element, char machine, double xspacing, double zspac
 	z 	= Te;
 	mevap 	= Te;
 	gridflag= std::vector<std::vector<int>>(gridx,std::vector<int>(gridz));
-
+	std::cout << "\n\t* Begin File read *";
 	//impurity.open("output///impurity///impurity.vtk");
 	try{ // Read data
 		int readstatus = readdata();
@@ -138,7 +138,9 @@ int PlasmaGrid::readMPSIdata(){
 	P_Debug("\tPlasmaGrid::readMPSIdata()\n\n");
 	
 	const int NC_ERR = 2;
-	
+	std::string filename="Models/PlasmaData/MagnumPSI/Magnum-PSI_Prelim_B1.41_L1.0.nc";
+	std::cout << "\n\t\t* Reading data from: " << filename << " *";
+
 	float electron_dens_mat[gridx][gridz][gridtheta];
 	float electron_temp_mat[gridx][gridz][gridtheta];
 	float electron_Vele_mat[gridx][gridz][gridtheta];
@@ -156,7 +158,7 @@ int PlasmaGrid::readMPSIdata(){
 	NcError err(NcError::silent_nonfatal);
 
 	
-	NcFile dataFile("Models/PlasmaData/MagnumPSI/Magnum-PSI_Prelim_B1.41_L1.0.nc", NcFile::ReadOnly);
+	NcFile dataFile(filename.c_str(), NcFile::ReadOnly);
 	if(!dataFile.is_valid())
 		return NC_ERR;
 	
@@ -206,8 +208,8 @@ int PlasmaGrid::readMPSIdata(){
 			po[i][k] = Potential_mat[i][k][0];
 			ua0[i][k] = ion_Veli_mat[i][k][0];
 			ua1[i][k] = electron_Vele_mat[i][k][0];
-                        bx[i][k] = 0.0;
-                        by[i][k] = 0.0;
+			bx[i][k] = 0.0;
+			by[i][k] = 0.0;
 			bz[i][k] = Bxy_mat[i][k];
 		}
 	}
