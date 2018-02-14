@@ -382,9 +382,11 @@ void Matter::update_temperature(double EnergyIn){
 void Matter::update_motion(threevector &ChangeInPosition,threevector &ChangeInVelocity, double Rotation){
 	M_Debug("\tIn Matter::update_motion(threevector &ChangeInPosition,threevector &ChangeInVelocity)\n\n");
 	// Calculate new position
+
 	St.DustPosition = St.DustPosition + ChangeInPosition;
 	St.DustVelocity = St.DustVelocity + ChangeInVelocity;
 	St.RotationalFrequency = St.RotationalFrequency + Rotation;
+	assert( St.DustPosition.getx() > 0.0 );
 };
 
 void Matter::update_charge(double charge, double potential, double deltat, double deltas){

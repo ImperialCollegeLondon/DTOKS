@@ -69,6 +69,7 @@ class Model{
 
 		void RecordPlasmadata();				// Record the plasma Data	
 
+		void update_plasmagrid(PlasmaGrid *&pgrid);
 		void update_plasmadata(PlasmaData *&pdata);
 		bool update_plasmadata();
 		void update_fields(int i, int k);

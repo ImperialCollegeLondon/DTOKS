@@ -58,12 +58,17 @@ Model::Model( Matter *&sample, PlasmaGrid &pgrid, float accuracy )
 bool Model::new_cell()const{
 	int j(0), p(0);
 	Pgrid->locate(j,p,Sample->get_position());
-	if( j != i || p != k )	return true;
-	return false;
+	if( (j == i) && (p == k) )	return false;
+	return true;
 }
 
 void Model::CloseFile(){
 	ModelDataFile.close();
+}
+
+void Model::update_plasmagrid(PlasmaGrid *&pgrid){
+	Mo_Debug( "\tIn Model::update_plasmagrid(PlasmaGrid *&pgrid)\n\n");
+	Pgrid = pgrid;
 }
 
 void Model::update_plasmadata(PlasmaData *&pdata){
@@ -77,12 +82,12 @@ bool Model::update_plasmadata(){
 	bool InGrid = Pgrid->locate(i,k,Sample->get_position());
 	if( !InGrid ) return InGrid;			// Particle has escaped simulation domain
 	update_fields(i,k);
-	Pdata->NeutralDensity 	= 10e19;  	// NEUTRAL DENSITY EQUALS 10e19
+	Pdata->NeutralDensity 	= 1e19;  	// NEUTRAL DENSITY EQUALS 10e19
 	Pdata->ElectronDensity 	= Pgrid->getna1(i,k);  
 	Pdata->IonDensity 		= Pgrid->getna0(i,k);
 	Pdata->IonTemp			= Pgrid->getTi(i,k)*ConvertJtoK;
 	Pdata->ElectronTemp 	= Pgrid->getTe(i,k)*ConvertJtoK;
-	Pdata->NeutralTemp 		= 0.025e-19*ConvertJtoK; 	// NEUTRAL TEMP EQUAL TO ION TEMP
+	Pdata->NeutralTemp 		= 0.025*echarge*ConvertJtoK; 	// NEUTRAL TEMP EQUAL TO ION TEMP
 	Pdata->AmbientTemp 		= 300; 						// NOTE THIS IS HARD CODED OHMEINGOD
 	
 	return true;
