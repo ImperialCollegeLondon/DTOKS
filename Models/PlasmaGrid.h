@@ -12,7 +12,7 @@
 
 class PlasmaGrid{
 	// Plasma variables
-	protected:
+	private:
 
 		// Te & Ti are the electron and ion temperatures stored in units of (J)
 		// na0 & na1 are the ion and electron densities stored in units of (m^-3)
@@ -27,14 +27,6 @@ class PlasmaGrid{
 		const double mi, gamma, dlx, dlz;
 		const char gas, device;
 
-		// Files
-//		std::ofstream impurity;
-	public:
-
-		// Constructor: input the plasma gas and the tokamak with the grid spacing
-		PlasmaGrid(char element, char machine, double xspacing, double yspacing);
-		~PlasmaGrid(){};		// Destructor - frees up the memory
-
 		// TO ALLOW FOR THIS CLASS TO BE CONST LIKE IT SHOULD BE:
 		// YOU COULD CONSIDER MAKING THESE FOUR FUNCTIONS STATIC AND RETURN VECTORS OF EACH THING
 		// THESE COULD THEN BE USED IN THE INITIALISER LIST OF THE CONSTRUCTOR.
@@ -42,8 +34,17 @@ class PlasmaGrid{
 		void readscalars(std::ifstream &input); // Read an input file
 		void readthreevectors(std::ifstream &input);
 		void readgridflag(std::ifstream &input);
-		int readMPSIdata();
-		int readdata();
+		int readMPSIdata(std::string filename);
+
+		// Files
+//		std::ofstream impurity;
+	public:
+
+		// Constructor: input the plasma gas and the tokamak with the grid spacing
+		PlasmaGrid(std::string filename, char element, char machine, double xspacing, double yspacing);
+		~PlasmaGrid(){};		// Destructor - frees up the memory
+
+		int readdata(std::string filename);
 
 		// functions to locate dust, update electromagnetic fields, calculate mass loss and check position
 		void setfields(int i, int k);

@@ -2,8 +2,8 @@
 
 #include "PlasmaGrid.h"
 
-PlasmaGrid::PlasmaGrid(char element, char machine, double xspacing, double zspacing):mi(Mp),gamma(Me/mi),gas(element),device(machine),dlx(xspacing),dlz(zspacing){
-	P_Debug( "\n\nIn PlasmaGrid::PlasmaGrid(char element, char machine, double xspacing, double zspacing):mi(Mp),gamma(Me/mi),gas(element),device(machine),dlx(xspacing),dlz(zspacing)\n\n");
+PlasmaGrid::PlasmaGrid(std::string filename, char element, char machine, double xspacing, double zspacing):mi(Mp),gamma(Me/mi),gas(element),device(machine),dlx(xspacing),dlz(zspacing){
+	P_Debug( "\n\nIn PlasmaGrid::PlasmaGrid(std::string filename, char element, char machine, double xspacing, double zspacing):mi(Mp),gamma(Me/mi),gas(element),device(machine),dlx(xspacing),dlz(zspacing)\n\n");
 
 	// Plasma parameters
 	if(device=='m'){
@@ -36,15 +36,15 @@ PlasmaGrid::PlasmaGrid(char element, char machine, double xspacing, double zspac
 		std::cout << "\n\n\tCalculation for Double Null MAST 17839files shot" << std::endl;
 	}else if(device=='p'){
 		gridx = 64;
-		gridz = 25;
+		gridz = 20;
 		gridtheta=64;
 		gridxmin = 0.0;
 		gridzmin = 0.0;
 		gridxmax = 0.15;
-		gridzmax = 1.0;
+//		gridzmax = 1.0;
+		gridzmax = 1.9;
 		std::cout << "\n\n\t* Calculation for Magnum-PSI *\n";
-	}
-	else std::cout << "Invalid tokamak" << std::endl;
+	}else std::cout << "Invalid tokamak" << std::endl;
 
 	Te	= std::vector<std::vector<double>>(gridx,std::vector<double>(gridz));
 	Ti 	= Te;
@@ -63,7 +63,7 @@ PlasmaGrid::PlasmaGrid(char element, char machine, double xspacing, double zspac
 	std::cout << "\n\t* Begin File read *";
 	//impurity.open("output///impurity///impurity.vtk");
 	try{ // Read data
-		int readstatus = readdata();
+		int readstatus = readdata(filename);
 		if(readstatus != 0)
 			throw readstatus;
 	}	
@@ -134,11 +134,10 @@ void PlasmaGrid::readgridflag(std::ifstream &input){
 }
 
 
-int PlasmaGrid::readMPSIdata(){
-	P_Debug("\tPlasmaGrid::readMPSIdata()\n\n");
+int PlasmaGrid::readMPSIdata(std::string filename){
+	P_Debug("\tPlasmaGrid::readMPSIdata(std::string filename)\n\n");
 	
 	const int NC_ERR = 2;
-	std::string filename="Models/PlasmaData/MagnumPSI/Magnum-PSI_Prelim_B1.41_L1.0.nc";
 	std::cout << "\n\t\t* Reading data from: " << filename << " *";
 
 	float electron_dens_mat[gridx][gridz][gridtheta];
@@ -168,7 +167,7 @@ int PlasmaGrid::readMPSIdata(){
 	// We get back a pointer to each NcVar we request. Get the
 	// latitude and longitude coordinate variables.
 
-	NcVar *Ne, *e_Temp, *Vel_e, *Ni, *Vel_i, *Potential, *B_xy;
+	NcVar *Ne, *e_Temp, *Vel_e, *Ni, *Vel_i, *Potential; //, *B_xy;
 	if (!(Ne = dataFile.get_var("Ne")))
 		return NC_ERR;
 	if (!(e_Temp = dataFile.get_var("Te")))
@@ -179,10 +178,10 @@ int PlasmaGrid::readMPSIdata(){
 		return NC_ERR;
 	if (!(Vel_i = dataFile.get_var("Vel_i")))
 		return NC_ERR;
-	if (!(Potential = dataFile.get_var("Pressure")))
+	if (!(Potential = dataFile.get_var("Potential_Phi")))
 		return NC_ERR;
-	if (!(B_xy = dataFile.get_var("B_xy")))
-		return NC_ERR;
+//	if (!(B_xy = dataFile.get_var("B_xy")))
+//		return NC_ERR;
 
 	if (!Ne->get(&electron_dens_mat[0][0][0], gridx, gridz, gridtheta))
 		return NC_ERR;
@@ -196,8 +195,8 @@ int PlasmaGrid::readMPSIdata(){
 		return NC_ERR;
 	if (!Potential->get(&Potential_mat[0][0][0], gridx, gridz, gridtheta))
 		return NC_ERR;
-	if (!B_xy->get(&Bxy_mat[0][0], gridx, gridz))
-		return NC_ERR;
+//	if (!B_xy->get(&Bxy_mat[0][0], gridx, gridz))
+//		return NC_ERR;
 	
 	for(unsigned int i=0; i< gridx; i++){
 		for(unsigned int k=0; k< gridz; k++){
@@ -210,33 +209,31 @@ int PlasmaGrid::readMPSIdata(){
 			ua1[i][k] = electron_Vele_mat[i][k][0];
 			bx[i][k] = 0.0;
 			by[i][k] = 0.0;
-			bz[i][k] = Bxy_mat[i][k];
+			bz[i][k] = 0.1;
+//			bz[i][k] = Bxy_mat[i][k];
 		}
 	}
 	return 0;
 
 }
 
-int PlasmaGrid::readdata(){
-	P_Debug("\tPlasmaGrid::readdata()\n\n");
+int PlasmaGrid::readdata(std::string filename){
+	P_Debug("\tPlasmaGrid::readdatastd::string filename()\n\n");
 	// Input files
 	if(device=='p'){ // Note, grid flags will be empty 
-		return readMPSIdata();
+		return readMPSIdata(filename);
 	}else{
+		std::cout << "\nWarning! Filename: " << filename << " is unused parameter in function PlasmaGrid::readdata()";
 		std::ifstream scalars,threevectors,gridflagfile;
 		if(device=='m'){
 			scalars.open("Models/PlasmaData/MAST/b2processed.dat");
 			threevectors.open("Models/PlasmaData/MAST/b2processed2.dat");
 			gridflagfile.open("Models/PlasmaData/MAST/locate.dat");
-		}
-		else if(device=='i')
-		{
+		}else if(device=='i'){
 			scalars.open("Models/PlasmaData/regulardataITER/b2processed.dat");
 			threevectors.open("Models/PlasmaData/regulardataITER/b2processed2.dat");
 			gridflagfile.open("Models/PlasmaData/regulardataITER/locate.dat");
-		}
-		else if(device=='d')
-		{
+		}else if(device=='d'){
 			scalars.open("Models/PlasmaData/MASTDexp/b2processed.dat");
 			threevectors.open("Models/PlasmaData/MASTDexp/b2processed2.dat");
 			gridflagfile.open("Models/PlasmaData/MASTDexp/locate.dat");

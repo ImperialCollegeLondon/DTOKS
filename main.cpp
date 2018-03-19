@@ -17,7 +17,9 @@ static void show_usage(std::string name){
 	<< "\t-vz,--zvel ZVEL\t\t\tfloat variable defining lognitudinal velocity\n\n"
 	<< "\t-rr,--rpos RPOS\t\t\tfloat variable defining radial position\n\n"
 	<< "\t-rt,--thetapos THETAPOS\tfloat variable defining angular position\n\n"
-	<< "\t-rz,--zpos ZPOS\t\t\tfloat variable defining longitudinal position\n\n";
+	<< "\t-rz,--zpos ZPOS\t\t\tfloat variable defining longitudinal position\n\n"
+	<< "\t-op,--output OUTPUT\t\tstring variable defining the filename prefix to write to\n\n"
+	<< "\t-om,--metadata METADATA\tstring variable defining the MetaData filename to write to\n\n";
 }
 
 template<typename T> int InputFunction(int &argc, char* argv[], int &i, std::stringstream &ss0, T &Temp){
@@ -39,11 +41,21 @@ int main(int argc, char* argv[]){
 	clock_t begin = clock();
 
 	// ------------------- PARSE CONFIGURATION FILE ------------------- //
-	std::string Filename = "Data/DTOKSU.txt";
-	char Plasma='h';
-	char Machine='p';	// Initialise plasma grid
-	float xSpacing = 0.00234375;	// 0.15/64.0; x-dimensional spacing (Radial) metres
-	float zSpacing = 0.04; 	// 1.0/25.0;  y-dimensional spacing (z) metres
+	std::string MetaDataFilename = "Data/DTOKSU.txt";
+	std::string DataFilePrefix = "Data/DTOKSU";
+	std::string Config_Filename = "DTOKSU_Config_Magnum-PSI.cfg";
+	
+	std::vector <std::string> sources;
+	std::stringstream ss0;
+	for (int i = 1; i < argc; ++i){ // Read command line input
+		std::string arg = argv[i];
+		if     ( arg == "--help" 		|| arg == "-h" ){	show_usage( argv[0]); return 0; 		}
+		else if( arg == "--config"      || arg == "-c" )	InputFunction(argc,argv,i,ss0,Config_Filename);
+		else{
+			sources.push_back(argv[i]);
+		}
+	}
+
 	
 
 	// Coordinates are r, theta, z.
@@ -54,6 +66,13 @@ int main(int argc, char* argv[]){
 //	threevector xinit(1.15,0.0,-1.99);// default injection right hand side
 //	threevector vinit(-1.4,0.0,0.0);		// MAGNUM-PSI
 //	threevector vinit(0.0,0.0,100.0);
+
+	std::string plasma_file = "Models/PlasmaData/MagnumPSI/Magnum-PSI_Experiment_Homogeneous-B-Field_B0.2_L1.9.nc";
+	char Plasma='h';
+	char Machine='p';	// Initialise plasma grid
+	float xSpacing = 0.00234375;	// 0.15/64.0; x-dimensional spacing (Radial) metres
+//	float zSpacing = 0.04; 	// 1.0/25.0;  y-dimensional spacing (z) metres, Magnum-PSI_Prelim_B1.41_L1.0.nc
+	float zSpacing = 0.095; // 1.9/20.0;  y-dimensional spacing (z) metres, Magnum-PSI_Experiment_Homogeneous-B-Field_B0.1_L1.9.nc
 
 	char Element='W';
 	float size=0.5e-6;
@@ -79,17 +98,8 @@ int main(int argc, char* argv[]){
 	std::array<float,3> AccuracyLevels;
 	PlasmaData *Pdata = new PlasmaData;
 
-// ------------------- PROCESS USER-INPUT ------------------- //
-	std::vector <std::string> sources;
-	std::string Config_Filename = "DTOKSU_Config_Magnum-PSI.cfg";
-	std::stringstream ss0;
-	for (int i = 1; i < argc; ++i){ // Read command line input
-		std::string arg = argv[i];
-		if( arg == "--config"      || arg == "-c" )	InputFunction(argc,argv,i,ss0,Config_Filename);
-		else{
-			sources.push_back(argv[i]);
-		}
-	}
+	// ------------------- PROCESS USER-INPUT ------------------- //
+
 	threevector PlasmaVelocity(501.33, 7268.5, 914.947); // Taken from initial for DTOKS
 	threevector Efield(-13.673, 0, -27.925);
 	threevector Bfield(0.0226868, 0.328923, 0.0414043);
@@ -100,7 +110,9 @@ int main(int argc, char* argv[]){
 	std::cout << "\n* Reading configuration file: " << Config_Filename << " *";
 	try {
         cfg->parse(Config_Filename.c_str());
-        Filename = cfg->lookupString("", "Filename");
+        MetaDataFilename = cfg->lookupString("", "Filename");
+        DataFilePrefix = cfg->lookupString("", "DataFilePrefix");
+        plasma_file = cfg->lookupString("plasmagrid", "Filename");
         Plasma   = cfg->lookupString("plasmagrid", "Plasma")[0];
         Machine  = cfg->lookupString("plasmagrid", "Machine")[0];
         xSpacing = cfg->lookupFloat("plasmagrid", "xSpacing");
@@ -161,14 +173,13 @@ int main(int argc, char* argv[]){
     std::cout << "\n\t* Plasma:\t" << Plasma << "\n\t* Machine:\t" << Machine;
     std::cout << "\n\t* xSpacing:\t" << xSpacing << "\n\t* zSpacing:\t" << zSpacing;
 
-    PlasmaGrid Pgrid(Plasma,Machine,xSpacing,zSpacing);
+    PlasmaGrid Pgrid(plasma_file,Plasma,Machine,xSpacing,zSpacing);
     std::cout << "\n* PlasmaGrid created successfully! *\n\n* Processing command line input *";
 
 // ------------------- PROCESS USER-INPUT ------------------- //
 	for (int i = 1; i < argc; ++i){ // Read command line input
 		std::string arg = argv[i];
-		if     ( arg == "--help" 		|| arg == "-h"  ){	show_usage( argv[0]); return 0; 		}
-		else if( arg == "--temperature" || arg == "-t"  )	InputFunction(argc,argv,i,ss0,Temp);
+		if( arg == "--temperature" || arg == "-t"  )	InputFunction(argc,argv,i,ss0,Temp);
 		else if( arg == "--material" 	|| arg == "-m"  ) 	InputFunction(argc,argv,i,ss0,Element);
 		else if( arg == "--size" 		|| arg == "-s"  )	InputFunction(argc,argv,i,ss0,size);
 		else if( arg == "--rvel" 		|| arg == "-vr"  )	InputFunction(argc,argv,i,ss0,rvel);
@@ -176,7 +187,9 @@ int main(int argc, char* argv[]){
 		else if( arg == "--zvel" 		|| arg == "-vz"  )	InputFunction(argc,argv,i,ss0,zvel);
 		else if( arg == "--rpos" 		|| arg == "-rr" )	InputFunction(argc,argv,i,ss0,rpos);
 		else if( arg == "--thetapos"    || arg == "-rt"  )	InputFunction(argc,argv,i,ss0,thetapos);
-		else if( arg == "--zpos" 		|| arg == "-rz"  )	InputFunction(argc,argv,i,ss0,zvel);
+		else if( arg == "--zpos" 		|| arg == "-rz"  )	InputFunction(argc,argv,i,ss0,zpos);
+		else if( arg == "--output" 		|| arg == "-op"  )	InputFunction(argc,argv,i,ss0,DataFilePrefix);
+		else if( arg == "--MetaData" 		|| arg == "-om"  )	InputFunction(argc,argv,i,ss0,MetaDataFilename);
 		else{
 			sources.push_back(argv[i]);
 		}
@@ -184,11 +197,11 @@ int main(int argc, char* argv[]){
 	std::cout << "\n* Command line input processed successfully! *\n\n";
 
     // ------------------- INITIALISE META_DATA FILE ------------------- //
-    std::cout << "* Creating MetaDataFile: " << Filename << " *\n\n";
+    std::cout << "* Creating MetaDataFile: " << MetaDataFilename << " *\n\n";
     std::ofstream MetaDataFile;	// Data file for containing the run information
     time_t now = time(0);		// Get the time of simulation
 	char * dt = ctime(&now);
-    MetaDataFile.open(Filename);
+    MetaDataFile.open(MetaDataFilename);
 	MetaDataFile << "## Run Data File ##\n";
 	MetaDataFile << "#Date:\t" << dt;
 
@@ -243,13 +256,16 @@ int main(int argc, char* argv[]){
 	std::cout << "\n\n * CREATING DTOKS * \n";
 //	DTOKSU *MyDtoks1 = new DTOKSU(AccuracyLevels, Sample, Pdata, HeatModels, ForceModels, ChargeModels);
 	DTOKSU *MyDtoks2 = new DTOKSU(AccuracyLevels, Sample, Pgrid, HeatModels, ForceModels, ChargeModels);
+
+	MyDtoks2->OpenFiles(DataFilePrefix,0);
 	std::cout << "\n * DTOKS SUCCESSFULLY INITIALISED * \n";
 
 	std::cout << "\n * RUNNING DTOKS * \n";
-	Breakup Break(MyDtoks2, Sample);
-	Break.Run();
-//	MyDtoks2->Run();
+//	Breakup Break(MyDtoks2, Sample);
+//	Break.Run();
+	MyDtoks2->Run();
 
+	MyDtoks2->CloseFiles();
 	std::cout << "\n\n * DTOKS COMPLETED SUCCESSFULLY * \n\n";
 	clock_t end = clock();
 	double elapsd_secs = double(end-begin)/CLOCKS_PER_SEC;	

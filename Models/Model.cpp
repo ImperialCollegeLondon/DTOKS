@@ -18,7 +18,7 @@ struct PlasmaData PlasmaDefaults = {
 };
 //PlasmaGrid *DefaultGrid = new PlasmaGrid('h','m',0.01);
 
-Model::Model():Sample(new Tungsten),Pgrid(new PlasmaGrid('h','m',0.01,0.01)),Pdata(&PlasmaDefaults),Accuracy(1.0),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
+Model::Model():Sample(new Tungsten),Pgrid(new PlasmaGrid("",'h','m',0.01,0.01)),Pdata(&PlasmaDefaults),Accuracy(1.0),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
 	Mo_Debug("\n\nIn Model::Model():Sample(new Tungsten),Pgrid('h','m',0.01,0.01),Pdata(PlasmaDefaults),Accuracy(1.0),ContinuousPlasma(true)\n\n");
 	i = 0; k = 0;
 	PlasmaDataFile.open("Data/pd.txt");
@@ -30,7 +30,7 @@ Model::Model():Sample(new Tungsten),Pgrid(new PlasmaGrid('h','m',0.01,0.01)),Pda
 
 // Constructor for Matter sample sitting in a constant plasma background given by PlasmaData (pdata) with a Default grid
 Model::Model( Matter *&sample, PlasmaData *&pdata, float accuracy )
-		:Sample(sample),Pgrid(new PlasmaGrid('h','m',0.01,0.01)),Pdata(pdata),Accuracy(accuracy),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
+		:Sample(sample),Pgrid(new PlasmaGrid("",'h','m',0.01,0.01)),Pdata(pdata),Accuracy(accuracy),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
 	Mo_Debug("\n\nIn Model::Model( Matter *& sample, PlasmaData *&pdata, float accuracy ):Sample(sample),Pgrid(new PlasmaGrid('h','m',0.01,0.01)),Pdata(pdata),Accuracy(accuracy),ContinuousPlasma(true)\n\n");
 	assert(Accuracy > 0);
 	i = 0; k = 0;
@@ -64,6 +64,11 @@ bool Model::new_cell()const{
 
 void Model::CloseFile(){
 	ModelDataFile.close();
+}
+
+void Model::read_plasmagrid(std::string filename){
+	Mo_Debug( "\tIn Model::read_plasagrid(std::string filename)\n\n");
+	Pgrid->readdata(filename);
 }
 
 void Model::update_plasmagrid(PlasmaGrid *&pgrid){
