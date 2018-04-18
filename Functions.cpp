@@ -408,3 +408,9 @@ double LambertW(const double z) {
   exit(1);
 }
 
+void CheckPos(double Value, std::string ErrorMssg){
+	if( Value <= 0 ){
+		std::cerr << "Error! " << ErrorMssg << " is Zero or negative. " << ErrorMssg << " = " << Value << "\n\n";
+		assert(Value > 0);
+	}
+}

@@ -42,4 +42,4 @@ double round_to_digits(double value, int digits);
 
 double LambertW(const double z);
 
-
+void CheckPos(double Value, std::string ErrorMssg);
