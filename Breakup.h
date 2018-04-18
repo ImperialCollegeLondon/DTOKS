@@ -2,6 +2,8 @@
 #define __BREAKUP_H_INCLUDED__
 
 #include "DTOKSU.h"
+#include <random>	// for std::normal_distribution<> etc.
+#include <chrono>	// for chrono::high_resolution_clock::now().time_since_epoch().count();
 
 class Breakup{
 
