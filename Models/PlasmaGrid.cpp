@@ -115,9 +115,9 @@ void PlasmaGrid::readthreevectors(std::ifstream &input){
 		for(i=0;i<=gridx-1;i++){
 			input >> dummy1 >> dummy2 >> bx[i][k] >> bz[i][k] >> by[i][k];
 			bz[i][k] = -bz[i][k];
-			if( bx[i][k] != 0 && bx[i][k] < 1e-100 ) {	bx[i][k]  = 0.0; } 
-			if( by[i][k] != 0 && by[i][k] < 1e-100 ) {	by[i][k]  = 0.0; } 
-			if( bz[i][k]!= 0 && bz[i][k] < 1e-100 ){ 	bz[i][k] = 0.0; }
+			if( bx[i][k] != 0 && bx[i][k] < 1e-100 ) {	bx[i][k] = 0.0; } 
+			if( by[i][k] != 0 && by[i][k] < 1e-100 ) {	by[i][k] = 0.0; } 
+			if( bz[i][k] != 0 && bz[i][k] < 1e-100 ) { 	bz[i][k] = 0.0; }
 		}
 	}
 }
@@ -209,7 +209,7 @@ int PlasmaGrid::readMPSIdata(std::string filename){
 			ua1[i][k] = electron_Vele_mat[i][k][0];
 			bx[i][k] = 0.0;
 			by[i][k] = 0.0;
-			bz[i][k] = 0.1;
+			bz[i][k] = 0.4;
 //			bz[i][k] = Bxy_mat[i][k];
 		}
 	}
@@ -223,7 +223,7 @@ int PlasmaGrid::readdata(std::string filename){
 	if(device=='p'){ // Note, grid flags will be empty 
 		return readMPSIdata(filename);
 	}else{
-		std::cout << "\nWarning! Filename: " << filename << " is unused parameter in function PlasmaGrid::readdata()";
+		std::cout << "\nWarning! Filename: " << filename << " is unused parameter in function PlasmaGrid::readdata(std::string filename)";
 		std::ifstream scalars,threevectors,gridflagfile;
 		if(device=='m'){
 			scalars.open("Models/PlasmaData/MAST/b2processed.dat");

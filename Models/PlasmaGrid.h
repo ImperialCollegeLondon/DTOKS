@@ -153,11 +153,15 @@ class PlasmaGrid{
 		}
 		double getgridflag	(int i, int k)const{
 			checkingrid(i,k);
-                        if(gridflag[i][k] == gridflag[i][k] ){
-                                return gridflag[i][k];
-                        }else{
-                                return 0;
-                        }
+			if( device != 'p'){
+	                        if(gridflag[i][k] == gridflag[i][k] ){
+	                                return gridflag[i][k];
+	                        }else{
+	                                return 0;
+	                        }
+			}else{
+				return checkingrid(i,k);
+			}
 		}	
 		char get_machine	()		const{return device;}
 		char get_gas		()		const{return gas;}
