@@ -46,7 +46,7 @@ void ChargingModel::CreateFile(std::string filename){
 void ChargingModel::Print(){
 	C_Debug("\tIn ChargingModel::Print()\n\n");
 	ModelDataFile.open(FileName,std::ofstream::app);
-	ModelDataFile << TotalTime << "\t" << ChargeOfGrain;
+	ModelDataFile << TotalTime << "\t" << ChargeOfGrain/echarge;
 	if( Sample->is_positive() )  ModelDataFile << "\tPos";
 	if( !Sample->is_positive() ) ModelDataFile << "\tNeg";
 	ModelDataFile << "\t" << Sample->get_potential();
@@ -99,6 +99,7 @@ void ChargingModel::Charge(double timestep){
 	assert(timestep > 0);// && timestep <= TimeStep );
 	double DSec = DeltaSec();
 	double DTherm = DeltaTherm();
+
 	double Potential;
 	if( Pdata->ElectronTemp <= 0 ){ // Avoid dividing by zero
 /*		if( UseModel [0] ){	// This model is supposed to provide a steady loss of charge
@@ -115,15 +116,15 @@ void ChargingModel::Charge(double timestep){
 						// Take away factor of temperature ratios for depth of well
 						// This is not explained further...
 			Potential = solveOML( 0.0, Sample->get_potential()) 
-					- Sample->get_temperature()/Pdata->ElectronTemp; 
+					- (Kb*Sample->get_temperature())/(Pdata->ElectronTemp*echarge); 
 		}else{ // If the grain is negative...
 			// Calculate the potential with the normal current balance including electron emission
 			Potential = solveOML( DSec + DTherm,Sample->get_potential());
 			if( Potential < 0.0 ){
 				// But! If it's now positive, our assumptions must be wrong!
 				// So now we assume it's positive and calculate the potential with a well.
-				Potential = solveOML(0.0,Sample->get_potential())-Sample->get_temperature()
-						/Pdata->ElectronTemp;
+				Potential = solveOML(0.0,Sample->get_potential())-(Kb*Sample->get_temperature())
+						/(Pdata->ElectronTemp*echarge);
 			}
 		}
 		ChargeOfGrain = -(4.0*PI*epsilon0*Sample->get_radius()*Potential*Kb*Pdata->ElectronTemp)/echarge;
@@ -136,9 +137,13 @@ void ChargingModel::Charge(double timestep){
 			ChargeOfGrain = (4.0*PI*epsilon0*Sample->get_radius()*Potential*Kb*Pdata->ElectronTemp)/echarge;
 		}
 	}else if( UseModel[2] ){	// In this case, maintain a potential well for entire temperature range
-		Potential = 2.5;
-//		Potential = solveOML( 0.0, Sample->get_potential()) 
-//			- Sample->get_temperature()/Pdata->ElectronTemp; 
+//		Potential = solveOML( -0.5, Sample->get_potential()) 
+//			- Sample->get_temperature()/Pdata->ElectronTemp;
+		Potential = solveOML2();//-Sample->get_temperature()/Pdata->ElectronTemp;
+//		Potential = solveOML( DSec + DTherm, Sample->get_potential());
+//		if( (DSec+ DTherm) >= 1.0 )
+			
+		ChargeOfGrain = -(4.0*PI*epsilon0*Sample->get_radius()*Potential*Kb*Pdata->ElectronTemp)/echarge;
 	}
 	// Have to calculate charge of grain here since it doesn't know about the Electron Temp and since potential is normalised.
 	// This information has to be passed to the grain.
@@ -153,6 +158,12 @@ void ChargingModel::Charge(){
 	Charge(TimeStep);
 }
 
+double ChargingModel::solveOML2(){
+	double TemperatureRatio = Pdata->ElectronTemp/Pdata->IonTemp;
+	double Ionization = 1.0;
+	double MassRatio = Mp/Me;
+	return -(TemperatureRatio/Ionization-LambertW(sqrt(MassRatio*TemperatureRatio)*exp(TemperatureRatio/Ionization)/Ionization));
+}
 double ChargingModel::solveOML(double a, double guess){
         C_Debug("\tIn ChargingModel::solveOML(double a, double guess)\n\n");
         if( a >= 1.0 ){
@@ -167,7 +178,7 @@ double ChargingModel::solveOML(double a, double guess){
 
 	double x1 = guess - ( (( 1-a)*exp(-guess) - sqrt(b*C)*(1+guess/b))/((a-1)*exp(-guess) - sqrt(C/b) ) );
 
-	while(fabs(guess-x1)>1e-3){
+	while(fabs(guess-x1)>1e-2){
 		guess = x1;
 		x1 = guess - ( ( (1-a)*exp(-guess) - sqrt(b*C)*(1+guess/b) ) /( (a-1)*exp(-guess) - sqrt(C/b) ) );
 	}
@@ -185,8 +196,10 @@ double ChargingModel::solvePosSchottkyOML(){
 	double Z = 1.0; 		// Ionization
 	double vi = sqrt(Kb*Pdata->IonTemp/(2*PI*Mp));
 	double ve = sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
+	double Arg = TemperatureRatio*exp(TemperatureRatio)*(vi+Richardson*pow(Sample->get_temperature(),2)
+			*exp(-Wf/(Kb*Sample->get_temperature()))/(Z*echarge*Pdata->IonDensity))/(ve*(1-DeltaSec()));
+	assert( Arg != INFINITY && Arg != -INFINITY );
 
-	double Arg = TemperatureRatio*exp(TemperatureRatio)*(vi+Richardson*pow(Sample->get_temperature(),2)*exp(-Wf/(Kb*Sample->get_temperature()))/(Z*echarge*Pdata->IonDensity))/(ve*(1-DeltaSec()));
 	double Coeff = TemperatureRatio;
 	return +Coeff - LambertW(Arg); 	// NOTE! Should be "return -Coeff + LambertW(Arg);" but we've reversed sign as equation
 					// as potential definition is reversed ( Positive potential for positive dust in this case)
@@ -220,8 +233,14 @@ double ChargingModel::solveNegSchottkyOML(double guess){
 double ChargingModel::DeltaTherm()const{
 	C_Debug("\tIn ChargingModel::DeltaTherm()\n\n");
 
-	return (Richardson*pow(Sample->get_temperature(),2)*exp(-(Sample->get_workfunction()*echarge)
-				/(Kb*Sample->get_temperature())))/(echarge*ElectronFlux(Sample->get_temperature()));
+	double dtherm(0.0);
+
+	if( ElectronFlux(Sample->get_temperature()) > 0.0 )
+		dtherm = (Richardson*pow(Sample->get_temperature(),2)*exp(-(Sample->get_workfunction()*echarge)
+                                /(Kb*Sample->get_temperature())))/(echarge*ElectronFlux(Sample->get_temperature()));
+
+	assert(dtherm >= 0.0 && dtherm == dtherm && dtherm != INFINITY );
+	return dtherm;
 }
 
 double ChargingModel::DeltaSec()const{

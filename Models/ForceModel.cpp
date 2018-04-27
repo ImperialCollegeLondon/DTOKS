@@ -152,8 +152,10 @@ void ForceModel::Force(double timestep){
 //	to lead to dust breakup. We need to find a way to increase the theoretical breakup speed.
 //	double B = (5*sqrt(2*PI)*Pdata->IonDensity*Mp*sqrt((Kb*Pdata->IonTemp)/Mp)*pow(Sample->get_radius(),2))
 //			/(2*Sample->get_mass()); 
-	double B = 1.0;
-	double RotationalSpeedUp = timestep*B*(2*(echarge*(Pdata->MagneticField.mag3())/Mp)-Sample->get_rotationalfreq());
+//	double B = 1.0;
+//	double RotationalSpeedUp = timestep*B*(2*(echarge*(Pdata->MagneticField.mag3())/Mp)-Sample->get_rotationalfreq());
+	double RotationalSpeedUp = echarge*Pdata->MagneticField.mag3()*Pdata->ElectronDensity*sqrt(Kb*Pdata->ElectronTemp/Me)/(Sample->get_density()*Sample->get_radius())*timestep;
+//	std::cout << "\nTe = " << Pdata->ElectronTemp; std::cin.get();
 
 	Sample->update_motion(ChangeInPosition,ChangeInVelocity,RotationalSpeedUp);
 

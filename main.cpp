@@ -43,7 +43,8 @@ int main(int argc, char* argv[]){
 	// ------------------- PARSE CONFIGURATION FILE ------------------- //
 	std::string MetaDataFilename = "Data/DTOKSU.txt";
 	std::string DataFilePrefix = "Data/DTOKSU";
-	std::string Config_Filename = "DTOKSU_Config_Magnum-PSI.cfg";
+//	std::string Config_Filename = "Config_Files/DTOKSU_Config_Magnum-PSI.cfg";
+	std::string Config_Filename = "Config_Files/DTOKSU_Config_MAST.cfg";
 	
 	std::vector <std::string> sources;
 	std::stringstream ss0;
@@ -261,11 +262,11 @@ int main(int argc, char* argv[]){
 	std::cout << "\n * DTOKS SUCCESSFULLY INITIALISED * \n";
 
 	std::cout << "\n * RUNNING DTOKS * \n";
-//	Breakup Break(MyDtoks2, Sample);
-//	Break.Run();
-	MyDtoks2->Run();
+	Breakup Break(MyDtoks2, Sample);
+	Break.Run();
+//	MyDtoks2->Run();
+//	MyDtoks2->CloseFiles();
 
-	MyDtoks2->CloseFiles();
 	std::cout << "\n\n * DTOKS COMPLETED SUCCESSFULLY * \n\n";
 	clock_t end = clock();
 	double elapsd_secs = double(end-begin)/CLOCKS_PER_SEC;	

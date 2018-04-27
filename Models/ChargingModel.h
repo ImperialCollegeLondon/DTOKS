@@ -14,6 +14,7 @@ class ChargingModel : public Model{
 		void Print();			// Write to output data file
 
 		double solveOML(double a, double guess);
+		double solveOML2();
 		double solveNegSchottkyOML(double guess);
 		double solvePosSchottkyOML();
 		double DeltaTherm()const;

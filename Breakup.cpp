@@ -20,7 +20,7 @@ int Breakup::Run(){
 	// Loop over the number of broken paths.
 	for( unsigned int j(0);	j < i; j ++){
 //		std::cout << "\nSimulating NEGATIVE Branch " << i << " : " << j << "\nStart Pos = " << Sample->get_position()
-//			<< "\nVelocity = " << Sample->get_velocity() << "\nMass = " << Sample->get_mass(); std::cin.get();
+//			<< "\nVelocity = " << Sample->get_velocity() << "\nMass = " << Sample->get_mass() << "\nTemperature = " << Sample->get_temperature();
 
 		// When breakup occurs and a path forks, track it. If it breaks up, track the subsequent particle
 		// Repeat until the end condition is no-longer breakup
@@ -35,24 +35,12 @@ int Breakup::Run(){
 
 			// Reset the end point data with the same position, no rotation and heading off in negative direction
 			// Rotation occurs in same direction as Ion Gyromotion
-//			double VelocityMag = (0.0001)*2*PI*(Sample->get_radius())*Sample->get_rotationalfreq();
 			double VelocityMag = 2*PI*(Sample->get_radius())*Sample->get_rotationalfreq();
-			double theta_dir =2*PI*rad(randnumber);
 
-			threevector Unit(1.0,0.0,0.0);
-			threevector VelocityUnitVec = (Unit^Sim->get_bfielddir());
-			double l = VelocityUnitVec.square();
-			threevector dvMinus;
-			if( l < 0.00001 ){
-				dvMinus.setx(0.0);
-				dvMinus.sety(VelocityMag*sin(theta_dir));
-				dvMinus.setz(VelocityMag*cos(theta_dir));
-			}else{
-				VelocityUnitVec = VelocityUnitVec*(1.0/sqrt(l));
-				threevector b = VelocityUnitVec^Sim->get_bfielddir();
-				dvMinus = VelocityMag*VelocityUnitVec*sin(theta_dir)+b*cos(theta_dir);
-			}
+			threevector Unit(2.0*rad(randnumber)-1.0,2.0*rad(randnumber)-1.0,2.0*rad(randnumber)-1.0);
+			threevector VelocityUnitVec = (Unit.getunit()^Sim->get_bfielddir()).getunit();
 
+			threevector dvMinus = VelocityMag*VelocityUnitVec;
 			Sample->update_motion(Zeros,dvMinus,-Sample->get_rotationalfreq());
 
 			// Record dust end conditions
@@ -67,7 +55,7 @@ int Breakup::Run(){
 			Sample->update_motion(Zeros,dvPlus,0.0);
 
 //			std::cout << "\nSimulating POSITIVE Branch " << i << " : " << j << "\nStart Pos = " << Sample->get_position()
-//				<< "\nVelocity = " << Sample->get_velocity() << "\nMass = " << Sample->get_mass(); std::cin.get();
+//				<< "\nVelocity = " << Sample->get_velocity() << "\nMass = " << Sample->get_mass() << "\nTemperature = " << Sample->get_temperature();
 			i = i + 1;
 			p = p + 1;
 			// Run the simulation again!
@@ -89,7 +77,7 @@ int Breakup::Run(){
 			Sim->OpenFiles("Data/breakup",p);
 			p = p + 1;
 //			std::cout << "\nSimulating Branch " << i  << " : " << j << "\nStart Pos = " << GDvector[j].DustPosition
-//				<< "\nVelocity = " << Sample->get_velocity() << "\nMass = " << Sample->get_mass(); std::cin.get();
+//				<< "\nVelocity = " << Sample->get_velocity() << "\nMass = " << Sample->get_mass() << "\nTemperature = " << Sample->get_temperature(); std::cin.get();
 
 		}
 //		std::cout << "\n***** END OF : DUST DIDN'T BREAKUP *****\n!";

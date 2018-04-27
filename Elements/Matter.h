@@ -1,7 +1,8 @@
 #ifndef __MATTER_H_INCLUDED__   // if Matter.h hasn't been included yet...
 #define __MATTER_H_INCLUDED__
 
-#define MinMass 10e-25
+//#define MinMass 10e-25
+#define MinMass 1e-19
 
 #include "GrainStructs.h"// Contains the structure element for storing properties of material
 #include "Constants.h"	// Contains general physical constants
