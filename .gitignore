@@ -17,6 +17,8 @@ main
 *.dat
 *.o
 *.png
+*.m
+*.sh
 
 DTOKSU_Config_MAST.cfg
 DTOKSU_Config_Magnum-PSI.cfg

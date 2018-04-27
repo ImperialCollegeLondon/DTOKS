@@ -2,7 +2,6 @@
 //#define MATTER_DEBUG
 //#define MATTER_DEEP_DEBUG
 
-
 #include "Matter.h"
 // Default values describe Tungsten
 struct GrainData MatterDefaults = { 
@@ -307,9 +306,11 @@ void Matter::update(){
 	}
 
 	double CriticalRotation = 0.56*sqrt(8*Ec.SurfaceTension/(St.Density*pow(St.Radius,3)));
-	if( St.RotationalFrequency > (0.56*sqrt(8*Ec.SurfaceTension/(St.Density*pow(St.Radius,3))))  && St.Liquid ){
+
+	M2_Debug("\nCriticalRotation = " << CriticalRotation << "\n");
+	if( St.RotationalFrequency > CriticalRotation && St.Liquid ){
 		std::cout << "\nRotational Breakup has occured!";
-		M2_Debug("\nCriticalRotation = " << CriticalRotation << "\n");
+
 		if( St.Mass/2 < MinMass*10 ){
 			St.Gas = true;
 			std::cout << "\nMass too small to support breakup, vaporisation assumed...";

@@ -4,7 +4,6 @@
 
 #include "HeatingModel.h"
 #include "Constants.h"
-#include "Checks.h"
 #include "Functions.h"
 
 HeatingModel::HeatingModel():Model(){
