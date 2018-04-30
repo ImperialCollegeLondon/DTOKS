@@ -226,17 +226,17 @@ int PlasmaGrid::readdata(std::string filename){
 		std::cout << "\nWarning! Filename: " << filename << " is unused parameter in function PlasmaGrid::readdata(std::string filename)";
 		std::ifstream scalars,threevectors,gridflagfile;
 		if(device=='m'){
-			scalars.open("Models/PlasmaData/MAST/b2processed.dat");
-			threevectors.open("Models/PlasmaData/MAST/b2processed2.dat");
-			gridflagfile.open("Models/PlasmaData/MAST/locate.dat");
+			scalars.open("PlasmaData/MAST/b2processed.dat");
+			threevectors.open("PlasmaData/MAST/b2processed2.dat");
+			gridflagfile.open("PlasmaData/MAST/locate.dat");
 		}else if(device=='i'){
-			scalars.open("Models/PlasmaData/regulardataITER/b2processed.dat");
-			threevectors.open("Models/PlasmaData/regulardataITER/b2processed2.dat");
-			gridflagfile.open("Models/PlasmaData/regulardataITER/locate.dat");
+			scalars.open("PlasmaData/ITER/b2processed.dat");
+			threevectors.open("PlasmaData/ITER/b2processed2.dat");
+			gridflagfile.open("PlasmaData/ITER/locate.dat");
 		}else if(device=='d'){
-			scalars.open("Models/PlasmaData/MASTDexp/b2processed.dat");
-			threevectors.open("Models/PlasmaData/MASTDexp/b2processed2.dat");
-			gridflagfile.open("Models/PlasmaData/MASTDexp/locate.dat");
+			scalars.open("PlasmaData/MASTDexp/b2processed.dat");
+			threevectors.open("PlasmaData/MASTDexp/b2processed2.dat");
+			gridflagfile.open("PlasmaData/MASTDexp/locate.dat");
 		}
 		assert( scalars.is_open() );
 		assert( threevectors.is_open() );
