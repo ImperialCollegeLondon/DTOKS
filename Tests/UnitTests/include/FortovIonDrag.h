@@ -16,8 +16,8 @@ void FortovIonDragTest(){
 
 	for( double u(0.01); u < 100; u *= 1.1){	// Normalised ion flow velocity
 		for( double Te(10000); Te < 10001; Te *= 1.1 ){	// Electron temperature, K
-			for( double Ti(10000); Ti < 10001; Ti *= 1.1 ){	// Ion temperature, K
-				for( double potential(2.5); potential < 2.6; potential += 0.1 ){	// Normalised dust potential
+			for( double Ti(5000); Ti < 50001; Ti *= 1.1 ){	// Ion temperature, K
+				for( double potential(0.1); potential < 5.1; potential += 0.1 ){	// Normalised dust potential
 
 					double Fid(0);
 					if(u<2.0){ // Relative speed less than twice mach number, use Fortov et al theory with screening length 'Lambda'.

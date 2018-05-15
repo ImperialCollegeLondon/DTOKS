@@ -10,50 +10,7 @@ void DTOKSchargingTest(){
 	clock_t begin = clock();
 
 	double converteVtoK(11600);
-	// TEST TO COMPARE TWO DIFFERENT WAYS OF APPROACHING THE DTOKS OML PROBLEM
-/*
-	double Potential = 2;
-	double Potential2 = 2;
 
-	for(double Td(300); Td < 5e3; Td ++){ // Loop over temperatures
-		double Sec = sec(Td/converteVtoK,'w'); 
-		for( double ne(1e18); ne < 1e20; ne *= 1.1 ){
-			for( double Te(1); Te < 100; Te *= 1.1 ){
-
-				double gammae = ne*exp(Potential)*sqrt(echarge*Te/(2*PI*Me));
-				for( double Ti(1); Ti < 100; Ti *= 1.1 ){
-					double Therm = Richardson*pow(Td,2)*exp(-(4.55*echarge)/(Kb*Td))/(echarge*gammae);
-
-					// BEGINING STRUCTURE ONE : NEW CODE
-					if( (Sec + Therm) < 1.0 ){ // DTOKSsolveOML only defined for deltatot < 1.0
-						Potential = DTOKSsolveOML( Sec + Therm, Ti, Te, Potential); 
-					}else{ // If the grain is in fact positive ...
-						Potential = DTOKSsolveOML( Sec + Therm, Ti, Te, Potential);
-						if( Potential < 0.0 ){
-							Potential = DTOKSsolveOML(0.0, Ti, Te, Potential)-Kb*Td/(echarge*Te);
-						}
-					}
-					// BEGINNING STRUCTURE TWO : OLD CODE
-					if( (Sec + Therm) >= 1.0 ){ 
-						Potential2 = DTOKSsolveOML( 0.0, Ti, Te, Potential2) - Td*Kb/(echarge*Te);
-					}else{ // If the grain is negative...
-						Potential2 = DTOKSsolveOML( Sec + Therm, Ti, Te, Potential2);
-						if( Potential2 < 0.0 ){ // But if it's positive
-							// But! If it's now positive, our assumptions must be wrong!
-							// So now we assume it's positive and calculate the potential with a well.
-							Potential2 = DTOKSsolveOML(0.0, Ti, Te, Potential2)-Td*Kb/(echarge*Te);
-						}
-					}
-					// Proof that they're identical... They are mostly but not always
-					if( Potential != Potential2 ){
-						std::cout << "\n" << Td << "\t" << ne << "\t" << Ti/Te << "\t" << Potential << "\t" << Potential2;
-					}
-				}
-			}
-		}
-	}
-
-*/
 	// TEST TO CALCULATE THE DTOKS FLOATING POTENTIAL FOR CONSTANT ELECTRON DENSITY AND ELECTRON TEMPERATURE
 
 	double Te = 1; 		// Electron Temp in ev DO NOT CHANGE THIS VALUE. CHECK DTOKSsolveOML.h FIRST

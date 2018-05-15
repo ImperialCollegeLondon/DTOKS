@@ -8,8 +8,9 @@ zlabel('Height (m)');
 set(get(gca,'zlabel'),'rotation',0)
 %view([0.3 -0.6 0.1]);
 view([-0.5 -0.5 0.2]);
-dirname='Data/BreakupDataForPaper/new/ITER_10um_Bdir_W_4/';
-filenum=247;
+%dirname='Data/BreakupDataForPaper/new/ITER_10um_Bdir_W_4/';
+dirname='/home/ls5115/Software/DTOKS-U/Data/';
+filenum=33;
 ForceData = readtable(strcat(dirname,'MAST_fm_0.txt'));
 HeatData = readtable(strcat(dirname,'MAST_hm_0.txt'));
 
@@ -81,7 +82,7 @@ for i = 1:filenum
 	end
 end
 grid on
-title('ITER','fontsize',60);
+title('JET','fontsize',60);
 xlabel('Major Radius (m)','fontsize',30);
 ylabel('Toroidal Angle (rad)','fontsize',30);
 %ylabel('Z (m)');

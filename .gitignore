@@ -7,10 +7,15 @@ Tests/TemperatureVariationOfConstants
 Backups/
 Data/
 build/
+CMakeFiles/
 
 main
+Test
 *.txt
 *.dat
 *.o
 *.png
 *.sh
+
+cmake_install.cmake
+Makefile

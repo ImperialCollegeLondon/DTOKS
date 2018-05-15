@@ -5,6 +5,7 @@ project(DTOKSUproject)
 enable_language(CXX)
 
 set (CMAKE_CXX_STANDARD 14)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 
 set (NETCDF_CXX "YES")
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/build) 
@@ -20,6 +21,9 @@ find_package (NetCDF REQUIRED)
 
 include_directories(${PROJECT_SOURCE_DIR}/include ${HDF5_INCLUDE_DIRS} ${NETCDF_INCLUDES} ${PROJECT_SOURCE_DIR}/Dependencies/config4cpp/include)
 
+add_subdirectory(Tests)
+
+add_library(DTOKSCore ${PROJECT_SOURCE_DIR}/src/Functions.cpp ${PROJECT_SOURCE_DIR}/src/Constants.cpp ${PROJECT_SOURCE_DIR}/src/threevector.cpp)
 
 target_link_libraries(main ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES} ${HDF5_CXX_LIBRARIES} ${NETCDF_LIBRARIES_CXX} ${PROJECT_SOURCE_DIR}/Dependencies/config4cpp/lib/libconfig4cpp.a)
 
