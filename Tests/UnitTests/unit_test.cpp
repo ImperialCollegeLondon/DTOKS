@@ -2,11 +2,13 @@
 #include <vector>
 #include <string>
 
+// FUNCTIONS TESTS
 #include "BackscatterTest.h"
-
-// CHARGING TESTS
 #include "DeltaSecTest.h"
 #include "DeltaThermTest.h"
+#include "MaxwellianTest.h"
+
+// CHARGING TESTS
 #include "ChargingTimescales.h"
 #include "DTOKSchargingTest.h"
 #include "DTOKSwellchargingTest.h"
@@ -56,14 +58,13 @@ int main(int argc, char* argv[]){
 		}
 	}
 
+	// ***** 	FUNCTIONS TESTS		***** //
 	// Backscatter Unit Test:
 	// This test prints the values of the fraction of backscattered energy and the fraction of back scattered particles
 	// as calculated by the backscatter function from DTOKS. This can be readily compared to the results published in
 	// the DTOKS papers
 	if( Test_Mode == "Backscatter" )
 		BackscatterTest();
-
-	// ***** 	CHARGING TESTS		***** //
 
 	// Delta Sec Unit Test:
 	// This test prints the value of the empirical function calculating the yield due to secondary electron emission.
@@ -83,6 +84,13 @@ int main(int argc, char* argv[]){
         else if( Test_Mode == "DeltaTherm" )
 		DeltaThermTest();
 
+	// Maxwellian Unit Test:
+	// This test prints the value of the Maxwellian function for different values of temperature and energy.
+	// The results are plotted in 3D, with the expected maxwellian distribution recovered for a fixed temperature or Energy
+        else if( Test_Mode == "Maxwellian" )
+		MaxwellianTest();
+
+	// ***** 	CHARGING TESTS		***** //
 	// Charging Timescale Test:
 	// This test is used to verify that the timestep as calculated by Krasheninnikovs is always smaller
 	// than the electron plasma frequency. In practice, this is found to not be perfectly true, there exist
