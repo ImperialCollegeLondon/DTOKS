@@ -1,6 +1,6 @@
 #include "HeatingModel.h"
 
-int ConstantElectronPlasmaHeatingTest(char Element){
+int ConstantPlasmaHeatingNeutralRecombTest(char Element){
 	clock_t begin = clock();
 	// ********************************************************** //
 	// FIRST, define program default behaviour
@@ -17,21 +17,21 @@ int ConstantElectronPlasmaHeatingTest(char Element){
 	std::string Name="constant";	// Describes heating model
 
  	// Parameters describing the heating model
-	double Power=1e-9;		// Kilo-Watts power in addition to heating model powers
-	double Size=5e-8; 		// m
+	double Power=1e-8;		// Kilo-Watts power in addition to heating model powers
+	double Size=1e-6; 		// m
 	double Temp=280;		// K
-	double TimeStep=1e-12;		// s
+	double TimeStep=1e-9;		// s
 	Matter *Sample;			// Define the sample matter type
 
 	// Set to true all heating models that are wanted
-	bool RadiativeCooling = true;
+	bool RadiativeCooling = false;
 	bool EvaporativeCooling = false;
 	bool NewtonCooling = false;		// This model is equivalent to Electron and Ion heat flux terms
 	// Plasma heating terms
-	bool IonHeatFlux = false;
-	bool ElectronHeatFlux = true;
 	bool NeutralHeatFlux = true;
-	bool NeutralRecomb = false;
+	bool ElectronHeatFlux = true;
+	bool IonHeatFlux = true;
+	bool NeutralRecomb = true;
 	// Electron Emission terms
 	bool TEE = false;
 	bool SEE = false;
@@ -54,13 +54,13 @@ int ConstantElectronPlasmaHeatingTest(char Element){
 
 	if	(Element == 'W'){ 
 		Sample = new Tungsten(Size,Temp,ConstModels);
-		TimeStep=1e-11;
+		TimeStep=1e-12;
 	}else if (Element == 'B'){ 
 		Sample = new Beryllium(Size,Temp,ConstModels);
-		TimeStep=1e-10;
+		TimeStep=1e-12;
 	}else if (Element == 'F'){
 		Sample = new Iron(Size,Temp,ConstModels);
-		TimeStep=1e-11;
+		TimeStep=1e-13;
 	}else if (Element == 'G'){
 		Sample = new Graphite(Size,Temp,ConstModels);
 		TimeStep=1e-11;
@@ -70,14 +70,13 @@ int ConstantElectronPlasmaHeatingTest(char Element){
 	}
 	threevector xinit(1.15,0.0,-1.99);// default injection right hand side
 	threevector vinit(0.0,0.0,0.0);
-	Sample->update_motion(xinit,vinit);
+	Sample->update_motion(xinit,vinit,0.0);
+	double mass = Sample->get_mass();
 	Sample->set_potential(Potential);
 	HeatingModel MyModel("out_ConstantHeatingTest.txt",1.0,Models,Sample,Pdata);
-	double Mass = Sample->get_mass();
 	MyModel.set_PowerIncident(Power);
 	MyModel.UpdateTimeStep();
 	MyModel.Vapourise();
-
 	double ModelTime = MyModel.get_totaltime();
 	
 
@@ -85,69 +84,62 @@ int ConstantElectronPlasmaHeatingTest(char Element){
 
 	double ElectronFlux = Pdata->ElectronDensity*exp(-Potential)*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
 	double NeutralFlux = Pdata->NeutralDensity*sqrt(Kb*Pdata->NeutralTemp/(2*PI*Mp));
-	
+	double IonFlux = ElectronFlux;
+
 	double ElectronFluxPower = Sample->get_surfacearea()*2*ElectronFlux*Pdata->ElectronTemp*Kb/1000; // Convert from Joules to KJ
 	double NeutralFluxPower = Sample->get_surfacearea()*2*NeutralFlux*Pdata->NeutralTemp*Kb/1000; // Convert from Joules to KJ
+	double IonFluxPower = (Sample->get_surfacearea()*IonFlux*Pdata->IonTemp*Kb/1000) // Convert from Joules to KJ
+	*(2+2*Potential*(Pdata->ElectronTemp/Pdata->IonTemp)+pow(Potential*(Pdata->ElectronTemp/Pdata->IonTemp),2))
+	/(1+Potential*(Pdata->ElectronTemp/Pdata->IonTemp));
+	double NeutralRecombPower = Sample->get_surfacearea()*14.7*echarge*IonFlux/1000; // Convert from J to kJ
 
+//	std::cout << "\nElectronFluxPower = " << ElectronFluxPower << "\nNeutralFluxPower = " << NeutralFluxPower << "\nIonFluxPower = " << IonFluxPower << "\nNeutralRecombPower = " << NeutralRecombPower;
 
+	double a = Power+ElectronFluxPower+NeutralFluxPower+IonFluxPower+NeutralRecombPower;
+	double b = Sample->get_surfacearea()*2*Kb*NeutralFlux/1000; // Convert from J to kJ
 
-	double a = Power+ElectronFluxPower+NeutralFluxPower;
-
-
-
-	double b = Sample->get_emissivity()*Sample->get_surfacearea()*Sigma/1000;
-	std::cout << "\nSample->get_surfacearea() : " << Sample->get_surfacearea() << "\nb : " << b;
 	double ti(0), tf(0), t1(0), t2(0), t3(0), t4(0);
-	double FinalTemp = pow(a/b,0.25)-0.000000001;
+	double FinalTemp = a/b;
 //	std::cout << "\nFinalTemp = " << FinalTemp; std::cin.get();
 	if( FinalTemp < Sample->get_meltingtemp() ){ 
-		tf=(atan(FinalTemp*pow(b/a,0.25))+atanh(FinalTemp*pow(b/a,0.25)))
-					/(2*pow(pow(a,3)*b,0.25));
-		ti=(atan(Temp*pow(b/a,0.25))+atanh(Temp*pow(b/a,0.25)))
-					/(2*pow(pow(a,3)*b,0.25));
-		t1 = Mass*Sample->get_heatcapacity()*(tf-ti);
+		tf=-log(a-b*FinalTemp)/b;
+		ti=-log(a-b*Temp)/b;
+		t1 = mass*Sample->get_heatcapacity()*(tf-ti);
 	}else{
 		if( FinalTemp > Sample->get_boilingtemp() )
-			FinalTemp = Sample->get_boilingtemp();
-		tf=(atan(Sample->get_meltingtemp()*pow(b/a,0.25))+atanh(Sample->get_meltingtemp()*pow(b/a,0.25)))
-					/(2*pow(pow(a,3)*b,0.25));
-		ti=(atan(Temp*pow(b/a,0.25))+atanh(Temp*pow(b/a,0.25)))
-					/(2*pow(pow(a,3)*b,0.25));
-		t1 = Mass*Sample->get_heatcapacity()*(tf-ti);
-		t2 = Sample->get_latentfusion()*Mass/(a-b*Sample->get_meltingtemp()); 
-		tf=(atan(FinalTemp*pow(b/a,0.25))+atanh(FinalTemp*pow(b/a,0.25)))
-					/(2*pow(pow(a,3)*b,0.25));
-		ti=(atan(Sample->get_meltingtemp()*pow(b/a,0.25))+atanh(Sample->get_meltingtemp()*pow(b/a,0.25)))
-					/(2*pow(pow(a,3)*b,0.25));
-//		std::cout << "\ntf is " << tf;
-		t3 = Mass*Sample->get_heatcapacity()*(tf-ti);
+			FinalTemp = Sample->get_boilingtemp()-0.000000001;
+		tf=-log(a-b*Sample->get_meltingtemp())/b;
+		ti=-log(a-b*Temp)/b;
+
+		t1 = mass*Sample->get_heatcapacity()*(tf-ti);
+		t2 = Sample->get_latentfusion()*mass/(a-b*Sample->get_meltingtemp()); 
+		tf=-log(a-b*FinalTemp)/b;
+		ti=-log(a-b*Sample->get_meltingtemp())/b;
+
+		t3 = mass*Sample->get_heatcapacity()*(tf-ti);
 		if( Sample->get_temperature() >= Sample->get_boilingtemp() ){
-			t4 = Sample->get_latentvapour()*Mass/(a-b*Sample->get_boilingtemp());
+			t4 = Sample->get_latentvapour()*mass/(a-b*Sample->get_boilingtemp());
 		}
 
 	}
-
 
 	if( Element == 'G' ){
 		if( FinalTemp > Sample->get_boilingtemp() )
 		FinalTemp = Sample->get_boilingtemp();
 	
 		// Only one phase transition
-//double p1 = atan(FinalTemp*pow(b/a,0.25));
-//double p2 = atanh(FinalTemp*pow(b/a,0.25));
-//double p3 = 2*pow(pow(a,3)*b,0.25);
-                tf = (atan(FinalTemp*pow(b/a,0.25)) + atanh(FinalTemp*pow(b/a,0.25)))/(2*pow(pow(a,3)*b,0.25));
-		ti=(atan(Temp*pow(b/a,0.25))+atanh(Temp*pow(b/a,0.25)))/(2*pow(pow(a,3)*b,0.25));
-		t1 = Mass*Sample->get_heatcapacity()*(tf-ti);
+		tf=-log(a-b*FinalTemp)/b;
+		ti=-log(a-b*Temp)/b;
+		t1 = mass*Sample->get_heatcapacity()*(tf-ti);
 
 		if( Sample->get_temperature() >= Sample->get_boilingtemp() ){
-                        t4 = Sample->get_latentvapour()*Mass/(a-b*Sample->get_boilingtemp());
+                        t4 = Sample->get_latentvapour()*mass/(a-b*Sample->get_boilingtemp());
                 }
 		t2 = 0;
 		t3 = 0;
-	}
+// 		std::cout << "\nt1 = " << t1 << "\nt2 = " << t2 << "\nt3 = " << t3 << "\nt4 = " << t4; 
 
-	std::cout << "\nt1 = " << t1 << "\nt2 = " << t2 << "\nt3 = " << t3 << "\nt4 = " << t4; 
+	}
 
 	if( t1 != t1 && t3 != t3 ){
 		std::cout << "\nt1 AND t3 are nan!";

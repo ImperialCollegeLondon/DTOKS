@@ -23,7 +23,8 @@ int ConstantLorentzForceTest(char Element){
 	bool Gravity = false;		// IS ON!
 	bool Centrifugal = false;	// IS OFF!
 	bool Lorentz = true;		// IS ON!
-	bool IonDrag = false;		// IS OFF!
+	bool DTOKSIonDrag = false;	// IS OFF!
+	bool HybridIonDrag = false;	// IS OFF!
 	bool NeutralDrag = false;	// IS OFF!
 
 	PlasmaData *Pdata = new PlasmaData();
@@ -33,7 +34,7 @@ int ConstantLorentzForceTest(char Element){
 	threevector Bfield(0.0, 1.0, 0.0);
 	Pdata->MagneticField = Bfield;
 
-	std::array<bool,5> ForceModels  = {Gravity,Centrifugal,Lorentz,IonDrag,NeutralDrag};
+	std::array<bool,6> ForceModels  = {Gravity,Centrifugal,Lorentz,DTOKSIonDrag,HybridIonDrag,NeutralDrag};
 
 	// Models and ConstModels are placed in an array in this order:
 	std::array<char, 4> ConstModels =
@@ -57,7 +58,7 @@ int ConstantLorentzForceTest(char Element){
 	threevector zeros(0.0,0.0,0.0);
 	Sample->update_motion(zeros,vinit,0.0);
 	// START NUMERICAL TESTING
-	ForceModel MyModel("out_ConstantForcingTest.txt",1.0,ForceModels,Sample,Pdata);
+	ForceModel MyModel("Tests/IntegrationTests/Data/out_ConstantLorentzTest.txt",1.0,ForceModels,Sample,Pdata);
 
 	double Mass = Sample->get_mass();
 	MyModel.UpdateTimeStep();
@@ -75,8 +76,8 @@ int ConstantLorentzForceTest(char Element){
 	threevector Vparr(Bfield.getx()*ModelVelocity.getx(),Bfield.gety()*ModelVelocity.gety(),Bfield.getz()*ModelVelocity.getz());
 	double ConvertKelvsToeV(8.621738e-5);
 	// NOTE: this is the charge to mass ratio for a negative grain only...
-	double qtom = -3.0*epsilon0*Pdata->ElectronTemp*ConvertKelvsToeV*Sample->get_potential()
-			/(pow(Sample->get_radius(),2)*Sample->get_density());
+	double qtom = 4.0*PI*epsilon0*Sample->get_radius()*Kb*Pdata->ElectronTemp*Sample->get_potential()/(echarge*Mass);
+		      
 	double AngularVel = qtom*Bfield.mag3(); // Direction of this as vector is parallel to B
 
 	threevector vE = (Eperp^Bfield)*(1/(pow(Bfield.mag3(),2)));
@@ -114,10 +115,16 @@ int ConstantLorentzForceTest(char Element){
 		
 	std::cout << "\n\n*****\n\nIntegrationTest 2 completed in " << elapsd_secs << "s\n";
 	std::cout << "\n\n*****\nModelVel = " << ModelVelocity << "m s^-1 : AnalyticVel = " << AnalyticVelocity << "m s^-1";
-	std::cout << "\nPercentage Deviation: Mag = " << fabs(100-100*ModelVelocity.mag3()/AnalyticVelocity.mag3()) <<"%\n*****\n\n";
-	std::cout << "\nPercentage Deviation: Xdir = " << fabs(100-100*ModelVelocity.getx()/AnalyticVelocity.getx()) <<"%\n*****\n\n";
-	std::cout << "\nPercentage Deviation: Ydir = " << fabs(100-100*ModelVelocity.gety()/AnalyticVelocity.gety()) <<"%\n*****\n\n";
-	std::cout << "\nPercentage Deviation: Zdir = " << fabs(100-100*ModelVelocity.getz()/AnalyticVelocity.getz()) <<"%\n*****\n\n";
+
+	if( AnalyticVelocity.mag3() != 0.0 )
+		std::cout << "\nPercentage Deviation: Mag = " << 100*fabs(1.0-ModelVelocity.mag3()/AnalyticVelocity.mag3()) <<"%\n*****\n\n";
+	if( AnalyticVelocity.getx() != 0.0 )
+		std::cout << "\nPercentage Deviation: Xdir = " << 100*fabs(1.0-ModelVelocity.getx()/AnalyticVelocity.getx()) <<"%\n*****\n\n";
+	if( AnalyticVelocity.gety() != 0.0 )
+	std::cout << "\nPercentage Deviation: Ydir = " << 100*fabs(1.0-ModelVelocity.gety()/AnalyticVelocity.gety()) <<"%\n*****\n\n";
+	if( AnalyticVelocity.getz() != 0.0 )
+		std::cout << "\nPercentage Deviation: Zdir = " << 100*fabs(1.0-ModelVelocity.getz()/AnalyticVelocity.getz()) <<"%\n*****\n\n";
+
 	delete Sample;
 
 	return ReturnVal;

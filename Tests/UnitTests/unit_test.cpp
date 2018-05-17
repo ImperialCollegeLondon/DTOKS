@@ -41,11 +41,11 @@ template<typename T> int InputFunction(int &argc, char* argv[], int &i, std::str
 		std::cerr << "\noption requires argument." << std::endl;
 		return 1;
 	}
-
 }
 
 int main(int argc, char* argv[]){
 
+	// Determine user input for testing mode
 	std::string Test_Mode("");
 	std::vector <std::string> sources;
 	std::stringstream ss0;

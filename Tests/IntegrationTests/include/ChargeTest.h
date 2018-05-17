@@ -50,7 +50,7 @@ int ChargeTest(char Element){
 	threevector Bfield(0.0, 0.0, 0.0);
 	Pdata->MagneticField = Bfield;
 
-	std::array<bool,1> ChargeModels  = {true};
+	std::array<bool,3> ChargeModels  = {true,false,false};
 
 	// Models and ConstModels are placed in an array in this order:
 	std::array<char, 4> ConstModels =
@@ -69,8 +69,9 @@ int ChargeTest(char Element){
 		return -1;
 	}
 	Sample->set_potential(Potential);
-	ChargingModel MyModel("out_ConstantChargingTest.txt",1.0,ChargeModels,Sample,Pdata);
+	ChargingModel MyModel("Tests/IntegrationTests/Data/out_ConstantChargingTest.txt",1.0,ChargeModels,Sample,Pdata);
 
+	MyModel.UpdateTimeStep();
 	MyModel.Charge();
 
 	double AnalyticPotential(0);
