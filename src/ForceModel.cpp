@@ -198,8 +198,11 @@ threevector ForceModel::Gravity()const{
 
 	double Theta = Sample->get_position().gety();
 	// Setup for Magnum-PSI
-	gravity.setx(-Pdata->Gravity.mag3()*cos(Theta));
-	gravity.sety(Pdata->Gravity.mag3()*sin(Theta));
+	gravity = Pdata->Gravity;
+	if( get_machine() == 'p' ){ // For Magnum PSI, Gravity is not in -z direction but is radial & Azimuthal
+		gravity.setx(-Pdata->Gravity.mag3()*cos(Theta));
+		gravity.sety(Pdata->Gravity.mag3()*sin(Theta));
+	}
 	return gravity;
 }
 
