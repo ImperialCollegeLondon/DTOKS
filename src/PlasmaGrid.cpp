@@ -24,6 +24,15 @@ PlasmaGrid::PlasmaGrid(std::string filename, char element, char machine, double 
 		gridxmax = 8.25;
 		gridzmax = 4.80;
 		std::cout << "\n\n\tCalculation for ITER" << std::endl;
+	}else if(device=='j'){
+		gridx = 251;
+		gridz = 401;
+		gridtheta=0;
+		gridxmin = 1.5;
+		gridzmin = -2.0;
+		gridxmax = 4.0;
+		gridzmax = 2.0;
+		std::cout << "\n\n\tCalculation for JET" << std::endl;
 	}else if(device=='d'){
 		gridx = 180;
 		gridz = 400;
@@ -114,7 +123,7 @@ void PlasmaGrid::readthreevectors(std::ifstream &input){
 	for(k=0;k<=gridz-1;k++){
 		for(i=0;i<=gridx-1;i++){
 			input >> dummy1 >> dummy2 >> bx[i][k] >> bz[i][k] >> by[i][k];
-			bz[i][k] = -bz[i][k];
+			if( device != 'j' )			 { bz[i][k] = -bz[i][k]; }
 			if( bx[i][k] != 0 && bx[i][k] < 1e-100 ) {	bx[i][k] = 0.0; } 
 			if( by[i][k] != 0 && by[i][k] < 1e-100 ) {	by[i][k] = 0.0; } 
 			if( bz[i][k] != 0 && bz[i][k] < 1e-100 ) { 	bz[i][k] = 0.0; }
@@ -233,6 +242,10 @@ int PlasmaGrid::readdata(std::string filename){
 			scalars.open("PlasmaData/ITER/b2processed.dat");
 			threevectors.open("PlasmaData/ITER/b2processed2.dat");
 			gridflagfile.open("PlasmaData/ITER/locate.dat");
+		}else if(device=='j'){
+			scalars.open("PlasmaData/JET/InterpolateOutputWorkspace.txt");
+			threevectors.open("PlasmaData/JET/FullPythonInterpolateOutput.txt");
+			gridflagfile.open("PlasmaData/JET/locate.dat");
 		}else if(device=='d'){
 			scalars.open("PlasmaData/MASTDexp/b2processed.dat");
 			threevectors.open("PlasmaData/MASTDexp/b2processed2.dat");
