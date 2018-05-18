@@ -6,14 +6,10 @@
 #include "ChargeTest.h"
 
 // FORCE TESTS
-#include "ConstantGravityTest.h"
-#include "ConstantEFieldGravityTest.h"
-#include "ConstantLorentzForceTest.h"
+#include "ForceTest.h"
 
 // HEATING TESTS
-#include "ConstantHeatingTest.h"
-#include "ConstantHeatEmissivTest.h"
-#include "ConstantElectronPlasmaHeatingTest.h"
+#include "HeatTest.h"
 #include "ConstantPlasmaHeatingTest.h"
 #include "ConstantPlasmaHeatingNeutralRecombTest.h"
 #include "CompareConstEmissivTest.h"
@@ -26,7 +22,9 @@ static void show_usage(std::string name){
 	<< "\t\tDTOKSOML                   : Test the charging model is producing the expected result\n"
 	<< "\t\tGravity                    : Test constant gravitational force is reproduced by analytical model\n"
 	<< "\t\tEFieldGravity              : Test constant Lorentz force (Electric field with no magnetic field) and gravity\n"
-	<< "\t\tLorentz                    : Test full Lorentz force (Electric field and magnetic field) and gravity\n"
+	<< "\t\tBField                     : Test constant Magnetic force (no Electric field with magnetic field) \n"
+	<< "\t\tLorentz                    : Test full Lorentz force; Electric field and magnetic field\n"
+	<< "\t\tLorentzGravity             : Test full Lorentz force (Electric field and magnetic field) and gravity\n"
 	<< "\t\tConstantHeating            : Test constant heating is comparable to analytic result\n"
 	<< "\t\tThermalRadiation           : Test constant heating with thermal radiation is comparable to analytic result\n"
 	<< "\t\tElectronHeatingRadiation   : Test constant heating with electron heating and thermal radiation\n"
@@ -62,89 +60,85 @@ int main(int argc, char* argv[]){
 		}
 	}
 
-	char Element[4]={'W','B','F','G'}; // Element, (W) : Tungsten, (G) : Graphite, (B) : Beryllium or (F) : Iron.
+	int NumOfElements = 4;
+	char Element[NumOfElements]={'W','B','F','G'}; // Element, (W) : Tungsten, (G) : Graphite, (B) : Beryllium or (F) : Iron
 	std::cout.precision(10);
 	int out(0);
-	for(int i(0); i < 4; i ++){
+	for(int i(0); i < NumOfElements; i ++){
 		std::cout << "\nElement["<<i<<"] is = ";
 		std::cout << Element[i];
 		// Charging Test
+		std::cout << "\nRunning " << Test_Mode << " Test. Testing Element[" << i << "]=" << Element[i] << "...\n";
 		if( Test_Mode == "DTOKSOML" ){
 			// Test bout 1,
 			// Integration test one for all materials
 			// Test if the charging model is producing the expected result
 			// This test is very rudimentary and just checks that the charging model matches DTOKS's original format
-			std::cout << "\nRunning DTOKSOML Test " << i << "...\n";
 			out = ChargeTest(Element[i]);	
-			std::cout << "\nFinished Running Test " << i << "!\n";
 		}else if( Test_Mode == "Gravity" ){
 			// Test bout 2,
 			// Integration test two for all materials
 			// Test if constant gravitational force is reproduced by analytical model
 			// Produce expected results over 100 or so steps
-                        std::cout << "\nRunning Gravity Test " << i << "...\n";
-			out = ConstantGravityTest(Element[i]);
-                        std::cout << "\nFinished Running Test " << i << "!\n";
-		}
-		else if( Test_Mode == "EFieldGravity" ){
+//			out = ConstantGravityTest(Element[i]);
+			out = ForceTest(Element[i],Test_Mode);
+		}else if( Test_Mode == "EFieldGravity" ){
 			// Test bout 3,
 			// Integration test three for all materials
 			// Test if constant Lorentz force (Electric field with no magnetic field) and gravity
 			// Produce expected results over 100 or so steps
-                        std::cout << "\nRunning EFieldGravity Test " << i << "...\n";
-			out = ConstantEFieldGravityTest(Element[i]);
-                        std::cout << "\nFinished Running Test " << i << "!\n";
+			out = ForceTest(Element[i],Test_Mode);
+		}else if( Test_Mode == "BField" ){
+			// Test bout 4, 
+			// Integration test four for all materials
+			// Test if a constant magnetic field force
+			// Produces expected results over 100 or so steps
+			out = ForceTest(Element[i],Test_Mode);
 		}else if( Test_Mode == "Lorentz" ){
-			// Test bout 4, THIS TEST DOESN'T WORK YET
+			// Test bout 5, 
 			// Integration test four for all materials
 			// Test if full Lorentz force (Electric field and magnetic field) and gravity
 			// Produce expected results over 100 or so steps
-                        std::cout << "\nRunning Lorentz Test " << i << "...\n";
-			out = ConstantLorentzForceTest(Element[i]);
-                        std::cout << "\nFinished Running Test " << i << "!\n";
+			out = ForceTest(Element[i],Test_Mode);
+		}else if( Test_Mode == "LorentzGravity" ){
+			// Test bout 6,
+			// Integration test four for all materials
+			// Test if full Lorentz force (Electric field and magnetic field) and gravity
+			// Produce expected results over 100 or so steps
+			out = ForceTest(Element[i],Test_Mode);
 		}else if( Test_Mode == "ConstantHeating" ){
-			// Test bout 5,
+			// Test bout 7,
 	                // Integration test one for all materials
 	                // Test if constant heating is comparable to analytic result
-                        std::cout << "\nRunning Constant Heat Test " << i << "...\n";
-	                out = ConstantHeatingTest(Element[i]);  
-                        std::cout << "\nFinished Running Test " << i << "!\n";
+	                out = HeatTest(Element[i],Test_Mode);  
 		}else if( Test_Mode == "ThermalRadiation" ){
-			// Test bout 6,
+			// Test bout 8, NOTE THIS DEVIATES AND I DON'T KNOW WHY EXACTLY! 
         	        // Integration test two for all materials
 	                // Test if constant heating with thermal radiation is comparable to analytic result
-                        std::cout << "\nRunning Thermal Radiation Test " << i << "...\n";
-        	        out = ConstantHeatEmissivTest(Element[i]);
-                        std::cout << "\nFinished Running Test " << i << "!\n";
+        	        out = HeatTest(Element[i],Test_Mode);
 		}else if( Test_Mode == "ElectronHeatingRadiation" ){
-			// Test bout 7, NOTE THIS DEVIATES AND I DON'T KNOW WHY EXACTLY! 
+			// Test bout 9, NOTE THIS DEVIATES AND I DON'T KNOW WHY EXACTLY! 
 	                // Integration test four for all materials
 	                // Test if constant heating with plasma heating and thermal radiation is comparable to analytic result
 	                // Note, emissivity is once again a const
-			std::cout << "\nRunning Electron Heating with Thermal Radiation Test " << i << "...\n";
-	                out = ConstantElectronPlasmaHeatingTest(Element[i]);
-                        std::cout << "\nFinished Running Test " << i << "!\n";
+	                out = HeatTest(Element[i],Test_Mode);
 		}else if( Test_Mode == "PlasmaHeatingRadiation" ){
-
-			// Test bout 8, NOTE THIS DEVIATES AND I DON'T KNOW WHY EXACTLY! 
+			// Test bout 10, NOTE THIS DEVIATES AND I DON'T KNOW WHY EXACTLY! 
 	                // Integration test four for all materials
 	                // Test if constant heating with plasma heating and thermal radiation
 	                // Note, emissivity is once again a const
-                        std::cout << "\nRunning Plasma Heating with Thermal Radiation Test " << i << "...\n";
-	                out = ConstantPlasmaHeatingTest(Element[i]);
-                        std::cout << "\nFinished Running Test " << i << "!\n";
+	                out = HeatTest(Element[i],Test_Mode);
 		}else if( Test_Mode == "PlasmaHeatingNeutralRecomb" ){
-			// Test bout 9, NOTE THIS DEVIATES AND I DON'T KNOW WHY EXACTLY! SAME PROBLEM
+			// Test bout 10, NOTE THIS DEVIATES AND I DON'T KNOW WHY EXACTLY! SAME PROBLEM
 	                // Integration test four for all materials
 	                // Test if constant heating with plasma heating, thermal radiation and neutral recombination
 	                // Note, emissivity is once again a const
-                        std::cout << "\nRunning Plasma Heating with Neutral Recombination Test " << i << "...\n";
-	                out = ConstantPlasmaHeatingNeutralRecombTest(Element[i]);
-                        std::cout << "\nFinished Running Test " << i << "!\n";
+	                out = HeatTest(Element[i],Test_Mode);
 		}else{
 			std::cout << "\n\nInput not recognised! Exiting program\n.";
 			break;
-		}		
+		}
+		std::cout << "\nFinished Running Test " << i+1 << "/" << NumOfElements << "!\n";	
 		
 		// Other Heating terms not tested:
 		// TEE has no analytical solution as the solution involves exponential integrals
