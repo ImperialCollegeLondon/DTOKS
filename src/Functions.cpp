@@ -66,7 +66,7 @@ double ionback(double E, char isotope, char material, int flag)
 {
 	double M1,M2,Z1=1.0,Z2;
 	double A1,A2,A3,A4,A5,A6;
-// Hydrogen isotope
+	// Hydrogen isotope
 	if(isotope=='h')
 	{
 		M1 = 1.0;
@@ -88,12 +88,12 @@ double ionback(double E, char isotope, char material, int flag)
 	{
 		M2 = 12.0;
 		Z2 = 6.0;
-// flag=0 returns energy
+		// flag=0 returns energy
 		if(flag==0)
 		{
 			A1 = 0.4484; A2 = 27.16; A3 = 15.66; A4 = 0.6598; A5 = 7.967; A6 = 1.822;
 		}
-// flag=1 returns fraction of particles
+		// flag=1 returns fraction of particles
 		else if(flag==1)
 		{
             A1 = 0.6192; A2 = 20.01; A3 = 8.922; A4 = 0.6669; A5 = 1.864; A6 = 1.899;
@@ -108,15 +108,15 @@ double ionback(double E, char isotope, char material, int flag)
 	{
 		M2 = 183.84;
 		Z2 = 74.0;
-// flag=0 returns energy
+		// flag=0 returns energy
 		if(flag==0)
 		{
 			A1 = 0.6831; A2 = 27.16; A3 = 15.66; A4 = 0.6598; A5 = 7.967; A6 = 1.822;
 		}
-// flag=1 returns fraction of particles
+		// flag=1 returns fraction of particles
 		else if(flag==1)
 		{
-            A1 = 0.8250; A2 = 21.41; A3 = 8.606; A4 = 0.6425; A5 = 1.907; A6 = 1.927;
+		        A1 = 0.8250; A2 = 21.41; A3 = 8.606; A4 = 0.6425; A5 = 1.907; A6 = 1.927;
 		}
 		else
 		{
@@ -129,15 +129,15 @@ double ionback(double E, char isotope, char material, int flag)
 	{
 		M2 = 55.845;
 		Z2 = 26.0;
-// flag=0 returns energy
+		// flag=0 returns energy
 		if(flag==0)
 		{
 			A1 = 0.6831; A2 = 27.16; A3 = 15.66; A4 = 0.6598; A5 = 7.967; A6 = 1.822;
 		}
-// flag=1 returns fraction of particles
+		// flag=1 returns fraction of particles
 		else if(flag==1)
 		{
-            A1 = 0.8250; A2 = 21.41; A3 = 8.606; A4 = 0.6425; A5 = 1.907; A6 = 1.927;
+			A1 = 0.8250; A2 = 21.41; A3 = 8.606; A4 = 0.6425; A5 = 1.907; A6 = 1.927;
 		}
 		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     }		
@@ -146,15 +146,15 @@ double ionback(double E, char isotope, char material, int flag)
 	{
 		M2 = 6.941;
 		Z2 = 3.0;
-// flag=0 returns energy
+		// flag=0 returns energy
 		if(flag==0)
 		{
 			A1 = 0.4222; A2 = 3.092; A3 = 13.17; A4 = 0.5393; A5 = 4.464; A6 = 1.877;
 		}
-// flag=1 returns fraction of particles
+		// flag=1 returns fraction of particles
 		else if(flag==1)
 		{
-            A1 = 0.5173; A2 = 2.549; A3 = 5.325; A4 = 0.5719; A5 = 1.094; A6 = 1.933;
+			A1 = 0.5173; A2 = 2.549; A3 = 5.325; A4 = 0.5719; A5 = 1.094; A6 = 1.933;
 		}
 		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		else
@@ -162,40 +162,20 @@ double ionback(double E, char isotope, char material, int flag)
 			std::cout << "Error: Incorrect flag in ionback" << std::endl;
 			exit(1);
 		}
-
-		
-		/*M2 = 12.0;
-		Z2 = 6.0;
-// flag=0 returns energy
-		if(flag==0)
-		{
-			A1 = 0.4484; A2 = 27.16; A3 = 15.66; A4 = 0.6598; A5 = 7.967; A6 = 1.822;
-		}
-// flag=1 returns fraction of particles
-		else if(flag==1)
-		{
-            A1 = 0.6192; A2 = 20.01; A3 = 8.922; A4 = 0.6669; A5 = 1.864; A6 = 1.899;
-		}
-		else
-		{
-			std::cout << "Error: Incorrect flag in ionback" << std::endl;
-			exit(1);
-		}*/
 	}
-
 	else if(material=='l' || material == 'L')
 	{
 		M2 = 6.941;
 		Z2 = 3.0;
-// flag=0 returns energy
+		// flag=0 returns energy
 		if(flag==0)
 		{
 			A1 = 0.4222; A2 = 3.092; A3 = 13.17; A4 = 0.5393; A5 = 4.464; A6 = 1.877;
 		}
-// flag=1 returns fraction of particles
+		// flag=1 returns fraction of particles
 		else if(flag==1)
 		{
-            A1 = 0.5173; A2 = 2.549; A3 = 5.325; A4 = 0.5719; A5 = 1.094; A6 = 1.933;
+			A1 = 0.5173; A2 = 2.549; A3 = 5.325; A4 = 0.5719; A5 = 1.094; A6 = 1.933;
 		}
 		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		else
@@ -210,10 +190,20 @@ double ionback(double E, char isotope, char material, int flag)
 		exit(1);
 	}
 	double epsilon = 0.032534*E*M2/((M1+M2)*Z1*Z2*pow(pow(Z1,2.0/3.0)+pow(Z2,2.0/3.0),0.5));
-	double R = A1*log(A2*epsilon+exp(1.0))/(1.0+A3*pow(epsilon,A4)+A5*pow(epsilon,A6));
+	double R = 1.0; 
+	if( epsilon < 1e-3 ){
+		epsilon = 1e-3;
+	}
+	if( epsilon >= 0 ){
+		R = A1*log(A2*epsilon+exp(1.0))/(1.0+A3*pow(epsilon,A4)+A5*pow(epsilon,A6));
+	}
+	if( epsilon > 10 ){
+		R = 0.0;
+	}
 	return R;
 }
-
+// Scaling of particle reflection coefficients, Thomas et al. (1991)
+// https://ac.els-cdn.com/0168583X92952986/1-s2.0-0168583X92952986-main.pdf?_tid=0681b324-e2bf-4202-bda3-b80a891903d6&acdnat=1525860063_de8cb49792721d431e72a2c896c33bc7
 double backscatter(double Te, double Ti, double mi, double Vion, char material, 
 				   double &RE, double &RN)
 {
@@ -342,16 +332,21 @@ if(material!='b' && material !='B')
 		RN = 0.0;
 	}
  }    
-//	assert(RE < 1);
-//	assert(RN < 1);
-//	if(RE != RE){
-//		std::cout << "\nError! In void backscatter, RE = " << RE;
-//		throw std::exception();
-//	}
-//	if(RN != RN){
-//		std::cout << "\nError! In void backscatter, RN = " << RN;
-//		throw std::exception();
-//	}
+	// This is a bad solution to the fact that this function is only valid for a certain range of inputs as yet unknown.
+	// This will depend on the ratio of the term 4.0*maxwellian(E,Ti)*sqrt(2.0*E/mi)*(1.0+Vion*Te/E) to ionback
+	if( RE < 0.0 ){
+		RE = 0.0;
+	}
+	if( RN < 0.0 ){
+		RN = 0.0;
+	}
+	if( RE > 1.0 ){
+		RE = 1.0;
+	}
+	if( RN > 1.0 ){
+		RN = 1.0;
+	}
+
 	clock_t end = clock();
 	double elapsd_secs = double(end-begin)/CLOCKS_PER_SEC;
 	return elapsd_secs;
