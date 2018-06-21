@@ -222,7 +222,10 @@ int DTOKSU::Run(){
 		return 2;
 	}else if( Sample->is_split() && !Sample->is_gas() ){
 		return 3;	// Return status for continue simulating Breakup condition
-	}else if( ErrorFlag ){
+	}else if( Sample->is_gas() ){
+		std::cout << "\nSample has boiled, evaporated or vapourised!\n\n";
+		return 4;
+        else if( ErrorFlag ){
                std::cout << "\nGeneric run-time error!\n\n";
                return 10;
 	}
