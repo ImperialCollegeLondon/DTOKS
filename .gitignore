@@ -9,8 +9,9 @@ Data/
 build/
 CMakeFiles/
 
-main
-Test
+bin/main
+bin/unit_test
+bin/int_test
 *.txt
 *.dat
 *.o
