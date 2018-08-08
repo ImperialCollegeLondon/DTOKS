@@ -2,17 +2,9 @@
 #include <sstream>			// std::stringstream
 #include <string>			// std::string
 
-// CHARGING TESTS
-#include "ChargeTest.h"
-
-// FORCE TESTS
-#include "ForceTest.h"
-
-// HEATING TESTS
-#include "HeatTest.h"
-#include "ConstantPlasmaHeatingTest.h"
-#include "ConstantPlasmaHeatingNeutralRecombTest.h"
-#include "CompareConstEmissivTest.h"
+#include "ChargeTest.h" // CHARGING TESTS
+#include "ForceTest.h" 	// FORCE TESTS
+#include "HeatTest.h" 	// HEATING TESTS
 
 static void show_usage(std::string name){
 	std::cerr << "Usage: int main(int argc, char* argv[]) <option(s)> SOURCES"

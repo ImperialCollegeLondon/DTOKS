@@ -63,7 +63,7 @@ int ForceTest(char Element, std::string ForceType){
 	}
 
 
-	std::array<bool,6> ForceModels  = {Gravity,Centrifugal,Lorentz,DTOKSIonDrag,HybridIonDrag,NeutralDrag};
+	std::array<bool,FMN> ForceModels  = {Gravity,Centrifugal,Lorentz,DTOKSIonDrag,HybridIonDrag,NeutralDrag};
 
 	// Models and ConstModels are placed in an array in this order:
 	std::array<char, 4> ConstModels =

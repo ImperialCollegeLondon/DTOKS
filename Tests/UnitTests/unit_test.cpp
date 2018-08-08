@@ -17,6 +17,7 @@
 #include "MOMLTest.h"
 #include "SOMLTest.h"
 #include "SMOMLTest.h"
+#include "PHLTest.h"
 
 // FORCE TESTS
 #include "HybridIonDrag.h"
@@ -153,6 +154,12 @@ int main(int argc, char* argv[]){
 //      else if( Test_Mode == "SchottkyMOML" )
 //		SchottkyMOMLTest();
 
+	// PHL Charging Test:
+	// This test is designed to find the floating potential for small dust grains in collisionless weakly magnetised plasmas.
+	// The calculation follows the work by Patacchini et al and implements a semi-empirical model
+	// see L. Patacchini, I. H. Hutchinson, and G. Lapenta, Phys. Plasmas 14, (2007). for details
+        else if( Test_Mode == "PHL" )
+		PHLTest();
 
 	// ***** 	FORCE TESTS		***** //
 	// Hybrid Ion Drag Test

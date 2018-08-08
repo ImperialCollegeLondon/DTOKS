@@ -50,7 +50,7 @@ int ChargeTest(char Element){
 	threevector Bfield(0.0, 0.0, 0.0);
 	Pdata->MagneticField = Bfield;
 
-	std::array<bool,3> ChargeModels  = {true,false,false};
+	std::array<bool,CMN> ChargeModels  = {true,false,false};
 
 	// Models and ConstModels are placed in an array in this order:
 	std::array<char, 4> ConstModels =

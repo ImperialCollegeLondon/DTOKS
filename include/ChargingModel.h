@@ -3,18 +3,20 @@
 
 #include "Model.h"
 
+const long unsigned int CMN = 4;	// CHARGE MODEL NUMBER, the number of charge models
+
 class ChargingModel : public Model{
 
 	private:
 		// Models defining the Force equation
-		enum { NumModels = 3 };
-		std::array<bool,NumModels> UseModel; 		// Charging Models turned on of possible 1
+		std::array<bool,CMN> UseModel; 		// Charging Models turned on of possible 1
 		std::string FileName;						// Variable to hold data file name
 		
 		void Print();			// Write to output data file
 
 		double solveOML(double a, double guess);
-		double solveOML2();
+		double solveOML_LambertW(double DeltaTot);
+		double solvePHL(double Phi);
 		double solveNegSchottkyOML(double guess);
 		double solvePosSchottkyOML();
 		double DeltaTherm()const;
@@ -24,9 +26,9 @@ class ChargingModel : public Model{
 	public:
 		// Constructors
 		ChargingModel();
-		ChargingModel(std::string filename, float accuracy, std::array<bool,NumModels> models, 
+		ChargingModel(std::string filename, float accuracy, std::array<bool,CMN> models, 
 				Matter *& sample, PlasmaData *& pdata);
-		ChargingModel(std::string filename, float accuracy, std::array<bool,NumModels> models, 
+		ChargingModel(std::string filename, float accuracy, std::array<bool,CMN> models, 
 				Matter *& sample, PlasmaGrid & pgrid);
 
 		void CreateFile(std::string filename);

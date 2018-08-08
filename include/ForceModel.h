@@ -3,12 +3,13 @@
 
 #include "Model.h"
 
+const long unsigned int FMN = 6;	// CHARGE MODEL NUMBER, the number of charge models
+
 class ForceModel : public Model {
 
 	private:
 		// Models defining the Force equation
-		enum { NumModels = 6 };
-		std::array<bool,NumModels> UseModel; 		// Force Models turned on of possibly 4
+		std::array<bool,FMN> UseModel; 		// Force Models turned on of possibly 4
 		std::string FileName;				// Variable to hold data file name
 
 		void Print();			// Write to output data file
@@ -26,9 +27,9 @@ class ForceModel : public Model {
 	public:
 		// Constructors
 		ForceModel();
-		ForceModel(std::string filename, float accuracy, std::array<bool,NumModels> models, 
+		ForceModel(std::string filename, float accuracy, std::array<bool,FMN> models, 
 				Matter *& sample, PlasmaData *& pdata);
-		ForceModel(std::string filename, float accuracy, std::array<bool,NumModels> models, 
+		ForceModel(std::string filename, float accuracy, std::array<bool,FMN> models, 
 				Matter *& sample, PlasmaGrid & pgrid);
 
 		// Destructor

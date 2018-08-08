@@ -47,7 +47,7 @@ int ConstantHeatingTest(char Element){
 	}
 
 	// Models and ConstModels are placed in an array in this order:
-	std::array<bool, 9> Models = 
+	std::array<bool, HMN> Models = 
 		{RadiativeCooling, EvaporativeCooling, NewtonCooling, IonHeatFlux, ElectronHeatFlux, NeutralHeatFlux, 
 		NeutralRecomb, SEE, TEE };
 	std::array<char, 4> ConstModels =
@@ -66,7 +66,7 @@ int ConstantHeatingTest(char Element){
 		return -1;
 	}
 
-	HeatingModel MyModel("out_ConstantHeatingTest.txt",1.0,Models,Sample,Pdata);
+	HeatingModel MyModel("Tests/IntegrationTests/Data/out_ConstantHeatingTest.txt",1.0,Models,Sample,Pdata);
 
 	double Mass = Sample->get_mass();
 	MyModel.set_PowerIncident(Power);

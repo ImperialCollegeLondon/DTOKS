@@ -9,11 +9,12 @@ ChargingModel::ChargingModel():Model(){
 	UseModel[0] = true;
 	UseModel[1] = false;
 	UseModel[2] = false;
+	UseModel[3] = false;
 	ChargeOfGrain = 0;
 	CreateFile("Default_Charging_Filename.txt");
 }
 
-ChargingModel::ChargingModel(std::string filename, float accuracy, std::array<bool,NumModels> models,
+ChargingModel::ChargingModel(std::string filename, float accuracy, std::array<bool,CMN> models,
 				Matter *& sample, PlasmaData *&pdata) : Model(sample,pdata,accuracy){
 	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename,float accuracy,std::array<bool,1> models,Matter *& sample, PlasmaData const& pdata) : Model(sample,pdata,accuracy)\n\n");
 	UseModel = models;
@@ -21,7 +22,7 @@ ChargingModel::ChargingModel(std::string filename, float accuracy, std::array<bo
 	ChargeOfGrain = 0;
 }
 
-ChargingModel::ChargingModel(std::string filename, float accuracy, std::array<bool,NumModels> models,
+ChargingModel::ChargingModel(std::string filename, float accuracy, std::array<bool,CMN> models,
 				Matter *& sample, PlasmaGrid &pgrid) : Model(sample,pgrid,accuracy){
 	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename,float accuracy,std::array<bool,1> models,Matter *& sample, PlasmaGrid const& pgrid) : Model(sample,pgrid,accuracy)\n\n");
 	UseModel = models;
@@ -139,10 +140,13 @@ void ChargingModel::Charge(double timestep){
 	}else if( UseModel[2] ){	// In this case, maintain a potential well for entire temperature range
 //		Potential = solveOML( -0.5, Sample->get_potential()) 
 //			- Sample->get_temperature()/Pdata->ElectronTemp;
-		Potential = solveOML2();//-Sample->get_temperature()/Pdata->ElectronTemp;
+		Potential = solveOML_LambertW(DSec+DTherm);//-Sample->get_temperature()/Pdata->ElectronTemp;
 //		Potential = solveOML( DSec + DTherm, Sample->get_potential());
 //		if( (DSec+ DTherm) >= 1.0 )
 			
+		ChargeOfGrain = -(4.0*PI*epsilon0*Sample->get_radius()*Potential*Kb*Pdata->ElectronTemp)/echarge;
+	}else if( UseModel[3] ){	// In this case, use Hutchinson, Patterchini and Lapenta
+		Potential = solvePHL(Potential);
 		ChargeOfGrain = -(4.0*PI*epsilon0*Sample->get_radius()*Potential*Kb*Pdata->ElectronTemp)/echarge;
 	}
 	// Have to calculate charge of grain here since it doesn't know about the Electron Temp and since potential is normalised.
@@ -158,12 +162,72 @@ void ChargingModel::Charge(){
 	Charge(TimeStep);
 }
 
-double ChargingModel::solveOML2(){
-	double TemperatureRatio = Pdata->ElectronTemp/Pdata->IonTemp;
+double ChargingModel::solveOML_LambertW(double DeltaTot){
+	double TemperatureRatio(0);
+	if( Pdata->ElectronTemp != 0 ) TemperatureRatio = Pdata->IonTemp/Pdata->ElectronTemp;
+
 	double Ionization = 1.0;
 	double MassRatio = Mp/Me;
-	return -(TemperatureRatio/Ionization-LambertW(sqrt(MassRatio*TemperatureRatio)*exp(TemperatureRatio/Ionization)/Ionization));
+	return -(TemperatureRatio/Ionization-LambertW((1.0-DeltaTot)*sqrt(MassRatio*TemperatureRatio)*exp(TemperatureRatio/Ionization)/Ionization));
 }
+
+// Solve the Potential for a sphere in a collisionless magnetoplasma following
+// L. Patacchini, I. H. Hutchinson, and G. Lapenta, Phys. Plasmas 14, (2007).
+// Assuming that Lambda_s >> r_p, i.e dust grain is small.
+double ChargingModel::solvePHL(double Phi){ 
+	double TemperatureRatio = Pdata->ElectronTemp/Pdata->IonTemp;
+	double Beta = Sample->get_radius()
+			/(sqrt(PI*Pdata->ElectronTemp*Me)/(2.0*echarge*echarge*Pdata->MagneticField*Pdata->MagneticField));
+	double MassRatio = Mp/Me;
+
+	if( Beta/MassRatio > 0.01 ){
+		static bool runOnce = true;
+		WarnOnce(runOnce,"Beta/MassRatio > 0.01 in solvePHL! Model may not be valid in this range! see Fig 11. of  L. Patacchini, I. H. Hutchinson, and G. Lapenta, Phys. Plasmas 14, (2007).");
+	}
+	double AtomicNumber = 1.0;	
+	double DebyeLength=sqrt((epsilon0*Kb*Pdata->ElectronTemp)/(Pdata->ElectronDensity*pow(echarge,2)));
+
+	double z = Beta/(1+Beta);
+	double i_star = 1.0-0.0946*z-0.305*z*z+0.950*z*z*z-2.2*z*z*z*z+1.150*z*z*z*z*z;
+
+	double eta = -(Phi/Beta)*(1+(Beta/4.0)*(1-exp(-4.0/(DebyeLength*Beta))));
+	double w(1.0);
+	if( Beta == 0.0 || eta == -1.0 ){
+		w = 1.0;
+	}else if( std::isnan(eta) ){
+		std::cout << "\nWarning! w being set to 1.0 (Assuming high B field limit) but Phi/Beta is nan while Beta != 0.";
+		w = 1.0;
+	}else{
+		w = eta/(1+eta);
+	} 
+	
+	double A = 0.678*w+1.543*w*w-1.212*w*w*w;
+
+	double Potential = TemperatureRatio/AtomicNumber
+		-LambertW((A+(1.0-A)*i_star)*sqrt(MassRatio*TemperatureRatio)*exp(TemperatureRatio/AtomicNumber)/AtomicNumber);
+	
+	while( fabs(Phi - Potential) >= 0.01 ){
+		Phi = solvePHL(Potential);
+	
+		eta = -(Phi/Beta)*(1+(Beta/4.0)*(1-exp(-4.0/(DebyeLength*Beta))));
+		double w(1.0);
+		if( Beta == 0.0 || eta == -1.0 ){
+			w = 1.0;
+		}else if( std::isnan(eta) ){
+			std::cout << "\nWarning! w being set to 1.0 (Assuming high B field limit) but Phi/Beta is nan while Beta != 0.";
+			w = 1.0;
+		}else{
+			w = eta/(1+eta);
+		} 
+
+	        A = 0.678*w+1.543*w*w-1.212*w*w*w;
+	
+	        Potential = TemperatureRatio/AtomicNumber
+                -LambertW((A+(1.0-A)*i_star)*sqrt(MassRatio*TemperatureRatio)*exp(TemperatureRatio/AtomicNumber)/AtomicNumber);
+	}
+	return Potential;
+}
+
 double ChargingModel::solveOML(double a, double guess){
         C_Debug("\tIn ChargingModel::solveOML(double a, double guess)\n\n");
         if( a >= 1.0 ){

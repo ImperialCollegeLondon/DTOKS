@@ -13,14 +13,14 @@ ForceModel::ForceModel():Model(){
 	CreateFile("Default_Force_filename.txt");
 }
 
-ForceModel::ForceModel(std::string filename, float accuracy, std::array<bool,NumModels> models, 
+ForceModel::ForceModel(std::string filename, float accuracy, std::array<bool,FMN> models, 
 			Matter *& sample, PlasmaData *& pdata) : Model(sample,pdata,accuracy){
 	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, float accuracy, std::array<bool,3> models, Matter *& sample, PlasmaData const *& pdata) : Model(sample,pdata,accuracy)\n\n");
 	UseModel = models;
 	CreateFile(filename);
 }
 
-ForceModel::ForceModel(std::string filename, float accuracy, std::array<bool,NumModels> models, 
+ForceModel::ForceModel(std::string filename, float accuracy, std::array<bool,FMN> models, 
 			Matter *& sample, PlasmaGrid & pgrid) : Model(sample,pgrid,accuracy){
 	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, float accuracy, std::array<bool,3> models, Matter *& sample, PlasmaGrid const& pgrid) : Model(sample,pgrid,accuracy)\n\n");
 	UseModel = models;

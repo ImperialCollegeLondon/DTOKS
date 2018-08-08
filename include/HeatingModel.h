@@ -3,6 +3,8 @@
 
 #include "Model.h"
 
+const long unsigned int HMN = 9;	// CHARGE MODEL NUMBER, the number of charge models
+
 class HeatingModel : public Model{
 
 	private:
@@ -16,8 +18,7 @@ class HeatingModel : public Model{
 		std::string FileName;			// Variable to hold data file name
 
 		// Models defining the heating equation
-		enum { NumModels = 9 };
-		std::array<bool,NumModels> UseModel; 		// Heating Models turned on of possibly 9
+		std::array<bool,HMN> UseModel; 		// Heating Models turned on of possibly 9
 
 		void Print();				// Write to output data file
 		void Defaults(); // Sets default settings
@@ -40,9 +41,9 @@ class HeatingModel : public Model{
 	public:
 		// Constructors
 		HeatingModel();
-		HeatingModel( std::string filename, float accuracy, std::array<bool,NumModels> &models, 
+		HeatingModel( std::string filename, float accuracy, std::array<bool,HMN> &models, 
 				Matter *& sample, PlasmaData *& pdata);
-		HeatingModel( std::string filename, float accuracy, std::array<bool,NumModels> &models, 
+		HeatingModel( std::string filename, float accuracy, std::array<bool,HMN> &models, 
 				Matter *& sample, PlasmaGrid & pgrid);
 
 		// Destructor

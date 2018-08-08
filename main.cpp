@@ -1,4 +1,4 @@
-#include "DTOKSU.h"
+//#include "DTOKSU.h"
 #include "Breakup.h"
 
 #include <vector>
@@ -44,7 +44,8 @@ int main(int argc, char* argv[]){
 	std::string MetaDataFilename = "Data/DTOKSU.txt";
 	std::string DataFilePrefix = "Data/DTOKSU";
 //	std::string Config_Filename = "Config_Files/DTOKSU_Config_Magnum-PSI.cfg";
-	std::string Config_Filename = "Config_Files/DTOKSU_Config_MAST.cfg";
+//	std::string Config_Filename = "Config_Files/DTOKSU_Config_MAST.cfg";
+	std::string Config_Filename = "Config_Files/DTOKSU_Config_JET.cfg";
 	
 	std::vector <std::string> sources;
 	std::stringstream ss0;
@@ -94,7 +95,7 @@ int main(int argc, char* argv[]){
 	// ------------------- GROUP MODELS ------------------- //
 	std::array<bool, 9> HeatModels;
 	std::array<bool,6> ForceModels;
-	std::array<bool,3> ChargeModels;
+	std::array<bool,4> ChargeModels;
 	std::array<char,4> ConstModels;
 	std::array<float,3> AccuracyLevels;
 	PlasmaData *Pdata = new PlasmaData;
@@ -150,7 +151,7 @@ int main(int argc, char* argv[]){
 		ChargeModels =
 			{
 				cfg->lookupBoolean("chargemodels","DTOKSOML"), cfg->lookupBoolean("chargemodels","SchottkyOML"),
-				cfg->lookupBoolean("chargemodels","DTOKSWell")
+				cfg->lookupBoolean("chargemodels","DTOKSWell"), cfg->lookupBoolean("chargemodels","PHL")
 			};
 		
 		AccuracyLevels = 
@@ -251,7 +252,8 @@ int main(int argc, char* argv[]){
 		<<"Lorentz:\t\t" << ForceModels[2] << "\n"<<"IonDrag:\t\t" << ForceModels[3] << "\n"
 		<<"HybridDrag:\t\t" << ForceModels[4] << "\n"<<"NeutralDrag:\t\t" << ForceModels[5] << "\n"
 		<<"\n#CHARGING MODELS\n"
-		<<"DTOKSOML:\t\t" << ChargeModels[0] << "\n"<<"SchottkyOML:\t\t" << ChargeModels[1] << "\n" << "DTOKSWell:\t\t" << ChargeModels[2];
+		<<"DTOKSOML:\t\t" << ChargeModels[0] << "\n"<<"SchottkyOML:\t\t" << ChargeModels[1] << "\n" 
+		<< "DTOKSWell:\t\t" << ChargeModels[2] << "\n" << "PHL:\t\t" << ChargeModels[3];
 
 
 	std::cout << "\n\n * CREATING DTOKS * \n";

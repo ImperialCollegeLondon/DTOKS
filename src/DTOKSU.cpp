@@ -4,8 +4,8 @@
 #include "DTOKSU.h"
 
 DTOKSU::DTOKSU( std::array<float,3> acclvls, Matter *& sample, PlasmaData *&pdata,
-				std::array<bool,9> &heatmodels, std::array<bool,6> &forcemodels, std::array<bool,3> &chargemodels)
-			: Sample(sample),
+				std::array<bool,HMN> &heatmodels, std::array<bool,FMN> &forcemodels, 
+				std::array<bool,CMN> &chargemodels): Sample(sample),
 				CM("Data/breakup_cm_0.txt",acclvls[0],chargemodels,sample,pdata),
 				HM("Data/breakup_hm_0.txt",acclvls[1],heatmodels,sample,pdata),
 				FM("Data/breakup_fm_0.txt",acclvls[2],forcemodels,sample,pdata){
@@ -18,7 +18,8 @@ DTOKSU::DTOKSU( std::array<float,3> acclvls, Matter *& sample, PlasmaData *&pdat
 }
 
 DTOKSU::DTOKSU( std::array<float,3> acclvls, Matter *& sample, PlasmaGrid &pgrid,
-				std::array<bool,9> &heatmodels, std::array<bool,6> &forcemodels, std::array<bool,3> &chargemodels)
+				std::array<bool,HMN> &heatmodels, std::array<bool,FMN> &forcemodels, 
+				std::array<bool,CMN> &chargemodels)
 				: Sample(sample),
 				CM("Data/breakup_cm_0.txt",acclvls[0],chargemodels,sample,pgrid),
 				HM("Data/breakup_hm_0.txt",acclvls[1],heatmodels,sample,pgrid),
@@ -225,7 +226,7 @@ int DTOKSU::Run(){
 	}else if( Sample->is_gas() ){
 		std::cout << "\nSample has boiled, evaporated or vapourised!\n\n";
 		return 4;
-        else if( ErrorFlag ){
+        }else if( ErrorFlag ){
                std::cout << "\nGeneric run-time error!\n\n";
                return 10;
 	}
