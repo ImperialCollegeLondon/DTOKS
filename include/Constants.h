@@ -80,6 +80,12 @@
 #define D1_Debug(x) 
 #endif 
 
+#ifdef BREAKUP_DEBUG
+#define B_Debug(x) std::cout << x
+#else
+#define B_Debug(x) 
+#endif 
+
 #ifdef PAUSE
 #define Pause(); std::cin.get();
 #else
