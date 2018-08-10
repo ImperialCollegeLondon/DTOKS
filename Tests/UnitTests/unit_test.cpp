@@ -15,6 +15,8 @@
 #include "SchottkyOMLTest.h"
 #include "OMLTest.h"
 #include "MOMLTest.h"
+#include "MOMLWEMTest.h"
+#include "MOMLEMTest.h"
 #include "SOMLTest.h"
 #include "SMOMLTest.h"
 #include "PHLTest.h"
@@ -127,6 +129,23 @@ int main(int argc, char* argv[]){
 	// This employs an approximate series expansion to the Lambert W function to find the floating potential
         else if( Test_Mode == "MOML" )
 		MOMLTest();
+
+	// MOMLwEM Charging Test:
+	// This test is designed to find the floating potential for large emitting dust grains in a stationary plasma 
+	// following MOML With electron emission theory, see: N. Rizopoulou and M. Bacharis, Phys. Plasmas 25, (2018). 
+	// Equation (1) and (2)
+	// This employs an approximate series expansion to the Lambert W function to find the floating potential
+        else if( Test_Mode == "MOMLWEM" )
+		MOMLWEMTest();
+
+	// MOML-EM Charging Test:
+	// This test is designed to find the floating potential for large emitting dust grains in a stationary plasma 
+	// following MOML-EM theory, see: N. Rizopoulou and M. Bacharis, Phys. Plasmas 25, (2018). &
+	// N. Rizopoulou and M. Bacharis, Phys. Plasmas 25, (2018).
+	// This employs a Newton Rhapson method to solve the equations of the two papers finding a kinetic potential well
+        else if( Test_Mode == "MOMLEM" )
+		MOMLEMTest();
+
 
 	// SOML Charging Test:
 	// This test is designed to find the floating potential for small dust grains in a flowing plasma following SOML theory.
