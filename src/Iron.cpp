@@ -21,18 +21,18 @@ const struct ElementConsts IronConsts = {
 				// http://hyperphysics.phy-astr.gsu.edu/hbase/Tables/thrcn.html
 };
 
-Iron::Iron():Matter(&IronConsts){
+Iron::Iron():Matter(IronConsts){
 	set_defaults();
 	update();
 }
 
-Iron::Iron(double radius):Matter(radius,&IronConsts){
+Iron::Iron(double radius):Matter(radius,IronConsts){
 	set_defaults();
 	update();
 }
 
 
-Iron::Iron(double radius, double tempin):Matter(radius,tempin,&IronConsts){
+Iron::Iron(double radius, double tempin):Matter(radius,tempin,IronConsts){
 	E_Debug("\n\nIn Iron::Iron(double radius, double tempin)");
 	set_defaults();
 
@@ -43,13 +43,26 @@ Iron::Iron(double radius, double tempin):Matter(radius,tempin,&IronConsts){
 			<< "\nSt.Volume = " << St.Volume);
 }
 
-Iron::Iron(double radius, double tempin, std::array<char,4> &constmodels):Matter(radius,tempin,&IronConsts,constmodels){
+Iron::Iron(double radius, double tempin, std::array<char,4> &constmodels):Matter(radius,tempin,IronConsts,constmodels){
 
 	E_Debug("\n\nIn Iron::Iron(double radius, double tempin, std::array<char,4> &constmodels)");
 
 	set_defaults();
 	update_state(0.0);		// Temperature dependant
 	update_models(constmodels);
+	update();
+	E_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius << "\nSt.Density = " << St.Density 
+			<< "\nSt.Volume = " << St.Volume);
+}
+
+Iron::Iron(double radius, double tempin, std::array<char,4> &constmodels, const threevector &position, const threevector &velocity):Matter(radius,tempin,IronConsts,constmodels){
+
+	E_Debug("\n\nIn Iron::Iron(double radius, double tempin, std::array<char,4> &constmodels)");
+
+	set_defaults();
+	update_state(0.0);		// Temperature dependant
+	update_models(constmodels);
+	update_motion(position,velocity,0.0);
 	update();
 	E_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius << "\nSt.Density = " << St.Density 
 			<< "\nSt.Volume = " << St.Volume);

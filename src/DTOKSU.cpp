@@ -3,7 +3,7 @@
 //#define DTOKSU_DEEP_DEBUG
 #include "DTOKSU.h"
 
-DTOKSU::DTOKSU( std::array<float,3> acclvls, Matter *& sample, PlasmaData *&pdata,
+DTOKSU::DTOKSU( std::array<float,MN> acclvls, Matter *& sample, PlasmaData &pdata,
 				std::array<bool,HMN> &heatmodels, std::array<bool,FMN> &forcemodels, 
 				std::array<bool,CMN> &chargemodels): Sample(sample),
 				CM("Data/breakup_cm_0.txt",acclvls[0],chargemodels,sample,pdata),
@@ -14,10 +14,10 @@ DTOKSU::DTOKSU( std::array<float,3> acclvls, Matter *& sample, PlasmaData *&pdat
 //	std::cout << "\nacclvls[0] = " << acclvls[0];
 
 	TotalTime = 0;
-	CreateFile("Data/df.txt");
+	create_file("Data/df.txt");
 }
 
-DTOKSU::DTOKSU( std::array<float,3> acclvls, Matter *& sample, PlasmaGrid &pgrid,
+DTOKSU::DTOKSU( std::array<float,MN> acclvls, Matter *& sample, PlasmaGrid_Data &pgrid,
 				std::array<bool,HMN> &heatmodels, std::array<bool,FMN> &forcemodels, 
 				std::array<bool,CMN> &chargemodels)
 				: Sample(sample),
@@ -30,18 +30,18 @@ DTOKSU::DTOKSU( std::array<float,3> acclvls, Matter *& sample, PlasmaGrid &pgrid
 //	D_Debug("\nHeatModels = " << heatmodels[0]);
 //	std::cout << "\nacclvls[0] = " << acclvls[0];
 	TotalTime = 0;
-	CreateFile("Data/df.txt");
+	create_file("Data/df.txt");
 }
 
-void DTOKSU::CreateFile( std::string filename ){
-	D_Debug("\n\nIn DTOKSU::CreateFile(std::string filename)\n\n");
+void DTOKSU::create_file( std::string filename ){
+	D_Debug("\n\nIn DTOKSU::create_file(std::string filename)\n\n");
 	MyFile.open(filename);
 	MyFile << "TotalTime\n";
 }
 
 void DTOKSU::OpenFiles( std::string filename, unsigned int i ){
 	D_Debug("\n\nIn DTOKSU::OpenFiles(std::string filename, unsigned int i)\n\n");
-	CreateFile(filename + "_df_" + std::to_string(i) + ".txt");
+	create_file(filename + "_df_" + std::to_string(i) + ".txt");
 	HM.CreateFile(filename + "_hm_" + std::to_string(i) + ".txt",false);
 	FM.CreateFile(filename + "_fm_" + std::to_string(i) + ".txt");
 	CM.CreateFile(filename + "_cm_" + std::to_string(i) + ".txt");
@@ -50,9 +50,9 @@ void DTOKSU::OpenFiles( std::string filename, unsigned int i ){
 void DTOKSU::CloseFiles(){
 	D_Debug("\n\nIn DTOKSU::CloseFiles()\n\n");
 	MyFile.close();
-	HM.CloseFile();
-	FM.CloseFile();
-	CM.CloseFile();
+	HM.close_file();
+	FM.close_file();
+	CM.close_file();
 }
 
 void DTOKSU::ResetModelTime(double HMTime, double FMTime, double CMTime){
@@ -61,8 +61,8 @@ void DTOKSU::ResetModelTime(double HMTime, double FMTime, double CMTime){
 	CM.AddTime(CMTime);
 }
 
-void DTOKSU::Print(){
-	D_Debug("\tIn DTOKSU::Print()\n\n");
+void DTOKSU::print(){
+	D_Debug("\tIn DTOKSU::print()\n\n");
 	MyFile 	<< TotalTime;
 	MyFile << "\n";
 }
@@ -188,7 +188,7 @@ int DTOKSU::Run(){
 		// Update the plasma data from the plasma grid for all models...
 		InGrid = CM.update_plasmadata();
 		CM.RecordPlasmadata();
-		Print();
+		print();
 		// ***** START OF : DETERMINE IF END CONDITION HAS BEEN REACHED ***** //
 		if( Sample->is_gas() && Sample->is_split() ){
 			std::cout << "\nSample has undergone electrostatic breakup!";

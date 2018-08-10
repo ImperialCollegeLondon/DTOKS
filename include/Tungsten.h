@@ -19,6 +19,8 @@ class Tungsten: public Matter{
 		Tungsten(double radius);
 		Tungsten(double radius, double tempin);
 		Tungsten(double radius, double tempin, std::array<char,4> &constmodels);
+		Tungsten(double radius, double tempin, std::array<char,4> &constmodels,
+			const threevector &position, const threevector &velocity);
 
 		// Destructor
 		~Tungsten(){};

@@ -21,19 +21,19 @@ const struct ElementConsts TungstenConsts = {
 	0.163			// kW/m K at 20 degrees celsius
 };
 
-Tungsten::Tungsten():Matter(&TungstenConsts){
+Tungsten::Tungsten():Matter(TungstenConsts){
 	E_Debug("\n\nIn Tungsten::Tungsten():Matter(&TungstenConsts)\n\n");
 	tungsten_defaults();
 	update();
 }
 
-Tungsten::Tungsten(double radius):Matter(radius,&TungstenConsts){
+Tungsten::Tungsten(double radius):Matter(radius,TungstenConsts){
 	E_Debug("\n\nIn Tungsten::Tungsten(double radius):Matter(radius,&TungstenConsts)\n\n");
 	tungsten_defaults();
 	update();
 }
 
-Tungsten::Tungsten(double radius, double tempin):Matter(radius,tempin,&TungstenConsts){
+Tungsten::Tungsten(double radius, double tempin):Matter(radius,tempin,TungstenConsts){
 	E_Debug("\n\nIn Tungsten::Tungsten(double radius, double tempin):Matter(radius,tempin,&TungstenConsts)\n\n");
 	tungsten_defaults();
 	update_state(0.0);		// Temperature dependant
@@ -43,12 +43,24 @@ Tungsten::Tungsten(double radius, double tempin):Matter(radius,tempin,&TungstenC
 			<< "\nSt.Volume = " << St.Volume);
 }
 
-Tungsten::Tungsten(double radius, double tempin, std::array<char,4> &constmodels):Matter(radius,tempin,&TungstenConsts){
+Tungsten::Tungsten(double radius, double tempin, std::array<char,4> &constmodels):Matter(radius,tempin,TungstenConsts){
 	E_Debug("\n\nIn Tungsten::Tungsten(double radius, double tempin, std::array<char,4> &constmodels):Matter(radius,tempin,&TungstenConsts)\n\n\t");
 	tungsten_defaults();
 
 	update_state(0.0);		// Temperature dependant
 	update_models(constmodels);
+	update();
+	E1_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius << "\nSt.Density = " << St.Density 
+			<< "\nSt.Volume = " << St.Volume);
+}
+
+Tungsten::Tungsten(double radius, double tempin, std::array<char,4> &constmodels, const threevector& position, const threevector& velocity):Matter(radius,tempin,TungstenConsts){
+	E_Debug("\n\nIn Tungsten::Tungsten(double radius, double tempin, std::array<char,4> &constmodels):Matter(radius,tempin,&TungstenConsts)\n\n\t");
+	tungsten_defaults();
+
+	update_state(0.0);		// Temperature dependant
+	update_models(constmodels);
+	update_motion(position,velocity,0.0);
 	update();
 	E1_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius << "\nSt.Density = " << St.Density 
 			<< "\nSt.Volume = " << St.Volume);

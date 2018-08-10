@@ -22,17 +22,17 @@ const struct ElementConsts BerylliumConsts = {
 };
 
 
-Beryllium::Beryllium():Matter(&BerylliumConsts){
+Beryllium::Beryllium():Matter(BerylliumConsts){
 	set_defaults();
 	update();
 }
 
-Beryllium::Beryllium(double radius):Matter(radius,&BerylliumConsts){
+Beryllium::Beryllium(double radius):Matter(radius,BerylliumConsts){
 	set_defaults();
 	update();
 }
 
-Beryllium::Beryllium(double radius, double tempin):Matter(radius,tempin,&BerylliumConsts){
+Beryllium::Beryllium(double radius, double tempin):Matter(radius,tempin,BerylliumConsts){
 	E_Debug("\n\nIn Beryllium::Beryllium(double radius, double tempin)");
 	set_defaults();
 
@@ -44,12 +44,25 @@ Beryllium::Beryllium(double radius, double tempin):Matter(radius,tempin,&Berylli
 			<< "\nSt.Volume = " << St.Volume);
 }
 
-Beryllium::Beryllium(double radius, double tempin, std::array<char,4> &constmodels):Matter(radius,tempin,&BerylliumConsts){
+Beryllium::Beryllium(double radius, double tempin, std::array<char,4> &constmodels):Matter(radius,tempin,BerylliumConsts){
 	E_Debug("\n\nIn Beryllium::Beryllium(double radius, double tempin)");
 	set_defaults();
 
 	update_state(0.0);		// Temperature dependant
 	update_models(constmodels);
+	update();
+
+	E_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius << "\nSt.Density = " << St.Density 
+			<< "\nSt.Volume = " << St.Volume);
+}
+
+Beryllium::Beryllium(double radius, double tempin, std::array<char,4> &constmodels, const threevector& position, const threevector& velocity):Matter(radius,tempin,BerylliumConsts){
+	E_Debug("\n\nIn Beryllium::Beryllium(double radius, double tempin)");
+	set_defaults();
+
+	update_state(0.0);		// Temperature dependant
+	update_models(constmodels);
+	update_motion(position,velocity,0.0);
 	update();
 
 	E_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius << "\nSt.Density = " << St.Density 

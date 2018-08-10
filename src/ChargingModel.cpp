@@ -15,16 +15,24 @@ ChargingModel::ChargingModel():Model(){
 }
 
 ChargingModel::ChargingModel(std::string filename, float accuracy, std::array<bool,CMN> models,
-				Matter *& sample, PlasmaData *&pdata) : Model(sample,pdata,accuracy){
-	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename,float accuracy,std::array<bool,1> models,Matter *& sample, PlasmaData const& pdata) : Model(sample,pdata,accuracy)\n\n");
+				Matter *& sample, PlasmaData &pdata) : Model(sample,pdata,accuracy){
+	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename, float accuracy, std::array<bool,CMN> models,Matter *& sample, PlasmaData *&pdata) : Model(sample,pdata,accuracy)\n\n");
 	UseModel = models;
 	CreateFile(filename);
 	ChargeOfGrain = 0;
 }
 
 ChargingModel::ChargingModel(std::string filename, float accuracy, std::array<bool,CMN> models,
-				Matter *& sample, PlasmaGrid &pgrid) : Model(sample,pgrid,accuracy){
-	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename,float accuracy,std::array<bool,1> models,Matter *& sample, PlasmaGrid const& pgrid) : Model(sample,pgrid,accuracy)\n\n");
+				Matter *& sample, PlasmaData *pdata) : Model(sample,*pdata,accuracy){
+	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename, float accuracy, std::array<bool,CMN> models,Matter *& sample, PlasmaData *&pdata) : Model(sample,pdata,accuracy)\n\n");
+	UseModel = models;
+	CreateFile(filename);
+	ChargeOfGrain = 0;
+}
+
+ChargingModel::ChargingModel(std::string filename, float accuracy, std::array<bool,CMN> models,
+				Matter *& sample, PlasmaGrid_Data &pgrid) : Model(sample,pgrid,accuracy){
+	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename, float accuracy, std::array<bool,CMN> models,Matter *& sample, PlasmaGrid_Data &pgrid) : Model(sample,pgrid,accuracy)\n\n");
 	UseModel = models;
 	CreateFile(filename);
 	ChargeOfGrain = 0;
@@ -272,14 +280,14 @@ double ChargingModel::solvePosSchottkyOML(){
 // Solve the orbital motion limited potential for small dust grains accounting for electron emission.
 // WARNING: This is only valid for negatively charged dust grains.
 double ChargingModel::solveNegSchottkyOML(double guess){
-        double Vi = sqrt(Kb*Pdata->IonTemp/(2*PI*Mp));
-        double Ve = sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
+	double Vi = sqrt(Kb*Pdata->IonTemp/(2*PI*Mp));
+	double Ve = sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
 
-        double a = Pdata->ElectronDensity*Ve*(DeltaSec()-1);
-        double b = Pdata->IonDensity*Vi*(Pdata->ElectronTemp/Pdata->IonTemp);
-        double C = Pdata->IonDensity*Vi;
-        double d = Richardson*pow(Sample->get_temperature(),2)/echarge;
-        double f = (echarge*Sample->get_workfunction())/(Kb*Sample->get_temperature());
+	double a = Pdata->ElectronDensity*Ve*(DeltaSec()-1);
+	double b = Pdata->IonDensity*Vi*(Pdata->ElectronTemp/Pdata->IonTemp);
+	double C = Pdata->IonDensity*Vi;
+	double d = Richardson*pow(Sample->get_temperature(),2)/echarge;
+	double f = (echarge*Sample->get_workfunction())/(Kb*Sample->get_temperature());
 
 	double x1 = guess;
 	do{
@@ -291,7 +299,7 @@ double ChargingModel::solveNegSchottkyOML(double guess){
 
 	}while(fabs(guess-x1)>1e-4);// >1e-2){
 
-        return guess;
+	return guess;
 }
 
 double ChargingModel::DeltaTherm()const{

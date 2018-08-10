@@ -3,7 +3,7 @@
 
 #include "Model.h"
 
-const long unsigned int CMN = 4;	// CHARGE MODEL NUMBER, the number of charge models
+const unsigned int CMN = 4;	// CHARGE MODEL NUMBER, the number of charge models
 
 class ChargingModel : public Model{
 
@@ -27,9 +27,11 @@ class ChargingModel : public Model{
 		// Constructors
 		ChargingModel();
 		ChargingModel(std::string filename, float accuracy, std::array<bool,CMN> models, 
-				Matter *& sample, PlasmaData *& pdata);
+				Matter *& sample, PlasmaData & pdata);
 		ChargingModel(std::string filename, float accuracy, std::array<bool,CMN> models, 
-				Matter *& sample, PlasmaGrid & pgrid);
+				Matter *& sample, PlasmaData * pdata);
+		ChargingModel(std::string filename, float accuracy, std::array<bool,CMN> models, 
+				Matter *& sample, PlasmaGrid_Data & pgrid);
 
 		void CreateFile(std::string filename);
 

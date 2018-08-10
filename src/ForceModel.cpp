@@ -14,14 +14,21 @@ ForceModel::ForceModel():Model(){
 }
 
 ForceModel::ForceModel(std::string filename, float accuracy, std::array<bool,FMN> models, 
-			Matter *& sample, PlasmaData *& pdata) : Model(sample,pdata,accuracy){
+			Matter *& sample, PlasmaData & pdata) : Model(sample,pdata,accuracy){
 	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, float accuracy, std::array<bool,3> models, Matter *& sample, PlasmaData const *& pdata) : Model(sample,pdata,accuracy)\n\n");
 	UseModel = models;
 	CreateFile(filename);
 }
 
 ForceModel::ForceModel(std::string filename, float accuracy, std::array<bool,FMN> models, 
-			Matter *& sample, PlasmaGrid & pgrid) : Model(sample,pgrid,accuracy){
+			Matter *& sample, PlasmaData * pdata) : Model(sample,*pdata,accuracy){
+	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, float accuracy, std::array<bool,3> models, Matter *& sample, PlasmaData const *& pdata) : Model(sample,pdata,accuracy)\n\n");
+	UseModel = models;
+	CreateFile(filename);
+}
+
+ForceModel::ForceModel(std::string filename, float accuracy, std::array<bool,FMN> models, 
+			Matter *& sample, PlasmaGrid_Data & pgrid) : Model(sample,pgrid,accuracy){
 	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, float accuracy, std::array<bool,3> models, Matter *& sample, PlasmaGrid const& pgrid) : Model(sample,pgrid,accuracy)\n\n");
 	UseModel = models;
 	CreateFile(filename);
@@ -199,7 +206,7 @@ threevector ForceModel::Gravity()const{
 	double Theta = Sample->get_position().gety();
 	// Setup for Magnum-PSI
 	gravity = Pdata->Gravity;
-	if( get_machine() == 'p' ){ // For Magnum PSI, Gravity is not in -z direction but is radial & Azimuthal
+	if( get_device() == 'p' ){ // For Magnum PSI, Gravity is not in -z direction but is radial & Azimuthal
 		gravity.setx(-Pdata->Gravity.mag3()*cos(Theta));
 		gravity.sety(Pdata->Gravity.mag3()*sin(Theta));
 	}

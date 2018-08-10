@@ -19,6 +19,8 @@ class Beryllium: public Matter{
 		Beryllium(double radius);
 		Beryllium(double radius, double tempin);
 		Beryllium(double radius, double tempin, std::array<char,4> &constmodels);
+		Beryllium(double radius, double tempin, std::array<char,4> &constmodels,
+			const threevector& position, const threevector& velocity);
 
 		// Destructor
 		~Beryllium(){};

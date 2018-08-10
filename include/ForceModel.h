@@ -3,7 +3,7 @@
 
 #include "Model.h"
 
-const long unsigned int FMN = 6;	// CHARGE MODEL NUMBER, the number of charge models
+const unsigned int FMN = 6;	// CHARGE MODEL NUMBER, the number of charge models
 
 class ForceModel : public Model {
 
@@ -28,9 +28,11 @@ class ForceModel : public Model {
 		// Constructors
 		ForceModel();
 		ForceModel(std::string filename, float accuracy, std::array<bool,FMN> models, 
-				Matter *& sample, PlasmaData *& pdata);
+				Matter *& sample, PlasmaData & pdata);
 		ForceModel(std::string filename, float accuracy, std::array<bool,FMN> models, 
-				Matter *& sample, PlasmaGrid & pgrid);
+				Matter *& sample, PlasmaData * pdata);
+		ForceModel(std::string filename, float accuracy, std::array<bool,FMN> models, 
+				Matter *& sample, PlasmaGrid_Data & pgrid);
 
 		// Destructor
 		~ForceModel(){};

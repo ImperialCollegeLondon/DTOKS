@@ -5,42 +5,42 @@
 #include "Matter.h"
 // Default values describe Tungsten
 struct GrainData MatterDefaults = { 
-	false,		// Is Liquid,		fine
-	false,		// Is Gas,		fine
-	false,		// Breakup,		fine
-	1e-6,		// Unheated Radius,	should be updated
-	8.21e-14,	// Mass,		should be updated
-	1e-6,		// Radius,		fine
-	1.26e-11,	// Surface Area		should be updated
-	4.189e-18,	// Volume		should be updated
-	19600,		// Density		should be updated
-	5555,		// SuperBoilingTemp	should be updated	(was 3000)
-	270,		// Temperature		fine
-	1e5,		// Vapour Pressure	should be updated
-	1.0,		// Emissivity		should be updated
-	1.0,		// Linear Expansion	should be updated
-	0.5,		// Heat Capacity	should be updated
-	0,		// DeltaSec		should be updated
-	0,		// DeltaTherm		should be updated
-	0,		// Potential		should be updated
-	false,		// Is Positive		should be updated
-	{0,0,0},	// Dust position	case dependant
-	{0,0,0},	// Dust Velocity	case dependant
-	0,		// Rotational Freq  	fine
-	0,		// FusionEnergy		fine
-	0		// VapourEnergy		fine
+	false,			// Is Liquid,		fine
+	false,			// Is Gas,			fine
+	false,			// Breakup,			fine
+	1e-6,			// Unheated Radius,	should be updated
+	8.21e-14,		// Mass,			should be updated
+	1e-6,			// Radius,			fine
+	1.26e-11,		// Surface Area		should be updated
+	4.189e-18,		// Volume			should be updated
+	19600,			// Density			should be updated
+	5555,			// SuperBoilingTemp	should be updated	(was 3000)
+	270,			// Temperature		fine
+	1e5,			// Vapour Pressure	should be updated
+	1.0,			// Emissivity		should be updated
+	1.0,			// Linear Expansion	should be updated
+	0.5,			// Heat Capacity	should be updated
+	0,				// DeltaSec		should be updated
+	0,				// DeltaTherm		should be updated
+	0,				// Potential		should be updated
+	false,			// Is Positive		should be updated
+	{0.0,0.0,0.0},	// Dust position	should be updated
+	{0,0,0},		// Dust Velocity	case dependant
+	0,				// Rotational Freq  fine
+	0,				// FusionEnergy		fine
+	0				// VapourEnergy		fine
 };
 
-
 // Constructors
-Matter::Matter(const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults){
-	M_Debug("\n\nIn Matter::Matter(const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults)\n\n");
+Matter::Matter(const ElementConsts &elementconsts):Ec(elementconsts),St(MatterDefaults){
+	M_Debug("\n\nIn Matter::Matter(const ElementConsts elementconsts):Ec(*elementconsts),St(MatterDefaults)\n\n");
 	ConstModels = {'c','c','c','y'};
 	St.Mass = Ec.RTDensity*St.Volume;
 	PreBoilMass = St.Mass;
 };
-Matter::Matter(double rad, const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults){
-	M_Debug("\n\nIn Matter::Matter(double rad, const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults)\n\n");
+
+Matter::Matter(double rad, const ElementConsts &elementconsts):Ec(elementconsts),St(MatterDefaults){
+	M_Debug("\n\nIn Matter::Matter(double rad, const ElementConsts elementconsts):Ec(*elementconsts),St(MatterDefaults)\n\n");
 	ConstModels = {'c','c','c','y'};
 	St.Radius = rad;			// m
 	St.UnheatedRadius = St.Radius;		// m
@@ -52,8 +52,8 @@ Matter::Matter(double rad, const ElementConsts *elementconsts):Ec(*elementconsts
 //	M_Debug("\nSt.Radius = " << St.Radius << "\nSt.Mass = " << St.Mass);
 };
 
-Matter::Matter(double rad, double temp, const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults){
-	M_Debug("\n\nIn Matter::Matter(double rad, double temp, const ElementConsts *elementconsts):Ec(*elementconsts),St(MatterDefaults)\n\n");
+Matter::Matter(double rad, double temp, const ElementConsts &elementconsts):Ec(elementconsts),St(MatterDefaults){
+	M_Debug("\n\nIn Matter::Matter(double rad, double temp, const ElementConsts elementconsts):Ec(*elementconsts),St(MatterDefaults)\n\n");
 	ConstModels = {'c','c','c','y'};
 	St.Radius = rad;					// m
 	St.UnheatedRadius = St.Radius;				// m
@@ -73,8 +73,8 @@ Matter::Matter(double rad, double temp, const ElementConsts *elementconsts):Ec(*
 	M_Debug("\nEc.LatentVapour = " << Ec.LatentVapour << "\nEc.AtomicMass = " << Ec.AtomicMass);
 };
 
-Matter::Matter(double rad, double temp, const ElementConsts *elementconsts, std::array<char,4> &constmodels):Ec(*elementconsts),St(MatterDefaults){
-	M_Debug("\n\nIn Matter::Matter(double rad, double temp, const ElementConsts *elementconsts, std::array<char,4> &constmodels):Ec(*elementconsts),St(MatterDefaults)\n\n");
+Matter::Matter(double rad, double temp, const ElementConsts &elementconsts, std::array<char,4> &constmodels):Ec(elementconsts),St(MatterDefaults){
+	M_Debug("\n\nIn Matter::Matter(double rad, double temp, const ElementConsts elementconsts, std::array<char,4> &constmodels):Ec(*elementconsts),St(MatterDefaults)\n\n");
 	ConstModels = constmodels;
 	St.Radius = rad;					// m
 	St.UnheatedRadius = St.Radius;				// m
@@ -380,8 +380,8 @@ void Matter::update_temperature(double EnergyIn){
 	if(!St.Gas)	assert(St.Temperature <= St.SuperBoilingTemp);
 };
 
-void Matter::update_motion(threevector &ChangeInPosition,threevector &ChangeInVelocity, double Rotation){
-	M_Debug("\tIn Matter::update_motion(threevector &ChangeInPosition,threevector &ChangeInVelocity)\n\n");
+void Matter::update_motion(const threevector &ChangeInPosition,const threevector &ChangeInVelocity, double Rotation){
+	M_Debug("\tIn Matter::update_motion(const threevector &ChangeInPosition,const threevector &ChangeInVelocity)\n\n");
 	// Calculate new position
 
 	St.DustPosition = St.DustPosition + ChangeInPosition;

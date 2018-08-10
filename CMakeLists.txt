@@ -24,7 +24,7 @@ include_directories(${PROJECT_SOURCE_DIR}/include ${HDF5_INCLUDE_DIRS} ${NETCDF_
 add_subdirectory(Tests)
 
 add_library(DTOKSFunc ${PROJECT_SOURCE_DIR}/src/Functions.cpp ${PROJECT_SOURCE_DIR}/src/Constants.cpp ${PROJECT_SOURCE_DIR}/src/threevector.cpp)
-add_library(DTOKSCore ${PROJECT_SOURCE_DIR}/src/Beryllium.cpp ${PROJECT_SOURCE_DIR}/src/Tungsten.cpp ${PROJECT_SOURCE_DIR}/src/Graphite.cpp ${PROJECT_SOURCE_DIR}/src/Iron.cpp ${PROJECT_SOURCE_DIR}/src/Matter.cpp ${PROJECT_SOURCE_DIR}/src/ChargingModel.cpp ${PROJECT_SOURCE_DIR}/src/HeatingModel.cpp ${PROJECT_SOURCE_DIR}/src/ForceModel.cpp ${PROJECT_SOURCE_DIR}/src/Model.cpp ${PROJECT_SOURCE_DIR}/src/PlasmaGrid.cpp)
+add_library(DTOKSCore ${PROJECT_SOURCE_DIR}/src/Beryllium.cpp ${PROJECT_SOURCE_DIR}/src/Tungsten.cpp ${PROJECT_SOURCE_DIR}/src/Graphite.cpp ${PROJECT_SOURCE_DIR}/src/Iron.cpp ${PROJECT_SOURCE_DIR}/src/Matter.cpp ${PROJECT_SOURCE_DIR}/src/ChargingModel.cpp ${PROJECT_SOURCE_DIR}/src/HeatingModel.cpp ${PROJECT_SOURCE_DIR}/src/ForceModel.cpp ${PROJECT_SOURCE_DIR}/src/Model.cpp)
 
 target_link_libraries(main ${HDF5_LIBRARIES} ${HDF5_HL_LIBRARIES} ${HDF5_CXX_LIBRARIES} ${NETCDF_LIBRARIES_CXX} ${PROJECT_SOURCE_DIR}/Dependencies/config4cpp/lib/libconfig4cpp.a)
 

@@ -3,7 +3,7 @@
 
 #include "Model.h"
 
-const long unsigned int HMN = 9;	// CHARGE MODEL NUMBER, the number of charge models
+const unsigned int HMN = 9;	// CHARGE MODEL NUMBER, the number of charge models
 
 class HeatingModel : public Model{
 
@@ -42,9 +42,11 @@ class HeatingModel : public Model{
 		// Constructors
 		HeatingModel();
 		HeatingModel( std::string filename, float accuracy, std::array<bool,HMN> &models, 
-				Matter *& sample, PlasmaData *& pdata);
+				Matter *& sample, PlasmaData & pdata);
 		HeatingModel( std::string filename, float accuracy, std::array<bool,HMN> &models, 
-				Matter *& sample, PlasmaGrid & pgrid);
+				Matter *& sample, PlasmaData * pdata);
+		HeatingModel( std::string filename, float accuracy, std::array<bool,HMN> &models, 
+				Matter *& sample, PlasmaGrid_Data & pgrid);
 
 		// Destructor
 		~HeatingModel(){

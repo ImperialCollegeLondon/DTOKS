@@ -1,7 +1,6 @@
 #ifndef __DTOKSU_H_INCLUDED__   // if Matter.h hasn't been included yet...
 #define __DTOKSU_H_INCLUDED__
 
-#include "PlasmaGrid.h"
 #include "HeatingModel.h"
 #include "ForceModel.h"
 #include "ChargingModel.h"
@@ -23,33 +22,33 @@ class DTOKSU{
 		std::ofstream MyFile;			// Output data file
 	
 		// Private Functions
-		void Print();				// Write to output data file
-		void CreateFile(std::string filename);
+		void print();				// Write to output data file
+		void create_file(std::string filename);
 
 	public:
+		static const unsigned int MN = 3;	// MODEL NUMBER, the number of physical models in DTOKS
+
 //		DTOKSU();
-		DTOKSU( std::array<float,3> alvls, Matter *& sample, PlasmaData *&pdata,
+		DTOKSU( std::array<float,MN> alvls, Matter *& sample, PlasmaData &pdata,
 				std::array<bool,HMN> &heatmodels, std::array<bool,FMN> &forcemodels, 
 				std::array<bool,CMN> &chargemodels);
-		DTOKSU( std::array<float,3> alvls, Matter *& sample, PlasmaGrid &pgrid,
+		DTOKSU( std::array<float,MN> alvls, Matter *& sample, PlasmaGrid_Data &pgrid,
 				std::array<bool,HMN> &heatmodels, std::array<bool,FMN> &forcemodels, 
 				std::array<bool,CMN> &chargemodels);
 
 		~DTOKSU(){
 		};
-		
+
 		int Run();
 		void OpenFiles(std::string filename, unsigned int i);
 		void CloseFiles();			// Close all model files
 		void ResetModelTime(double HMTime, double FMTime, double CMTime);
 	
-		double get_HMTime()const{ return HM.get_totaltime(); }
-		double get_FMTime()const{ return FM.get_totaltime(); }
-		double get_CMTime()const{ return CM.get_totaltime(); }
+		double 		get_HMTime()const	{ 	return HM.get_totaltime(); }
+		double 		get_FMTime()const	{ 	return FM.get_totaltime(); }
+		double 		get_CMTime()const	{ 	return CM.get_totaltime(); }
 	
-		threevector get_bfielddir(){
-			return (FM.get_plasmadata()->MagneticField.getunit());
-		}
+		threevector get_bfielddir()const{	return (FM.get_plasmadata()->MagneticField.getunit());	}
 };
 
 #endif

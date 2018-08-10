@@ -80,10 +80,10 @@
 #define D1_Debug(x) 
 #endif 
 
-#ifdef BREAKUP_DEBUG
-#define B_Debug(x) std::cout << x
+#ifdef DM_DEBUG
+#define DM_Debug(x) std::cout << x
 #else
-#define B_Debug(x) 
+#define DM_Debug(x) 
 #endif 
 
 #ifdef PAUSE

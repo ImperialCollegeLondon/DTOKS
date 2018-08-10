@@ -9,7 +9,7 @@
 
 // NOTE THE FOLLOWING MUST BE WELL DEFINED BY CHILDREN OF MATTER UPON INITIALIZATION
 // VapourPressure; 		// N/m^2 or Pa, Pascals
-// Emissivity;		// Arb, deviation of EM radiation from black body spectrum
+// Emissivity;			// Arb, deviation of EM radiation from black body spectrum
 // LinearExpansion; 	// Units of m K^-1
 // HeatCapacity;		// kJ/(kg·K)	(Constant Pressure!)
 

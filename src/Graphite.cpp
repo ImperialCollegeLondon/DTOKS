@@ -24,17 +24,17 @@ const struct ElementConsts GraphiteConsts = {
 };
 
 
-Graphite::Graphite():Matter(&GraphiteConsts){
+Graphite::Graphite():Matter(GraphiteConsts){
 	set_defaults();
 	update();
 }
 
-Graphite::Graphite(double radius):Matter(radius,&GraphiteConsts){
+Graphite::Graphite(double radius):Matter(radius,GraphiteConsts){
 	set_defaults();
 	update();
 }
 
-Graphite::Graphite(double radius, double tempin):Matter(radius,tempin,&GraphiteConsts){
+Graphite::Graphite(double radius, double tempin):Matter(radius,tempin,GraphiteConsts){
 	E_Debug("\n\nIn Graphite::Graphite(double radius, double tempin)");
 	set_defaults();
 
@@ -45,7 +45,7 @@ Graphite::Graphite(double radius, double tempin):Matter(radius,tempin,&GraphiteC
 			<< "\nSt.Volume = " << St.Volume);
 }
 
-Graphite::Graphite(double radius, double tempin, std::array<char,4> &constmodels):Matter(radius,tempin,&GraphiteConsts){
+Graphite::Graphite(double radius, double tempin, std::array<char,4> &constmodels):Matter(radius,tempin,GraphiteConsts){
 	E_Debug("\n\nIn Graphite::Graphite(double radius, double tempin)");
 	set_defaults();
 
@@ -56,6 +56,20 @@ Graphite::Graphite(double radius, double tempin, std::array<char,4> &constmodels
 	E_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius << "\nSt.Density = " << St.Density 
 			<< "\nSt.Volume = " << St.Volume);
 }
+
+Graphite::Graphite(double radius, double tempin, std::array<char,4> &constmodels, const threevector & position, const threevector& velocity):Matter(radius,tempin,GraphiteConsts){
+	E_Debug("\n\nIn Graphite::Graphite(double radius, double tempin)");
+	set_defaults();
+
+	update_state(0.0);		// Temperature dependent
+	update_models(constmodels);
+	update_motion(position,velocity,0.0);
+	update();
+
+	E_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius << "\nSt.Density = " << St.Density 
+			<< "\nSt.Volume = " << St.Volume);
+}
+
 void Graphite::set_defaults(){
 	E_Debug("\n\nIn Graphite::set_defaults()");
         St.HeatCapacity = 0.846; 		// kJ/(kg-K)			(+/- 0.001)
