@@ -27,18 +27,18 @@ int ForceTest(char Element, std::string ForceType){
 	bool HybridIonDrag = false;	// IS OFF!
         bool NeutralDrag = false;	// Is OFF!
 
-	PlasmaData *Pdata = new PlasmaData();
+	PlasmaData Pdata;
 
 //	threevector PlasmaVelocity(10, 5, 3); // Taken from initial for DTOKS
-//	Pdata->PlasmaVel = PlasmaVelocity;
-	Pdata->ElectronTemp = 10*1.16e4;	// K, Electron Temperature, convert from eV
+//	Pdata.PlasmaVel = PlasmaVelocity;
+	Pdata.ElectronTemp = 10*1.16e4;	// K, Electron Temperature, convert from eV
 	threevector GravityForce(0, 0, -9.81);
-	Pdata->Gravity = GravityForce;
+	Pdata.Gravity = GravityForce;
 //	threevector Efield(1.0, -2.0, 3.0);
 	threevector Efield(1.0, 0.0, 0.0);
-	Pdata->ElectricField = Efield;
+	Pdata.ElectricField = Efield;
 	threevector Bfield(0.0, 0.0, 10.0);
-	Pdata->MagneticField = Bfield;
+	Pdata.MagneticField = Bfield;
 
 	if( ForceType == "Gravity" ){
 		Gravity = true;
@@ -46,11 +46,11 @@ int ForceTest(char Element, std::string ForceType){
 		Gravity = true;
 		Lorentz = true;
 		threevector zeros(0.0, 0.0, 0.0);
-		Pdata->MagneticField = zeros;
+		Pdata.MagneticField = zeros;
 	}else if( ForceType == "BField" ){
 		Lorentz = true;
 		threevector zeros(0.0, 0.0, 0.0);
-		Pdata->ElectricField = zeros;
+		Pdata.ElectricField = zeros;
 	}else if( ForceType == "Lorentz" ){
 		Lorentz = true;
 	}else if( ForceType == "LorentzGravity" ){
@@ -84,7 +84,7 @@ int ForceTest(char Element, std::string ForceType){
 	Sample->set_potential(Potential);
 	// Determine initial conditions depending on the force type
 	threevector vinit(0.0,0.0,0.0);
-	threevector rinit(0.0,0.0,0.0);
+	threevector rinit(0.0,0.0,0.01);
 
 	if( ForceType == "BField" ){ // Start at large radius and with positive radial and z velocity
 		vinit.setx(1.0);
@@ -110,14 +110,14 @@ int ForceTest(char Element, std::string ForceType){
 	// START ANALYTICAL MODEL
 	threevector AnalyticVelocity;
 	double ModelTimeStep = MyModel.get_timestep();
-	double qtom = 4*PI*epsilon0*Sample->get_radius()*Kb*Pdata->ElectronTemp*Sample->get_potential()/(echarge*Mass);
+	double qtom = 4*PI*epsilon0*Sample->get_radius()*Kb*Pdata.ElectronTemp*Sample->get_potential()/(echarge*Mass);
 	if( ForceType == "Gravity" ){
-		AnalyticVelocity = (Pdata->Gravity)*(imax*MyModel.get_timestep());
+		AnalyticVelocity = (Pdata.Gravity)*(imax*MyModel.get_timestep());
 	}else if( ForceType == "EFieldGravity" ){
-		AnalyticVelocity = (Efield*qtom + Pdata->Gravity)*(imax*MyModel.get_timestep());
+		AnalyticVelocity = (Efield*qtom + Pdata.Gravity)*(imax*MyModel.get_timestep());
 	}else if( ForceType == "BField"){
 		
-		double GyroFrequency = qtom*Pdata->MagneticField.mag3();
+		double GyroFrequency = qtom*Pdata.MagneticField.mag3();
 		double VPerp = sqrt(vinit.getx()*vinit.getx()+vinit.gety()*vinit.gety());
 	
 		double vx = VPerp*cos(GyroFrequency*imax*MyModel.get_timestep());
@@ -129,13 +129,13 @@ int ForceTest(char Element, std::string ForceType){
 	}else if( ForceType == "Lorentz" ){
 		// Starting from zero initial velocity with EField = (1.0,0.0,0.0), BField = (0.0,0.0,10.0)
 		// We have an ExB drift vE, and gyro-motion with gyro-velocity equal to the max of vE
-		double GyroFrequency = qtom*Pdata->MagneticField.mag3(); // Direction of this as vector is parallel to B
+		double GyroFrequency = qtom*Pdata.MagneticField.mag3(); // Direction of this as vector is parallel to B
 		double VPerp = sqrt(vinit.getx()*vinit.getx()+vinit.gety()*vinit.gety());
 	
-		threevector vE = (Pdata->ElectricField^Pdata->MagneticField)*(1/(Pdata->MagneticField*Pdata->MagneticField));	
+		threevector vE = (Pdata.ElectricField^Pdata.MagneticField)*(1/(Pdata.MagneticField*Pdata.MagneticField));	
 	
-		double vx = vE.getx()+(Pdata->ElectricField.getx()/Pdata->MagneticField.mag3())*sin(GyroFrequency*imax*MyModel.get_timestep()); // vE.getx()
-		double vy = vE.gety()+(Pdata->ElectricField.getx()/Pdata->MagneticField.mag3())*cos(GyroFrequency*imax*MyModel.get_timestep()); // vE.gety()
+		double vx = vE.getx()+(Pdata.ElectricField.getx()/Pdata.MagneticField.mag3())*sin(GyroFrequency*imax*MyModel.get_timestep()); // vE.getx()
+		double vy = vE.gety()+(Pdata.ElectricField.getx()/Pdata.MagneticField.mag3())*cos(GyroFrequency*imax*MyModel.get_timestep()); // vE.gety()
 		double vz = qtom*Efield.getz()*imax*ModelTimeStep+vinit.getz();
 	
 		AnalyticVelocity.setx(vx);
@@ -145,17 +145,17 @@ int ForceTest(char Element, std::string ForceType){
 		// Starting from zero initial velocity with 
 		// EField = (1.0,0.0,0.0), BField = (0.0,0.0,10.0) & Gravity = (0.0,0.0,-9.81)
 		// We have an ExB drift vE, and Gravity force drift vG and gyro-motion with gyro-velocity equal to the max of vE+vG
-		double GyroFrequency = qtom*Pdata->MagneticField.mag3(); // Direction of this as vector is parallel to B
+		double GyroFrequency = qtom*Pdata.MagneticField.mag3(); // Direction of this as vector is parallel to B
 		double VPerp = sqrt(vinit.getx()*vinit.getx()+vinit.gety()*vinit.gety());
 	
-		threevector vE = (Pdata->ElectricField^Pdata->MagneticField)*(1/(Pdata->MagneticField*Pdata->MagneticField));	
-		threevector vG = qtom*(Pdata->Gravity^Pdata->MagneticField)*(1/(Pdata->MagneticField*Pdata->MagneticField));	
+		threevector vE = (Pdata.ElectricField^Pdata.MagneticField)*(1/(Pdata.MagneticField*Pdata.MagneticField));	
+		threevector vG = qtom*(Pdata.Gravity^Pdata.MagneticField)*(1/(Pdata.MagneticField*Pdata.MagneticField));	
 	
 		double vdriftMag = (vE +vG).mag3();
 	
 		double vx = vE.getx()+vdriftMag*sin(GyroFrequency*imax*MyModel.get_timestep()); // vE.getx()
 		double vy = vE.gety()+vdriftMag*cos(GyroFrequency*imax*MyModel.get_timestep()); // vE.gety()
-		double vz = (qtom*Efield.getz()+Pdata->Gravity.getz())*imax*ModelTimeStep+vinit.getz();
+		double vz = (qtom*Efield.getz()+Pdata.Gravity.getz())*imax*ModelTimeStep+vinit.getz();
 	
 		AnalyticVelocity.setx(vx);
 		AnalyticVelocity.sety(vy);
@@ -163,8 +163,6 @@ int ForceTest(char Element, std::string ForceType){
 
 	}
 
-
-	delete Pdata;
 	// END ANALYTICAL MODEL
 	
 	double ReturnVal = 0;
@@ -190,8 +188,6 @@ int ForceTest(char Element, std::string ForceType){
 	if( AnalyticVelocity.getz() != 0.0 )
 		std::cout << "\nPercentage Deviation: Zdir = " << 100*fabs(1.0-ModelVelocity.getz()/AnalyticVelocity.getz()) <<"%\n*****\n\n";
 
-	delete Sample;
-
 	return ReturnVal;
 }
 /*
@@ -199,7 +195,7 @@ int ForceTest(char Element, std::string ForceType){
 	threevector Eperp = Efield - Eparr;
 	double ConvertKelvsToeV(8.621738e-5);
 	// NOTE: this is the charge to mass ratio for a negative grain only...
-	double qtom = -3.0*epsilon0*Pdata->ElectronTemp*ConvertKelvsToeV*Sample->get_potential()
+	double qtom = -3.0*epsilon0*Pdata.ElectronTemp*ConvertKelvsToeV*Sample->get_potential()
 			/(pow(Sample->get_radius(),2)*Sample->get_density());
 	double AngularVel = qtom*Bfield.mag3();
 	double rc = 0.0;

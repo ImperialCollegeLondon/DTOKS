@@ -165,7 +165,8 @@ void ForceModel::Force(double timestep){
 //	std::cout << "\nTe = " << Pdata->ElectronTemp; std::cin.get();
 
 	Sample->update_motion(ChangeInPosition,ChangeInVelocity,RotationalSpeedUp);
-
+	if( !ContinuousPlasma )
+		assert( Sample->get_position().getx() > 0.0 );
 	F1_Debug( "\nChangeInPosition : " << ChangeInPosition << "\nChangeInVelocity : " << ChangeInVelocity << "\nAcceleration : " << Acceleration << "\nTimeStep : " << TimeStep << "\n");
 	F_Debug("\t"); Print();
 	TotalTime += timestep;

@@ -10,6 +10,50 @@
 #include "Graphite.h"
 #include "Beryllium.h"
 
+static struct PlasmaData PlasmaDataDefaults = {
+	1e20,		// m^-3, Neutral Density
+	1e20,		// m^-3, Electron Density
+	1e20,		// m^-3, Ion Density
+	116045.25,	// K, Ion Temperature
+	116045.25,	// K, Electron Temperature
+	116045.25,	// K, Neutral Temperature
+	300,		// K, Ambient Temperature
+	1.66054e-27,// kg, Mass of ions
+	threevector(),	// m s^-1, Plasma Velocity (Should eventually be normalised to sound speed cs)
+	threevector(),	// m s^-2, Acceleration due to gravity
+	threevector(),	// V m^-1, Electric field at dust location (Normalised later) 
+	threevector(),	// T, Magnetic field at dust location (Normalised later)
+};
+
+static struct PlasmaGrid_Data PlasmaGrid_DataDefaults = {
+	// Plasma Parameters
+	std::vector< std::vector<double> >(),
+	std::vector< std::vector<double> >(),
+	std::vector< std::vector<double> >(),
+	std::vector< std::vector<double> >(),
+	std::vector< std::vector<double> >(),
+	std::vector< std::vector<double> >(),
+	std::vector< std::vector<double> >(),
+	std::vector< std::vector<double> >(),
+	std::vector< std::vector<double> >(),
+	std::vector< std::vector<double> >(),
+	std::vector< std::vector<double> >(),
+	std::vector< std::vector<double> >(),
+	std::vector< std::vector<int> >	(),
+
+	251,
+	401,
+	0,
+	1.5,
+	4.0,
+	-2.0,
+	2.0,
+
+	1.66054e-27,
+	'h',
+	'j',
+};
+
 class Model{
 //	Could also be
  	private:
@@ -59,7 +103,7 @@ class Model{
 		virtual ~Model(){};
 
 		const Matter *get_sample			()const{ return Sample;		}
-		const std::shared_ptr<PlasmaData>  get_plasmadata	()const{ return Pdata; 		}
+		const threevector  get_bfield		()const{ return Pdata->MagneticField.getunit(); 		}
 		double get_totaltime				()const{ return TotalTime; 	}
 		double get_timestep					()const{ return TimeStep; 	}	
 

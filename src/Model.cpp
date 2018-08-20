@@ -3,52 +3,7 @@
 
 #include "Model.h"
 
-//PlasmaGrid *DefaultGrid = new PlasmaGrid('h','m',0.01);
-struct PlasmaData PlasmaDataDefaults = {
-	1e20,		// m^-3, Neutral Density
-	1e20,		// m^-3, Electron Density
-	1e20,		// m^-3, Ion Density
-	116045.25,	// K, Ion Temperature
-	116045.25,	// K, Electron Temperature
-	116045.25,	// K, Neutral Temperature
-	300,		// K, Ambient Temperature
-	1.66054e-27,// kg, Mass of ions
-	threevector(),	// m s^-1, Plasma Velocity (Should eventually be normalised to sound speed cs)
-	threevector(),	// m s^-2, Acceleration due to gravity
-	threevector(),	// V m^-1, Electric field at dust location (Normalised later) 
-	threevector(),	// T, Magnetic field at dust location (Normalised later)
-};
-
-struct PlasmaGrid_Data PlasmaGrid_DataDefaults = {
-	// Plasma Parameters
-	std::vector< std::vector<double> >(),
-	std::vector< std::vector<double> >(),
-	std::vector< std::vector<double> >(),
-	std::vector< std::vector<double> >(),
-	std::vector< std::vector<double> >(),
-	std::vector< std::vector<double> >(),
-	std::vector< std::vector<double> >(),
-	std::vector< std::vector<double> >(),
-	std::vector< std::vector<double> >(),
-	std::vector< std::vector<double> >(),
-	std::vector< std::vector<double> >(),
-	std::vector< std::vector<double> >(),
-	std::vector< std::vector<int> >	(),
-
-	251,
-	401,
-	0,
-	1.5,
-	4.0,
-	-2.0,
-	2.0,
-
-	1.66054e-27,
-	'h',
-	'j',
-};
-
-Model::Model():Sample(new Tungsten),PG_data(&PlasmaGrid_DataDefaults),Pdata(&PlasmaDataDefaults),Accuracy(1.0),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
+Model::Model():Sample(new Tungsten),PG_data(std::make_shared<PlasmaGrid_Data>(PlasmaGrid_DataDefaults)),Pdata(&PlasmaDataDefaults),Accuracy(1.0),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
 	Mo_Debug("\n\nIn Model::Model():Sample(new Tungsten),PG_data(PlasmaGridDefaults),Pdata(&PlasmaDefaults),Accuracy(1.0),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0)\n\n");
 	i = 0; k = 0;
 	PlasmaDataFile.open("Data/pd.txt");
@@ -60,7 +15,7 @@ Model::Model():Sample(new Tungsten),PG_data(&PlasmaGrid_DataDefaults),Pdata(&Pla
 
 // Constructor for Matter sample sitting in a constant plasma background given by PlasmaData (pdata) with a Default grid
 Model::Model( Matter *&sample, PlasmaData &pdata, float accuracy )
-		:Sample(sample),PG_data(&PlasmaGrid_DataDefaults),Pdata(std::make_shared<PlasmaData>(pdata)),Accuracy(accuracy),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
+		:Sample(sample),PG_data(std::make_shared<PlasmaGrid_Data>(PlasmaGrid_DataDefaults)),Pdata(std::make_shared<PlasmaData>(pdata)),Accuracy(accuracy),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
 	Mo_Debug("\n\nIn Model::Model( Matter *&sample, PlasmaData *&pdata, float accuracy ):Sample(sample),PG_data(PlasmaGridDefaults),Pdata(pdata),Accuracy(accuracy),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0)\n\n");
 	assert(Accuracy > 0);
 	i = 0; k = 0;

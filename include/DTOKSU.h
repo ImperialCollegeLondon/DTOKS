@@ -48,7 +48,7 @@ class DTOKSU{
 		double 		get_FMTime()const	{ 	return FM.get_totaltime(); }
 		double 		get_CMTime()const	{ 	return CM.get_totaltime(); }
 	
-		threevector get_bfielddir()const{	return (FM.get_plasmadata()->MagneticField.getunit());	}
+		threevector get_bfielddir()const{	return (FM.get_bfield());	}
 };
 
 #endif
