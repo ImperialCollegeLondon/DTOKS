@@ -179,7 +179,7 @@ void Matter::update_emissivity(){
 	}else{ // Invalid input for Emissivity model
 		std::cout << "\nError! In Matter::update_emissivity()\n"
 				<< "Invalid input for Emissivity Model.";
-		assert( strchr("cCvVfF",ConstModels[1]) );
+		assert( strchr("cCfF",ConstModels[0]) );
 	}
 
 	if(St.Emissivity > 1.0){
@@ -217,7 +217,7 @@ void Matter::update_boilingtemp(){
 	else{
 		std::cout << "\nError! In Matter::update_boilingtemp()\n"
 				<< "Invalid input '" << ConstModels[3] << "' for Emissivity Model.";
-		assert( strchr("yYnNsStT",ConstModels[1]) );
+		assert( strchr("yYnNsStT",ConstModels[3]) );
 	}
 	M2_Debug("\nR*log(CapillaryPressure)/(1000*Ec.LatentVapour*Ec.AtomicMass) = " 
 		<< R*log(CapillaryPressure)/(1000*Ec.LatentVapour*Ec.AtomicMass) << "\nSt.SuperBoilingTemp = " 
@@ -308,7 +308,7 @@ void Matter::update(){
 	else{
 		std::cout << "\nError! In Matter::update(char EmissivModel, char ExpansionModel, char ConstModels[0])\n"
                                 << "Invalid input for HeatCapacity Model.";
-                assert( strchr("vVcCsS",ConstModels[1]) );	
+                assert( strchr("vVcCsS",ConstModels[2]) );	
 	}
 
 	double CriticalRotation = 0.56*sqrt(8*Ec.SurfaceTension/(St.Density*pow(St.Radius,3)));

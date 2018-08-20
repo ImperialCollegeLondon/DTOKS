@@ -4,7 +4,6 @@
 
 //#include <math.h>
 #include "ForceModel.h"
-#include "MathHeader.h" // This is weird
 
 // Default Constructor, no arguments
 ForceModel::ForceModel():Model(){
@@ -88,7 +87,8 @@ double ForceModel::ProbeTimeStep()const{
 
 	// Check if the timestep should be shortened such that particles don't cross many grid cells in a single step
 	// (This is often the case without this condition.)
-	if( Sample->get_velocity().mag3() != 0.0 && ( get_dlx()*Accuracy/(2*Sample->get_velocity().mag3()) ) < timestep ){
+	if( !ContinuousPlasma &&  Sample->get_velocity().mag3() != 0.0 
+			&& ( get_dlx()*Accuracy/(2*Sample->get_velocity().mag3()) ) < timestep ){
 		F_Debug("\ntimestep limited by grid size!");
 		timestep = get_dlx()*Accuracy/(2*Sample->get_velocity().mag3());
 	}

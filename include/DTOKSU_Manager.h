@@ -25,15 +25,19 @@ class DTOKSU_Manager{
 		int configure_plasmagrid(std::string plasma_dirname);
 		int read_data(std::string plasma_dirname);
 		int read_MPSIdata(std::string plasma_dirname);
-
+	
 	public:
 		DTOKSU_Manager();
 		DTOKSU_Manager( int argc, char* argv[] );
+		DTOKSU_Manager( int argc, char* argv[], std::string = "Config_Files/DTOKSU_Config.cfg" );
 
 		~DTOKSU_Manager(){
 		};
 		
-		int Configure(int argc, char* argv[]);
+		int Configure(std::string = "Config_Files/DTOKSU_Config.cfg");
+		int Configure(int argc, char* argv[], std::string = "Config_Files/DTOKSU_Config.cfg");
+
+
 		int Breakup();
 		int Run();
 };

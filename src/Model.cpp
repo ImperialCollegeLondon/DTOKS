@@ -61,7 +61,10 @@ const bool Model::checkingrid(const int i, const int k)const{
 	bool returnval(true);
 	if( i >= get_gridx() || i < 0) returnval = false;
 	if( k >= get_gridz() || k < 0) returnval = false;
-	return returnval;
+	if( !ContinuousPlasma )
+		return returnval;
+
+	return true;
 }
 
 
@@ -86,6 +89,7 @@ const bool Model::update_plasmadata(){
 	double ConvertJtoK(7.24297166e22);		// Conversion factor from ev to K
 	bool InGrid = locate(i,k,Sample->get_position());
 	if( !InGrid ) return InGrid;			// Particle has escaped simulation domain
+	if( ContinuousPlasma ) return InGrid;
 	update_fields(i,k);
 	Pdata->NeutralDensity 	= 1e19;  	// NEUTRAL DENSITY EQUALS 10e19
 	Pdata->ElectronDensity 	= get_na1(i,k);  

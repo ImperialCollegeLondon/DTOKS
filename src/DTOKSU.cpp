@@ -72,7 +72,7 @@ int DTOKSU::Run(){
 
 	double HeatTime(0),ForceTime(0),ChargeTime(0);
 
-	bool InGrid = CM.update_plasmadata();
+	bool InGrid = CM.update_plasmadata(); 
 	CM.Charge(1e-100);		// Charge instantaneously as soon as we start, have to add a time though...
 	Sample->update();		// Need to manually update the first time as first step is not necessarily heating
 	bool ErrorFlag(false);
@@ -151,18 +151,21 @@ int DTOKSU::Run(){
 				// NOTE the FM.ProbeTimeStep() command takes a significant amount of time and has been found
 				// to be rarely activated. This could still be a nice/necessary check in some circumstances.
 				// However, I can't see a way to make this faster right now
+				double HM_ProbeTime = HM.ProbeTimeStep();
 				if( ForceTime/FM.ProbeTimeStep() > 2 ){
 					D1_Debug("\nForce TimeStep Has Changed Significantly whilst taking small steps...");
 //					std::cin.get();
 					j ++;
 					break; // Can't do this: MaxTimeStep = j*MinTimeStep; as we change MaxTimeStep...
 				}
-				if( HeatTime/HM.ProbeTimeStep() > 2 ){
+				if( HeatTime/HM_ProbeTime > 2 ){
 					D1_Debug("\nHeat TimeStep Has Changed Significantly whilst taking small steps...");
 
 					j ++;
 					break; // Can't do this: MaxTimeStep = j*MinTimeStep; as we change MaxTimeStep...
 				}
+
+				if( HM_ProbeTime == 1) break;			// Thermal Equilibrium Reached
 			}
 
 			// Take a time step in the slower time process
@@ -189,6 +192,7 @@ int DTOKSU::Run(){
 		InGrid = CM.update_plasmadata();
 		CM.RecordPlasmadata();
 		print();
+		Pause();
 		// ***** START OF : DETERMINE IF END CONDITION HAS BEEN REACHED ***** //
 		if( Sample->is_gas() && Sample->is_split() ){
 			std::cout << "\nSample has undergone electrostatic breakup!";

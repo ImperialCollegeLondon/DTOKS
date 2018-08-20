@@ -5,18 +5,27 @@
 // Default constructor
 DTOKSU_Manager::DTOKSU_Manager(){
 	DM_Debug("\n\nIn DTOKSU_Manager::DTOKSU_Manager()\n\n");
-	std::cout << "\n * CONFIGURING DTOKS * \n";
 	Config_Status = -1;
 };
 
 // Parameterised constructor, from command line.
 // Call the configure function with command line options to configure as well as construct.
 DTOKSU_Manager::DTOKSU_Manager(int argc, char* argv[]){
-	DM_Debug("\n\nIn DTOKSU_Manager::DTOKSU_Manager()\n\n");
+	DM_Debug("\n\nIn DTOKSU_Manager::DTOKSU_Manager(int argc, char* argv[])\n\n");
 	std::cout << "\n * CONFIGURING DTOKS * \n";
 	Config_Status = -1;
 	Config_Status = Configure(argc,argv);
 };
+
+// Parameterised constructor, from command line and config_file.
+// Call the configure function with command line options to configure as well as construct.
+DTOKSU_Manager::DTOKSU_Manager(int argc, char* argv[], std::string filename){
+	DM_Debug("\n\nIn DTOKSU_Manager::DTOKSU_Manager(int argc, char* argv[], std::string filename = Config/DTOKSU_Config.cfg)\n\n");
+	std::cout << "\n * CONFIGURING DTOKS * \n";
+	Config_Status = -1;
+	Config_Status = Configure(argc,argv,filename);
+};
+
 
 void DTOKSU_Manager::config_message()const{
 	if( Config_Status == -1 ){ // Configuration hasn't been processed
@@ -71,14 +80,20 @@ template<typename T> int DTOKSU_Manager::input_function(int &argc, char* argv[],
 }
 
 // Configure DTOKS ready to run with a particular plasma and matter sample
-// which are established from command line options and .cfg configuration files
-int DTOKSU_Manager::Configure(int argc, char* argv[]){
-	DM_Debug("\n\nIn DTOKSU_Manager::Configure(int argc, char* argv[])\n\n");
+// which are established from configuration filename
+int DTOKSU_Manager::Configure(std::string Config_Filename){
+	char* argv[0] = {};
+	return Configure(0,argv,Config_Filename);
+}
+
+// Configure DTOKS ready to run with a particular plasma and matter sample
+// which are established from command line options and DTOKSU_Config.cfg configuration file
+int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filename){
+	DM_Debug("\n\nIn DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filename=Config_Files/DTOKSU_Config.cfg)\n\n");
 
 	// ------------------- PARSE CONFIGURATION FILE ------------------- //
 	std::string MetaDataFilename = "Data/DTOKSU.txt";
 	std::string DataFilePrefix = "Data/DTOKSU";
-	std::string Config_Filename = "Config_Files/DTOKSU_Config_JET.cfg";
 	std::string dir_name = "PlasmaData/Magnum-PSI/";
 
 	// Check user input for specifying the configuration file.

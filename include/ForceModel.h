@@ -2,6 +2,7 @@
 #define __FORCEMODEL_H_INCLUDED__
 
 #include "Model.h"
+#include "MathHeader.h" // This is weird
 
 const unsigned int FMN = 6;	// CHARGE MODEL NUMBER, the number of charge models
 

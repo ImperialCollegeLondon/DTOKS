@@ -399,7 +399,7 @@ const double HeatingModel::IonHeatFlux(double DustTemperature)const{ // Assuming
 //		WarnOnce(runOnce,"In HeatingModel::IonHeatFlux(double DustTemperature)\nRE > 0.1. Ion Heat Flux affected by backscattering by more than 10%!");
 //	}
 
-	if( Pdata->IonTemp == 0 )	return 0;	
+	if( Pdata->IonTemp == 0 || Sample->get_potential()*(Pdata->ElectronTemp/Pdata->IonTemp) == -1.0 )	return 0;	
 	else				return (Sample->get_surfacearea()*(1-RE)*IonFlux(DustTemperature)*Pdata->IonTemp*Kb) 
 						*(2+2*Sample->get_potential()*(Pdata->ElectronTemp/Pdata->IonTemp)
 						+pow(Sample->get_potential()*(Pdata->ElectronTemp/Pdata->IonTemp),2))

@@ -1,5 +1,6 @@
 # Install dependenceis: ZLIB, HDF5, NETCDF
 mkdir Dependencies
+mkdir Data
 cd Dependencies
 
 . install_netcdf.sh
