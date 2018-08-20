@@ -21,6 +21,8 @@ find_package (NetCDF REQUIRED)
 
 include_directories(${PROJECT_SOURCE_DIR}/include ${HDF5_INCLUDE_DIRS} ${NETCDF_INCLUDES} ${PROJECT_SOURCE_DIR}/Dependencies/config4cpp/include)
 
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
+
 add_subdirectory(Tests)
 
 add_library(DTOKSFunc ${PROJECT_SOURCE_DIR}/src/Functions.cpp ${PROJECT_SOURCE_DIR}/src/Constants.cpp ${PROJECT_SOURCE_DIR}/src/threevector.cpp)

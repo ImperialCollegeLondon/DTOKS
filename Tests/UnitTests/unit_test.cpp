@@ -29,7 +29,24 @@ static void show_usage(std::string name){
 	std::cerr << "Usage: int main(int argc, char* argv[]) <option(s)> SOURCES"
 	<< "\n\nOptions:\n"
 	<< "\t-h,--help\t\tShow this help message\n\n"
-	<< "\t-m,--mode MODE\tstring variable defining the Test to be run\n\n";
+	<< "\t-m,--mode MODE\tstring variable defining the Test to be run. Available Options:\n"
+	<< "\t\tBackscatter	 : Returns the fraction of backscattered energy and back scattered particles\n"
+	<< "\t\tDeltaSec	 : Returns the empirical function calculating the yield due to secondary electron emission\n"
+	<< "\t\tDeltaTherm	 : Returns the value of the 'effective yield' from the Richardson-Dushmann formula\n"
+	<< "\t\tMaxwellian	 : Returns the value of the Maxwellian function for different values of temperature and energy\n"
+	<< "\t\tDTOKScharging	 : Returns the output the potential as calculated by the DTOKS solution to the OML equation\n"
+	<< "\t\tDTOKSWell	 : Returns the potential as calculated by the DTOKS solution to the OML equation with a well\n"
+	<< "\t\tOML		 : Returns the floating potential for small dust grains in a stationary plasma following OML theory\n"
+	<< "\t\tMOML		 : Returns the floating potential for large dust grains in a stationary plasma following MOML theory\n"
+	<< "\t\tMOMLWEM		 : Returns the floating potential for large emitting dust grains in a stationary plasma \n"
+	<< "\t\tMOMLEM		 : Returns the same as previous but as calculated by MOML-EM,\n\t\t\tsee N. Rizopoulou and M. Bacharis, Phys. Plasmas 25, (2018)\n"
+	<< "\t\tSOML		 : Returns the floating potential for small dust grains in a flowing plasma following SOML theory.\n"
+	<< "\t\tSMOML		 : Returns the floating potential for large dust grains in a flowing plasma following SMOML theory.\n"
+	<< "\t\tSchottkyOML	 : Returns the solution for the electron emission with Schottky correction\n"
+	<< "\t\tPHL		 : Returns the floating potential for small dust grains in collisionless weakly magnetised plasmas.\n"
+	<< "\t\tHybridIonDrag	 : Returns the magnitude of the HybridIonDrag force, see https://doi.org/10.1063/1.1867995\n"
+	<< "\t\tFortovIonDrag	 : Returns the magnitude of the ion drag force, see https://doi.org/10.1016/j.physrep.2005.08.007\n\n";
+
 }
 
 

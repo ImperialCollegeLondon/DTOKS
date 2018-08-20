@@ -8,14 +8,17 @@ Backups/
 Data/
 build/
 CMakeFiles/
+Plotting/
 
 bin/main
 bin/unit_test
 bin/int_test
+bin/lib*
 *.dat
 *.o
 *.png
 *.sh
+*.eps
 
 cmake_install.cmake
 Makefile
