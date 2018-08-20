@@ -19,6 +19,7 @@ bin/lib*
 *.png
 *.sh
 *.eps
+*.txt
 
 cmake_install.cmake
 Makefile
