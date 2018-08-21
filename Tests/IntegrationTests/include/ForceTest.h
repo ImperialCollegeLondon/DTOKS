@@ -12,6 +12,7 @@ int ForceTest(char Element, std::string ForceType){
 	char HeatCapacityModel = 'c'; 	// Possible values 'c', 'v' and 's': Corresponding to (c)onstant, (v)ariable and (s)et
 	char BoilingModel = 'y'; 	// Possible values 'y', 'n', 's' and 't': Corresponding to (y)es, (n)o, (s)uper 
 													// and (t)homson
+	char BreakupModel = 'n';	// Possible values 'r', 'e', 'b'  and 'n': Corresponding to (r)otational, (e)lectrostatic, (b)oth and (n)o
 
  	// Parameters describing the heating model
 	double Size=5e-8; 		// m
@@ -66,8 +67,8 @@ int ForceTest(char Element, std::string ForceType){
 	std::array<bool,FMN> ForceModels  = {Gravity,Centrifugal,Lorentz,DTOKSIonDrag,HybridIonDrag,NeutralDrag};
 
 	// Models and ConstModels are placed in an array in this order:
-	std::array<char, 4> ConstModels =
-		{ EmissivityModel,ExpansionModel,HeatCapacityModel,BoilingModel};
+	std::array<char, CM> ConstModels =
+		{ EmissivityModel,ExpansionModel,HeatCapacityModel,BoilingModel,BreakupModel};
 
 	if	(Element == 'W'){ 
 		Sample = new Tungsten(Size,Temp,ConstModels);

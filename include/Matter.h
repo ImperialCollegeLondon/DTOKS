@@ -17,6 +17,8 @@
 #include <limits>	// std::numeric_limits<double>::max()
 #include <string.h>	// strchr("",std::string)
 
+const unsigned int CM = 5;	// CHARGE MODEL NUMBER, the number of charge models
+
 class Matter{
 
        	// Functions used by HeatingMatter.cpp
@@ -25,14 +27,14 @@ class Matter{
 		Matter(const ElementConsts &elementconsts);
 		Matter(double rad, const ElementConsts &elementconsts);
 		Matter(double rad, double temp, const ElementConsts &elementconsts);
-		Matter(double rad, double temp, const ElementConsts &elementconsts, std::array <char,4> &constmodels);
-		Matter(double rad, double temp, const ElementConsts &elementconsts, std::array <char,4> &constmodels,
+		Matter(double rad, double temp, const ElementConsts &elementconsts, std::array <char,CM> &constmodels);
+		Matter(double rad, double temp, const ElementConsts &elementconsts, std::array <char,CM> &constmodels,
 			const threevector &Position, const threevector &Velocity);
  
 		struct GrainData 		St;
 		const struct ElementConsts	Ec;
 		double PreBoilMass;				// A variable needed to remember the mass before boiling...
-		std::array<char,4> ConstModels;	// Constant Models variation with Temperature turned on of possibly 4
+		std::array<char,CM> ConstModels;	// Constant Models variation with Temperature turned on of possibly CM
 
 		// Functions called by Matter::update(). These are element dependant and must be defined in the child class.
 		virtual void update_radius			()=0;
@@ -54,8 +56,8 @@ class Matter{
 		// volume, surface area, density, heat capacity, emissivity and vapour pressure
 		// Think about putting 'update()' in HeatingMatter.cpp
 		void update();
-		void update_models(char emissivmodel, char linexpanmodel, char heatcapacity, char boilingmodel);
-		void update_models(std::array<char,4> &constmodels);
+		void update_models(char emissivmodel, char linexpanmodel, char heatcapacity, char boilingmodel, char breakupmodel);
+		void update_models(std::array<char,CM> &constmodels);
 		void update_mass(double LostMass); // Mass lost in Kilogrammes
 		// Takes argument of amount of energy lost in Kilo Joules and changes temperature in Degrees
 		void update_temperature(double EnergyIn);
@@ -102,7 +104,7 @@ class Matter{
 		bool is_liquid				()const{ return St.Liquid;						};
 		bool is_split				()const{ return St.Breakup;						};
 		bool is_positive			()const{ return St.Positive;					};
-		bool get_c		  	 (int i)const{ assert(i < 4); return ConstModels[i];	};		
+		bool get_c		  	 (int i)const{ assert(i < CM); return ConstModels[i];	};		
 
 		void set_potential		(double potential){ St.Potential = potential;	};
 		void set_mass			(double mass){ assert(mass > MinMass*10); St.Mass = mass;	};

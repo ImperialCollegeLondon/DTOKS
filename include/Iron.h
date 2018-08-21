@@ -19,8 +19,8 @@ class Iron : public Matter{
 		Iron();
 		Iron(double radius);
 		Iron(double radius, double tempin);
-		Iron(double radius, double tempin, std::array<char,4> &constmodels);
-		Iron(double radius, double tempin, std::array<char,4> &constmodels,
+		Iron(double radius, double tempin, std::array<char,CM> &constmodels);
+		Iron(double radius, double tempin, std::array<char,CM> &constmodels,
 				const threevector &position, const threevector &velocity);
 
 		// Destructor

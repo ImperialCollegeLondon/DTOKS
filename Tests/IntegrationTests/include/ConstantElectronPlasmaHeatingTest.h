@@ -49,7 +49,7 @@ int ConstantElectronPlasmaHeatingTest(char Element){
 	std::array<bool, HMN> Models = 
 		{RadiativeCooling, EvaporativeCooling, NewtonCooling, IonHeatFlux, ElectronHeatFlux, NeutralHeatFlux, 
 		NeutralRecomb, SEE, TEE };
-	std::array<char, 4> ConstModels =
+	std::array<char, CM> ConstModels =
 		{ EmissivityModel,ExpansionModel,HeatCapacityModel,BoilingModel};
 
 	if	(Element == 'W'){ 

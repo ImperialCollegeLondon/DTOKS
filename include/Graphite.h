@@ -19,8 +19,8 @@ class Graphite: public Matter{
 		Graphite();
 		Graphite(double radius);
 		Graphite(double radius, double tempin);
-		Graphite(double radius, double tempin, std::array<char,4> &constmodels);
-		Graphite(double radius, double tempin, std::array<char,4> &constmodels,
+		Graphite(double radius, double tempin, std::array<char,CM> &constmodels);
+		Graphite(double radius, double tempin, std::array<char,CM> &constmodels,
 			const threevector &position, const threevector &velocity);
 
 		// Destructor

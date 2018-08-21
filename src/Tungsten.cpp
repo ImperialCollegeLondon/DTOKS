@@ -37,14 +37,14 @@ Tungsten::Tungsten(double radius, double tempin):Matter(radius,tempin,TungstenCo
 	E_Debug("\n\nIn Tungsten::Tungsten(double radius, double tempin):Matter(radius,tempin,&TungstenConsts)\n\n");
 	tungsten_defaults();
 	update_state(0.0);		// Temperature dependant
-	update_models('c','c','c','y');
+	update_models('c','c','c','y','n');
 	update();
 	E1_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius << "\nSt.Density = " << St.Density 
 			<< "\nSt.Volume = " << St.Volume);
 }
 
-Tungsten::Tungsten(double radius, double tempin, std::array<char,4> &constmodels):Matter(radius,tempin,TungstenConsts){
-	E_Debug("\n\nIn Tungsten::Tungsten(double radius, double tempin, std::array<char,4> &constmodels):Matter(radius,tempin,&TungstenConsts)\n\n\t");
+Tungsten::Tungsten(double radius, double tempin, std::array<char,CM> &constmodels):Matter(radius,tempin,TungstenConsts){
+	E_Debug("\n\nIn Tungsten::Tungsten(double radius, double tempin, std::array<char,CM> &constmodels):Matter(radius,tempin,&TungstenConsts)\n\n\t");
 	tungsten_defaults();
 
 	update_state(0.0);		// Temperature dependant
@@ -54,8 +54,8 @@ Tungsten::Tungsten(double radius, double tempin, std::array<char,4> &constmodels
 			<< "\nSt.Volume = " << St.Volume);
 }
 
-Tungsten::Tungsten(double radius, double tempin, std::array<char,4> &constmodels, const threevector& position, const threevector& velocity):Matter(radius,tempin,TungstenConsts){
-	E_Debug("\n\nIn Tungsten::Tungsten(double radius, double tempin, std::array<char,4> &constmodels):Matter(radius,tempin,&TungstenConsts)\n\n\t");
+Tungsten::Tungsten(double radius, double tempin, std::array<char,CM> &constmodels, const threevector& position, const threevector& velocity):Matter(radius,tempin,TungstenConsts){
+	E_Debug("\n\nIn Tungsten::Tungsten(double radius, double tempin, std::array<char,CM> &constmodels):Matter(radius,tempin,&TungstenConsts)\n\n\t");
 	tungsten_defaults();
 
 	update_state(0.0);		// Temperature dependant
@@ -70,11 +70,11 @@ void Tungsten::tungsten_defaults(){
 	E_Debug("\tIn Tungsten::tungsten_defaults()\n\n");
 
 	// http://www.engineersedge.com/materials/specific_heat_capacity_of_metals_13259.html
-        St.HeatCapacity = 0.13398; 		// kJ/(kg-K)         
+	St.HeatCapacity = 0.13398; 		// kJ/(kg-K)         
 	St.Emissivity = 0.04; 			// Arb, http://www.engineeringtoolbox.com/emissivity-coefficients-d_447.html
-        St.SuperBoilingTemp = Ec.BoilingTemp; 	// K, At any pressure
+	St.SuperBoilingTemp = Ec.BoilingTemp; 	// K, At any pressure
 	St.Density = 19600;			// (kg/m^3) from Wikipedia
-	update_models('c','c','c','y');
+	update_models('c','c','c','y','n');
 	
 
 //	St.ThermConduct = 0.163;		// kW/m K at 20 degrees celsius

@@ -37,15 +37,15 @@ Iron::Iron(double radius, double tempin):Matter(radius,tempin,IronConsts){
 	set_defaults();
 
 	update_state(0.0);		// Temperature dependant
-	update_models('c','c','c','y');
+	update_models('c','c','c','y','n');
 	update();
 	E_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius << "\nSt.Density = " << St.Density 
 			<< "\nSt.Volume = " << St.Volume);
 }
 
-Iron::Iron(double radius, double tempin, std::array<char,4> &constmodels):Matter(radius,tempin,IronConsts,constmodels){
+Iron::Iron(double radius, double tempin, std::array<char,CM> &constmodels):Matter(radius,tempin,IronConsts,constmodels){
 
-	E_Debug("\n\nIn Iron::Iron(double radius, double tempin, std::array<char,4> &constmodels)");
+	E_Debug("\n\nIn Iron::Iron(double radius, double tempin, std::array<char,CM> &constmodels)");
 
 	set_defaults();
 	update_state(0.0);		// Temperature dependant
@@ -55,9 +55,9 @@ Iron::Iron(double radius, double tempin, std::array<char,4> &constmodels):Matter
 			<< "\nSt.Volume = " << St.Volume);
 }
 
-Iron::Iron(double radius, double tempin, std::array<char,4> &constmodels, const threevector &position, const threevector &velocity):Matter(radius,tempin,IronConsts,constmodels){
+Iron::Iron(double radius, double tempin, std::array<char,CM> &constmodels, const threevector &position, const threevector &velocity):Matter(radius,tempin,IronConsts,constmodels){
 
-	E_Debug("\n\nIn Iron::Iron(double radius, double tempin, std::array<char,4> &constmodels)");
+	E_Debug("\n\nIn Iron::Iron(double radius, double tempin, std::array<char,CM> &constmodels)");
 
 	set_defaults();
 	update_state(0.0);		// Temperature dependant
@@ -71,11 +71,11 @@ Iron::Iron(double radius, double tempin, std::array<char,4> &constmodels, const 
 void Iron::set_defaults(){
 	E_Debug("\n\nIn Iron::set_defaults()");
 
-        St.HeatCapacity = 0.450;	 	// KJ/(kg K)
-        St.Emissivity = 0.2;			// Arb, Emissivity
-        St.SuperBoilingTemp =  Ec.BoilingTemp; 	// K, At any pressure
+	St.HeatCapacity = 0.450;	 	// KJ/(kg K)
+	St.Emissivity = 0.2;			// Arb, Emissivity
+	St.SuperBoilingTemp =  Ec.BoilingTemp; 	// K, At any pressure
 	St.Density = 7874;			// kg/m^3 From wikipedia
-	update_models('c','c','c','y');
+	update_models('c','c','c','y','n');
 	update();
 
 //	St.FractionalExpansion = 0.348; 	// Units of kg m^-3 K^-1: Calculated ROUGLY by measuring the gradient of Figure 1 found at https://aaltodoc.aalto.fi/bitstream/handle/123456789/14194/D4_tesfaye_fiseha_2010.pdf?sequence=1. See also https://www.jstage.jst.go.jp/article/matertrans1960/14/2/14_2_120/_pdf.  https://en.wikipedia.org/wiki/Iron#Mechanical_properties

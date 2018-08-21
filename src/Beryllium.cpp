@@ -37,15 +37,15 @@ Beryllium::Beryllium(double radius, double tempin):Matter(radius,tempin,Berylliu
 	set_defaults();
 
 	update_state(0.0);		// Temperature dependant
-	update_models('c','c','c','y');
+	update_models('c','c','c','y','n');
 	update();
 
 	E_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius << "\nSt.Density = " << St.Density 
 			<< "\nSt.Volume = " << St.Volume);
 }
 
-Beryllium::Beryllium(double radius, double tempin, std::array<char,4> &constmodels):Matter(radius,tempin,BerylliumConsts){
-	E_Debug("\n\nIn Beryllium::Beryllium(double radius, double tempin)");
+Beryllium::Beryllium(double radius, double tempin, std::array<char,CM> &constmodels):Matter(radius,tempin,BerylliumConsts){
+	E_Debug("\n\nIn Beryllium::Beryllium(double radius, double tempin, std::array<char,CM> &constmodels)");
 	set_defaults();
 
 	update_state(0.0);		// Temperature dependant
@@ -56,8 +56,8 @@ Beryllium::Beryllium(double radius, double tempin, std::array<char,4> &constmode
 			<< "\nSt.Volume = " << St.Volume);
 }
 
-Beryllium::Beryllium(double radius, double tempin, std::array<char,4> &constmodels, const threevector& position, const threevector& velocity):Matter(radius,tempin,BerylliumConsts){
-	E_Debug("\n\nIn Beryllium::Beryllium(double radius, double tempin)");
+Beryllium::Beryllium(double radius, double tempin, std::array<char,CM> &constmodels, const threevector& position, const threevector& velocity):Matter(radius,tempin,BerylliumConsts){
+	E_Debug("\n\nIn Beryllium::Beryllium(double radius, double tempin, std::array<char,CM> &constmodels, const threevector & position, const threevector& velocity)");
 	set_defaults();
 
 	update_state(0.0);		// Temperature dependant
@@ -72,11 +72,11 @@ Beryllium::Beryllium(double radius, double tempin, std::array<char,4> &constmode
 void Beryllium::set_defaults(){
 	E_Debug("\n\nIn Beryllium::set_defaults()");
 	// http://www.engineersedge.com/materials/specific_heat_capacity_of_metals_13259.html
-        St.HeatCapacity = 1.8254448;	 	// kJ/(kg-K)         
+	St.HeatCapacity = 1.8254448;	 	// kJ/(kg-K)         
 	St.Emissivity = 0.18; 			// Arb, Polished Beryllium
-        St.SuperBoilingTemp = Ec.BoilingTemp; 	// K, At any pressure
+	St.SuperBoilingTemp = Ec.BoilingTemp; 	// K, At any pressure
 	St.Density = 1840; 			// (kg/m^3) from Wikipedia
-	update_models('c','c','c','y');
+	update_models('c','c','c','y','n');
 }
 
 /// ************************************************************************************************* \\\

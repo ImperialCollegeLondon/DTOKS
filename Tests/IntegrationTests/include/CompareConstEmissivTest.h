@@ -12,6 +12,7 @@ int CompareConstEmissivTest(char Element,double Emissiv){
 	char HeatCapacityModel = 'c'; 	// Possible values 'c', 'v' and 's': Corresponding to (c)onstant, (v)ariable and (s)et
 	char BoilingModel = 'y'; 	// Possible values 'y', 'n', 's' and 't': Corresponding to (y)es, (n)o, (s)uper 
 													// and (t)homson
+	char BreakupModel = 'n';	// Possible values 'r', 'e', 'b'  and 'n': Corresponding to (r)otational, (e)lectrostatic, (b)oth and (n)o
 	char TimeStepType = 'f';	// Possible values 'o', 's' and 'f': Corresponding to (o)ne degree steps, (s)mall steps 
 													// and (f)ixed steps
 	std::string Name="constant";	// Describes heating model
@@ -51,8 +52,8 @@ int CompareConstEmissivTest(char Element,double Emissiv){
 	std::array<bool, HMN> Models = 
 		{RadiativeCooling, EvaporativeCooling, NewtonCooling, IonHeatFlux, ElectronHeatFlux, NeutralHeatFlux, 
 		NeutralRecomb, SEE, TEE };
-	std::array<char, 4> ConstModels =
-		{ EmissivityModel,ExpansionModel,HeatCapacityModel,BoilingModel};
+	std::array<char, CM> ConstModels =
+		{ EmissivityModel,ExpansionModel,HeatCapacityModel,BoilingModel,BreakupModel};
 
 	if	(Element == 'W'){ 
 		Sample = new Tungsten(Size,Temp,ConstModels);

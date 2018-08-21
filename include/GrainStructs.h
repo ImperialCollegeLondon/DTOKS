@@ -42,7 +42,7 @@ struct GrainData{
 	bool Positive;			// Defines the sign of the grain charge.
 
 	// Force/Motion Data
-	threevector DustPosition;	// Dust position (m)
+	threevector DustPosition;	// Dust position (m), radial, angular and vertical
 	threevector DustVelocity;	// Dust velocity (I guess this should be normalised to Cs, but for now: (m/s) )
 	double RotationalFrequency;     // Rotational Frequency (s^-1), This is the rate of rotation of the dust.
 

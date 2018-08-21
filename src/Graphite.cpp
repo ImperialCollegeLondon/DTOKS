@@ -39,14 +39,14 @@ Graphite::Graphite(double radius, double tempin):Matter(radius,tempin,GraphiteCo
 	set_defaults();
 
 	update_state(0.0);		// Temperature dependent
-	update_models('c','c','c','y');
+	update_models('c','c','c','y','n');
 	update();
 	E_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius << "\nSt.Density = " << St.Density 
 			<< "\nSt.Volume = " << St.Volume);
 }
 
-Graphite::Graphite(double radius, double tempin, std::array<char,4> &constmodels):Matter(radius,tempin,GraphiteConsts){
-	E_Debug("\n\nIn Graphite::Graphite(double radius, double tempin)");
+Graphite::Graphite(double radius, double tempin, std::array<char,CM> &constmodels):Matter(radius,tempin,GraphiteConsts){
+	E_Debug("\n\nIn Graphite::Graphite(double radius, double tempin, std::array<char,CM> &constmodels)");
 	set_defaults();
 
 	update_state(0.0);		// Temperature dependent
@@ -57,8 +57,8 @@ Graphite::Graphite(double radius, double tempin, std::array<char,4> &constmodels
 			<< "\nSt.Volume = " << St.Volume);
 }
 
-Graphite::Graphite(double radius, double tempin, std::array<char,4> &constmodels, const threevector & position, const threevector& velocity):Matter(radius,tempin,GraphiteConsts){
-	E_Debug("\n\nIn Graphite::Graphite(double radius, double tempin)");
+Graphite::Graphite(double radius, double tempin, std::array<char,CM> &constmodels, const threevector & position, const threevector& velocity):Matter(radius,tempin,GraphiteConsts){
+	E_Debug("\n\nIn Graphite::Graphite(double radius, double tempin, std::array<char,CM> &constmodels, const threevector & position, const threevector& velocity)");
 	set_defaults();
 
 	update_state(0.0);		// Temperature dependent
@@ -77,7 +77,7 @@ void Graphite::set_defaults(){
 	St.Emissivity = 0.70; 			// Arb, Polished Graphite, 	(+/- 0.1)
         St.SuperBoilingTemp = Ec.BoilingTemp;	// K, At any pressure,
 	St.Density = 2260; 			// (kg/m^3)			(+/- 100)
-	update_models('c','c','c','y');
+	update_models('c','c','c','y','n');
 }
 
 
