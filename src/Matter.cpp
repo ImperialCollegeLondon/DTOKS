@@ -76,8 +76,8 @@ Matter::Matter(double rad, double temp, const ElementConsts &elementconsts):Ec(e
 	M_Debug("\nEc.LatentVapour = " << Ec.LatentVapour << "\nEc.AtomicMass = " << Ec.AtomicMass);
 };
 
-Matter::Matter(double rad, double temp, const ElementConsts &elementconsts, std::array<char,4> &constmodels):Ec(elementconsts),St(MatterDefaults){
-	M_Debug("\n\nIn Matter::Matter(double rad, double temp, const ElementConsts elementconsts, std::array<char,4> &constmodels):Ec(*elementconsts),St(MatterDefaults)\n\n");
+Matter::Matter(double rad, double temp, const ElementConsts &elementconsts, std::array<char,CM> &constmodels):Ec(elementconsts),St(MatterDefaults){
+	M_Debug("\n\nIn Matter::Matter(double rad, double temp, const ElementConsts elementconsts, std::array<char,CM> &constmodels):Ec(*elementconsts),St(MatterDefaults)\n\n");
 	ConstModels = constmodels;
 	St.Radius = rad;					// m
 	St.UnheatedRadius = St.Radius;				// m
@@ -288,7 +288,7 @@ void Matter::update_state(double EnergyIn){
 	M2_Debug( "\n**** St.Liquid = " << St.Liquid << "\n**** St.Gas = " << St.Gas);
 
 	if( St.Mass < MinMass*10 ){ // Lower limit for mass of dust
-		std::cout << "\nSt.Mass = " << St.Mass << " < 10e-24, vaporisation assumed.";
+		std::cout << "\nSt.Mass = " << St.Mass << " < " << MinMass*10 << ", vaporisation assumed.";
 		St.Gas = true;
 	}
 	assert(St.Temperature > 0);
@@ -314,7 +314,8 @@ void Matter::update(){
 	double CriticalRotation = 0.56*sqrt(8*Ec.SurfaceTension/(St.Density*pow(St.Radius,3)));
 
 	M2_Debug("\nCriticalRotation = " << CriticalRotation << "\n");
-	if( St.RotationalFrequency > CriticalRotation && St.Liquid ){
+	
+	if( St.RotationalFrequency > CriticalRotation && St.Liquid && ( ConstModels[4] == 'r' || ConstModels[4] == 'b' ) ){
 		std::cout << "\nRotational Breakup has occured!";
 
 		if( St.Mass/2 < MinMass*10 ){
@@ -335,16 +336,17 @@ void Matter::update(){
 // Change geometric and variable properties of matter; 
 // volume, surface area, density, heat capacity, emissivity and vapour pressure
 
-void Matter::update_models(char emissivmodel, char linexpanmodel, char heatcapacitymodel, char boilingmodel){
-	M_Debug("\tIn Matter::update_models(char emissivmodel, char linexpanmodel, char heatcapacitymodel, char boilingmodel)\n\n");
+void Matter::update_models(char emissivmodel, char linexpanmodel, char heatcapacitymodel, char boilingmodel, char breakupmodel){
+	M_Debug("\tIn Matter::update_models(char emissivmodel, char linexpanmodel, char heatcapacitymodel, char boilingmodel, char breakupmodel)\n\n");
 	ConstModels[0] = emissivmodel;
 	ConstModels[1] = linexpanmodel;
 	ConstModels[2] = heatcapacitymodel;
 	ConstModels[3] = boilingmodel;
+	ConstModels[4] = breakupmodel;
 };
 
-void Matter::update_models(std::array<char,4> &constmodels){
-	M_Debug("\tIn Matter::update_models(std::array<char,4> &constmodels)\n\n");
+void Matter::update_models(std::array<char,CM> &constmodels){
+	M_Debug("\tIn Matter::update_models(std::array<char,CM> &constmodels)\n\n");
 //	update(constmodels[0],constmodels[1],constmodels[2],constmodels[3],);
 	ConstModels = constmodels;
 }
@@ -408,7 +410,7 @@ void Matter::update_charge(double charge, double potential, double deltat, doubl
 		St.Positive = false;
 	}
 
-	if( fabs(charge) > 8*PI*sqrt(epsilon0*Ec.SurfaceTension*pow(St.Radius,3)) && St.Liquid ){
+	if( fabs(charge) > 8*PI*sqrt(epsilon0*Ec.SurfaceTension*pow(St.Radius,3)) && St.Liquid && (ConstModels[4] == 'e' || ConstModels[4] == 'b') ){
 		std::cout << "\nElectrostatic Breakup! Instantaneous vaporisation assumed.";
 //		std::cout << "\nQcrit = " << 8*PI*sqrt(epsilon0*Ec.SurfaceTension*pow(St.Radius,3));
 //		std::cout << "\nCharge = " << charge;
