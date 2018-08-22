@@ -1,0 +1,33 @@
+//#include <math.h>
+#ifndef __GRAPHITE_H_INCLUDED__   // if Matter.h hasn't been included yet...
+#define __GRAPHITE_H_INCLUDED__
+
+#include <iostream>
+#include "Matter.h"
+
+class Graphite: public Matter{
+
+	private:
+
+		// Functions called by Matter::update()
+		void update_radius		();
+		void update_heatcapacity 	();
+		void update_vapourpressure	();
+
+	public:
+		// Constructors
+		Graphite();
+		Graphite(double radius);
+		Graphite(double radius, double tempin);
+		Graphite(double radius, double tempin, std::array<char,CM> &constmodels);
+		Graphite(double radius, double tempin, std::array<char,CM> &constmodels,
+			const threevector &position, const threevector &velocity);
+
+		// Destructor
+		~Graphite(){};
+		
+		// Change Properties; Mass and Temperature
+		void set_defaults		();
+};
+
+#endif
