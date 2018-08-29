@@ -33,6 +33,13 @@ ForceModel::ForceModel(std::string filename, float accuracy, std::array<bool,FMN
 	CreateFile(filename);
 }
 
+ForceModel::ForceModel(std::string filename, float accuracy, std::array<bool,FMN> models, 
+			Matter *& sample, PlasmaGrid_Data & pgrid, PlasmaData & pdata) 
+			: Model(sample,pgrid,pdata,accuracy){
+	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, float accuracy, std::array<bool,3> models, Matter *& sample, PlasmaGrid const& pgrid) : Model(sample,pgrid,accuracy)\n\n");
+	UseModel = models;
+	CreateFile(filename);
+}
 
 void ForceModel::CreateFile(std::string filename){
 	F_Debug("\tIn ForceModel::CreateFile(std::string filename)\n\n");
@@ -129,10 +136,6 @@ void ForceModel::Force(double timestep){
 					Sample->get_velocity().getx()*timestep,
 					(Sample->get_velocity().gety()*timestep)/Sample->get_position().getx(),
 					Sample->get_velocity().getz()*timestep);
-	// WARNING! If Sample->get_position().getx() == 0, then we will get nans in the position element
-	if( Sample->get_position().getx() == 0.0 ){
-		ChangeInPosition.sety(0.0);
-	}
 
 	threevector ChangeInVelocity = Acceleration*timestep;
 
@@ -202,16 +205,7 @@ threevector ForceModel::CalculateAcceleration()const{
 }
 
 threevector ForceModel::Gravity()const{
-	threevector gravity(0.0,0.0,0.0);
-
-	double Theta = Sample->get_position().gety();
-	// Setup for Magnum-PSI
-	gravity = Pdata->Gravity;
-	if( get_device() == 'p' ){ // For Magnum PSI, Gravity is not in -z direction but is radial & Azimuthal
-		gravity.setx(-Pdata->Gravity.mag3()*cos(Theta));
-		gravity.sety(Pdata->Gravity.mag3()*sin(Theta));
-	}
-	return gravity;
+	return Pdata->Gravity;
 }
 
 threevector ForceModel::HybridIonDrag()const{
@@ -297,7 +291,8 @@ threevector ForceModel::NeutralDrag()const{
 	F_Debug("\tIn ForceModel::DTOKSIonDrag()\n\n");
 //	return (Pdata->PlasmaVel-Sample->get_velocity())*Pdata->NeutralDensity*sqrt(2*Kb*Pdata->IonTemp*Mp)*PI
 //			*pow(Sample->get_radius(),2);
-	return (Pdata->PlasmaVel-Sample->get_velocity())*Mp*sqrt(4*PI)*NeutralFlux()*PI*pow(Sample->get_radius(),2)*(1.0/Sample->get_mass());
+//	return (Pdata->PlasmaVel-Sample->get_velocity())*Mp*sqrt(4*PI)*NeutralFlux()*PI*pow(Sample->get_radius(),2)*(1.0/Sample->get_mass());
+	return -1.0*Sample->get_velocity()*Mp*sqrt(4*PI)*NeutralFlux()*PI*pow(Sample->get_radius(),2)*(1.0/Sample->get_mass());
 }
 
 threevector ForceModel::LorentzForce()const{

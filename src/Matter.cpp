@@ -283,14 +283,15 @@ void Matter::update_state(double EnergyIn){
 			std::cout << "\n\n***** WARNING! SAMPLE IS GASEOUS *****\n";
 		}
 	}
+
+	if( St.Mass <= MinMass ){ // Lower limit for mass of dust
+		St.Liquid = false;
+		St.Gas = true;
+	}
 	M2_Debug( "\n**** Temp change = " << EnergyIn/(St.Mass*St.HeatCapacity) << "\n**** Ein = " << EnergyIn 
 		<< "\n**** Mass = " << St.Mass << "\n**** Cv = " << St.HeatCapacity << "\nSt.Temperature = " << St.Temperature);
 	M2_Debug( "\n**** St.Liquid = " << St.Liquid << "\n**** St.Gas = " << St.Gas);
 
-	if( St.Mass < MinMass*10 ){ // Lower limit for mass of dust
-		std::cout << "\nSt.Mass = " << St.Mass << " < " << MinMass*10 << ", vaporisation assumed.";
-		St.Gas = true;
-	}
 	assert(St.Temperature > 0);
 }
 
@@ -312,13 +313,13 @@ void Matter::update(){
 	}
 
 	double CriticalRotation = 0.56*sqrt(8*Ec.SurfaceTension/(St.Density*pow(St.Radius,3)));
-
+	double FudgeFactor = 0.6;
 	M2_Debug("\nCriticalRotation = " << CriticalRotation << "\n");
 	
-	if( St.RotationalFrequency > CriticalRotation && St.Liquid && ( ConstModels[4] == 'r' || ConstModels[4] == 'b' ) ){
+	if( St.RotationalFrequency > FudgeFactor*CriticalRotation && St.Liquid && ( ConstModels[4] == 'r' || ConstModels[4] == 'b' ) ){
 		std::cout << "\nRotational Breakup has occured!";
 
-		if( St.Mass/2 < MinMass*10 ){
+		if( St.Mass/2 < MinMass ){
 			St.Gas = true;
 			std::cout << "\nMass too small to support breakup, vaporisation assumed...";
 		}else{
@@ -360,9 +361,7 @@ void Matter::update_mass(double LostMass){
 	St.FusionEnergy -= LostMass*Ec.LatentFusion;
 
 	//Pause();
-	if(St.Mass < 0){ 
-		std::cout << "\n\nSt.Mass = " << St.Mass << "\nSample mass is Negative! Evaporation assumed\n\n";
-		St.Mass = 0;
+	if(St.Mass <= MinMass){
 		St.Gas = true;
 		St.Liquid = false;
 	}
@@ -393,12 +392,16 @@ void Matter::update_motion(const threevector &ChangeInPosition,const threevector
 	// Calculate new position
 
 	St.DustPosition = St.DustPosition + ChangeInPosition;
+	if( St.DustPosition.getx() == 0.0 ){
+		static bool runOnce = true;
+		WarnOnce(runOnce,"Dust Radial Position <= 0.0! Angular position badly defined!");
+	}
 	St.DustVelocity = St.DustVelocity + ChangeInVelocity;
 	St.RotationalFrequency = St.RotationalFrequency + Rotation;
 };
 
 void Matter::update_charge(double charge, double potential, double deltat, double deltas){
-	M_Debug("\tIn Matter::update_charge(double potential)\n\n");
+	M_Debug("\tIn Matter::update_charge(double potential, double deltat, double deltas)\n\n");
 	St.Potential = potential;
 	
 	St.DeltaTherm = deltat;
@@ -409,11 +412,9 @@ void Matter::update_charge(double charge, double potential, double deltat, doubl
 	}else{
 		St.Positive = false;
 	}
-
+	
 	if( fabs(charge) > 8*PI*sqrt(epsilon0*Ec.SurfaceTension*pow(St.Radius,3)) && St.Liquid && (ConstModels[4] == 'e' || ConstModels[4] == 'b') ){
 		std::cout << "\nElectrostatic Breakup! Instantaneous vaporisation assumed.";
-//		std::cout << "\nQcrit = " << 8*PI*sqrt(epsilon0*Ec.SurfaceTension*pow(St.Radius,3));
-//		std::cout << "\nCharge = " << charge;
 		St.Gas = true;
 	}
 }

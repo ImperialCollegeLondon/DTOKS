@@ -35,6 +35,9 @@ class DTOKSU{
 		DTOKSU( std::array<float,MN> alvls, Matter *& sample, PlasmaGrid_Data &pgrid,
 				std::array<bool,HMN> &heatmodels, std::array<bool,FMN> &forcemodels, 
 				std::array<bool,CMN> &chargemodels);
+		DTOKSU( std::array<float,MN> alvls, Matter *& sample, PlasmaGrid_Data &pgrid,
+				PlasmaData &pdata,	std::array<bool,HMN> &heatmodels, 
+				std::array<bool,FMN> &forcemodels, std::array<bool,CMN> &chargemodels);
 
 		~DTOKSU(){
 		};

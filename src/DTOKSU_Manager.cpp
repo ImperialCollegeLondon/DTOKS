@@ -2,6 +2,7 @@
 //#define DM_DEBUG
 #include "DTOKSU_Manager.h"
 
+
 // Default constructor
 DTOKSU_Manager::DTOKSU_Manager(){
 	DM_Debug("\n\nIn DTOKSU_Manager::DTOKSU_Manager()\n\n");
@@ -94,7 +95,7 @@ int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filenam
 	// ------------------- PARSE CONFIGURATION FILE ------------------- //
 	std::string MetaDataFilename = "Data/DTOKSU.txt";
 	std::string DataFilePrefix = "Data/DTOKSU";
-	std::string dir_name = "PlasmaData/Magnum-PSI/";
+	std::string dir_name = "PlasmaData/";
 
 	// Check user input for specifying the configuration file.
 	// We want other command line options to over-ride the configuration file.
@@ -122,6 +123,7 @@ int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filenam
 
 	// ------------------- DUST VARIABLE DEFAULTS ------------------- //
 	char Element='W';
+	char IonSpecies='h';
 	float size=0.5e-6;
 	float Temp=300;
 	float InitRotationalFreq(0.0);
@@ -137,8 +139,10 @@ int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filenam
 	std::array<bool,HMN> HeatModels;
 	std::array<bool,FMN> ForceModels;
 	std::array<bool,CMN> ChargeModels;
-	std::array<char,4> ConstModels;
+	std::array<char,CM> ConstModels;
 	std::array<float,DTOKSU::MN> AccuracyLevels;
+
+	config4cpp::StringVector CfgStringVec;
 
 	// ------------------- PROCESS CONFIGURATION FILE ------------------- //
 //	threevector PlasmaVelocity(501.33, 7268.5, 914.947); // Taken from initial for DTOKS
@@ -147,26 +151,52 @@ int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filenam
 	config4cpp::Configuration *  cfg = config4cpp::Configuration::create();
 	std::cout << "\n* Reading configuration file: " << Config_Filename << " *";
 	try {
-        cfg->parse(Config_Filename.c_str());
-        MetaDataFilename 		= cfg->lookupString("", "Filename");
-        DataFilePrefix 			= cfg->lookupString("", "DataFilePrefix");
-        ContinuousPlasma		= cfg->lookupBoolean("plasma", "ContinuousPlasma");
-        dir_name 				= cfg->lookupString("plasma", "plasmagrid.Dirname");
-        Pgrid.gas   			= cfg->lookupString("plasma", "plasmagrid.Plasma")[0];
-        Pgrid.device  			= cfg->lookupString("plasma", "plasmagrid.Machine")[0];
-        Pgrid.dlx 				= cfg->lookupFloat("plasma", "plasmagrid.xSpacing");
-        Pgrid.dlz	 			= cfg->lookupFloat("plasma", "plasmagrid.zSpacing");
-        Pdata.IonDensity 		= cfg->lookupFloat("plasma","plasmadata.IonDensity");
+		cfg->parse(Config_Filename.c_str());
+		MetaDataFilename 		= cfg->lookupString("", "Filename");
+		DataFilePrefix 			= cfg->lookupString("", "DataFilePrefix");
+		ContinuousPlasma		= cfg->lookupBoolean("plasma", "ContinuousPlasma");
+		IonSpecies  			= cfg->lookupString("plasma", "Plasma")[0];
+		Pdata.Z   			= cfg->lookupFloat("plasma", "MeanIonization");
+		if( !ContinuousPlasma ){
+			dir_name 				= cfg->lookupString("plasma", "plasmagrid.Dirname");
+			Pgrid.device  			= cfg->lookupString("plasma", "plasmagrid.Machine")[0];
+			Pgrid.dlx 				= cfg->lookupFloat("plasma", "plasmagrid.xSpacing");
+			Pgrid.dlz	 			= cfg->lookupFloat("plasma", "plasmagrid.zSpacing");
+		}
+		Pdata.IonDensity 		= cfg->lookupFloat("plasma","plasmadata.IonDensity");
 		Pdata.ElectronDensity 	= cfg->lookupFloat("plasma","plasmadata.ElectronDensity");
 		Pdata.NeutralDensity 	= cfg->lookupFloat("plasma","plasmadata.NeutralDensity");
 		Pdata.IonTemp 			= cfg->lookupFloat("plasma","plasmadata.IonTemp");
 		Pdata.NeutralTemp 		= cfg->lookupFloat("plasma","plasmadata.NeutralTemp");
 		Pdata.ElectronTemp 		= cfg->lookupFloat("plasma","plasmadata.ElectronTemp");
 		Pdata.AmbientTemp 		= cfg->lookupFloat("plasma","plasmadata.AmbientTemp");
-		Pdata.mi 				= cfg->lookupFloat("plasma","plasmadata.Mi");
+		cfg->lookupList("plasma","plasmadata.PlasmaVelocity",CfgStringVec);
+		if( CfgStringVec.length() != 3 ){
+			std::cout << "\nError, reading configuration file!\nplasmadata.PlasmaVelocity length != 3";
+		}else{
+			Pdata.PlasmaVel = threevector(std::stof(CfgStringVec[0]),std::stof(CfgStringVec[1]),std::stof(CfgStringVec[2]));
+		}
+		cfg->lookupList("plasma","plasmadata.Gravity",CfgStringVec);
+		if( CfgStringVec.length() != 3 ){
+			std::cout << "\nError, reading configuration file!\nplasmadata.Gravity length != 3";
+		}else{
+			Pdata.Gravity = threevector(std::stof(CfgStringVec[0]),std::stof(CfgStringVec[1]),std::stof(CfgStringVec[2]));
+		}
+		cfg->lookupList("plasma","plasmadata.Efield",CfgStringVec);
+		if( CfgStringVec.length() != 3 ){
+			std::cout << "\nError, reading configuration file!\nplasmadata.Efield length != 3";
+		}else{			
+			Pdata.ElectricField = threevector(std::stof(CfgStringVec[0]),std::stof(CfgStringVec[1]),std::stof(CfgStringVec[2]));
+		}
+		cfg->lookupList("plasma","plasmadata.Bfield",CfgStringVec);
+		if( CfgStringVec.length() != 3 ){
+			std::cout << "\nError, reading configuration file!\nplasmadata.Bfield length != 3";
+		}else{			
+			Pdata.MagneticField = threevector(std::stof(CfgStringVec[0]),std::stof(CfgStringVec[1]),std::stof(CfgStringVec[2]));
+		}
 		Element  				= cfg->lookupString("dust", "Element")[0];
-        size     				= cfg->lookupFloat("dust", "size");
-        Temp     				= cfg->lookupFloat("dust", "Temp");
+		size     				= cfg->lookupFloat("dust", "size");
+		Temp     				= cfg->lookupFloat("dust", "Temp");
 		rpos 					= cfg->lookupFloat("dust", "dynamics.rpos");
 		thetapos 				= cfg->lookupFloat("dust", "dynamics.thetapos");
 		zpos 					= cfg->lookupFloat("dust", "dynamics.zpos");
@@ -174,12 +204,13 @@ int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filenam
 		thetavel 				= cfg->lookupFloat("dust", "dynamics.thetavel");
 		zvel 					= cfg->lookupFloat("dust", "dynamics.zvel");
 		InitRotationalFreq 		= cfg->lookupFloat("dust", "dynamics.InitRotationalFreq");
-        ConstModels = 
+		ConstModels = 
 			{
 				cfg->lookupString("variablemodels", "EmissivityModel")[0], cfg->lookupString("variablemodels", "ExpansionModel")[0], 
-				cfg->lookupString("variablemodels", "HeatCapacityModel")[0], cfg->lookupString("variablemodels", "BoilingModel")[0]
+				cfg->lookupString("variablemodels", "HeatCapacityModel")[0], cfg->lookupString("variablemodels", "BoilingModel")[0],
+				cfg->lookupString("variablemodels", "BreakupModel")[0]
 			};
-        HeatModels = 
+		HeatModels = 
 			{
 				cfg->lookupBoolean("heatingmodels","RadiativeCooling"), cfg->lookupBoolean("heatingmodels","EvaporativeCooling"), 
 				cfg->lookupBoolean("heatingmodels","NewtonCooling"), cfg->lookupBoolean("heatingmodels","IonHeatFlux"), 
@@ -214,25 +245,39 @@ int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filenam
     std::cout << "\n* Configuration file read successfully! *";
     std::cout << "\nContinuousPlasma = " << ContinuousPlasma;
 
+    if( IonSpecies == 'h' ){ // For Hydrogen plasma, we have hydrogen ions of mass Mp
+        Pgrid.mi = Mp;
+        if( Pdata.Z > 1.0 ){
+            Pdata.Z = 1.0;
+        }
+    }else{
+        std::cout << "Invalid IonSpecies, IonSpecies = " << IonSpecies << "!\n";
+        return 1;
+    }
+
+
+
+
 	// ------------------- CONFIGURE PLASMAGRID ------------------- //
 	if( !ContinuousPlasma ){
 		std::cout << "\n\n* Full Machine Simulation! *\n\n* Creating PlasmaGrid_Data Structure *";
-    	std::cout << "\n\t* Plasma:\t" << Pgrid.gas << "\n\t* Machine:\t" << Pgrid.device;
+    	std::cout << "\n\t* Plasma:\t" << IonSpecies << "\n\t* Machine:\t" << Pgrid.device;
     	std::cout << "\n\t* xSpacing:\t" << Pgrid.dlx << "\n\t* zSpacing:\t" << Pgrid.dlz;
     	if( configure_plasmagrid(dir_name) != 0 ){ // Failed to configure plasma data
     		std::cerr << "\nFailed to configure plasma data!";
     		Config_Status = 3;
     		return Config_Status;
     	}
-		std::cout << "\n* PlasmaGrid_Data Structure created successfully! *\n\n* Processing command line input *";
+		std::cout << "\n* PlasmaGrid_Data Structure created successfully! *\n";
     }else{
     	std::cout << "\n\n* ContinuousPlasma! *";
-    	std::cout << "\n* PlasmaData Structure created successfully! *\n\n* Processing command line input *";
+    	std::cout << "\n* PlasmaData Structure created successfully! *\n";
     }
 
 
 
 	// ------------------- PROCESS USER-INPUT ------------------- //
+	std::cout << "\n* Processing command line input *";
 	for (int i = 1; i < argc; ++i){ // Read command line input
 		std::string arg = argv[i];
 		if( 	 arg == "--temperature" || arg == "-t"   )	input_function(argc,argv,i,ss0,Temp);
@@ -252,12 +297,12 @@ int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filenam
 	}
 	std::cout << "\n* Command line input processed successfully! *\n\n";
 
-    // ------------------- INITIALISE META_DATA FILE ------------------- //
-    std::cout << "* Creating MetaDataFile: " << MetaDataFilename << " *\n\n";
+	// ------------------- INITIALISE META_DATA FILE ------------------- //
+	std::cout << "* Creating MetaDataFile: " << MetaDataFilename << " *\n\n";
 	std::ofstream MetaDataFile;	// Data file for containing the run information
-    time_t now = time(0);		// Get the time of simulation
+	time_t now = time(0);		// Get the time of simulation
 	char * dt = ctime(&now);
-    MetaDataFile.open(MetaDataFilename);
+	MetaDataFile.open(MetaDataFilename);
 	MetaDataFile << "## Run Data File ##\n";
 	MetaDataFile << "#Date:\t" << dt;
 
@@ -284,22 +329,23 @@ int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filenam
 		<<Sample->get_elem()<<"\t\t"<<Sample->get_radius()<<"\t\t"<<Sample->get_temperature()
 		<<"\t\t"<<Sample->get_position()<<"\t\t"<<Sample->get_velocity()<<"\n";
 
-	if( ContinuousPlasma ){
-		MetaDataFile <<"\n\n#PLASMA PARAMETERS"
-			<<"\nMachine\tgas\tgridx\tgridz\tgridtheta\tdlx\tdlz\n"
-			<<Pgrid.device<<"\t"<<Pgrid.gas<<"\t"<<Pgrid.gridx<<"\t"<<Pgrid.gridz<<"\t"
+	if( !ContinuousPlasma ){
+		MetaDataFile <<"\n\n#PLASMA GRID PARAMETERS"
+			<<"\nMachine\tIonSpecies\tgridx\tgridz\tgridtheta\tdlx\tdlz\n"
+			<<Pgrid.device<<"\t"<<IonSpecies<<"\t"<<Pgrid.gridx<<"\t"<<Pgrid.gridz<<"\t"
 			<<Pgrid.gridtheta<<"\t"<<Pgrid.dlx<<"\t"<<Pgrid.dlz<<"\n"
 			<<"\nxmin (m)\txmax (m)\tzmin (m)\tzmax (m)\n"
 			<<Pgrid.gridxmin<<"\t\t"<<Pgrid.gridxmax<<"\t\t"<<Pgrid.gridzmin<<"\t\t"<<Pgrid.gridzmax << "\n";
-		Sim = new DTOKSU(AccuracyLevels, Sample, Pdata, HeatModels, ForceModels, ChargeModels);
-	}else if( !ContinuousPlasma ){
-		MetaDataFile <<"\n\nNn (m^-3)\tNi (m^-3)\tNe (m^-3)\n"
+		Sim = new DTOKSU(AccuracyLevels, Sample, Pgrid, Pdata, HeatModels, ForceModels, ChargeModels);
+	}else{
+		MetaDataFile <<"\n\n#PLASMA DATA PARAMETERS"
+			<<"\n\nNn (m^-3)\tNi (m^-3)\tNe (m^-3)\n"
 			<<Pdata.NeutralDensity<<"\t\t"<<Pdata.IonDensity<<"\t\t"<<Pdata.ElectronDensity
 			<<"\n\nTn (K)\t\tTi (K)\t\tTe (K)\n"
 			<<Pdata.NeutralTemp<<"\t\t"<<Pdata.IonTemp<<"\t\t"<<Pdata.ElectronTemp<<"\t"
 			<<"\n\nPvel (m s^-1)\t\tE (V m^-1)\t\tB (T)\n"
 			<<Pdata.PlasmaVel<<"\t"<<Pdata.ElectricField<<"\t"<<Pdata.MagneticField<<"\n";
-		Sim = new DTOKSU(AccuracyLevels, Sample, Pgrid, HeatModels, ForceModels, ChargeModels);
+		Sim = new DTOKSU(AccuracyLevels, Sample, Pdata, HeatModels, ForceModels, ChargeModels);
 	}
 	MetaDataFile <<"\n\n##MODEL SWITHES\n#HEATING MODELS\n"
 		<<"RadiativeCooling:\t" << HeatModels[0] << "\n"<<"EvaporativeCooling:\t" << HeatModels[1] << "\n"
@@ -377,22 +423,15 @@ int DTOKSU_Manager::configure_plasmagrid(std::string plasma_dirname){
 		std::cout << "Invalid tokamak" << std::endl;
 	}
 
-	if( Pgrid.gas == 'h' ){ // For Hydrogen plasma, we have hydrogen ions of mass Mp
-		Pgrid.mi = Mp;
-	}else{
-		std::cout << "Invalid gas, Pgrid.gas = " << Pgrid.gas << "!\n";
-		return 1;
-	}
-
 	//impurity.open("output///impurity///impurity.vtk");
 	int readstatus(-1);
 	try{ // Read data
 		readstatus = read_data(plasma_dirname);
 		if(readstatus != 0)
-			throw readstatus;
-	}	
-	catch( int e ){
-		std::cerr << "Exception opening/reading/closing file\nError status: " << e;
+			throw PlasmaFileReadFailure();
+	}catch( PlasmaFileReadFailure &e ){
+		std::cout << e.what();
+		std::cerr << "\nError status: " << readstatus;
 		return readstatus;
 	}
 	return 0;
@@ -400,7 +439,24 @@ int DTOKSU_Manager::configure_plasmagrid(std::string plasma_dirname){
 
 int DTOKSU_Manager::read_data(std::string plasma_dirname){
 	P_Debug("\tIn DTOKSU_Manager::read_data(std::string plasma_dirname)\n\n");
-	// 
+	// Preallocate size of vectors
+	Pgrid.Te 		= std::vector<std::vector<double>>(Pgrid.gridx,std::vector<double>(Pgrid.gridz));
+	Pgrid.Ti 		= Pgrid.Te;
+	Pgrid.Tn 		= Pgrid.Te;
+	Pgrid.Ta 		= Pgrid.Te;
+	Pgrid.na0		= Pgrid.Te;
+	Pgrid.na1		= Pgrid.Te;
+	Pgrid.na2		= Pgrid.Te;
+	Pgrid.po 		= Pgrid.Te;
+	Pgrid.ua0		= Pgrid.Te;
+	Pgrid.ua1		= Pgrid.Te;
+	Pgrid.bx 		= Pgrid.Te;
+	Pgrid.by 		= Pgrid.Te;
+	Pgrid.bz 		= Pgrid.Te;
+	Pgrid.x  		= Pgrid.Te;
+	Pgrid.z  		= Pgrid.Te;
+	Pgrid.gridflag	= std::vector<std::vector<int>>(Pgrid.gridx,std::vector<int>(Pgrid.gridz));
+
 	if(Pgrid.device=='p'){ // Note, grid flags will be empty 
 		return read_MPSIdata(plasma_dirname);
 	}else{
@@ -430,21 +486,6 @@ int DTOKSU_Manager::read_data(std::string plasma_dirname){
 		assert( scalars.is_open() );
 		assert( threevectors.is_open() );
 		assert( gridflagfile.is_open() );
-
-		// Preallocate size of vectors
-		Pgrid.Te 		= std::vector<std::vector<double>>(Pgrid.gridx,std::vector<double>(Pgrid.gridz));
-		Pgrid.Ti 		= Pgrid.Te;
-		Pgrid.na0		= Pgrid.Te;
-		Pgrid.na1		= Pgrid.Te;
-		Pgrid.po 		= Pgrid.Te;
-		Pgrid.ua0		= Pgrid.Te;
-		Pgrid.ua1		= Pgrid.Te;
-		Pgrid.bx 		= Pgrid.Te;
-		Pgrid.by 		= Pgrid.Te;
-		Pgrid.bz 		= Pgrid.Te;
-		Pgrid.x  		= Pgrid.Te;
-		Pgrid.z  		= Pgrid.Te;
-		Pgrid.gridflag	= std::vector<std::vector<int>>(Pgrid.gridx,std::vector<int>(Pgrid.gridz));
 
 		// Throw away variables which read in data which is unimportnat.
 		char dummy_char;
@@ -476,6 +517,10 @@ int DTOKSU_Manager::read_data(std::string plasma_dirname){
 				if( Pgrid.po[i][k] != 0 && Pgrid.po[i][k] < 1e-100 ) 	{	Pgrid.po[i][k]  = 0.0; } 
 				if( Pgrid.ua0[i][k]!= 0 && Pgrid.ua0[i][k] < 1e-100 )	{	Pgrid.ua0[i][k] = 0.0; }
 				if( Pgrid.ua1[i][k]!= 0 && Pgrid.ua1[i][k] < 1e-100 )	{ 	Pgrid.ua1[i][k] = 0.0; }
+				
+				Pgrid.Ta[i][k] = Pdata.AmbientTemp;
+				Pgrid.Tn[i][k] = Pdata.NeutralTemp;
+				Pgrid.na2[i][k] = Pdata.NeutralDensity;
 			}
 		}
 		scalars.close();
@@ -493,7 +538,9 @@ int DTOKSU_Manager::read_MPSIdata(std::string plasma_dirname){
 	
 	const int NC_ERR = 2;
 	std::string filename = "Magnum-PSI_Experiment_Homogeneous-B-Field_B0.2_L1.9.nc";
-	std::cout << "\n\t\t* Reading data from: " << plasma_dirname + filename << " *";
+	std::cout << "\t\t* Reading data from: " << plasma_dirname + filename << " *\n";
+	std::cout << "\t\t* gridx: " << Pgrid.gridx << "\t * gridz: " 
+		<< Pgrid.gridz << "\t * gridtheta: " << Pgrid.gridtheta << " *\n";
 
 	float electron_dens_mat[Pgrid.gridx][Pgrid.gridz][Pgrid.gridtheta];
 	float electron_temp_mat[Pgrid.gridx][Pgrid.gridz][Pgrid.gridtheta];
@@ -509,7 +556,7 @@ int DTOKSU_Manager::read_MPSIdata(std::string plasma_dirname){
 	// any failure, and leaves any other error handling to the calling
 	// program. In the case of this example, we just exit with an
 	// NC_ERR error code.
-	NcError err(NcError::silent_nonfatal);
+	NcError err(NcError::silent_nonfatal); 
 
 	
 	NcFile dataFile((plasma_dirname+filename).c_str(), NcFile::ReadOnly);
@@ -552,20 +599,28 @@ int DTOKSU_Manager::read_MPSIdata(std::string plasma_dirname){
 		return NC_ERR;
 //	if (!B_xy->get(&Bxy_mat[0][0], Pgrid.gridx, Pgrid.gridz))
 //		return NC_ERR;
-	
+	double ConvertJtoK(7.24297166e22);		// Conversion factor from ev to K
 	for(unsigned int i=0; i< Pgrid.gridx; i++){
 		for(unsigned int k=0; k< Pgrid.gridz; k++){
-			Pgrid.Ti[i][k] = 1.0*echarge;
-			Pgrid.Te[i][k] = electron_temp_mat[i][k][0];
+
+//			std::cout << "\n[" << i << "]" << "[" << k << "]";	std::cin.get();
+			Pgrid.Ti[i][k] = 1.0*echarge*ConvertJtoK;
+			Pgrid.Te[i][k] = electron_temp_mat[i][k][0]*ConvertJtoK;
+			Pgrid.Tn[i][k] = Pdata.NeutralTemp;
+			Pgrid.Ta[i][k] = Pdata.AmbientTemp;
 			Pgrid.na0[i][k] = ion_dens_mat[i][k][0];
 			Pgrid.na1[i][k] = electron_dens_mat[i][k][0];
+			Pgrid.na2[i][k] = Pdata.NeutralDensity;
 			Pgrid.po[i][k] = Potential_mat[i][k][0];
 			Pgrid.ua0[i][k] = ion_Veli_mat[i][k][0];
 			Pgrid.ua1[i][k] = electron_Vele_mat[i][k][0];
 			Pgrid.bx[i][k] = 0.0;
 			Pgrid.by[i][k] = 0.0;
 			Pgrid.bz[i][k] = 0.4;
-//			Pgrid.bz[i][k] = Bxy_mat[i][k];
+
+			Pgrid.x[i][k] = Pgrid.gridxmin+i*Pgrid.dlx;
+			Pgrid.z[i][k] = Pgrid.gridzmin+k*Pgrid.dlz;
+			Pgrid.gridflag	= std::vector<std::vector<int>>(Pgrid.gridx,std::vector<int>(Pgrid.gridz));
 		}
 	}
 	return 0;
@@ -649,8 +704,9 @@ int DTOKSU_Manager::Breakup(){
 			double VelocityMag = 2*PI*(Sample->get_radius())*Sample->get_rotationalfreq();
 			threevector Unit(2.0*rad(randnumber)-1.0,2.0*rad(randnumber)-1.0,2.0*rad(randnumber)-1.0);
 			threevector VelocityUnitVec = (Unit.getunit()^Sim->get_bfielddir()).getunit();
-			threevector dvMinus = VelocityMag*VelocityUnitVec;
-			Sample->update_motion(Zeroes,dvMinus,-Sample->get_rotationalfreq());
+			double RandomlyDistributeRotationAndLinMom = rad(randnumber);
+			threevector dvMinus = RandomlyDistributeRotationAndLinMom*VelocityMag*VelocityUnitVec; // This is a fudge
+			Sample->update_motion(Zeroes,dvMinus,-RandomlyDistributeRotationAndLinMom*Sample->get_rotationalfreq()/2.0);
 
 			// Record dust end conditions for later when we simulate other half of fork
 			GDvector.push_back(Sample->get_graindata());
@@ -693,10 +749,10 @@ int DTOKSU_Manager::Breakup(){
 			Sim->OpenFiles("Data/breakup",p);
 			p = p + 1;
 			DM_Debug("\nSimulating POSITIVE Branch "); DM_Debug(i); DM_Debug(" : "); DM_Debug(j);
-                        DM_Debug("\nStart Pos = "); DM_Debug(Sample->get_position()); 
-                        DM_Debug("\nVelocity = "); DM_Debug(Sample->get_velocity());
-                        DM_Debug("\nMass = "); DM_Debug(Sample->get_mass());
-                        DM_Debug("\nTemperature = "); DM_Debug(Sample->get_temperature()); DM_Debug("\n");
+			DM_Debug("\nStart Pos = "); DM_Debug(Sample->get_position()); 
+			DM_Debug("\nVelocity = "); DM_Debug(Sample->get_velocity());
+			DM_Debug("\nMass = "); DM_Debug(Sample->get_mass());
+			DM_Debug("\nTemperature = "); DM_Debug(Sample->get_temperature()); DM_Debug("\n");
 			Pause();
 		}
 		DM_Debug("\n***** END OF : DUST DIDN'T BREAKUP *****\n!");

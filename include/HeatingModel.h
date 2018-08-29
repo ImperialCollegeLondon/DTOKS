@@ -33,7 +33,7 @@ class HeatingModel : public Model{
 		const double NeutralRecombination	(double DustTemperature)const;
 		const double IonHeatFlux		(double DustTemperature)const;
 		const double ElectronHeatFlux		(double DustTemperature)const;
-		const double NeutralHeatFlux		()			const;
+		const double NeutralHeatFlux		(double DustTemperature)const;
 
 		// Fluxes of particles and coefficients
 		const double EvaporationFlux		(double DustTemperature)const;
@@ -47,7 +47,8 @@ class HeatingModel : public Model{
 				Matter *& sample, PlasmaData * pdata);
 		HeatingModel( std::string filename, float accuracy, std::array<bool,HMN> &models, 
 				Matter *& sample, PlasmaGrid_Data & pgrid);
-
+		HeatingModel( std::string filename, float accuracy, std::array<bool,HMN> &models, 
+				Matter *& sample, PlasmaGrid_Data & pgrid, PlasmaData &pdata);
 		// Destructor
 		~HeatingModel(){
 		};

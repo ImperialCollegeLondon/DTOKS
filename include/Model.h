@@ -11,22 +11,26 @@
 #include "Beryllium.h"
 
 static struct PlasmaData PlasmaDataDefaults = {
-	1e20,		// m^-3, Neutral Density
-	1e20,		// m^-3, Electron Density
-	1e20,		// m^-3, Ion Density
-	116045.25,	// K, Ion Temperature
-	116045.25,	// K, Electron Temperature
-	116045.25,	// K, Neutral Temperature
-	300,		// K, Ambient Temperature
-	1.66054e-27,// kg, Mass of ions
-	threevector(),	// m s^-1, Plasma Velocity (Should eventually be normalised to sound speed cs)
-	threevector(),	// m s^-2, Acceleration due to gravity
-	threevector(),	// V m^-1, Electric field at dust location (Normalised later) 
-	threevector(),	// T, Magnetic field at dust location (Normalised later)
+	1e19,				// m^-3, Neutral Density
+	1e19,				// m^-3, Electron Density
+	1e19,				// m^-3, Ion Density
+	116045.25,			// K, Ion Temperature
+	116045.25,			// K, Electron Temperature
+	0.025*116045.25,	// K, Neutral Temperature
+	300,				// K, Ambient Temperature
+	1.66054e-27,		// kg, Mass of ions
+	1.0,			// (1/e), Mean Ionization state of plasma
+	threevector(),		// m s^-1, Plasma Velocity (Should eventually be normalised to sound speed cs)
+	threevector(),		// m s^-2, Acceleration due to gravity
+	threevector(),		// V m^-1, Electric field at dust location (Normalised later) 
+	threevector(),		// T, Magnetic field at dust location (Normalised later)
 };
 
 static struct PlasmaGrid_Data PlasmaGrid_DataDefaults = {
 	// Plasma Parameters
+	std::vector< std::vector<double> >(),
+	std::vector< std::vector<double> >(),
+	std::vector< std::vector<double> >(),
 	std::vector< std::vector<double> >(),
 	std::vector< std::vector<double> >(),
 	std::vector< std::vector<double> >(),
@@ -50,7 +54,6 @@ static struct PlasmaGrid_Data PlasmaGrid_DataDefaults = {
 	2.0,
 
 	1.66054e-27,
-	'h',
 	'j',
 };
 
@@ -98,6 +101,7 @@ class Model{
 		Model();
 		Model(Matter *& sample, PlasmaData &pdata, float accuracy);
 		Model(Matter *& sample, PlasmaGrid_Data &pgrid, float accuracy);
+		Model(Matter *& sample, PlasmaGrid_Data &pgrid, PlasmaData &pdata, float accuracy );
 
 		// Destructor
 		virtual ~Model(){};
@@ -109,7 +113,7 @@ class Model{
 
 		bool new_cell						()const;
 
-		void RecordPlasmadata();				// Record the plasma Data	
+		void RecordPlasmadata(std::string filename);				// Record the plasma Data	
 
 		void update_plasmadata(PlasmaData &pdata);
 		const bool update_plasmadata();
@@ -119,124 +123,7 @@ class Model{
 
 		void AddTime(double T){	TotalTime = TotalTime + T;	}
 
-
-		// Sort this mess out...
-
-		// Methods to get variables
-		double get_Te		(int i, int k)const{
-			checkingrid(i,k);
-			if(PG_data->Te[i][k] == PG_data->Te[i][k] && PG_data->Te[i][k] > 0.0 ){
-				return PG_data->Te[i][k];
-			}else{
-				return 0;
-			}
-		}
-		double get_Ti		(int i, int k)const{
-			checkingrid(i,k);
-			if(PG_data->Ti[i][k] == PG_data->Ti[i][k] && PG_data->Ti[i][k] > 0.0 ){
-				return PG_data->Ti[i][k];
-			}else{
-				return 0;
-			}
-		}
-		double get_na0		(int i, int k)const{
-			checkingrid(i,k);
-                        if(PG_data->na0[i][k] == PG_data->na0[i][k] && PG_data->na0[i][k] > 0.0 ){
-                                return PG_data->na0[i][k];
-                        }else{
-                                return 0;
-                        }
-		}
-		double get_po		(int i, int k)const{
-			checkingrid(i,k);
-                        if(PG_data->po[i][k] == PG_data->po[i][k] ){
-                                return PG_data->po[i][k];
-                        }else{
-                                return 0;
-                        }
-		}
-		double get_ua0		(int i, int k)const{
-			checkingrid(i,k);
-                        if(PG_data->ua0[i][k] == PG_data->ua0[i][k] ){
-                                return PG_data->ua0[i][k];
-                        }else{
-                                return 0;
-                        }
-		}
-		double get_ua1		(int i, int k)const{
-			checkingrid(i,k);
-                        if(PG_data->ua1[i][k] == PG_data->ua1[i][k] ){
-                                return PG_data->ua1[i][k];
-                        }else{
-                                return 0;
-                        }
-		}
-		double get_bx		(int i, int k)const{
-			checkingrid(i,k);
-                        if(PG_data->bx[i][k] == PG_data->bx[i][k] ){
-                                return PG_data->bx[i][k];
-                        }else{
-                                return 0;
-                        }
-		}
-		double get_by		(int i, int k)const{
-			checkingrid(i,k);
-                        if(PG_data->by[i][k] == PG_data->by[i][k] ){
-                                return PG_data->by[i][k];
-                        }else{
-                                return 0;
-                        }
-		}
-		double get_bz		(int i, int k)const{
-			checkingrid(i,k);
-                        if(PG_data->bz[i][k] == PG_data->bz[i][k] ){
-                                return PG_data->bz[i][k];
-                        }else{
-                                return 0;
-                        }
-		}
-
-		double get_na1		(int i, int k)const{
-			checkingrid(i,k);
-                        if(PG_data->na1[i][k] == PG_data->na1[i][k] && PG_data->na1[i][k] > 0.0 ){
-                                return PG_data->na1[i][k];
-                        }else{
-                                return 0;
-                        }
-		}
-		double get_na1mi		(int i, int k)const{
-			checkingrid(i,k);
-                        if(PG_data->na1[i][k]*PG_data->mi == PG_data->na1[i][k]*PG_data->mi && PG_data->na1[i][k] > 0.0 ){
-                                return PG_data->na1[i][k]*PG_data->mi;
-                        }else{
-                                return 0;
-                        }
-		}
-		double get_gridflag	(int i, int k)const{
-			checkingrid(i,k);
-			if( PG_data->device != 'p'){
-	                        if(PG_data->gridflag[i][k] == PG_data->gridflag[i][k] ){
-	                                return PG_data->gridflag[i][k];
-	                        }else{
-	                                return 0;
-	                        }
-			}else{
-				return checkingrid(i,k);
-			}
-		}	
-
-		const char get_device		()		const{return PG_data->device;}
-		const char get_gas			()		const{return PG_data->gas;}
-		const double get_mi			()		const{return PG_data->mi;}
-		const double get_gridxmin	()		const{return PG_data->gridxmin;}
-		const double get_gridxmax	()		const{return PG_data->gridxmax;}
-		const double get_gridzmin	()		const{return PG_data->gridzmin;}
-		const double get_gridzmax	()		const{return PG_data->gridzmax;}
-		const double get_gridx		()		const{return PG_data->gridx;}
-		const double get_gridz		()		const{return PG_data->gridz;}
-		const double get_gridtheta	()		const{return PG_data->gridtheta;}
 		const double get_dlx		()		const{return PG_data->dlx;}
-		const double get_dlz		()		const{return PG_data->dlz;}
 
 		// Functions for printing
 		void vtkcircle(double r, std::ofstream &fout); // Print the inside and the outside of the tokamak 

@@ -22,7 +22,6 @@ class ChargingModel : public Model{
 		double DeltaTherm()const;
 		double DeltaSec()const;
 
-		double ChargeOfGrain;		// Coulombs, Charge on dust grain
 	public:
 		// Constructors
 		ChargingModel();
@@ -32,6 +31,8 @@ class ChargingModel : public Model{
 				Matter *& sample, PlasmaData * pdata);
 		ChargingModel(std::string filename, float accuracy, std::array<bool,CMN> models, 
 				Matter *& sample, PlasmaGrid_Data & pgrid);
+		ChargingModel(std::string filename, float accuracy, std::array<bool,CMN> models, 
+				Matter *& sample, PlasmaGrid_Data & pgrid, PlasmaData &pdata);
 
 		void CreateFile(std::string filename);
 

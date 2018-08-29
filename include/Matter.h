@@ -2,6 +2,7 @@
 #define __MATTER_H_INCLUDED__
 
 #define MinMass 10e-25
+//#define MinMass 10e-11 // Note real MinMass is 10 times larger
 
 #include "GrainStructs.h"// Contains the structure element for storing properties of material
 #include "Constants.h"	// Contains general physical constants
@@ -63,7 +64,6 @@ class Matter{
 		void update_temperature(double EnergyIn);
 
 		void update_motion(const threevector &changeinposition, const threevector &changeinvelocity, double Rotation);
-		// Resolve region of rapid charge variation
 		void update_charge(double charge, double potential, double deltas, double deltat);
 
 		// Update the Grain data

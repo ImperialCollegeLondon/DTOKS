@@ -6,6 +6,14 @@
 #include <chrono>	// for chrono::high_resolution_clock::now().time_since_epoch().count();
 #include <config4cpp/Configuration.h>	// For Configuration
 #include <netcdfcpp.h>	// for reading netcdf files
+#include <exception>	// for Exception handling
+#include <stdlib.h>
+
+struct PlasmaFileReadFailure : public std::exception {
+   const char * what () const throw () {
+      return "Exception raised opening/reading/closing PlasmaData file\n";
+   }
+};
 
 class DTOKSU_Manager{
 

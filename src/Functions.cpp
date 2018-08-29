@@ -3,6 +3,8 @@
 #include <assert.h>	// Assertion errors
 #include <ctime>	// Time program
 
+#include "Functions.h"
+
 // Empirical fit to secondary electron emission equation as in Stangeby
 // Electron temperature is expected to be in units of electron volts!
 double sec(double Te, char material)
@@ -360,6 +362,11 @@ double round_to_digits(double value, int digits){
     return round(value * factor) / factor;   
 }
 
+const char * LambertWFailure::what () const throw () {
+	return "\nException Raised in LambertW function: No convergence\n";
+}
+
+
 double LambertW(const double z) {
   int i; 
   const double eps=4.0e-16, em1=0.3678794411714423215955237701614608; 
@@ -367,6 +374,7 @@ double LambertW(const double z) {
 //  if (dbgW) fprintf(stderr,"LambertW: z=%g\n",z);
   if (z<-em1 || std::isinf(z) || std::isnan(z)) { 
 	fprintf(stderr,"LambertW: bad argument %g, exiting.\n",z); // exit(1); 
+	throw LambertWFailure();
 	return 0.0;
   }
   if (0.0==z) return 0.0;
@@ -400,7 +408,7 @@ double LambertW(const double z) {
   }
   /* should never get here */
   fprintf(stderr,"LambertW: No convergence at z=%g, exiting.\n",z); 
-  exit(1);
+  throw LambertWFailure();
 }
 
 void CheckPos(double Value, std::string ErrorMssg){

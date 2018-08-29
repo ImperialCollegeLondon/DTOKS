@@ -1,8 +1,13 @@
+#ifndef __FUNCTIONS_H_INCLUDED__   // if Functions.h hasn't been included yet...
+#define __FUNCTIONS_H_INCLUDED__
+
+
 #include <string>
 
 #include <cmath>
 #include <math.h>
 #include <stdio.h>
+#include <exception>
 
 // Empirical fit to secondary electron emission equation as in Stangeby
 double sec(double Te, char material);
@@ -39,7 +44,11 @@ double round_to_digits(double value, int digits);
    Library:
      gcc -O3 -c LambertW.c 
 */
+struct LambertWFailure : public std::exception{
+  const char * what () const throw ();
+};
 
 double LambertW(const double z);
 
 void CheckPos(double Value, std::string ErrorMssg);
+#endif

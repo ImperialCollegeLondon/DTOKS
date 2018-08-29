@@ -16,6 +16,7 @@ struct PlasmaData{
 	double NeutralTemp;			// K, Neutral Temperature
 	double AmbientTemp;			// K, Ambient Temperature
 	double mi;					// mi is the mass of the gas
+	double Z;			// (1/e), Z is the mean ionisation of the gas
 	threevector PlasmaVel;		// m s^-1, Plasma Velocity (Should eventually be normalised to sound speed cs)
 	threevector Gravity;		// m s^-2, Acceleration due to gravity 
 	threevector ElectricField;	// V m^-1, Electric field at dust location (Normalised later) 
@@ -25,10 +26,13 @@ struct PlasmaData{
 struct PlasmaGrid_Data{
 
 	// Plasma Parameters
-	std::vector<std::vector<double>> Te;	// Te is the electron temperature stored in units of (J)
-	std::vector<std::vector<double>> Ti;	// Ti is the ion temperature stored in units of (J)
+	std::vector<std::vector<double>> Te;	// Te is the electron temperature in units of K
+	std::vector<std::vector<double>> Ti;	// Ti is the ion temperature in units of K
+	std::vector<std::vector<double>> Tn;	// Tn is the neutral temperature in units of K
+	std::vector<std::vector<double>> Ta;	// Ta is the ambient temperature in units of K
 	std::vector<std::vector<double>> na0;	// na0 is the ion density stored in units of (m^-3)
 	std::vector<std::vector<double>> na1;	// na1 is the electron density stored in units of (m^-3)
+	std::vector<std::vector<double>> na2;	// na1 is the neutral density stored in units of (m^-3)
 	std::vector<std::vector<double>> po;	// po is the potential
 	std::vector<std::vector<double>> ua0;	// ua0 is the ion drift velocity stored in units of (m s^-1)
 	std::vector<std::vector<double>> ua1;	// ua1 is the electron drift velocity stored in units of (m s^-1)
@@ -51,10 +55,8 @@ struct PlasmaGrid_Data{
 	double dlz;			// dlz is the grid spacing in the z direction
 
 	// Basic Parameters defining plasma type.
-	double mi;			// mi is the mass of the gas
-	char gas;			// gas is a character specifying the plasma type (i.e Hydrogen)
+	double mi;			// mi is the mass of the gas (kg)
 	char device;		// device is a character specifying the machine type ('m', 'j', 'i', 'p' or 'd')
-
 };
 // PlasmaData():NeutralDensity(0.0), ElectronDensity(0.0), IonDensity(0.0),
 // 		IonTemp(0.0), ElectronTemp(0.0), NeutralTemp(0.0),

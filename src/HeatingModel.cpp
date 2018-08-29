@@ -39,6 +39,15 @@ HeatingModel::HeatingModel(std::string filename, float accuracy, std::array<bool
 	CreateFile(filename,false);
 }
 
+HeatingModel::HeatingModel(std::string filename, float accuracy, std::array<bool,HMN> &models,
+				Matter *& sample, PlasmaGrid_Data &pgrid, PlasmaData &pdata) 
+				: Model(sample,pgrid,pdata,accuracy){
+	H_Debug("\n\nIn HeatingModel::HeatingModel(std::string filename, float accuracy, std::array<bool,HMN> &models, Matter *& sample, PlasmaGrid const &pgrid) : Model(sample,pgrid,accuracy)\n\n");
+	Defaults();
+	UseModel 	= models;
+	CreateFile(filename,false);
+}
+
 void HeatingModel::Defaults(){
 	H_Debug("\tIn HeatingModel::Defaults()\n\n");
 	UseModel = {false,false,false,false,false,false,false};
@@ -165,7 +174,7 @@ void HeatingModel::Print(){
 					<< "\t" << IonHeatFlux(Sample->get_temperature());
 	if( UseModel[4] )	ModelDataFile 	<< "\t" << ElectronFlux(Sample->get_temperature()) << "\t" 
 					<< ElectronHeatFlux(Sample->get_temperature());
-	if( UseModel[5] )	ModelDataFile 	<< "\t" << NeutralFlux() << "\t" << NeutralHeatFlux();
+	if( UseModel[5] )	ModelDataFile 	<< "\t" << NeutralFlux() << "\t" << NeutralHeatFlux(Sample->get_temperature());
 	if( UseModel[6] )	ModelDataFile 	<< "\t" << NeutralRecombination(Sample->get_temperature());
 	if( UseModel[7] )	ModelDataFile 	<< "\t" << SEE(Sample->get_temperature());
 	if( UseModel[8] )	ModelDataFile 	<< "\t" << TEE(Sample->get_temperature());
@@ -221,7 +230,8 @@ void HeatingModel::Heat(double timestep){
 	if( UseModel[1] && Sample->is_liquid() && (Sample->get_temperature() != Sample->get_boilingtemp()) )
 		Sample->update_mass( (timestep*EvaporationFlux(Sample->get_temperature())*Sample->get_atomicmass())/AvNo );
 	H1_Debug("\tMass Loss = " << (timestep*EvaporationFlux(Sample->get_temperature())*Sample->get_atomicmass())/AvNo);
-	Sample->update();
+	if( !Sample->is_gas() )
+		Sample->update();
 	Print();  // Print data to file
 	H_Debug("\t"); 
 
@@ -242,22 +252,22 @@ double HeatingModel::CalculatePower(double DustTemperature)const{
 	if( UseModel[2] )				TotalPower -= NewtonCooling		(DustTemperature);
 	if( UseModel[3] )				TotalPower += IonHeatFlux		(DustTemperature);
 	if( UseModel[4] )				TotalPower += ElectronHeatFlux		(DustTemperature);
-	if( UseModel[5] )				TotalPower += NeutralHeatFlux		();
+	if( UseModel[5] )				TotalPower += NeutralHeatFlux		(DustTemperature);
 	if( UseModel[6] )				TotalPower += NeutralRecombination	(DustTemperature);
 	if( UseModel[7] )				TotalPower -= SEE			(DustTemperature);
 	if( UseModel[8] )				TotalPower -= TEE			(DustTemperature);	
 	TotalPower = TotalPower/1000;
 
-	H1_Debug("\n\nPowerIncident = \t" 	<< PowerIncident*1000				<< "W");
-	H1_Debug("\nEmissivityModel() = \t" 	<< -EmissivityModel(DustTemperature) 		<< "W");
-	H1_Debug("\nEvaporationModel() = \t" 	<< -EvaporationModel(DustTemperature)*1000 	<< "W");
-	H1_Debug("\nNewtonCooling() = \t" 	<< -NewtonCooling(DustTemperature) 		<< "W");
-	H1_Debug("\nIonHeatFlux() = \t" 	<< IonHeatFlux(DustTemperature) 		<< "W");
-	H1_Debug("\nElectronHeatFlux() = \t" 	<< ElectronHeatFlux(DustTemperature) 		<< "W");
-	H1_Debug("\nNeutralHeatFlux() = \t" 	<< NeutralHeatFlux() 				<< "W");
-	H1_Debug("\nNeutralRecombination() = \t"<< NeutralRecombination(DustTemperature)	<< "W");
-	H1_Debug("\nSEE() = \t" 		<< -SEE(DustTemperature) 			<< "W");
-	H1_Debug("\nTEE() = \t" 		<< -TEE(DustTemperature) 			<< "W\n");
+	H1_Debug("\n\n\tPowerIncident = \t" 	<< PowerIncident*1000				<< "W");
+	H1_Debug("\n\tEmissivityModel() = \t" 	<< -EmissivityModel(DustTemperature) 		<< "W");
+	H1_Debug("\n\tEvaporationModel() = \t" 	<< -EvaporationModel(DustTemperature)*1000 	<< "W");
+	H1_Debug("\n\tNewtonCooling() = \t" 	<< -NewtonCooling(DustTemperature) 		<< "W");
+	H1_Debug("\n\tIonHeatFlux() = \t" 	<< IonHeatFlux(DustTemperature) 		<< "W");
+	H1_Debug("\n\tElectronHeatFlux() = \t" 	<< ElectronHeatFlux(DustTemperature) 		<< "W");
+	H1_Debug("\n\tNeutralHeatFlux(DustTemperature) = \t" 	<< NeutralHeatFlux(DustTemperature) 				<< "W");
+	H1_Debug("\n\tNeutralRecombination() = \t"<< NeutralRecombination(DustTemperature)	<< "W");
+	H1_Debug("\n\tSEE() = \t" 		<< -SEE(DustTemperature) 			<< "W");
+	H1_Debug("\n\tTEE() = \t" 		<< -TEE(DustTemperature) 			<< "W\n");
 	//std::cin.get();
 	H1_Debug("\nTotalPower = \t" 		<< TotalPower*1000		<< "W\n");
 	return TotalPower;
@@ -362,9 +372,10 @@ const double HeatingModel::NeutralRecombination(double DustTemperature)const{
 //		static bool runOnce = true;
 //		WarnOnce(runOnce,"In HeatingModel::NeutralRecombination(double DustTemperature)\nRN > 0.1. Neutral Recombination affected by backscattering by more than 10%!");
 //	}
-
-	if( Sample->is_positive() ) 	return Sample->get_surfacearea()*(14.7*echarge*IonFlux(DustTemperature) - 2*Kb*DustTemperature*NeutralFlux()); 
-	else				return  Sample->get_surfacearea()*(1-RN)*(14.7*echarge*IonFlux(DustTemperature) - 2*Kb*DustTemperature*NeutralFlux()); 
+	if( Sample->is_positive() ) 	
+		return Sample->get_surfacearea()*(14.7*echarge*IonFlux(DustTemperature) - 2*Kb*DustTemperature*NeutralFlux()); 
+	else				
+		return  Sample->get_surfacearea()*(1-RN)*(14.7*echarge*IonFlux(DustTemperature) - 2*Kb*DustTemperature*NeutralFlux()); 
 }
 
 const double HeatingModel::SEE(double DustTemperature)const{
@@ -412,9 +423,9 @@ const double HeatingModel::ElectronHeatFlux(double DustTemperature)const{ // Onl
 	return Sample->get_surfacearea()*2*ElectronFlux(DustTemperature)*Pdata->ElectronTemp*Kb;
 }
 
-const double HeatingModel::NeutralHeatFlux()const{
-	H_Debug("\n\tIn HeatingModel::NeutralHeatFlux():\n\n");
-	return Sample->get_surfacearea()*2*NeutralFlux()*Pdata->NeutralTemp*Kb;
+const double HeatingModel::NeutralHeatFlux(double DustTemperature)const{
+	H_Debug("\n\tIn HeatingModel::NeutralHeatFlux(double DustTemperature):\n\n");
+	return Sample->get_surfacearea()*2*NeutralFlux()*(Pdata->NeutralTemp-DustTemperature)*Kb;
 }
 
 // ************************************* //

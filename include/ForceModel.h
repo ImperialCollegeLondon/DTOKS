@@ -34,6 +34,8 @@ class ForceModel : public Model {
 				Matter *& sample, PlasmaData * pdata);
 		ForceModel(std::string filename, float accuracy, std::array<bool,FMN> models, 
 				Matter *& sample, PlasmaGrid_Data & pgrid);
+		ForceModel(std::string filename, float accuracy, std::array<bool,FMN> models, 
+				Matter *& sample, PlasmaGrid_Data & pgrid, PlasmaData &pdata);
 
 		// Destructor
 		~ForceModel(){};

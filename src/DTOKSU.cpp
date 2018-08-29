@@ -33,6 +33,22 @@ DTOKSU::DTOKSU( std::array<float,MN> acclvls, Matter *& sample, PlasmaGrid_Data 
 	create_file("Data/df.txt");
 }
 
+DTOKSU::DTOKSU( std::array<float,MN> acclvls, Matter *& sample, PlasmaGrid_Data &pgrid, 
+				PlasmaData &pdata,	std::array<bool,HMN> &heatmodels, 
+				std::array<bool,FMN> &forcemodels, std::array<bool,CMN> &chargemodels)
+				: Sample(sample),
+				CM("Data/breakup_cm_0.txt",acclvls[0],chargemodels,sample,pgrid,pdata),
+				HM("Data/breakup_hm_0.txt",acclvls[1],heatmodels,sample,pgrid,pdata),
+				FM("Data/breakup_fm_0.txt",acclvls[2],forcemodels,sample,pgrid,pdata){
+        D_Debug("\n\nIn DTOKSU::DTOKSU( ... )\n\n");
+        D_Debug("\n\n************************************* SETUP FINISHED ************************************* \n\n");
+
+//	D_Debug("\nHeatModels = " << heatmodels[0]);
+//	std::cout << "\nacclvls[0] = " << acclvls[0];
+	TotalTime = 0;
+	create_file("Data/df.txt");
+}
+
 void DTOKSU::create_file( std::string filename ){
 	D_Debug("\n\nIn DTOKSU::create_file(std::string filename)\n\n");
 	MyFile.open(filename);
@@ -72,11 +88,17 @@ int DTOKSU::Run(){
 
 	double HeatTime(0),ForceTime(0),ChargeTime(0);
 
-	bool InGrid = CM.update_plasmadata(); 
+	// Update the plasma data from the plasma grid for all models...
+	// This has to be done individually because PlasmaData is shared accross models 
+	// in current design
+	bool cm_InGrid = CM.update_plasmadata(); 
+	bool hm_InGrid = HM.update_plasmadata(); 
+	bool fm_InGrid = FM.update_plasmadata(); 
+	assert( cm_InGrid == fm_InGrid && fm_InGrid == hm_InGrid && hm_InGrid == cm_InGrid );
 	CM.Charge(1e-100);		// Charge instantaneously as soon as we start, have to add a time though...
 	Sample->update();		// Need to manually update the first time as first step is not necessarily heating
 	bool ErrorFlag(false);
-	while( InGrid && !Sample->is_split() ){
+	while( cm_InGrid && !Sample->is_split() ){
 
 		// ***** START OF : DETERMINE TIMESCALES OF PROCESSES ***** //	
 
@@ -130,6 +152,10 @@ int DTOKSU::Run(){
 				// Take the time step in the faster time process
 				if( MinTimeStep == HeatTime ){
 					HM.Heat(MinTimeStep);
+					if( Sample->is_gas() ){
+						D1_Debug("\nSample is gaseous!");
+						Loop=false;
+					}
 					CM.Charge(MinTimeStep); // This has to go here, Think break; statement
 					D1_Debug("\nHeat Step Taken.");
 					// Check that time scales haven't changed significantly whilst looping... 
@@ -189,15 +215,19 @@ int DTOKSU::Run(){
 			<< "\n\tForceTime = " << ForceTime << "\n\tHeatTime = " << HeatTime << "\n");
 
 		// Update the plasma data from the plasma grid for all models...
-		InGrid = CM.update_plasmadata();
-		CM.RecordPlasmadata();
+		cm_InGrid = CM.update_plasmadata();
+		hm_InGrid = HM.update_plasmadata();
+		fm_InGrid = FM.update_plasmadata();
+		
+		assert( cm_InGrid == fm_InGrid && fm_InGrid == hm_InGrid && hm_InGrid == cm_InGrid );
+
+		CM.RecordPlasmadata("pd.txt");
+		//HM.RecordPlasmadata("hm_pd.txt");
+		//FM.RecordPlasmadata("fm_pd.txt");
 		print();
 		Pause();
 		// ***** START OF : DETERMINE IF END CONDITION HAS BEEN REACHED ***** //
-		if( Sample->is_gas() && Sample->is_split() ){
-			std::cout << "\nSample has undergone electrostatic breakup!";
-			break;	
-		}else if( Sample->is_gas() && Sample->get_superboilingtemp() <= Sample->get_temperature() ){
+		if( Sample->is_gas() && Sample->get_superboilingtemp() <= Sample->get_temperature() ){
 			std::cout << "\n\nSample has Boiled!";
 			break;
 		}else if( Sample->is_gas() && Sample->get_superboilingtemp() > Sample->get_temperature() ){
@@ -219,7 +249,7 @@ int DTOKSU::Run(){
 		std::cout << "\nHM.get_totaltime() = " << HM.get_totaltime() << "\nFM.get_totaltime() = " 
 			<< FM.get_totaltime() << "\nCM.get_totaltime() = " << CM.get_totaltime() << "\n\nTotalTime = " << TotalTime;
 	}
-	if( !InGrid ){
+	if( !cm_InGrid ){
 		std::cout << "\nSample has left simulation domain";
 		return 1;
 	}else if( HeatTime == 1 ){

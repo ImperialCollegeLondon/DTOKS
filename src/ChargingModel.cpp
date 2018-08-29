@@ -10,7 +10,6 @@ ChargingModel::ChargingModel():Model(){
 	UseModel[1] = false;
 	UseModel[2] = false;
 	UseModel[3] = false;
-	ChargeOfGrain = 0;
 	CreateFile("Default_Charging_Filename.txt");
 }
 
@@ -19,7 +18,6 @@ ChargingModel::ChargingModel(std::string filename, float accuracy, std::array<bo
 	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename, float accuracy, std::array<bool,CMN> models,Matter *& sample, PlasmaData *&pdata) : Model(sample,pdata,accuracy)\n\n");
 	UseModel = models;
 	CreateFile(filename);
-	ChargeOfGrain = 0;
 }
 
 ChargingModel::ChargingModel(std::string filename, float accuracy, std::array<bool,CMN> models,
@@ -27,7 +25,6 @@ ChargingModel::ChargingModel(std::string filename, float accuracy, std::array<bo
 	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename, float accuracy, std::array<bool,CMN> models,Matter *& sample, PlasmaData *&pdata) : Model(sample,pdata,accuracy)\n\n");
 	UseModel = models;
 	CreateFile(filename);
-	ChargeOfGrain = 0;
 }
 
 ChargingModel::ChargingModel(std::string filename, float accuracy, std::array<bool,CMN> models,
@@ -35,7 +32,14 @@ ChargingModel::ChargingModel(std::string filename, float accuracy, std::array<bo
 	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename, float accuracy, std::array<bool,CMN> models,Matter *& sample, PlasmaGrid_Data &pgrid) : Model(sample,pgrid,accuracy)\n\n");
 	UseModel = models;
 	CreateFile(filename);
-	ChargeOfGrain = 0;
+}
+
+ChargingModel::ChargingModel(std::string filename, float accuracy, std::array<bool,CMN> models,
+				Matter *& sample, PlasmaGrid_Data &pgrid, PlasmaData &pdata) 
+				: Model(sample,pgrid,pdata,accuracy){
+	C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename, float accuracy, std::array<bool,CMN> models,Matter *& sample, PlasmaGrid_Data &pgrid) : Model(sample,pgrid,accuracy)\n\n");
+	UseModel = models;
+	CreateFile(filename);
 }
 
 void ChargingModel::CreateFile(std::string filename){
@@ -44,7 +48,7 @@ void ChargingModel::CreateFile(std::string filename){
 	ModelDataFile.open(FileName);
 	ModelDataFile << std::fixed << std::setprecision(16) << std::endl;
 	ModelDataFile << "Time\tChargeOfGrain";
-	ModelDataFile << "\tPositive\tPotential";
+	ModelDataFile << "\tPositive\tDeltaTot\tPotential";
 	ModelDataFile << "\n";
 	ModelDataFile.close();
 	ModelDataFile.clear();
@@ -54,9 +58,10 @@ void ChargingModel::CreateFile(std::string filename){
 void ChargingModel::Print(){
 	C_Debug("\tIn ChargingModel::Print()\n\n");
 	ModelDataFile.open(FileName,std::ofstream::app);
-	ModelDataFile << TotalTime << "\t" << ChargeOfGrain/echarge;
+	ModelDataFile << TotalTime << "\t" << -(4.0*PI*epsilon0*Sample->get_radius()*Sample->get_potential()*Kb*Pdata->ElectronTemp)/(echarge*echarge);
 	if( Sample->is_positive() )  ModelDataFile << "\tPos";
 	if( !Sample->is_positive() ) ModelDataFile << "\tNeg";
+	ModelDataFile << "\t" << Sample->get_deltatot();
 	ModelDataFile << "\t" << Sample->get_potential();
 	ModelDataFile << "\n";
 	ModelDataFile.close();
@@ -109,16 +114,7 @@ void ChargingModel::Charge(double timestep){
 	double DTherm = DeltaTherm();
 
 	double Potential;
-	if( Pdata->ElectronTemp <= 0 ){ // Avoid dividing by zero
-/*		if( UseModel [0] ){	// This model is supposed to provide a steady loss of charge
-			ChargeOfGrain = ChargeOfGrain + 4*PI*pow(Sample->get_radius()*Sample->get_temperature(),2)*Richardson*
-			exp(-Sample->get_workfunction()*echarge/(Kb*Sample->get_temperature()))*timestep;
-		}else if( UseModel [1] ){
-			ChargeOfGrain += 4*PI*pow(Sample->get_radius()*Sample->get_temperature(),2)*Richardson*
-			exp(Sample->get_potential()-Sample->get_workfunction()*echarge/(Kb*Sample->get_temperature()))*TimeStep;
-		} */
-		Potential = 0.0;
-	}else if( UseModel[0] ){
+	if( UseModel[0] ){ // Original DTOKS Charging scheme
 //		WARNING! THIS SCHEME FOR THE CHARGING MODEL CREATES DISCONTINUITIES WHEN FORMING A WELL!
 		if( (DSec + DTherm) >= 1.0 ){ 	// If electron emission yield exceeds unity, we have potential well...
 						// Take away factor of temperature ratios for depth of well
@@ -135,30 +131,25 @@ void ChargingModel::Charge(double timestep){
 						/(Pdata->ElectronTemp*echarge);
 			}
 		}
-		ChargeOfGrain = -(4.0*PI*epsilon0*Sample->get_radius()*Potential*Kb*Pdata->ElectronTemp)/echarge;
-	}else if( UseModel[1] ){
+	}else if( UseModel[1] ){ // 
 		// Assume the grain is negative and calculate potential
 		Potential = solveNegSchottkyOML(Potential);
-		ChargeOfGrain = -(4.0*PI*epsilon0*Sample->get_radius()*Potential*Kb*Pdata->ElectronTemp)/echarge;
 		if ( Potential < 0 ){ // If dust grain is actually positive, (negative normalised potential) recalculate it...
 			Potential = solvePosSchottkyOML(); // Quasi-neutrality assumed, we take ni as ni=ne
-			ChargeOfGrain = (4.0*PI*epsilon0*Sample->get_radius()*Potential*Kb*Pdata->ElectronTemp)/echarge;
 		}
-	}else if( UseModel[2] ){	// In this case, maintain a potential well for entire temperature range
-//		Potential = solveOML( -0.5, Sample->get_potential()) 
-//			- Sample->get_temperature()/Pdata->ElectronTemp;
-		Potential = solveOML_LambertW(DSec+DTherm);//-Sample->get_temperature()/Pdata->ElectronTemp;
+	}else if( UseModel[2] ){ // In this case, maintain a potential well for entire temperature range
+		Potential = solveOML( 0.0, Sample->get_potential()) 
+			- Kb*Sample->get_temperature()/(Pdata->ElectronTemp*echarge);
+//		Potential = solveOML_LambertW(DSec+DTherm);//-Sample->get_temperature()/Pdata->ElectronTemp;
 //		Potential = solveOML( DSec + DTherm, Sample->get_potential());
 //		if( (DSec+ DTherm) >= 1.0 )
-			
-		ChargeOfGrain = -(4.0*PI*epsilon0*Sample->get_radius()*Potential*Kb*Pdata->ElectronTemp)/echarge;
 	}else if( UseModel[3] ){	// In this case, use Hutchinson, Patterchini and Lapenta
 		Potential = solvePHL(Potential);
-		ChargeOfGrain = -(4.0*PI*epsilon0*Sample->get_radius()*Potential*Kb*Pdata->ElectronTemp)/echarge;
 	}
 	// Have to calculate charge of grain here since it doesn't know about the Electron Temp and since potential is normalised.
 	// This information has to be passed to the grain.
-	Sample->update_charge(ChargeOfGrain,Potential,DTherm,DSec);
+	double charge = -(4.0*PI*epsilon0*Sample->get_radius()*Potential*Kb*Pdata->ElectronTemp)/echarge;
+	Sample->update_charge(charge,Potential,DTherm,DSec);
 	TotalTime += timestep;
 
 	C_Debug("\t"); Print();
@@ -170,12 +161,24 @@ void ChargingModel::Charge(){
 }
 
 double ChargingModel::solveOML_LambertW(double DeltaTot){
-	double TemperatureRatio(0);
-	if( Pdata->ElectronTemp != 0 ) TemperatureRatio = Pdata->IonTemp/Pdata->ElectronTemp;
+	double TemperatureRatio = Pdata->IonTemp/Pdata->ElectronTemp;
 
 	double Ionization = 1.0;
 	double MassRatio = Mp/Me;
-	return -(TemperatureRatio/Ionization-LambertW((1.0-DeltaTot)*sqrt(MassRatio*TemperatureRatio)*exp(TemperatureRatio/Ionization)/Ionization));
+	double LW(0);
+	try{
+		double Arg = (1.0-DeltaTot)*sqrt(MassRatio*TemperatureRatio)*exp(TemperatureRatio/Ionization)/Ionization;
+		if( std::isinf(Arg) ){
+			std::cout << "\nLambertW(Arg == " << Arg << ")! Using solveOML";
+			return solveOML( -0.5, Sample->get_potential()) 
+					- Sample->get_temperature()/Pdata->ElectronTemp;
+		}
+		LW = LambertW((1.0-DeltaTot)*sqrt(MassRatio*TemperatureRatio)*exp(TemperatureRatio/Ionization)/Ionization);
+		
+	}catch( LambertWFailure &e ){
+		std::cout << e.what();
+	}
+	return -(TemperatureRatio/Ionization-LW);
 }
 
 // Solve the Potential for a sphere in a collisionless magnetoplasma following
@@ -210,8 +213,15 @@ double ChargingModel::solvePHL(double Phi){
 	
 	double A = 0.678*w+1.543*w*w-1.212*w*w*w;
 
+	double Arg = (A+(1.0-A)*i_star)*sqrt(MassRatio*TemperatureRatio)*exp(TemperatureRatio/AtomicNumber)/AtomicNumber;
+
+	if( std::isinf(Arg) ){
+		std::cout << "\nLambertW(Arg == " << Arg << ")!";
+		throw LambertWFailure();
+		return 0.0;
+	}
 	double Potential = TemperatureRatio/AtomicNumber
-		-LambertW((A+(1.0-A)*i_star)*sqrt(MassRatio*TemperatureRatio)*exp(TemperatureRatio/AtomicNumber)/AtomicNumber);
+		-LambertW(Arg);
 	
 	while( fabs(Phi - Potential) >= 0.01 ){
 		Phi = solvePHL(Potential);
@@ -228,28 +238,34 @@ double ChargingModel::solvePHL(double Phi){
 		} 
 
 	        A = 0.678*w+1.543*w*w-1.212*w*w*w;
-	
-	        Potential = TemperatureRatio/AtomicNumber
-                -LambertW((A+(1.0-A)*i_star)*sqrt(MassRatio*TemperatureRatio)*exp(TemperatureRatio/AtomicNumber)/AtomicNumber);
+		
+		Arg = (A+(1.0-A)*i_star)*sqrt(MassRatio*TemperatureRatio)*exp(TemperatureRatio/AtomicNumber)/AtomicNumber;
+		if( std::isinf(Arg) ){
+			std::cout << "\nLambertW(Arg == " << Arg << ")!";
+			throw LambertWFailure();
+			return 0.0;
+		}
+
+		Potential = TemperatureRatio/AtomicNumber
+			-LambertW(Arg);
 	}
 	return Potential;
 }
 
 double ChargingModel::solveOML(double a, double guess){
-        C_Debug("\tIn ChargingModel::solveOML(double a, double guess)\n\n");
-        if( a >= 1.0 ){
+	C_Debug("\tIn ChargingModel::solveOML(double a, double guess)\n\n");
+	if( a >= 1.0 ){
 		static bool runOnce = true;
 		WarnOnce(runOnce,"DeltaTot >= 1.0. DeltaTot being set equal to unity.");
 		a = 1.0;
 	}
-	double b(0);
-	if( Pdata->ElectronTemp != 0 ) b = Pdata->IonTemp/Pdata->ElectronTemp;
+	double b = Pdata->IonTemp/Pdata->ElectronTemp;
 
 	double C = Me/Mp;
 
 	double x1 = guess - ( (( 1-a)*exp(-guess) - sqrt(b*C)*(1+guess/b))/((a-1)*exp(-guess) - sqrt(C/b) ) );
 
-	while(fabs(guess-x1)>1e-2){
+	while(fabs(guess-x1)>1e-3){
 		guess = x1;
 		x1 = guess - ( ( (1-a)*exp(-guess) - sqrt(b*C)*(1+guess/b) ) /( (a-1)*exp(-guess) - sqrt(C/b) ) );
 	}
@@ -269,8 +285,11 @@ double ChargingModel::solvePosSchottkyOML(){
 	double ve = sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
 	double Arg = TemperatureRatio*exp(TemperatureRatio)*(vi+Richardson*pow(Sample->get_temperature(),2)
 			*exp(-Wf/(Kb*Sample->get_temperature()))/(Z*echarge*Pdata->IonDensity))/(ve*(1-DeltaSec()));
-	assert( Arg != INFINITY && Arg != -INFINITY );
-
+	if( std::isinf(Arg) ){
+		std::cout << "\nLambertW(Arg == " << Arg << ")! Using solveOML";
+		throw LambertWFailure();
+		return 0;
+	}
 	double Coeff = TemperatureRatio;
 	return +Coeff - LambertW(Arg); 	// NOTE! Should be "return -Coeff + LambertW(Arg);" but we've reversed sign as equation
 					// as potential definition is reversed ( Positive potential for positive dust in this case)
@@ -304,10 +323,7 @@ double ChargingModel::solveNegSchottkyOML(double guess){
 double ChargingModel::DeltaTherm()const{
 	C_Debug("\tIn ChargingModel::DeltaTherm()\n\n");
 
-	double dtherm(0.0);
-
-	if( ElectronFlux(Sample->get_temperature()) > 0.0 )
-		dtherm = (Richardson*pow(Sample->get_temperature(),2)*exp(-(Sample->get_workfunction()*echarge)
+	double dtherm = (Richardson*pow(Sample->get_temperature(),2)*exp(-(Sample->get_workfunction()*echarge)
                                 /(Kb*Sample->get_temperature())))/(echarge*ElectronFlux(Sample->get_temperature()));
 
 	assert(dtherm >= 0.0 && dtherm == dtherm && dtherm != INFINITY );
