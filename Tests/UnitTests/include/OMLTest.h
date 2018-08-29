@@ -6,7 +6,7 @@ void OMLTest(){
 	clock_t begin = clock();
 
 //	double Z = 1.0; // Ionization state of plasma
-	for( double TiTe(0.01); TiTe < 100; TiTe *= 2 ){
+	for( double TiTe(0.01); TiTe < 1000; TiTe *= 2 ){
 		for( double Z(1.0); Z < 50; Z ++ ){
 			double Potential = solveOML(TiTe,Z,Mp/Me);
 			std::cout << "\n" << TiTe << "\t" << Z << "\t" << Mp/Me << "\t" << Potential;
