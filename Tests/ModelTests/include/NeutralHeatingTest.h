@@ -46,11 +46,11 @@ int NeutralHeatingTest(char Element, bool HeatSwitch){
 	Pdata->AmbientTemp = 0;
 
 	// Models and ConstModels are placed in an array in this order:
-	std::array<bool, 9> Models = 
+	std::array<bool, HMN> Models = 
 		{RadiativeCooling, EvaporativeCooling, NewtonCooling, IonHeatFlux, ElectronHeatFlux, NeutralHeatFlux, 
-		NeutralRecomb, SEE, TEE };
-	std::array<char, 4> ConstModels =
-		{ EmissivityModel,ExpansionModel,HeatCapacityModel,BoilingModel};
+		NeutralRecomb, SEE, TEE, false };
+	std::array<char, CM> ConstModels =
+		{ EmissivityModel,ExpansionModel,HeatCapacityModel,BoilingModel,'n'};
 
 	if	(Element == 'W'){ 
 		Sample = new Tungsten(Size,Temp,ConstModels);
@@ -64,6 +64,8 @@ int NeutralHeatingTest(char Element, bool HeatSwitch){
 	}else if (Element == 'G'){
 		Sample = new Graphite(Size,Temp,ConstModels);
 		TimeStep=1e-11;
+	}else if (Element == 'D'){
+		Sample = new Deuterium(Size,Temp,ConstModels);
 	}else{ 
 		std::cerr << "\nInvalid Option entered";
 		return -1;

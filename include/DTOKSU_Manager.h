@@ -29,6 +29,7 @@ class DTOKSU_Manager{
 		template<typename T> int input_function(int &argc, char* argv[], int &i, std::stringstream &ss0, T &Temp)const;
 		void show_usage(std::string name)const;
 		void config_message()const;
+		bool check_pdata_range()const;
 
 		int configure_plasmagrid(std::string plasma_dirname);
 		int read_data(std::string plasma_dirname);

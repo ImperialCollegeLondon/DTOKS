@@ -15,8 +15,6 @@ const struct ElementConsts GraphiteConsts = {
 	0.0120107,		// AMU in kg mol^-1, http://webbook.nist.gov/cgi/cbook.cgi?ID=C7782425&Mask=2
 	0,		 	// kJ/kg, Latent Fusion Energy From Wikipedia
 	712.912/0.0120107,	// kJ/kg, Latent Vapour Energy, http://aip.scitation.org/doi/10.1063/1.1746999 (+/-0.8)
-	4.20e15,		// rad s^-1, Plasma Frequency, 
-				// http://journals.aps.org/prb/abstract/10.1103/PhysRevB.16.2896(+/- 0.01)
 	0,			// N/m, Surface Tension, Is never a liquid
 	2260,			// (kg/m^3) from Wikipedia, Room temperature density (+/- 100)
 	0.140			// kW/m K, Thermal Conductivity at 293K, (+/- 0.001)

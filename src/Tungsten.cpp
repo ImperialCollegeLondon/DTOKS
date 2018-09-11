@@ -15,7 +15,6 @@ const struct ElementConsts TungstenConsts = {
 	0.18384,		// AMU in kg mol^-1, (+/- 0.00001) Atomic Mass
 	35.3/0.18384, 		// kJ/kg, Latent Fusion Energy From Wikipedia
 	774/0.18384, 		// kJ/kg, Latent Vapour Energy From Wikipedia
-	9.12e15,		// rad s^-1, Plasma Frequency, 'On thermal radiation from heated metallic dust grains' a. Pigarov
 	2.333,			// N/m, Surface Tension B. Keene, 1993, Review of data for the surface tension of pure metals
 	19600,			// (kg/m^3) from Wikipedia, Room temperature density
 	0.163			// kW/m K at 20 degrees celsius

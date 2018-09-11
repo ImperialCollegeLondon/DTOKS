@@ -15,7 +15,6 @@ const struct ElementConsts BerylliumConsts = {
 	0.009012182,		// AMU in kg mol^-1, (+/- 0.00001) Atomic Mass
 	12.2/0.009012182, 	// kJ/kg, Latent Fusion Energy From Wikipedia
 	292/0.009012182, 	// kJ/kg, Latent Vapour Energy From Wikipedia
-	3.093e14,		// rad s^-1, Plasma Frequency
 	1.100,			// N/m, Surface Tension B. Keene, 1993, Review of data for the surface tension of pure metal
 	1840,			// (kg/m^3) from Wikipedia, Room temperature density
 	0.200,			// kW/mK, from Wikipedia,

@@ -38,7 +38,7 @@
 
 int main(){
 
-	char Element[4]={'W','B','F','G'};// Element, (W) : Tungsten, (G) : Graphite, (B) : Beryllium or (F) : Iron.
+	char Element[5]={'W','B','F','G','D'};// Element, (W) : Tungsten, (G) : Graphite, (B) : Beryllium, (F) : Iron or (D) : Deuterium.
 	int out(0);
 	for(int i(0); i < 1; i ++){
 

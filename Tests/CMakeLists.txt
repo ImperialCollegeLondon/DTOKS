@@ -1,2 +1,3 @@
 add_subdirectory(UnitTests)
 add_subdirectory(IntegrationTests)
+add_subdirectory(ModelTests)

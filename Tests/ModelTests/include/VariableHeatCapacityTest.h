@@ -1,17 +1,17 @@
 #include "HeatingModel.h"
 
-int BeforeAfterHeatingTest(char Element, bool Old){
+int VariableHeatCapacityTest(char Element, bool VaryHeatCapacity){
 	clock_t begin = clock();
 	// ********************************************************** //
 	// FIRST, define program default behaviour
 
 	// Define the behaviour of the models for the temperature dependant constants, the time step and the 'Name' variable.
-	char EmissivityModel = 'f'; 	// Possible values 'c', 'v' and 'f': Corresponding to (c)onstant, (v)ariable and from (f)ile
-	if (Old) EmissivityModel = 'c';
+	char EmissivityModel = 'c'; 	// Possible values 'c', 'v' and 'f': Corresponding to (c)onstant, (v)ariable and from (f)ile
 	char ExpansionModel = 'c'; 	// Possible values 'c', 'v' and 's': Corresponding to (c)onstant, (v)ariable, (s)et 
 													// and (z)ero expansion
-	char HeatCapacityModel = 'v'; 	// Possible values 'c', 'v' and 's': Corresponding to (c)onstant, (v)ariable and (s)et
-	if (Old) EmissivityModel = 'c';
+
+	char HeatCapacityModel = 'c'; 	// Possible values 'c', 'v' and 's': Corresponding to (c)onstant, (v)ariable and (s)et
+	if (VaryHeatCapacity) HeatCapacityModel = 'v';
 
 	char BoilingModel = 'y'; 	// Possible values 'y', 'n', 's' and 't': Corresponding to (y)es, (n)o, (s)uper 
 													// and (t)homson
@@ -20,7 +20,7 @@ int BeforeAfterHeatingTest(char Element, bool Old){
 	std::string Name="constant";	// Describes heating model
 
  	// Parameters describing the heating model
-	double Size=5e-8; 		// m
+	double Size=1e-6; 		// m
 	double Temp=280;		// K
 	double TimeStep=1e-9;		// s
 	double Potential = 1;
@@ -28,10 +28,10 @@ int BeforeAfterHeatingTest(char Element, bool Old){
 
 	// Set to true all heating models that are wanted
 	bool RadiativeCooling = true;
-	bool EvaporativeCooling = !Old;
+	bool EvaporativeCooling = false;
 	bool NewtonCooling = false;		// This model is equivalent to Electron and Ion heat flux terms
 	// Plasma heating terms
-	bool NeutralHeatFlux = !Old;
+	bool NeutralHeatFlux = false;
 	bool ElectronHeatFlux = true;
 	bool IonHeatFlux = true;
 	bool NeutralRecomb = true;
@@ -42,32 +42,30 @@ int BeforeAfterHeatingTest(char Element, bool Old){
 	PlasmaData *Pdata = new PlasmaData;
 	Pdata->NeutralDensity	= 1e18; 	// m^-3, Neutral Density
 	Pdata->IonDensity	= 1e18; 	// m^-3, Ion Density
-	Pdata->ElectronDensity	= 1e18;		// m^-3, Electron Density
+	Pdata->ElectronDensity	= 1e18;	// m^-3, Electron Density
 	Pdata->NeutralTemp	= 10*1.16e4;	// K, Neutral Temperature, convert from eV
 	Pdata->IonTemp		= 10*1.16e4;	// K, Ion Temperature, convert from eV
 	Pdata->ElectronTemp	= 10*1.16e4;	// K, Electron Temperature, convert from eV
 	Pdata->AmbientTemp = 0;
 
 	// Models and ConstModels are placed in an array in this order:
-	std::array<bool, 9> Models = 
+	std::array<bool, HMN> Models = 
 		{RadiativeCooling, EvaporativeCooling, NewtonCooling, IonHeatFlux, ElectronHeatFlux, NeutralHeatFlux, 
-		NeutralRecomb, SEE, TEE };
-	std::array<char, 4> ConstModels =
-		{ EmissivityModel,ExpansionModel,HeatCapacityModel,BoilingModel};
+		NeutralRecomb, SEE, TEE, false };
+	std::array<char, CM> ConstModels =
+		{ EmissivityModel,ExpansionModel,HeatCapacityModel,BoilingModel,'n'};
 
 	if	(Element == 'W'){ 
 		Sample = new Tungsten(Size,Temp,ConstModels);
-		TimeStep=1e-12;
 	}else if (Element == 'B'){ 
 		Sample = new Beryllium(Size,Temp,ConstModels);
-		TimeStep=1e-11;
 	}else if (Element == 'F'){
 		Sample = new Iron(Size,Temp,ConstModels);
-		TimeStep=1e-13;
 	}else if (Element == 'G'){
 		Sample = new Graphite(Size,Temp,ConstModels);
-		TimeStep=1e-11;
-	}else{ 
+	}else if (Element == 'D'){
+                Sample = new Deuterium(Size,Temp,ConstModels);
+        }else{ 
 		std::cerr << "\nInvalid Option entered";
 		return -1;
 	}
@@ -78,8 +76,8 @@ int BeforeAfterHeatingTest(char Element, bool Old){
 	Sample->set_potential(Potential);
 
 	std::string filename;
-	if( Old ) 		filename = "Data/BeforeAfterHeatingOld.txt";
-	else 			filename = "Data/BeforeAfterHeatingNew.txt";
+	if( VaryHeatCapacity ) 	filename = "Data/HeatCapacityNonConst.txt";
+	else 			filename = "Data/HeatCapacityConst.txt";
 
 	HeatingModel MyModel(filename,1.0,Models,Sample,Pdata);
 	MyModel.UpdateTimeStep();

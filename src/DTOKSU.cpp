@@ -138,9 +138,9 @@ int DTOKSU::Run(){
 			TotalTime += ForceTime;
 		}else if( MinTimeStep*2.0 > MaxTimeStep){
 			D1_Debug("\nComparable Timescales, taking time steps through both processes at shorter time scale");
+			CM.Charge(MinTimeStep);
 			HM.Heat(MinTimeStep);
 			FM.Force(MinTimeStep);
-			CM.Charge(MinTimeStep);
 			TotalTime += MinTimeStep;
 		}else{ // Else, we can take steps through the smaller one til the sum of the steps is the larger.
 			D1_Debug("\nDifferent Timescales, taking many time steps through quicker process at shorter time scale");
