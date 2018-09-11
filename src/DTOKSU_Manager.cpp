@@ -137,7 +137,7 @@ int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filenam
 	std::array<bool,HMN> HeatModels;
 	std::array<bool,FMN> ForceModels;
 	std::array<bool,CMN> ChargeModels;
-	std::array<char,4> ConstModels;
+	std::array<char,CM> ConstModels;
 	std::array<float,DTOKSU::MN> AccuracyLevels;
 
 	// ------------------- PROCESS CONFIGURATION FILE ------------------- //
