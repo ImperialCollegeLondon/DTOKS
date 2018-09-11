@@ -46,7 +46,7 @@ Model::Model( Matter *&sample, PlasmaGrid_Data &pgrid, float accuracy )
 // stored in pdata.
 Model::Model( Matter *&sample, PlasmaGrid_Data &pgrid, PlasmaData &pdata, float accuracy )
 		:Sample(sample),PG_data(std::make_shared<PlasmaGrid_Data>(pgrid)),Pdata(std::make_shared<PlasmaData>(pdata)),Accuracy(accuracy),ContinuousPlasma(false),TimeStep(0.0),TotalTime(0.0){
-	Mo_Debug("\n\nIn Model::Model( Matter *& sample, PlasmaGrid_Data &pgrid, float accuracy ):Sample(sample),PG_data(pgrid),Pdata(PlasmaDefaults),Accuracy(accuracy), ContinuousPlasma(false)\n\n");
+	Mo_Debug("\n\nIn Model::Model( Matter *&sample, PlasmaGrid_Data &pgrid, PlasmaData &pdata, float accuracy ):Sample(sample),PG_data(pgrid),Pdata(PlasmaDefaults),Accuracy(accuracy), ContinuousPlasma(false)\n\n");
 	assert(Accuracy > 0);
 	i = 0; k = 0;
 	PlasmaDataFile.open("Data/pd.txt");
@@ -226,24 +226,25 @@ const double Model::OMLIonFlux(double DustTemperature)const{
 		WarnOnce(runOnce,"\nWarning!  Pdata->IonTemp <= 0!");
 		return 0.0;
 	}
-	if( Sample->is_positive() ) IonFlux = Pdata->IonDensity*sqrt(Kb*Pdata->IonTemp/(2*PI*Mp))*exp(Sample->get_potential());
-	else	IonFlux = Pdata->IonDensity*sqrt(Kb*Pdata->IonTemp/(2*PI*Mp))*(1+Sample->get_potential()*(Pdata->ElectronTemp/Pdata->IonTemp));
+	if( Sample->is_positive() ) IonFlux = Pdata->IonDensity*sqrt(Kb*Pdata->IonTemp/(2*PI*Pdata->mi))*exp(Sample->get_potential());
+	else	IonFlux = Pdata->IonDensity*sqrt(Kb*Pdata->IonTemp/(2*PI*Pdata->mi))*(1+Sample->get_potential()*(Pdata->ElectronTemp/Pdata->IonTemp));
 	assert(IonFlux >= 0);
 	return IonFlux;
 }
 
 const double Model::OMLElectronFlux(double DustTemperature)const{
 	H_Debug("\n\tIn Model::ElectronFlux():\n\n");
-	if( Pdata->IonTemp <= 0 ) return 0.0;
-	if(Sample->is_positive()) return Pdata->ElectronDensity*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me))*(1-Sample->get_potential()*(Pdata->ElectronTemp/Pdata->IonTemp));
+	if( Sample->is_positive() ) 
+		return Pdata->ElectronDensity*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me))*(1-Sample->get_potential()*(Pdata->ElectronTemp/Pdata->IonTemp));
 
-	else 	return Pdata->ElectronDensity*exp(-Sample->get_potential())*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
+	else 	
+		return Pdata->ElectronDensity*exp(-Sample->get_potential())*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
 }
 
 const double Model::NeutralFlux()const{
 	H_Debug("\n\tIn Model::NeutralFlux():\n\n");
 
-	return Pdata->NeutralDensity*sqrt(Kb*Pdata->NeutralTemp/(2*PI*Mp));
+	return Pdata->NeutralDensity*sqrt(Kb*Pdata->NeutralTemp/(2*PI*Pdata->mi));
 }
 
 // *************************************** PRINTING FUNCTIONS *************************************** //

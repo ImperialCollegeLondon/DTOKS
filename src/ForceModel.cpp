@@ -143,16 +143,16 @@ void ForceModel::Force(double timestep){
 	assert( ChangeInVelocity.mag3() < 0.1*Accuracy ); // Assert change in velocity less than 10* TimeStep accuracy
 
 	// Krasheninnikov, S. I. (2006). On dust spin up in uniform magnetized plasma. Physics of Plasmas, 13(11), 2004–2007.
-//	double TimeOfSpinUp = Sample->get_radius()*sqrt(Mp/(Kb*Pdata->IonTemp))*Sample->get_density()/(Mp*Pdata->IonDensity);
+//	double TimeOfSpinUp = Sample->get_radius()*sqrt(Pdata->mi/(Kb*Pdata->IonTemp))*Sample->get_density()/(Pdata->mi*Pdata->IonDensity);
 //	TimeOfSpinUp = 1;
-//	double RotationalSpeedUp = timestep*sqrt(Kb*Pdata->IonTemp/Mp)/(TimeOfSpinUp*Sample->get_radius());
-//	if( Sample->get_radius() < sqrt(Kb*Pdata->IonTemp*Mp)/(echarge*Pdata->MagneticField.mag3()) ){
-//	      	RotationalSpeedUp = (timestep*echarge*Pdata->MagneticField.mag3()/(TimeOfSpinUp*Mp));
+//	double RotationalSpeedUp = timestep*sqrt(Kb*Pdata->IonTemp/Pdata->mi)/(TimeOfSpinUp*Sample->get_radius());
+//	if( Sample->get_radius() < sqrt(Kb*Pdata->IonTemp*Pdata->mi)/(echarge*Pdata->MagneticField.mag3()) ){
+//	      	RotationalSpeedUp = (timestep*echarge*Pdata->MagneticField.mag3()/(TimeOfSpinUp*Pdata->mi));
 //		F1_Debug( "\nREGIME TWO!" );
 //	}
-//	F1_Debug( "\nRho_{Ti} = " << sqrt(Kb*Pdata->IonTemp*Mp)/(echarge*Pdata->MagneticField.mag3()) <<
-//		 "\nV_{Ti} = " << sqrt(Kb*Pdata->IonTemp/Mp) << "\nOmega_{i} = " 
-//		<< echarge*Pdata->MagneticField.mag3()/Mp << "\ntimestep = " << timestep );
+//	F1_Debug( "\nRho_{Ti} = " << sqrt(Kb*Pdata->IonTemp*Pdata->mi)/(echarge*Pdata->MagneticField.mag3()) <<
+//		 "\nV_{Ti} = " << sqrt(Kb*Pdata->IonTemp/Pdata->mi) << "\nOmega_{i} = " 
+//		<< echarge*Pdata->MagneticField.mag3()/Pdata->mi << "\ntimestep = " << timestep );
 //	F1_Debug( "\nBfield.mag = " << Pdata->MagneticField.mag3() << "\nTimeOfSpinUp = " << TimeOfSpinUp
 //		 << "\nSpeedUp = " << RotationalSpeedUp << "\n" );
 
@@ -160,10 +160,10 @@ void ForceModel::Force(double timestep){
 //	Introduced on 11/10/17, this is informed by over two months work on the theory and dynamics of dust rotation
 //	due to ion collection. Even with the full theory, we find values of B that are too small for tokamak conditions
 //	to lead to dust breakup. We need to find a way to increase the theoretical breakup speed.
-//	double B = (5*sqrt(2*PI)*Pdata->IonDensity*Mp*sqrt((Kb*Pdata->IonTemp)/Mp)*pow(Sample->get_radius(),2))
+//	double B = (5*sqrt(2*PI)*Pdata->IonDensity*Pdata->mi*sqrt((Kb*Pdata->IonTemp)/Pdata->mi)*pow(Sample->get_radius(),2))
 //			/(2*Sample->get_mass()); 
 //	double B = 1.0;
-//	double RotationalSpeedUp = timestep*B*(2*(echarge*(Pdata->MagneticField.mag3())/Mp)-Sample->get_rotationalfreq());
+//	double RotationalSpeedUp = timestep*B*(2*(echarge*(Pdata->MagneticField.mag3())/Pdata->mi)-Sample->get_rotationalfreq());
 	double RotationalSpeedUp = echarge*Pdata->MagneticField.mag3()*Pdata->ElectronDensity*sqrt(Kb*Pdata->ElectronTemp/Me)/(Sample->get_density()*Sample->get_radius())*timestep;
 //	std::cout << "\nTe = " << Pdata->ElectronTemp; std::cin.get();
 
@@ -209,11 +209,11 @@ threevector ForceModel::Gravity()const{
 }
 
 threevector ForceModel::HybridIonDrag()const{
-	double IonThermalVelocity = sqrt(Kb*Pdata->IonTemp/Mp);
+	double IonThermalVelocity = sqrt(Kb*Pdata->IonTemp/Pdata->mi);
 	double u = Pdata->PlasmaVel.mag3()*(1.0/IonThermalVelocity); 	// Normalised ion flow velocity
 	double Tau = Pdata->ElectronTemp/Pdata->IonTemp;
 
-	if( Pdata->IonTemp == 0.0 || u == 0.0 ){
+	if( u == 0.0 ){
 		threevector Zero(0.0,0.0,0.0);
 		return Zero;
 	}
@@ -222,7 +222,7 @@ threevector ForceModel::HybridIonDrag()const{
 	double CoulombLogarithm = 17.0;		// Approximation of coulomb logarithm	
 
 
-	double Coefficient = sqrt(2*PI)*pow(Sample->get_radius(),2.0)*Pdata->IonDensity*Mp*Pdata->PlasmaVel.square();
+	double Coefficient = sqrt(2*PI)*pow(Sample->get_radius(),2.0)*Pdata->IonDensity*Pdata->mi*Pdata->PlasmaVel.square();
 	double term1 = sqrt(PI/2.0)*erf(u/sqrt(2))*(1.0+u*u+(1.0-(1.0/(u*u)))*(1.0+2*Tau*z)+4*z*z*Tau*Tau*CoulombLogarithm/(u*u));
 	double term2 = (1.0/u)*exp(-u*u/2.0)*(1.0+2.0*Tau*z+u*u-4*z*z*Tau*Tau*CoulombLogarithm);	
 	
@@ -238,7 +238,7 @@ threevector ForceModel::DTOKSIonDrag()const{
 // ION TEMPERATURE IN THIS FUNCTION IS IN ev.
 	double ConvertKelvsToeV(8.621738e-5);
 	threevector Mt(0.0,0.0,0.0);
-	if( Pdata->IonTemp != 0 ) Mt = (Pdata->PlasmaVel-Sample->get_velocity())*sqrt(Mp/(Kb*Pdata->IonTemp)); 
+	if( Pdata->IonTemp != 0 ) Mt = (Pdata->PlasmaVel-Sample->get_velocity())*sqrt(Pdata->mi/(Kb*Pdata->IonTemp)); 
 	F_Debug("\nMt = " << Mt);
 
         if( Pdata->IonDensity == 0 || Pdata->IonTemp == 0 || Pdata->ElectronTemp == 0  || Mt.mag3() == 0 ){ 
@@ -267,7 +267,7 @@ threevector ForceModel::DTOKSIonDrag()const{
 			}
 
 			threevector FidC =(Pdata->PlasmaVel-Sample->get_velocity())*4.0*PI*pow(Sample->get_radius(),2)
-				*Pdata->IonDensity*Mp*sqrt(Kb*Pdata->ElectronTemp/(2.0*PI*Me))*exp(-Sample->get_potential()); 
+				*Pdata->IonDensity*Pdata->mi*sqrt(Kb*Pdata->ElectronTemp/(2.0*PI*Me))*exp(-Sample->get_potential()); 
 			//for John's ion drag... I assume here and in other places in the 
 			//calculation that the given potential is normalised to kTe/e
 	    
@@ -289,10 +289,10 @@ threevector ForceModel::DTOKSIonDrag()const{
 // Calculations for Neutral Drag
 threevector ForceModel::NeutralDrag()const{
 	F_Debug("\tIn ForceModel::DTOKSIonDrag()\n\n");
-//	return (Pdata->PlasmaVel-Sample->get_velocity())*Pdata->NeutralDensity*sqrt(2*Kb*Pdata->IonTemp*Mp)*PI
+//	return (Pdata->PlasmaVel-Sample->get_velocity())*Pdata->NeutralDensity*sqrt(2*Kb*Pdata->IonTemp*Pdata->mi)*PI
 //			*pow(Sample->get_radius(),2);
-//	return (Pdata->PlasmaVel-Sample->get_velocity())*Mp*sqrt(4*PI)*NeutralFlux()*PI*pow(Sample->get_radius(),2)*(1.0/Sample->get_mass());
-	return -1.0*Sample->get_velocity()*Mp*sqrt(4*PI)*NeutralFlux()*PI*pow(Sample->get_radius(),2)*(1.0/Sample->get_mass());
+//	return (Pdata->PlasmaVel-Sample->get_velocity())*Pdata->mi*sqrt(4*PI)*NeutralFlux()*PI*pow(Sample->get_radius(),2)*(1.0/Sample->get_mass());
+	return -1.0*Sample->get_velocity()*Pdata->mi*sqrt(4*PI)*NeutralFlux()*PI*pow(Sample->get_radius(),2)*(1.0/Sample->get_mass());
 }
 
 threevector ForceModel::LorentzForce()const{

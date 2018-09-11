@@ -9,6 +9,7 @@
 #include "Tungsten.h"
 #include "Graphite.h"
 #include "Beryllium.h"
+#include "Deuterium.h"
 
 static struct PlasmaData PlasmaDataDefaults = {
 	1e19,				// m^-3, Neutral Density

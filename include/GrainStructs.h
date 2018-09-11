@@ -65,7 +65,6 @@ struct ElementConsts{
 	double AtomicMass;	// kg/mol
 	double LatentFusion;	// kJ/kg, Energy required to melt 1kg of solid
 	double LatentVapour; 	// kJ/kg, Energy required to vapourize 1kg of liquid
-	double PlasmaFrequency;	// rad s^-1, plasma frequency of electrons in the material
 	double SurfaceTension;	// N/m,
 	double RTDensity;	// Kilogrammes / (metre^3), Denisty at room temperature
 	double ThermConduct; 	// KiloWatts / (Metre * Kelvin) 

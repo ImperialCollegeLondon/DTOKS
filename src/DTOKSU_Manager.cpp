@@ -2,6 +2,19 @@
 //#define DM_DEBUG
 #include "DTOKSU_Manager.h"
 
+namespace Overflows{
+	const double Density = 1e22;
+	const double Temperature = 1.5e7;
+	const double PlasmaVel = 100*sqrt((Kb*1.5e7)/Mp);
+	const double Field = 100.0;
+}
+
+namespace Underflows{
+	const double Density = 1e12;
+	const double Temperature = 100;
+	const double PlasmaVel = 0.0;
+	const double Field = 0.0;
+}
 
 // Default constructor
 DTOKSU_Manager::DTOKSU_Manager(){
@@ -46,6 +59,69 @@ void DTOKSU_Manager::config_message()const{
 	}
 }
 
+bool DTOKSU_Manager::check_pdata_range()const{
+	bool ReturnVal = true;
+	if( Pdata.IonDensity > Overflows::Density || Pdata.IonDensity < Underflows::Density ){
+		std::cout << "\n* Error, Configured Ion Density outside valid range! *";
+		std::cout << "\n* Density must be in range: " << Underflows::Density << "<= Density <=" << Overflows::Density;	
+		ReturnVal = false;
+	}
+	if( Pdata.ElectronDensity > Overflows::Density || Pdata.ElectronDensity < Underflows::Density ){
+		std::cout << "\n* Error, Configured Electron Density outside valid range! *";
+		std::cout << "\n* Density must be in range: " << Underflows::Density << "<= Density <=" << Overflows::Density;	
+		ReturnVal = false;
+	}
+	if( Pdata.NeutralDensity > Overflows::Density || Pdata.NeutralDensity < Underflows::Density ){
+		std::cout << "\n* Error, Configured Neutral Density outside valid range! *";
+		std::cout << "\n* Density must be in range: " << Underflows::Density << "<= Density <=" << Overflows::Density;	
+		ReturnVal = false;
+	}
+	if( Pdata.IonTemp > Overflows::Temperature || Pdata.IonTemp < Underflows::Temperature ){
+		std::cout << "\n* Error, Configured Ion Temperature outside valid range! *";
+		std::cout << "\n* Temperature must be in range: " << Underflows::Temperature << "<= Temperature <=" << Overflows::Temperature;	
+		ReturnVal = false;
+	}
+	if( Pdata.ElectronTemp > Overflows::Temperature || Pdata.ElectronTemp < Underflows::Temperature ){
+		std::cout << "\n* Error, Configured Electron Temperature outside valid range! *";
+		std::cout << "\n* Temperature must be in range: " << Underflows::Temperature << "<= Temperature <=" << Overflows::Temperature;	
+		ReturnVal = false;
+	}
+
+	if( Pdata.NeutralTemp > Overflows::Temperature || Pdata.NeutralTemp < Underflows::Temperature ){
+		std::cout << "\n* Error, Configured Neutral Temperature outside valid range! *";
+		std::cout << "\n* Temperature must be in range: " << Underflows::Temperature << "<= Temperature <=" << Overflows::Temperature;	
+		ReturnVal = false;
+	}
+
+	if( Pdata.AmbientTemp > Overflows::Temperature || Pdata.AmbientTemp < Underflows::Temperature ){
+		std::cout << "\n* Error, Configured Ambient Temperature outside valid range! *";
+		std::cout << "\n* Temperature must be in range: " << Underflows::Temperature << "<= Temperature <=" << Overflows::Temperature;	
+		ReturnVal = false;
+	}
+
+	if( Pdata.PlasmaVel.mag3() > Overflows::PlasmaVel || Pdata.PlasmaVel.mag3() < Underflows::PlasmaVel ){
+		std::cout << "\n* Error, Configured Plasma velocity outside valid range! *";
+		std::cout << "\n* Plasma Velocity Magnitude must be in range: " << Underflows::PlasmaVel << "<= PlasmaVel <=" << Overflows::PlasmaVel;	
+		ReturnVal = false;
+	}
+	if( Pdata.ElectricField.mag3() > Overflows::Field || Pdata.ElectricField.mag3() < Underflows::Field ){
+		std::cout << "\n* Error, Configured Electric Field outside valid range! *";
+		std::cout << "\n* Field Magnitude must be in range: " << Underflows::Field << "<= Field <=" << Overflows::Field;	
+		ReturnVal = false;
+	}
+	if( Pdata.MagneticField.mag3() > Overflows::Field || Pdata.MagneticField.mag3() < Underflows::Field ){
+		std::cout << "\n* Error, Configured Magnetic Field Field outside valid range! *";
+		std::cout << "\n* Field Magnitude must be in range: " << Underflows::Field << "<= Field <=" << Overflows::Field;	
+		ReturnVal = false;
+	}
+	if( Pdata.Gravity.mag3() > Overflows::Field || Pdata.Gravity.mag3() < Underflows::Field ){
+		std::cout << "\n* Error, Configured Gravity Field outside valid range! *";
+		std::cout << "\n* Field Magnitude must be in range: " << Underflows::Field << "<= Field <=" << Overflows::Field;	
+		ReturnVal = false;
+	}
+	return ReturnVal;
+}
+
 // Remind user of the command line options
 void DTOKSU_Manager::show_usage(std::string name)const{
 	std::cerr << "Usage: int main(int argc, char* argv[]) <option(s)> SOURCES"
@@ -54,7 +130,7 @@ void DTOKSU_Manager::show_usage(std::string name)const{
 	<< "\t-c  --config CONFIG\t\tSpecify the configuration file path\n\n"
 	<< "\t-t, --temperature TEMPERATURE\tdouble variable defining the initial temperature\n\n"
 	<< "\t-m, --material MATERIAL\t\tchar variable giving the dust grain element, possible values 'w', 'g', 'b' and 'f'\n"
-	<< "\t\t\t\t\t(W): Tungsten, (G): Graphite, (B): Beryllium or (F): Iron\n\n"
+	<< "\t\t\t\t\t(W): Tungsten, (G): Graphite, (B): Beryllium, (D): Deuterium or (F): Iron\n\n"
 	<< "\t-s, --size SIZE\t\t\tdouble variable giving the radius of the grain\n\n"
 	<< "\t-vr,--rvel RVEL\t\t\tfloat variable defining radial velocity\n\n"
 	<< "\t-vt,--thetavel THETAVEL\t\tfloat variable defining angular velocity\n\n"
@@ -216,7 +292,7 @@ int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filenam
 				cfg->lookupBoolean("heatingmodels","NewtonCooling"), cfg->lookupBoolean("heatingmodels","IonHeatFlux"), 
 				cfg->lookupBoolean("heatingmodels","ElectronHeatFlux"), cfg->lookupBoolean("heatingmodels","NeutralHeatFlux"), 
 				cfg->lookupBoolean("heatingmodels","NeutralRecomb"), cfg->lookupBoolean("heatingmodels","SEE"), 
-				cfg->lookupBoolean("heatingmodels","TEE")
+				cfg->lookupBoolean("heatingmodels","TEE"), cfg->lookupBoolean("heatingmodels","DUSTTIonHeatFlux")
 			};
 		ForceModels =
 			{
@@ -227,13 +303,17 @@ int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filenam
 		ChargeModels =
 			{
 				cfg->lookupBoolean("chargemodels","DTOKSOML"), cfg->lookupBoolean("chargemodels","SchottkyOML"),
-				cfg->lookupBoolean("chargemodels","DTOKSWell"), cfg->lookupBoolean("chargemodels","PHL")
-			};
+				cfg->lookupBoolean("chargemodels","DTOKSWell"), cfg->lookupBoolean("chargemodels","PHL"),
+				cfg->lookupBoolean("chargemodels","BIBHAS"), cfg->lookupBoolean("chargemodels","MOML"), 
+				cfg->lookupBoolean("chargemodels","SOML"), cfg->lookupBoolean("chargemodels","SMOML"), 
+				cfg->lookupBoolean("chargemodels","MOMLWEM")
+			};//cfg->lookupBoolean("chargemodels","MOMLEM")
 		
 		AccuracyLevels = 
 			{
-				cfg->lookupFloat("accuracylevels", "force"), cfg->lookupFloat("accuracylevels", "heat"), 
-				cfg->lookupFloat("accuracylevels", "charge")
+				cfg->lookupFloat("accuracylevels", "charge"), cfg->lookupFloat("accuracylevels", "heat"),
+				cfg->lookupFloat("accuracylevels", "force")
+				
 			};
     } catch(const config4cpp::ConfigurationException & ex) {
         std::cerr << ex.c_str() << std::endl;
@@ -241,22 +321,26 @@ int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filenam
         Config_Status = 2;
         return Config_Status;
     }
+
     cfg->destroy();
+	if( !check_pdata_range() ){
+		Config_Status = 3;
+		return Config_Status;
+	}
+
     std::cout << "\n* Configuration file read successfully! *";
-    std::cout << "\nContinuousPlasma = " << ContinuousPlasma;
 
     if( IonSpecies == 'h' ){ // For Hydrogen plasma, we have hydrogen ions of mass Mp
         Pgrid.mi = Mp;
+        Pdata.mi = Mp;
         if( Pdata.Z > 1.0 ){
-            Pdata.Z = 1.0;
+            std::cout << "\nPdata.Z < 1.0 for Hydrogen! Assuming Pdata.Z = 1.0";
         }
+        Pdata.Z = 1.0;
     }else{
         std::cout << "Invalid IonSpecies, IonSpecies = " << IonSpecies << "!\n";
         return 1;
     }
-
-
-
 
 	// ------------------- CONFIGURE PLASMAGRID ------------------- //
 	if( !ContinuousPlasma ){
@@ -315,6 +399,7 @@ int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filenam
 	else if (Element == 'B') Sample = new Beryllium(size,Temp,ConstModels,xinit,vinit);
 	else if (Element == 'F') Sample = new Iron(size,Temp,ConstModels,xinit,vinit);
 	else if (Element == 'G') Sample = new Graphite(size,Temp,ConstModels,xinit,vinit);
+	else if (Element == 'D') Sample = new Deuterium(size,Temp,ConstModels,xinit,vinit);
 	else{ 
 		std::cerr << "\nInvalid Option entered for Element";
 		Config_Status = 4;
@@ -513,16 +598,24 @@ int DTOKSU_Manager::read_data(std::string plasma_dirname){
 				// This should correct for this...
 
 				if( Pgrid.device != 'j' )								{	Pgrid.bz[i][k]  = -Pgrid.bz[i][k]; }
-				if( Pgrid.bx[i][k] != 0 && Pgrid.bx[i][k] < 1e-100 ) 	{	Pgrid.bx[i][k]  = 0.0; } 
-				if( Pgrid.by[i][k] != 0 && Pgrid.by[i][k] < 1e-100 ) 	{	Pgrid.by[i][k]  = 0.0; } 
-				if( Pgrid.bz[i][k] != 0 && Pgrid.bz[i][k] < 1e-100 ) 	{	Pgrid.bz[i][k]  = 0.0; }
-				if( Pgrid.Te[i][k] != 0 && Pgrid.Te[i][k] < 1e-100 ) 	{	Pgrid.Te[i][k]  = 0.0; } 
-				if( Pgrid.Ti[i][k] != 0 && Pgrid.Ti[i][k] < 1e-100 ) 	{	Pgrid.Ti[i][k]  = 0.0; } 
-				if( Pgrid.na0[i][k]!= 0 && Pgrid.na0[i][k] < 1e-100 )	{	Pgrid.na0[i][k] = 0.0; }
-				if( Pgrid.na1[i][k]!= 0 && Pgrid.na1[i][k] < 1e-100 )	{	Pgrid.na1[i][k] = 0.0; }
-				if( Pgrid.po[i][k] != 0 && Pgrid.po[i][k] < 1e-100 ) 	{	Pgrid.po[i][k]  = 0.0; } 
-				if( Pgrid.ua0[i][k]!= 0 && Pgrid.ua0[i][k] < 1e-100 )	{	Pgrid.ua0[i][k] = 0.0; }
-				if( Pgrid.ua1[i][k]!= 0 && Pgrid.ua1[i][k] < 1e-100 )	{ 	Pgrid.ua1[i][k] = 0.0; }
+				if( Pgrid.bx[i][k]  > Overflows::Field 
+					&& Pgrid.bx[i][k]  < Underflows::Field ) 		{	return 1; } 
+				if( Pgrid.by[i][k]  > Overflows::Field 
+					&& Pgrid.by[i][k]  < Underflows::Field ) 		{	return 2; } 
+				if( Pgrid.bz[i][k]  > Overflows::Field 
+					&& Pgrid.bz[i][k]  < Underflows::Field ) 		{	return 3; }
+				if( Pgrid.Te[i][k]  > Overflows::Temperature 
+					&& Pgrid.Te[i][k]  < Underflows::Temperature ) 	{	return 4; } 
+				if( Pgrid.Ti[i][k]  > Overflows::Temperature 
+					&& Pgrid.Ti[i][k]  < Underflows::Temperature ) 	{	return 5; } 
+				if( Pgrid.na0[i][k] > Overflows::Density 
+					&& Pgrid.na0[i][k] < Underflows::Density )		{	return 6; }
+				if( Pgrid.na1[i][k] > Overflows::Density 
+					&& Pgrid.na1[i][k] < Underflows::Density )		{	return 7; }
+				if( Pgrid.ua0[i][k] > Overflows::PlasmaVel 
+					&& Pgrid.ua0[i][k] < Underflows::PlasmaVel )	{	return 8; }
+				if( Pgrid.ua1[i][k] > Overflows::PlasmaVel 
+					&& Pgrid.ua1[i][k] < Underflows::PlasmaVel )	{ 	return 9; }
 				
 				Pgrid.Ta[i][k] = Pdata.AmbientTemp;
 				Pgrid.Tn[i][k] = Pdata.NeutralTemp;

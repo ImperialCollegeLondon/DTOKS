@@ -3,7 +3,7 @@
 
 #include "Model.h"
 
-const unsigned int HMN = 9;	// CHARGE MODEL NUMBER, the number of charge models
+const unsigned int HMN = 10;	// CHARGE MODEL NUMBER, the number of charge models
 
 class HeatingModel : public Model{
 
@@ -13,7 +13,6 @@ class HeatingModel : public Model{
 		double OldTemp;				// Kelvin, temperature last step, used to determine TE
 		double RE;				// Fraction of backscattered energy
 		double RN;				// Fraction of backscattered particles
-		bool ForceNegative;			// If we want to force the dust grain to be negative
 		bool ThermalEquilibrium;		// If the Dust grain is in Thermal Equilibrium (Constant Plasma only)
 		std::string FileName;			// Variable to hold data file name
 
@@ -27,11 +26,12 @@ class HeatingModel : public Model{
 		// Heating Models
 		const double EmissivityModel		(double DustTemperature)const;
 		const double EvaporationModel		(double DustTemperature)const;
-		const double NewtonCooling		(double DustTemperature)const;
-		const double SEE			(double DustTemperature)const;
-		const double TEE			(double DustTemperature)const;
+		const double NewtonCooling			(double DustTemperature)const;
+		const double SEE					(double DustTemperature)const;
+		const double TEE					(double DustTemperature)const;
 		const double NeutralRecombination	(double DustTemperature)const;
-		const double IonHeatFlux		(double DustTemperature)const;
+		const double DTOKSIonHeatFlux		(double DustTemperature)const;
+		const double DUSTTIonHeatFlux		(double DustTemperature)const;
 		const double ElectronHeatFlux		(double DustTemperature)const;
 		const double NeutralHeatFlux		(double DustTemperature)const;
 

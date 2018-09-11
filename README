@@ -49,7 +49,8 @@ cd ..
 
 ## How to Run DTOKSU
 
-./main -h <help message> -c <Config File> -t <Inital Temperature> -m <'w', 'g', 'b' or 'f'> -s <Initial Radius> 
+./main -h <help message> -c <Config File> -t <Inital Temperature> -m <'w', 'g', 'b', 'd' or 'f'> 
+	-s <Initial Radius> 
 	-vr <Radial Velocity> -vt <Angular Velocity> -vz <longitudinal velocity>
 	-rr <Radial position> -rt <Angular position> -rz <longitudinal position>
 	-op <Output File Pre-fix> -om <MetaData filename>

@@ -14,7 +14,6 @@ const struct ElementConsts IronConsts = {
 	0.055845,		// Atomic Mass in kg mol^-1, (+/- 0.00001)
 	13.810/0.055845, 	// kJ/kg, Latent Fusion Energy From Wikipedia
 	340/0.055845, 		// kJ/kg, Latent Vapour Energy From Wikipedia
-	3.29e16,		// rad s^-1, Plasma Frequency, Calculated from Robbies code with 4 electrons per atom
 	1.862,			// N/m, Surface Tension B. Keene, 1993, Review of data for the surface tension of pure metals
 	7874,			// (kg/m^3) from Wikipedia, Room temperature density
 	0.0795			// kW/m K, Thermal Conductivity at 20 degrees C

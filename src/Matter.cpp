@@ -66,9 +66,18 @@ Matter::Matter(double rad, double temp, const ElementConsts &elementconsts):Ec(e
 	PreBoilMass = St.Mass;
 	if( ConstModels[1] != 'v' && ConstModels[1] != 'V' )	St.Mass = Ec.RTDensity*St.Volume;
 	else							update();
-	if( St.Temperature > Ec.MeltingTemp ){
+	if( St.Temperature >= Ec.BoilingTemp ){
+		St.VapourEnergy = Ec.LatentVapour*St.Mass;
+		St.FusionEnergy = Ec.LatentFusion*St.Mass;
+		St.Liquid = false;
+		St.Gas = true;
+	}else if( St.Temperature >= Ec.MeltingTemp ){
 		St.FusionEnergy = Ec.LatentFusion*St.Mass;
 		St.Liquid = true;
+		St.Gas = false;
+	}else{
+		St.Liquid = false;
+		St.Gas = false;
 	}
 	assert(St.Radius > 0 && St.UnheatedRadius > 0 && St.Temperature > 0 && St.Temperature < St.SuperBoilingTemp );
 	
@@ -87,10 +96,18 @@ Matter::Matter(double rad, double temp, const ElementConsts &elementconsts, std:
 	PreBoilMass = St.Mass;
 	if( ConstModels[1] != 'v' && ConstModels[1] != 'V' )	St.Mass = Ec.RTDensity*St.Volume;
 	else							update();
-	if( St.Temperature > Ec.MeltingTemp ){
-		// This is a fix to avoid numerical errors
+	if( St.Temperature >= Ec.BoilingTemp ){
+		St.VapourEnergy = Ec.LatentVapour*St.Mass;
+		St.FusionEnergy = Ec.LatentFusion*St.Mass;
+		St.Liquid = false;
+		St.Gas = true;
+	}else if( St.Temperature >= Ec.MeltingTemp ){
 		St.FusionEnergy = Ec.LatentFusion*St.Mass;
 		St.Liquid = true;
+		St.Gas = false;
+	}else{
+		St.Liquid = false;
+		St.Gas = false;
 	}
 	assert(St.Radius > 0 && St.UnheatedRadius > 0 && St.Temperature > 0 && St.Temperature < St.SuperBoilingTemp );
 
