@@ -458,7 +458,13 @@ int DTOKSU_Manager::read_data(std::string plasma_dirname){
 	Pgrid.gridflag	= std::vector<std::vector<int>>(Pgrid.gridx,std::vector<int>(Pgrid.gridz));
 
 	if(Pgrid.device=='p'){ // Note, grid flags will be empty 
+		#ifdef NETCDF_SWITCH
 		return read_MPSIdata(plasma_dirname);
+		#else
+		std::cerr << "\nNETCDF SUPPORT REQUIRED FOR MPSI DATA!";
+		std::cerr << "\nRECOMPILE WITH NETCDF AND DEFINE NETCDF_SWITCH!\n\n";
+		return 3;
+		#endif
 	}else{
 		std::ifstream scalars,threevectors,gridflagfile;
 		if(Pgrid.device=='m'){
@@ -533,6 +539,7 @@ int DTOKSU_Manager::read_data(std::string plasma_dirname){
 
 // for Magnum-PSI, we need to read a NET-cdf file which is special
 // This function does all the necessary effort of extracting this information.
+#ifdef NETCDF_SWITCH
 int DTOKSU_Manager::read_MPSIdata(std::string plasma_dirname){
 	P_Debug("\tDTOKSU_Manager::read_MPSIdata(std::string plasma_dirname)\n\n");
 	
@@ -625,6 +632,7 @@ int DTOKSU_Manager::read_MPSIdata(std::string plasma_dirname){
 	}
 	return 0;
 }
+#endif
 
 // Run DTOKS Normally a single time
 int DTOKSU_Manager::Run(){

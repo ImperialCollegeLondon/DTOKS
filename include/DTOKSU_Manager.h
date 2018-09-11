@@ -1,11 +1,15 @@
 #ifndef __DTOKSU_Manager_H_INCLUDED__   // if Matter.h hasn't been included yet...
 #define __DTOKSU_Manager_H_INCLUDED__
 
+#define NETCDF_SWITCH
+
 #include "DTOKSU.h"
 #include <random>	// for std::normal_distribution<> etc.
 #include <chrono>	// for chrono::high_resolution_clock::now().time_since_epoch().count();
 #include <config4cpp/Configuration.h>	// For Configuration
+#ifdef NETCDF_SWITCH
 #include <netcdfcpp.h>	// for reading netcdf files
+#endif
 #include <exception>	// for Exception handling
 #include <stdlib.h>
 
@@ -32,7 +36,9 @@ class DTOKSU_Manager{
 
 		int configure_plasmagrid(std::string plasma_dirname);
 		int read_data(std::string plasma_dirname);
+		#ifdef NETCDF_SWITCH
 		int read_MPSIdata(std::string plasma_dirname);
+		#endif
 	
 	public:
 		DTOKSU_Manager();

@@ -20,6 +20,8 @@
 #include "SOMLTest.h"
 #include "SMOMLTest.h"
 #include "PHLTest.h"
+#include "THTest.h"
+#include "BIBHASTest.h"
 
 // FORCE TESTS
 #include "HybridIonDrag.h"
@@ -44,6 +46,8 @@ static void show_usage(std::string name){
 	<< "\t\tSMOML		 : Returns the floating potential for large dust grains in a flowing plasma following SMOML theory.\n"
 	<< "\t\tSchottkyOML	 : Returns the solution for the electron emission with Schottky correction\n"
 	<< "\t\tPHL		 : Returns the floating potential for small dust grains in collisionless weakly magnetised plasmas.\n"
+	<< "\t\tTH		 : Returns the floating potential for small dust grains magnetised plasmas semi-empirical from pot.\n"
+	<< "\t\tBIBHAS		 : Returns the floating potential for arbitary sized dust grain.\n"
 	<< "\t\tHybridIonDrag	 : Returns the magnitude of the HybridIonDrag force, see https://doi.org/10.1063/1.1867995\n"
 	<< "\t\tFortovIonDrag	 : Returns the magnitude of the ion drag force, see https://doi.org/10.1016/j.physrep.2005.08.007\n\n";
 
@@ -196,6 +200,23 @@ int main(int argc, char* argv[]){
 	// see L. Patacchini, I. H. Hutchinson, and G. Lapenta, Phys. Plasmas 14, (2007). for details
         else if( Test_Mode == "PHL" )
 		PHLTest();
+
+	// TH Charging Test:
+	// This test is designed to find the floating potential for small dust grains in magnetised plasmas 
+	// The calculation follows the work by Drew Thomas and Josh Holgate and implements a semi-empirical model
+	// see D. M. Thomas and J. T. Holgate, ArXiv Prepr. (2016). for details
+        else if( Test_Mode == "TH" )
+		THTest();
+
+	// BIBHAS Charging Test:
+	// This test is designed to find the floating potential for arbitary sized dust grain
+	// The calculation follows the work by R. DE Bibhas,
+	// see R. DE Bibhas, Astrophys. Space Sci. 30, (1974).
+        else if( Test_Mode == "BIBHAS" )
+		BIBHASTest();
+
+
+
 
 	// ***** 	FORCE TESTS		***** //
 	// Hybrid Ion Drag Test
