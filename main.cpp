@@ -7,7 +7,7 @@ int main(int argc, char* argv[]){
 	DTOKSU_Manager MyManager;
 
 //	int Config_Status = MyManager.Configure(argc,argv);
-	int Config_Status = MyManager.Configure(argc,argv,"Config_Files/DTOKSU_Config_JET.cfg");
+	int Config_Status = MyManager.Configure(argc,argv,"Config_Files/DTOKSU_Config.cfg");
 
 	return MyManager.Breakup();
 //	return 0;
