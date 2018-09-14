@@ -1,5 +1,6 @@
 #include "solveMOMLEM.h"
 #include <iostream>
+#include <limits>
 
 // Test orbital motion limited theory
 void MOMLEMTest(){
@@ -10,35 +11,45 @@ void MOMLEMTest(){
 	double EmittedTemperatureRatio = 0.5;
 	double TiTe = 1.0;
 //	for( double TiTe(0.01); TiTe < 100; TiTe *= 1.5 ){
-	for( EmittedTemperatureRatio = 0.02; EmittedTemperatureRatio < 0.7; EmittedTemperatureRatio += 0.01 ){
-		double Potential = solveMOMLEM(TiTe,Mp/Me,EmittedDensityRatio,EmittedTemperatureRatio,guess);
-		std::cout << "\n" << TiTe << "\t" << Mp/Me << "\t" << EmittedDensityRatio 
-			<< "\t" << EmittedTemperatureRatio << "\t" << guess << "\t" << Potential 
-			<< "\t" << log(sqrt(TiTe/(Mp/Me))+EmittedDensityRatio*sqrt(EmittedTemperatureRatio));
-	}
-	EmittedDensityRatio = 0.3;
-	EmittedTemperatureRatio = 0.5;
-	TiTe = 1.0;
 
+  	std::cout.precision(std::numeric_limits<double>::max_digits10);
+	double CritVal = FindCriticalVal(TiTe,EmittedDensityRatio,Mp/Me,'d');
+//	std::cout << "\n" << CritVal;
+
+	exploreWellCase(TiTe,0.2,EmittedTemperatureRatio,1.0/(Mp/Me));
+	for( EmittedTemperatureRatio = 0.2; EmittedTemperatureRatio < 0.201; EmittedTemperatureRatio += 0.01 ){
+//		double Potential = solveMOMLEM(TiTe,Mp/Me,EmittedDensityRatio,EmittedTemperatureRatio);
+
+//		std::cout << "\n" << TiTe << "\t" << Mp/Me << "\t" << EmittedDensityRatio 
+//			<< "\t" << EmittedTemperatureRatio << "\t" << Potential 
+//			<< "\t" << log(sqrt(TiTe/(Mp/Me))+EmittedDensityRatio*sqrt(EmittedTemperatureRatio));
+//		std::cout << "\t" << Potential;
+	}
+	EmittedTemperatureRatio = 0.5;
+/*
 	std::cout << "\n";
+	CritVal = FindCriticalVal(EmittedDensityRatio,EmittedTemperatureRatio,Mp/Me,'t');
+	std::cout << "\n" << CritVal;
 	for( TiTe = 0.5; TiTe < 7.0; TiTe += 0.1 ){
-		double Potential = solveMOMLEM(TiTe,Mp/Me,EmittedDensityRatio,EmittedTemperatureRatio,guess);
-		std::cout << "\n" << TiTe << "\t" << Mp/Me << "\t" << EmittedDensityRatio 
-			<< "\t" << EmittedTemperatureRatio << "\t" << guess << "\t" << Potential
-			<< "\t" << log(sqrt(TiTe/(Mp/Me))+EmittedDensityRatio*sqrt(EmittedTemperatureRatio));
+		double Potential = solveMOMLEM(TiTe,Mp/Me,EmittedDensityRatio,EmittedTemperatureRatio);
+//		std::cout << "\n" << TiTe << "\t" << Mp/Me << "\t" << EmittedDensityRatio 
+//			<< "\t" << EmittedTemperatureRatio << "\t" << guess << "\t" << Potential
+//			<< "\t" << log(sqrt(TiTe/(Mp/Me))+EmittedDensityRatio*sqrt(EmittedTemperatureRatio));
+//		std::cout << "\t" << Potential;
 	}
-	EmittedDensityRatio = 0.3;
-	EmittedTemperatureRatio = 0.5;
 	TiTe = 1.0;
 
 	std::cout << "\n";
+	CritVal = FindCriticalVal(EmittedTemperatureRatio,TiTe,Mp/Me,'c');
+	std::cout << "\n" << CritVal;
 	for( EmittedDensityRatio = 0.01; EmittedDensityRatio < 0.5; EmittedDensityRatio += 0.01 ){
-		double Potential = solveMOMLEM(TiTe,Mp/Me,EmittedDensityRatio,EmittedTemperatureRatio,guess);
-		std::cout << "\n" << TiTe << "\t" << Mp/Me << "\t" << EmittedDensityRatio 
-			<< "\t" << EmittedTemperatureRatio << "\t" << guess << "\t" << Potential
-			<< "\t" << log(sqrt(TiTe/(Mp/Me))+EmittedDensityRatio*sqrt(EmittedTemperatureRatio));
+		double Potential = solveMOMLEM(TiTe,Mp/Me,EmittedDensityRatio,EmittedTemperatureRatio);
+//		std::cout << "\n" << TiTe << "\t" << Mp/Me << "\t" << EmittedDensityRatio 
+//			<< "\t" << EmittedTemperatureRatio << "\t" << guess << "\t" << Potential
+//			<< "\t" << log(sqrt(TiTe/(Mp/Me))+EmittedDensityRatio*sqrt(EmittedTemperatureRatio));
+//		std::cout << "\t" << Potential;
 	}
-
+*/
 	clock_t end = clock();
 	double elapsd_secs = double(end-begin)/CLOCKS_PER_SEC;
 		

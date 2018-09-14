@@ -16,8 +16,8 @@ void THTest(){
 	double AtomicMass = 1.0*Mp; // Atomic Mass Of Element
 //	double Lambda = 1.1;
 
-	for( double Lambda(15.0); Lambda > 2.0; Lambda -= 12.0 ){	// Loop over magnetic field strengths
-		for( double Beta(0); Beta < 20; Beta += 0.001 ){	// Loop over magnetic field strengths
+	for( double Lambda(15.0); Lambda > 1.5; Lambda -= 12.0 ){	// Loop over magnetic field strengths
+		for( double Beta(0); Beta < 20; Beta += 0.0005 ){	// Loop over magnetic field strengths
 
 //		for( double Lambda(1.0/15.0); Lambda < 6.0/15.0; Lambda += 4.0/15.0 ){	// Loop over magnetic field strengths
 			double Potential = solveTH(Beta,Ti/Te,AtomicMass/Me,AtomicNumber,Lambda);
@@ -26,6 +26,14 @@ void THTest(){
 		}
 		std::cout << "\n\n";
 	}
+	double Lambda = 1.0;
+	for( double Beta(0); Beta < 20; Beta += 0.001 ){	// Loop over magnetic field strengths
+		double Potential = solveTH(Beta,Ti/Te,AtomicMass/Me,AtomicNumber,Lambda);
+		std::cout << "\n" << Beta << "\t" << Potential << "\t" << Ti/Te << "\t" << AtomicMass/Me
+				<< "\t" << AtomicNumber << "\t" << Lambda;
+	}
+	std::cout << "\n\n";
+
 	clock_t end = clock();
 	double elapsd_secs = double(end-begin)/CLOCKS_PER_SEC;
 		

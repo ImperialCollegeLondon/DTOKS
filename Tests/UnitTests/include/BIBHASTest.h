@@ -17,11 +17,12 @@ void BIBHASTest(){
 //	double Lambda = 1.1;
 
 	for( double Lambda(0.0001); Lambda < 100.0; Lambda *= 1.01 ){	// Loop over magnetic field strengths
-
-		double Potential = solveBIBHAS(Ti,Te,AtomicMass/Me,AtomicNumber,Lambda,-2.5);
-		std::cout << "\n" << Potential << "\t" << Ti/Te << "\t" << AtomicMass/Me
-				<< "\t" << AtomicNumber << "\t" << Lambda;
-		std::cout << "\n\n";
+//		for( double Ti(0.01); Ti <= 1.0; Ti *= 10 ){
+			double Potential = solveBIBHAS(Ti,Te,AtomicMass/Me,AtomicNumber,Lambda,-2.5);
+			std::cout << "\n" << Potential << "\t" << Ti/Te << "\t" << AtomicMass/Me
+					<< "\t" << AtomicNumber << "\t" << Lambda;
+			std::cout << "\n\n";
+//		}
 	}
 	clock_t end = clock();
 	double elapsd_secs = double(end-begin)/CLOCKS_PER_SEC;

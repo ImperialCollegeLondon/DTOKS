@@ -7,7 +7,7 @@
 // The calculation follows the work by R. DE Bibhas,
 // see R. DE Bibhas, Astrophys. Space Sci. 30, (1974).
 double solveBIBHAS(double Ti, double Te, double MassRatio, double Ionization, double DebyeLength, double guess){ 
-	double s = 1.0+DebyeLength; 
+	double s = (1.0+4.0*DebyeLength); 
 	double Radius = 1.0; // Normalised
 	double x1 = guess;
 	double HeatCapacityRatio = 1.0;
@@ -17,15 +17,25 @@ double solveBIBHAS(double Ti, double Te, double MassRatio, double Ionization, do
 //			+ehcarge*echarge*Radius/(2*r*r))/(echarge*Te);
 
 	double Coeff = Ionization*sqrt(Ti/(Te*MassRatio))*(s*s/(Radius*Radius));
-	double a = Coeff;
-	double b = Coeff*((s*s-1.0)/(s*s));
+	double b = Coeff*((s*s-1.0*1.0)/(s*s));
+
+//	Coeff = Ionization*sqrt(Ti/(Te*MassRatio));
+//	b = Coeff;
 	do{
 		guess = x1;
 		double SheathPotential = guess-(1.0/2.0)*log((1.0+HeatCapacityRatio*(Ti/Te))*(2.0*PI)/MassRatio);
-		double fx = a-b*exp(Ti/(Te*(s*s-1.0*1.0)))-exp(SheathPotential);
-		double fxprime = -(b/(s*s-1.0*1.0))*exp(Ti/(Te*(s*s-1.0*1.0)))-exp(SheathPotential);
+		double fx = Coeff*(1.0-(Te/Ti)*SheathPotential)-b*exp(guess*(Te/Ti)/(s*s-1.0*1.0))-exp(guess);
+		double fxprime = -Coeff*(Te/Ti)-(b*(Te/Ti)/(s*s-1.0*1.0))*exp(guess*(Te/Ti)/(s*s-1.0*1.0))-exp(guess);
 		x1 = guess - fx/fxprime;
 
+	/*
+		double Coeff = Ionization*sqrt(Ti/(Te*MassRatio))*(s*s/(Radius*Radius));
+		double b = Coeff*((s*s-1.0*1.0)/(s*s));
+		double SheathPotential = guess-(1.0/2.0)*log((1.0+HeatCapacityRatio*(Ti/Te))*(2.0*PI)/MassRatio);
+		double fx = Coeff*(1.0-(Te/Ti)*SheathPotential)-b*exp(guess*(Te/Ti)/(s*s-1.0*1.0))-exp(guess);
+		double fxprime = -Coeff*(Te/Ti)-(b*(Te/Ti)/(s*s-1.0*1.0))*exp(guess*(Te/Ti)/(s*s-1.0*1.0))-exp(guess);
+		x1 = guess - fx/fxprime;
+*/
 //		double fx = a-b*exp(guess/(s*s-1.0*1.0))-exp(guess);
 //		double fxprime = -(b/(s*s-1.0*1.0))*exp(guess*Ti/(Te*(s*s-1.0*1.0)))-exp(guess);
 //		x1 = guess - fx/fxprime;
