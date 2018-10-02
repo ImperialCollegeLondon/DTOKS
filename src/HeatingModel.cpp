@@ -458,10 +458,10 @@ const double HeatingModel::ElectronHeatFlux(double DustTemperature)const{ // Onl
 	H_Debug("\n\tIn HeatingModel::ElectronHeatFlux():\n\n");
 	if( !Sample->is_positive() ){ // Negative dust grain
 		return 2.0*sqrt(2.0*PI)*Sample->get_radius()*Sample->get_radius()
-				*ElectronFlux(DustTemperature)*Kb*(Pdata->ElectronTemp-DustTemperature)*(2.0+Sample->get_potential());
+				*ElectronFlux(DustTemperature)*Kb*(Pdata->ElectronTemp-DustTemperature);
 	}else{ // Positive dust grain
 		return 2.0*sqrt(2.0*PI)*Sample->get_radius()*Sample->get_radius()
-				*ElectronFlux(DustTemperature)*Kb*(Pdata->ElectronTemp-DustTemperature)*(2.0-Sample->get_potential())/exp(Sample->get_potential());
+				*ElectronFlux(DustTemperature)*Kb*(Pdata->ElectronTemp-DustTemperature);
 	}
 }
 
