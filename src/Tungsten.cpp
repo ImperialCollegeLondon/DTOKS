@@ -133,8 +133,25 @@ void Tungsten::update_radius(){
 void Tungsten::update_vapourpressure(){
 	E_Debug("\tIn Tungsten::update_vapourpressure()\n\n");
 //	double AmbientPressure = 0;
-	St.VapourPressure = 101325*pow(10,2.945 - 44094/St.Temperature + 1.3677*log10(St.Temperature)); // http://mmrc.caltech.edu/PVD/manuals/Metals%20Vapor%20pressure.pdf
-	
+	St.VapourPressure = probe_vapourpressure(St.Temperature);
 	// Answer is in pascals
 }
 
+double Tungsten::probe_vapourpressure(double Temperature)const{
+	double VapourPressure(0.0);
+	if( Temperature < 298 ){
+		static bool runOnce = true;
+		WarnOnce(runOnce,
+				"In Tungsten::update_vapourpressure():\nExtending model outside temperature range!(from 298K< to 0K<)");
+		VapourPressure = 101325*pow(10,2.945 - 44094/Temperature + 1.3677*log10(Temperature)); // http://mmrc.caltech.edu/PVD/manuals/Metals%20Vapor%20pressure.pdf
+	}else if( Temperature >= 298 && Temperature < 2500 ){
+		VapourPressure = 101325*pow(10,2.945 - 44094/Temperature + 1.3677*log10(Temperature)); // http://mmrc.caltech.edu/PVD/manuals/Metals%20Vapor%20pressure.pdf
+	}else if( Temperature >= 2500 ){
+		// E. R. Plante and A. B. Sessoms
+		VapourPressure = 101325*pow(10,7.871-45385/Temperature);
+	}else{
+		std::cerr << "\nError! Negative Temperature in Tungsten::probe_vapourpressure(double Temperature)";
+	}
+	
+	return VapourPressure;
+}

@@ -12,7 +12,7 @@ class Tungsten: public Matter{
 		void update_radius		();
 		void update_heatcapacity 	();
 		void update_vapourpressure	();
-
+		
 	public:
 		// Constructors
 		Tungsten();
@@ -27,6 +27,7 @@ class Tungsten: public Matter{
 		
 		// Change Properties; Mass and Temperature
 		void tungsten_defaults		();
+		double probe_vapourpressure(double Temperature)const;
 };
 
 #endif

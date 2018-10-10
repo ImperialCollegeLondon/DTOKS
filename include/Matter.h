@@ -41,7 +41,7 @@ class Matter{
 		virtual void update_radius			()=0;
 		virtual void update_heatcapacity 	()=0;
 		virtual void update_vapourpressure	()=0;
-
+		
 		// Update geometric properties of matter:
 		// Volume, Surface area and Density. Also initialises mass
 		void update_dim();
@@ -50,6 +50,8 @@ class Matter{
 		void update_boilingtemp();
 
 	public:
+		virtual double probe_vapourpressure	(double Temperature)const=0;
+
 		// Destructor
 		virtual ~Matter			(){M_Debug("M_Debug was on.\n");};
 

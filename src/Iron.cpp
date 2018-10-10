@@ -141,16 +141,21 @@ void Iron::update_radius(){
 }
 
 void Iron::update_vapourpressure(){
-	E_Debug("\n\nIn Iron::update_vapourpressure()");
-//	St.VapourPressure = pow(10,6.347 - 19574/St.Temperature); // http://mmrc.caltech.edu/PVD/manuals/Metals%20Vapor%20pressure.pdf
+	St.VapourPressure = probe_vapourpressure(St.Temperature);
+}
 
+double Iron::probe_vapourpressure(double Temperature)const{
+	E_Debug("\n\nIn Iron::probe_vapourpressure()");
+//	St.VapourPressure = pow(10,6.347 - 19574/St.Temperature); // http://mmrc.caltech.edu/PVD/manuals/Metals%20Vapor%20pressure.pdf
+	double VapourPressure(0.0);
 	// https://en.wikipedia.org/wiki/Vapor_pressures_of_the_elements_(data_page)
-	if( !St.Liquid && !St.Gas ) St.VapourPressure = 0;//pow(10,12.106 - 21723/St.Temperature + 0.4536*log(St.Temperature) - 0.5846/pow(St.Temperature,3));
+	if( !St.Liquid && !St.Gas ) VapourPressure = 0;//pow(10,12.106 - 21723/St.Temperature + 0.4536*log(St.Temperature) - 0.5846/pow(St.Temperature,3));
 	if( St.Liquid ){
 		static bool runOnce = true;
 		WarnOnce(runOnce,"Temperature range of model extended from 2100K to 3134K");
-		St.VapourPressure = pow(10,11.353 - 19574/St.Temperature);
+		VapourPressure = pow(10,11.353 - 19574/Temperature);
 	}
 	// St.VapourPressure *= 9.86923e-6; // Conversion from pascals to atmospheres. WE WANT IT IN PASCALS IDIAT
 	E_Debug("VapourPressure = " << St.VapourPressure);
+	return VapourPressure;
 }

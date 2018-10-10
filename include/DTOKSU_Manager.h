@@ -1,7 +1,7 @@
 #ifndef __DTOKSU_Manager_H_INCLUDED__   // if Matter.h hasn't been included yet...
 #define __DTOKSU_Manager_H_INCLUDED__
 
-//#define NETCDF_SWITCH
+#define NETCDF_SWITCH
 
 #include "DTOKSU.h"
 #include <random>	// for std::normal_distribution<> etc.

@@ -4,7 +4,7 @@
 #include "Model.h"
 #include "MathHeader.h" // This is weird
 
-const unsigned int FMN = 6;	// CHARGE MODEL NUMBER, the number of charge models
+const unsigned int FMN = 7;	// CHARGE MODEL NUMBER, the number of charge models
 
 class ForceModel : public Model {
 
@@ -12,6 +12,7 @@ class ForceModel : public Model {
 		// Models defining the Force equation
 		std::array<bool,FMN> UseModel; 		// Force Models turned on of possibly 4
 		std::string FileName;				// Variable to hold data file name
+		double OldTemp;						// Kelvin, temperature last step, used to determine RocketForce
 
 		void Print();			// Write to output data file
 
@@ -23,7 +24,7 @@ class ForceModel : public Model {
 		threevector NeutralDrag()const;
 		threevector LorentzForce()const;
 		threevector Centrifugal()const;
-
+		threevector RocketForce()const;
 
 	public:
 		// Constructors

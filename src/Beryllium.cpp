@@ -132,19 +132,24 @@ void Beryllium::update_radius(){
 }
 
 void Beryllium::update_vapourpressure(){
+	St.VapourPressure = probe_vapourpressure(St.Temperature);
+}
+
+double Beryllium::probe_vapourpressure(double Temperature)const{
 
 	// Also available from wikipedia in pascal: https://en.wikipedia.org/wiki/Vapor_pressures_of_the_elements_(data_page)
 	// St.VapourPressure = (pow(10,13.048-17020/St.Temperature - 0.4440*log10(St.Temperature)))/101325;
-
+	double VapourPressure(0.0);
 	if( !St.Liquid && !St.Gas ){
 		// http://mmrc.caltech.edu/PVD/manuals/Metals%20Vapor%20pressure.pdf
-		St.VapourPressure = pow(10,8.042 -17020/St.Temperature-0.444*log10(St.Temperature));
+		VapourPressure = pow(10,8.042 -17020/Temperature-0.444*log10(Temperature));
 	}else if( St.Liquid ){
 		// http://mmrc.caltech.edu/PVD/manuals/Metals%20Vapor%20pressure.pdf
-		St.VapourPressure = pow(10,5.786 -15731/St.Temperature);
+		VapourPressure = pow(10,5.786 -15731/Temperature);
 	}else{
-		St.VapourPressure = 0;
+		VapourPressure = 0;
 		std::cout << "\nWarning, Sample is assumed gas! St.VapourPressure = 0";
 	}
-	St.VapourPressure = 101325*St.VapourPressure; // Convert to Pascals
+	VapourPressure = 101325*VapourPressure; // Convert to Pascals
+	return VapourPressure;
 }

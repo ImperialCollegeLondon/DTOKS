@@ -129,12 +129,16 @@ void Graphite::update_radius(){
 }
 
 void Graphite::update_vapourpressure(){
-//	double AmbientPressure = 0;
+	St.VapourPressure = probe_vapourpressure(St.Temperature);
+}
+
+double Graphite::probe_vapourpressure(double Temperature)const{
+	//	double AmbientPressure = 0;
 	// http://pubs.acs.org/doi/pdf/10.1021/ja01161a081
 
 	// The factor alpha is the accommodation coefficient and represents the ratio of the 
 	// rate at which atoms actually condense on the surface to the rate at which they strike the surface
 	//double alpha = 1; 
 	//St.VapourPressure = pow(10,log10((St.AtomicMass*1000*alpha)/(2*PI*83.15*1e6*St.Temperature))+0.5*log10(St.Temperature)-2.187); 
-	St.VapourPressure = 0; // Carbon is never in the liquid state
+	return 0.0; // Carbon is never in the liquid state
 }

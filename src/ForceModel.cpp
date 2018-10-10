@@ -9,6 +9,7 @@
 ForceModel::ForceModel():Model(){
 	F_Debug("\n\nIn ForceModel::ForceModel():Model()\n\n");
 	UseModel = {false,false,false,false,false,false};
+	OldTemp = Sample->get_temperature();	// Set default OldTemp
 	CreateFile("Default_Force_filename.txt");
 }
 
@@ -16,6 +17,7 @@ ForceModel::ForceModel(std::string filename, float accuracy, std::array<bool,FMN
 			Matter *& sample, PlasmaData & pdata) : Model(sample,pdata,accuracy){
 	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, float accuracy, std::array<bool,3> models, Matter *& sample, PlasmaData const *& pdata) : Model(sample,pdata,accuracy)\n\n");
 	UseModel = models;
+	OldTemp = Sample->get_temperature();	// Set default OldTemp
 	CreateFile(filename);
 }
 
@@ -23,6 +25,7 @@ ForceModel::ForceModel(std::string filename, float accuracy, std::array<bool,FMN
 			Matter *& sample, PlasmaData * pdata) : Model(sample,*pdata,accuracy){
 	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, float accuracy, std::array<bool,3> models, Matter *& sample, PlasmaData const *& pdata) : Model(sample,pdata,accuracy)\n\n");
 	UseModel = models;
+	OldTemp = Sample->get_temperature();	// Set default OldTemp
 	CreateFile(filename);
 }
 
@@ -30,6 +33,7 @@ ForceModel::ForceModel(std::string filename, float accuracy, std::array<bool,FMN
 			Matter *& sample, PlasmaGrid_Data & pgrid) : Model(sample,pgrid,accuracy){
 	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, float accuracy, std::array<bool,3> models, Matter *& sample, PlasmaGrid const& pgrid) : Model(sample,pgrid,accuracy)\n\n");
 	UseModel = models;
+	OldTemp = Sample->get_temperature();	// Set default OldTemp
 	CreateFile(filename);
 }
 
@@ -38,6 +42,7 @@ ForceModel::ForceModel(std::string filename, float accuracy, std::array<bool,FMN
 			: Model(sample,pgrid,pdata,accuracy){
 	F_Debug("\n\nIn ForceModel::ForceModel(std::string filename, float accuracy, std::array<bool,3> models, Matter *& sample, PlasmaGrid const& pgrid) : Model(sample,pgrid,accuracy)\n\n");
 	UseModel = models;
+	OldTemp = Sample->get_temperature();	// Set default OldTemp
 	CreateFile(filename);
 }
 
@@ -54,6 +59,7 @@ void ForceModel::CreateFile(std::string filename){
 	if( UseModel[3] ) 			ModelDataFile << "\tIonDrag";
 	if( UseModel[4] ) 			ModelDataFile << "\tHybridIonDrag";
 	if( UseModel[5] ) 			ModelDataFile << "\tNeutralDrag";
+	if( UseModel[6] ) 			ModelDataFile << "\tRocketForce";
 	
 	ModelDataFile << "\n";
 	ModelDataFile.close();
@@ -73,6 +79,7 @@ void ForceModel::Print(){
 	if( UseModel[3] ) 			ModelDataFile << "\t" << DTOKSIonDrag();
 	if( UseModel[4] ) 			ModelDataFile << "\t" << HybridIonDrag();
 	if( UseModel[5] ) 			ModelDataFile << "\t" << NeutralDrag();
+	if( UseModel[6] ) 			ModelDataFile << "\t" << RocketForce();
 	ModelDataFile << "\n";
 	ModelDataFile.close();
 	ModelDataFile.clear();
@@ -131,6 +138,7 @@ void ForceModel::Force(double timestep){
 	assert(timestep > 0 && timestep <= TimeStep );
 
 	threevector Acceleration = CalculateAcceleration();
+	OldTemp = Sample->get_temperature();	// Update OldTemp
 
 	threevector ChangeInPosition(
 					Sample->get_velocity().getx()*timestep,
@@ -192,6 +200,7 @@ threevector ForceModel::CalculateAcceleration()const{
 	if( UseModel[3] ) Accel += DTOKSIonDrag();
 	if( UseModel[4] ) Accel += HybridIonDrag();
 	if( UseModel[5] ) Accel += NeutralDrag();
+	if( UseModel[6] ) Accel += RocketForce();
 
 	F1_Debug( "\n\t\tg = " << Gravity() );
 	F1_Debug( "\n\t\tcentrifugal = " << Centrifugal() );
@@ -199,6 +208,7 @@ threevector ForceModel::CalculateAcceleration()const{
 	F1_Debug( "\n\t\tDTOKSIonDrag = " << DTOKSIonDrag() );
 	F1_Debug( "\n\t\tHybridIonDrag = " << HybridIonDrag() );
 	F1_Debug( "\n\t\tNeutralDrag = " << NeutralDrag() );
+	F1_Debug( "\n\t\tRocketForce = " << RocketForce() );
 	F1_Debug( "\n\t\tAccel = " << Accel << "\n\n" );
 
 	return Accel;
@@ -312,6 +322,19 @@ threevector ForceModel::LorentzForce()const{
 	// Google Translate: Here I had changed it to all the brides in After 28_Feb so they have to be done again
 	
 	threevector returnvec = (Pdata->ElectricField+(Sample->get_velocity()^Pdata->MagneticField))*qtom;
+	return returnvec;
+}
+
+threevector ForceModel::RocketForce()const{
+	F_Debug("\tIn ForceModel::RocketForce()\n\n");
+	threevector returnvec(0.0,0.0,0.0);
+
+	if( Sample->is_liquid() ){
+		double Pv_plus = Sample->probe_vapourpressure(Sample->get_temperature());
+		double Pv_minus = Sample->probe_vapourpressure(OldTemp);
+		returnvec = (3.0/(4.0*sqrt(2.*PI)*Sample->get_density()))*((Pv_plus-Pv_minus)/Sample->get_radius())*Pdata->MagneticField.getunit();
+	}
+	//assert( returnval == returnval );
 	return returnvec;
 }
 

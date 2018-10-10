@@ -28,6 +28,7 @@ class Beryllium: public Matter{
 		
 		// Change Properties; Mass and Temperature
 		void set_defaults		();
+		double probe_vapourpressure	(double Temperature)const;
 };
 
 #endif

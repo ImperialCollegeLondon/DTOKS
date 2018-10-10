@@ -95,18 +95,23 @@ void Deuterium::update_radius(){
 }
 
 void Deuterium::update_vapourpressure(){
+	St.VapourPressure = probe_vapourpressure(St.Temperature);
+}
 
+double Deuterium::probe_vapourpressure(double Temperature)const{
+	double VapourPressure(0.0);
 	if( !St.Liquid && !St.Gas ){
 		// Page 466, equation 7.15
 		// H.W. Woolley, R.B. Scott, and F.G. Brickwedde, J. Res. Natl. Bur. Stand. (1934). 41, 379 (1948).
-		St.VapourPressure = pow(10,5.1625-67.9119/St.Temperature+0.03102*St.Temperature);
+		VapourPressure = pow(10,5.1625-67.9119/Temperature+0.03102*Temperature);
 	}else if( St.Liquid ){
 		// Page 466, equation 7.14
 		// H.W. Woolley, R.B. Scott, and F.G. Brickwedde, J. Res. Natl. Bur. Stand. (1934). 41, 379 (1948).
-		St.VapourPressure = pow(10,4.7367-58.54440/St.Temperature+0.02670*St.Temperature);
+		VapourPressure = pow(10,4.7367-58.54440/Temperature+0.02670*Temperature);
 	}else{
-		St.VapourPressure = 0;
+		VapourPressure = 0;
 		std::cout << "\nWarning, Sample is assumed gas! St.VapourPressure = 0";
 	}
-	St.VapourPressure = 133.322*St.VapourPressure; // Convert to Pascals
+	VapourPressure = 133.322*VapourPressure; // Convert to Pascals
+	return VapourPressure;
 }

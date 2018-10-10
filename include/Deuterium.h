@@ -12,7 +12,7 @@ class Deuterium: public Matter{
 		void update_radius		();
 		void update_heatcapacity 	();
 		void update_vapourpressure	();
-
+		
 	public:
 		// Constructors
 		Deuterium();
@@ -28,6 +28,7 @@ class Deuterium: public Matter{
 		
 		// Change Properties; Mass and Temperature
 		void set_defaults		();
+		double probe_vapourpressure (double Temperature)const;
 };
 
 #endif
