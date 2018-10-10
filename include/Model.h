@@ -74,6 +74,7 @@ class Model{
 
 		const bool locate(int &i, int &k, threevector xd)const; // Locate dust particle in the plasma grid		
 		const bool checkingrid(int i, int k)const;
+		const double interpolatepdata(const int i,const int k)const;
 
 	protected:
 		// It would be nice to have these as const pointers but this is not possible as this requires all function calls

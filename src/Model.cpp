@@ -3,6 +3,10 @@
 
 #include "Model.h"
 
+template <typename T> int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
+}
+
 Model::Model():Sample(new Tungsten),PG_data(std::make_shared<PlasmaGrid_Data>(PlasmaGrid_DataDefaults)),Pdata(&PlasmaDataDefaults),Accuracy(1.0),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
 	Mo_Debug("\n\nIn Model::Model():Sample(new Tungsten),PG_data(PlasmaGridDefaults),Pdata(&PlasmaDefaults),Accuracy(1.0),ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0)\n\n");
 	i = 0; k = 0;
@@ -100,6 +104,100 @@ void Model::update_plasmadata(PlasmaData &pdata){
 	Pdata = std::make_shared<PlasmaData>(pdata);
 }
 
+// Interpolate between grid points to determine plasma data
+const double Model::interpolatepdata(const int i,const int k)const{
+	Mo_Debug( "\tIn Model::interpolatepdata()\n\n");
+
+	if( PG_data->dlx != PG_data->dlz ){
+		static bool runOnce = true;
+		WarnOnce(runOnce,"PlasmaGrid Interpolation only valid for square Grid! PG_data->dlx != PG_data->dlz!")
+	}
+
+	// Get the position of the dust as a decimal number of grid cells
+	double i_pos = 0.5+(Sample->get_position().getx()-PG_data->gridxmin)/PG_data->dlx;
+	double k_pos = 0.5+(Sample->get_position().getz()-PG_data->gridzmin)/PG_data->dlz;
+
+	// Calculate the distance to the relative (0,0) of the current square
+	double i_diff = i_pos - i;
+	double k_diff = k_pos - k;
+
+	// Calculate the SI distance to each edge (m)
+	double dx_1 = PG_data->dlx*(1-i_diff);
+	double dz_1 = PG_data->dlz*(1-k_diff);
+	double dx_2 = PG_data->dlx*i_diff;
+	double dz_2 = PG_data->dlz*k_diff;
+
+	// Calculate the normalisation
+	double Coeff = 1.0/sqrt(4.0*PG_data->dlx*PG_data->dlx+4.0*PG_data->dlz*PG_data->dlz);
+	
+	// If it is not edge, in which case we aren't in a square
+	if( PG_data->gridx >= i_pos && PG_data->gridz >= k_pos 
+		&& 0 <= i_pos && 0 <= k_pos ){
+		//std::cout << "\n\nCoeff = " << Coeff;
+		//std::cout << "\ni = " << i;
+		//std::cout << "\nk = " << k;
+		//std::cout << "\ni_pos = " << i_pos;
+		//std::cout << "\nk_pos = " << k_pos; 
+		//std::cout << "\ni_diff = " << i_diff;
+		//std::cout << "\nk_diff = " << k_diff;
+		//std::cout << "\ni+sgn(i_diff) = " << i+1*sgn(i_diff);
+		//std::cout << "\nk+sgn(k_diff) = " << k+1*sgn(k_diff);
+		//std::cout << "\nPG_data->na0[" << i << "][" << k << "] = " << PG_data->na0[i][k]; 
+		//std::cout << "\nPG_data->na0[" << i+sgn(i_diff) << "][" << k << "] = " << PG_data->na0[i+1*sgn(i_diff)][k]; 
+		//std::cout << "\nPG_data->na0[" << i << "][" << k+sgn(k_diff) << "] = " << PG_data->na0[i][k+1*sgn(k_diff)]; 
+		//std::cout << "\nPG_data->na0[" << i+sgn(i_diff) << "][" << k+sgn(k_diff) << "] = " << PG_data->na0[i+1*sgn(i_diff)][k+1*sgn(k_diff)];
+		//std::cout << "\nsqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->na0[" << i << "][" << k << "] = " << sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->na0[i][k]; 
+		//std::cout << "\nsqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->na0[" << i+sgn(i_diff) << "][" << k << "] = " << sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->na0[i+1*sgn(i_diff)][k]; 
+		//std::cout << "\nsqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->na0[" << i << "][" << k+sgn(k_diff) << "] = " << sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->na0[i][k+1*sgn(k_diff)]; 
+		//std::cout << "\nsqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->na0[" << i+sgn(i_diff) << "][" << k+sgn(k_diff) << "] = " << sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->na0[i+1*sgn(i_diff)][k+1*sgn(k_diff)]; std::cin.get();
+		//std::cout << "\nPdata->IonDensity = " << Pdata->IonDensity;
+		Pdata->NeutralDensity 	= Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->na2[i][k]
+								+sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->na2[i+1*sgn(i_diff)][k]
+								+sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->na2[i][k+1*sgn(k_diff)]
+								+sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->na2[i+1*sgn(i_diff)][k+1*sgn(k_diff)]);
+		
+		Pdata->ElectronDensity 	= Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->na1[i][k]
+								+sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->na1[i+1*sgn(i_diff)][k]
+								+sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->na1[i][k+1*sgn(k_diff)]
+								+sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->na1[i+1*sgn(i_diff)][k+1*sgn(k_diff)]);
+
+		Pdata->IonDensity	 	= Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->na0[i][k]
+								+sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->na0[i+1*sgn(i_diff)][k]
+								+sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->na0[i][k+1*sgn(k_diff)]
+								+sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->na0[i+1*sgn(i_diff)][k+1*sgn(k_diff)]);
+		
+
+		Pdata->IonTemp	 		= Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->Ti[i][k]
+								+sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->Ti[i+1*sgn(i_diff)][k]
+								+sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->Ti[i][k+1*sgn(k_diff)]
+								+sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->Ti[i+1*sgn(i_diff)][k+1*sgn(k_diff)]);
+
+		Pdata->ElectronTemp 	= Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->Te[i][k]
+								+sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->Te[i+1*sgn(i_diff)][k]
+								+sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->Te[i][k+1*sgn(k_diff)]
+								+sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->Te[i+1*sgn(i_diff)][k+1*sgn(k_diff)]);
+
+		Pdata->NeutralTemp 		= Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->Tn[i][k]
+								+sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->Tn[i+1*sgn(i_diff)][k]
+								+sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->Tn[i][k+1*sgn(k_diff)]
+								+sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->Tn[i+1*sgn(i_diff)][k+1*sgn(k_diff)]);
+
+		Pdata->AmbientTemp	 	= Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->Ta[i][k]
+								+sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->Ta[i+1*sgn(i_diff)][k]
+								+sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->Ta[i][k+1*sgn(k_diff)]
+								+sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->Ta[i+1*sgn(i_diff)][k+1*sgn(k_diff)]);
+	}else{
+		Pdata->NeutralDensity 	= PG_data->na2[i][k];  
+		Pdata->ElectronDensity 	= PG_data->na1[i][k];  
+		Pdata->IonDensity 		= PG_data->na0[i][k];
+		Pdata->IonTemp			= PG_data->Ti[i][k];
+		Pdata->ElectronTemp 	= PG_data->Te[i][k];
+		Pdata->NeutralTemp		= PG_data->Tn[i][k];
+		Pdata->AmbientTemp		= PG_data->Ta[i][k];
+	}
+	return true;
+}
+
 const bool Model::update_plasmadata(){
 	Mo_Debug( "\tIn Model::update_plasmadata()\n\n");
 	
@@ -115,7 +213,7 @@ const bool Model::update_plasmadata(){
 	Pdata->ElectronTemp 	= PG_data->Te[i][k];
 	Pdata->NeutralTemp		= PG_data->Tn[i][k];
 	Pdata->AmbientTemp		= PG_data->Ta[i][k];
-	
+	//interpolatepdata(i,k);
 	return true;
 }
 
