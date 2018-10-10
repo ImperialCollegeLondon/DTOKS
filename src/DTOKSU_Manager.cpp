@@ -298,13 +298,14 @@ int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filenam
 			{
 				cfg->lookupBoolean("forcemodels","Gravity"), cfg->lookupBoolean("forcemodels","Centrifugal"),
 				cfg->lookupBoolean("forcemodels","Lorentz"), cfg->lookupBoolean("forcemodels","IonDrag"),
-				cfg->lookupBoolean("forcemodels","HybridDrag"), cfg->lookupBoolean("forcemodels","NeutralDrag")
+				cfg->lookupBoolean("forcemodels","HybridDrag"), cfg->lookupBoolean("forcemodels","NeutralDrag"),
+				cfg->lookupBoolean("forcemodels","RocketForce")
 			};
 		ChargeModels =
 			{
 				cfg->lookupBoolean("chargemodels","DTOKSOML"), cfg->lookupBoolean("chargemodels","SchottkyOML"),
 				cfg->lookupBoolean("chargemodels","DTOKSWell"), cfg->lookupBoolean("chargemodels","PHL"),
-				cfg->lookupBoolean("chargemodels","BIBHAS"), cfg->lookupBoolean("chargemodels","MOML"), 
+				cfg->lookupBoolean("chargemodels","OML"), cfg->lookupBoolean("chargemodels","MOML"), 
 				cfg->lookupBoolean("chargemodels","SOML"), cfg->lookupBoolean("chargemodels","SMOML"), 
 				cfg->lookupBoolean("chargemodels","MOMLWEM")
 			};//cfg->lookupBoolean("chargemodels","MOMLEM")
@@ -486,6 +487,15 @@ int DTOKSU_Manager::configure_plasmagrid(std::string plasma_dirname){
 		Pgrid.gridzmax = 2.0;
 		std::cout << "\n\n\tCalculation for JET" << std::endl;
 	}else if(Pgrid.device=='d'){
+		Pgrid.gridx = 83;
+		Pgrid.gridz = 50;
+		Pgrid.gridtheta=0;
+		Pgrid.gridxmin = 1.0;
+		Pgrid.gridzmin = -1.5;
+		Pgrid.gridxmax = 2.4;
+		Pgrid.gridzmax = 1.5;
+		std::cout << "\n\n\tCalculation for DIII-D" << std::endl;
+	}else if(Pgrid.device=='n'){
 		Pgrid.gridx = 180;
 		Pgrid.gridz = 400;
 		Pgrid.gridtheta=0;
@@ -552,26 +562,9 @@ int DTOKSU_Manager::read_data(std::string plasma_dirname){
 		#endif
 	}else{
 		std::ifstream scalars,threevectors,gridflagfile;
-		if(Pgrid.device=='m'){
-			scalars.open(plasma_dirname+"b2processed.dat");
-			threevectors.open(plasma_dirname+"b2processed2.dat");
-			gridflagfile.open(plasma_dirname+"locate.dat");
-		}else if(Pgrid.device=='i'){
-			scalars.open(plasma_dirname+"b2processed.dat");
-			threevectors.open(plasma_dirname+"b2processed2.dat");
-			gridflagfile.open(plasma_dirname+"locate.dat");
-		}else if(Pgrid.device=='j'){
-			scalars.open(plasma_dirname+"Interpolated_Data85974PostBolomValid_PlasmaData.txt");
-			threevectors.open(plasma_dirname+"Interpolated_Data85974PostBolomValid_BFieldData.txt");
-			gridflagfile.open(plasma_dirname+"locate.dat");
-		}else if(Pgrid.device=='d'){
-			scalars.open(plasma_dirname+"b2processed.dat");
-			threevectors.open(plasma_dirname+"b2processed2.dat");
-			gridflagfile.open(plasma_dirname+"locate.dat");
-		}else{
-			std::cerr << "\nInvalid device char!";
-			return 1;
-		}
+		scalars.open(plasma_dirname+"b2processed.dat");
+		threevectors.open(plasma_dirname+"b2processed2.dat");
+		gridflagfile.open(plasma_dirname+"locate.dat");
 
 		// Open files to read
 		assert( scalars.is_open() );
@@ -587,17 +580,21 @@ int DTOKSU_Manager::read_data(std::string plasma_dirname){
 			threevectors >> dummy_char;
 		}
 		// Now actually loop over the grid and feed in the data into the vectors
+		double convertJtoK = 7.242971666667e22 ;
 		for(unsigned int k=0; k<=Pgrid.gridz-1; k++){
 			for(unsigned int i=0; i<=Pgrid.gridx-1; i++){
-				scalars >> Pgrid.x[i][k] >> Pgrid.z[i][k] >> Pgrid.Te[i][k] >> Pgrid.Ti[i][k] 
-						>> Pgrid.na0[i][k] >> Pgrid.na1[i][k] >> Pgrid.po[i][k] >> Pgrid.ua0[i][k]
-						>> Pgrid.ua1[i][k];
+				scalars >> Pgrid.x[i][k] >> Pgrid.z[i][k] >> Pgrid.Te[i][k]
+						>> Pgrid.Ti[i][k]	>> Pgrid.na0[i][k] >> Pgrid.na1[i][k] 
+						>> Pgrid.po[i][k] >> Pgrid.ua0[i][k] >> Pgrid.ua1[i][k];
 				threevectors >> dummy_dub >> dummy_dub >> Pgrid.bx[i][k] >> Pgrid.bz[i][k] >> Pgrid.by[i][k];
 				gridflagfile >> dummy_dub >> dummy_dub >> Pgrid.gridflag[i][k];
+
+				Pgrid.Te[i][k]=convertJtoK*Pgrid.Te[i][k];
+				Pgrid.Ti[i][k]=convertJtoK*Pgrid.Ti[i][k];
 				// For some reason, very small non-zero values are being assigned to the 'zero' values being read in.
 				// This should correct for this...
 
-				if( Pgrid.device != 'j' )								{	Pgrid.bz[i][k]  = -Pgrid.bz[i][k]; }
+				if( Pgrid.device != 'j' )							{	Pgrid.bz[i][k]  = -Pgrid.bz[i][k]; }
 				if( Pgrid.bx[i][k]  > Overflows::Field 
 					&& Pgrid.bx[i][k]  < Underflows::Field ) 		{	return 1; } 
 				if( Pgrid.by[i][k]  > Overflows::Field 
