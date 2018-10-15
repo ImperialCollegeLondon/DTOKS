@@ -8,6 +8,11 @@
 #include "DeltaThermTest.h"
 #include "MaxwellianTest.h"
 
+// HEATING TESTS
+#include "EvaporativeCoolingTest.h"
+#include "EvaporativeMassLossTest.h"
+#include "NeutralHeatingTest.h"
+
 // CHARGING TESTS
 #include "ChargingTimescales.h"
 #include "DTOKSchargingTest.h"
@@ -26,6 +31,7 @@
 // FORCE TESTS
 #include "HybridIonDrag.h"
 #include "FortovIonDrag.h"
+#include "NeutralDrag.h"
 
 static void show_usage(std::string name){
 	std::cerr << "Usage: int main(int argc, char* argv[]) <option(s)> SOURCES"
@@ -36,6 +42,9 @@ static void show_usage(std::string name){
 	<< "\t\tDeltaSec	 : Returns the empirical function calculating the yield due to secondary electron emission\n"
 	<< "\t\tDeltaTherm	 : Returns the value of the 'effective yield' from the Richardson-Dushmann formula\n"
 	<< "\t\tMaxwellian	 : Returns the value of the Maxwellian function for different values of temperature and energy\n"
+	<< "\t\tEvapCooling      : Returns the heat loss due to evaporation\n"
+	<< "\t\tEvapMassLoss	 : Returns the mass loss due to evaporation\n"
+	<< "\t\tNeutralHeating	 : Returns the heat gained from neutral collisions\n"
 	<< "\t\tDTOKScharging	 : Returns the output the potential as calculated by the DTOKS solution to the OML equation\n"
 	<< "\t\tDTOKSWell	 : Returns the potential as calculated by the DTOKS solution to the OML equation with a well\n"
 	<< "\t\tOML		 : Returns the floating potential for small dust grains in a stationary plasma following OML theory\n"
@@ -49,7 +58,8 @@ static void show_usage(std::string name){
 	<< "\t\tTH		 : Returns the floating potential for small dust grains magnetised plasmas semi-empirical from pot.\n"
 	<< "\t\tBIBHAS		 : Returns the floating potential for arbitary sized dust grain.\n"
 	<< "\t\tHybridIonDrag	 : Returns the magnitude of the HybridIonDrag force, see https://doi.org/10.1063/1.1867995\n"
-	<< "\t\tFortovIonDrag	 : Returns the magnitude of the ion drag force, see https://doi.org/10.1016/j.physrep.2005.08.007\n\n";
+	<< "\t\tFortovIonDrag	 : Returns the magnitude of the ion drag force, see https://doi.org/10.1016/j.physrep.2005.08.007\n"
+	<< "\t\tNeutralDrag	 : Returns the magnitude of the neutral drag force\n\n";
 
 }
 
@@ -113,6 +123,15 @@ int main(int argc, char* argv[]){
 	// The results are plotted in 3D, with the expected maxwellian distribution recovered for a fixed temperature or Energy
         else if( Test_Mode == "Maxwellian" )
 		MaxwellianTest();
+
+	// ***** 	HEATING TESTS		***** //
+	else if( Test_Mode == "EvapCooling" )
+		EvaporativeCoolingTest();
+	else if( Test_Mode == "EvapMassLoss" )
+		EvaporativeMassLossTest();
+	else if( Test_Mode == "NeutralHeating" )
+		NeutralHeatingTest();
+
 
 	// ***** 	CHARGING TESTS		***** //
 	// Charging Timescale Test:
@@ -237,6 +256,11 @@ int main(int argc, char* argv[]){
 	// https://doi.org/10.1016/j.physrep.2005.08.007
         else if( Test_Mode == "FortovIonDrag" )
 		FortovIonDragTest();
+	// Neutral Drag test
+	// This test is designed to test the magnitude of the neutral drag force relative to the Ion drag force.
+	// This neutral drag force is formulated by the OML flux for uncharged species to a sphere
+	else if( Test_Mode == "NeutralDrag" )
+		IonNeutralDragTest();
 	else
 		std::cout << "\n\nInput not recognised! Exiting program\n.";
 

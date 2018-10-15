@@ -2,7 +2,7 @@
 mkdir Data
 cd Dependencies
 
-#. install_netcdf.sh
+. install_netcdf.sh
 
 # Get config4cpp for configuration
 git clone https://github.com/config4star/config4cpp.git
@@ -11,3 +11,7 @@ git clone https://github.com/config4star/config4cpp.git
 cd config4cpp
 make
 cd ../..
+
+# Install Boost libraries
+#echo "Installing boost libraries"
+#sudo apt-get install libboost-all-dev
