@@ -110,7 +110,7 @@ const double Model::interpolatepdata(const int i,const int k)const{
 
 	if( PG_data->dlx != PG_data->dlz ){
 		static bool runOnce = true;
-		WarnOnce(runOnce,"PlasmaGrid Interpolation only valid for square Grid! PG_data->dlx != PG_data->dlz!")
+		WarnOnce(runOnce,"PlasmaGrid Interpolation only valid for square Grid! PG_data->dlx != PG_data->dlz!");
 	}
 
 	// Get the position of the dust as a decimal number of grid cells
