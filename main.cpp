@@ -11,7 +11,7 @@ int main(int argc, char* argv[]){
 
 //	int Config_Status = MyManager.Configure(argc,argv);
 	try{
-		int Config_Status = MyManager.Configure(argc,argv,"Config_Files/DTOKSU_Config.cfg");
+		int Config_Status = MyManager.Configure(argc,argv,"Config_Files/DTOKSU_Config_DIII-D.cfg");
 		return MyManager.Breakup();
 	}catch(std::exception &e){
 		std::cout << "\nException Caught!\n";

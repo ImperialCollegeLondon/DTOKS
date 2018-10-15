@@ -3,8 +3,6 @@
 
 // Solve the orbital motion limited potential for small dust grains accounting for electron emission.
 // WARNING: This is only valid for positively charged dust grains.
-// See drews Thesis, pg 52
-// https://spiral.imperial.ac.uk/bitstream/10044/1/32003/1/Thomas-D-2016-PhD-thesis.pdf
 double solvePosSchottkyOML(double DustTemperature, double Ti, double Te, double n0, double Dsec){
 
 	double Wf = 3.4*echarge;

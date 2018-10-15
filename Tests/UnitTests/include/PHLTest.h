@@ -11,7 +11,7 @@ void PHLTest(){
 	double Ti = 1.0; // Ion Temperature in eV
 	double Te = 1.0; // Electron Temperature in eV
 	double Phi = 1.0; // Initial guess at potential
-	double Lambda = 0.0; // Debye length relative to probe radius
+	double Lambda = 1000.0;//0.0; // Debye length relative to probe radius
 	double AtomicNumber = 1.0; // Charge state of element. 1.0 = First ionisation
 	double AtomicMass = 1.0*Mp; // Atomic Mass Of Element
 	for( double Beta(0); Beta < 1000; Beta += 0.1 ){	// Loop over magnetic field strengths
@@ -19,7 +19,41 @@ void PHLTest(){
 		std::cout << "\n" << Phi << "\t" << Beta*sqrt(Me*AtomicNumber*AtomicNumber*Te/(Ti*AtomicMass)) << "\t" << Ti/Te << "\t" << AtomicMass/Me << "\t" << AtomicNumber << "\t" << Lambda << "\t" << Potential;
 		std::cout << "\t" << (1.0-(AtomicNumber/(Ti/Te))*Potential) 
 			<< "\t" << (1.0/sqrt(Ti/Te))*sqrt(AtomicMass/Me)*solveI_curr(Potential,Beta,Ti/Te,AtomicMass/Me,1.0,Lambda);
+
 	}
+
+/*
+	Beta = 1.0;
+
+	double Potential = solvePHL(Phi,Beta,Ti/Te,AtomicMass/Me,AtomicNumber,Lambda);
+	for( double Potential(-5.0); Potential < 0.0; Potential += 0.01){
+		std::cout << "\n" << Potential << "\t" << Beta*sqrt(Me*AtomicNumber*AtomicNumber*Te/(Ti*AtomicMass)) << "\t" << (1.0/sqrt(Ti/Te))*solveI_curr(Potential,Beta,Ti/Te,AtomicMass/Me,1.0,Lambda)/exp(Potential);
+	}
+	Beta = 2.0;
+	Potential = solvePHL(Phi,Beta,Ti/Te,AtomicMass/Me,AtomicNumber,Lambda);
+for( double Potential(-5.0); Potential < 0.0; Potential += 0.01){
+		std::cout << "\n" << Potential << "\t" << Beta*sqrt(Me*AtomicNumber*AtomicNumber*Te/(Ti*AtomicMass)) << "\t" << (1.0/sqrt(Ti/Te))*solveI_curr(Potential,Beta,Ti/Te,AtomicMass/Me,1.0,Lambda)/exp(Potential);
+}
+	Beta = 5.0;
+	Potential = solvePHL(Phi,Beta,Ti/Te,AtomicMass/Me,AtomicNumber,Lambda);
+	for( double Potential(-5.0); Potential < 0.0; Potential += 0.01){
+		std::cout << "\n" << Potential << "\t" << Beta*sqrt(Me*AtomicNumber*AtomicNumber*Te/(Ti*AtomicMass)) << "\t" << (1.0/sqrt(Ti/Te))*solveI_curr(Potential,Beta,Ti/Te,AtomicMass/Me,1.0,Lambda)/exp(Potential);
+	}
+
+
+	Beta = 10.0;
+	Potential = solvePHL(Phi,Beta,Ti/Te,AtomicMass/Me,AtomicNumber,Lambda);
+	for( double Potential(-5.0); Potential < 0.0; Potential += 0.01){
+		std::cout << "\n" << Potential << "\t" << Beta*sqrt(Me*AtomicNumber*AtomicNumber*Te/(Ti*AtomicMass)) << "\t" << (1.0/sqrt(Ti/Te))*solveI_curr(Potential,Beta,Ti/Te,AtomicMass/Me,1.0,Lambda)/exp(Potential);
+	}
+	Beta = 30.0;
+	Potential = solvePHL(Phi,Beta,Ti/Te,AtomicMass/Me,AtomicNumber,Lambda);
+	for( double Potential(-5.0); Potential < 0.0; Potential += 0.01){
+		std::cout << "\n" << Potential << "\t" << Beta*sqrt(Me*AtomicNumber*AtomicNumber*Te/(Ti*AtomicMass)) << "\t" << (1.0/sqrt(Ti/Te))*solveI_curr(Potential,Beta,Ti/Te,AtomicMass/Me,1.0,Lambda)/exp(Potential);
+	}
+*/
+
+
 	clock_t end = clock();
 	double elapsd_secs = double(end-begin)/CLOCKS_PER_SEC;
 		

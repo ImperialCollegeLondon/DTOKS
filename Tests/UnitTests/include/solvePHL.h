@@ -22,9 +22,28 @@ double solvePHL(double Phi, double Beta, double TemperatureRatio, double MassRat
 	
 	double A = 0.678*w+1.543*w*w-1.212*w*w*w;
 
-	double Potential = TemperatureRatio/AtomicNumber
-		-LambertW((A+(1.0-A)*i_star)*sqrt(MassRatio*TemperatureRatio)*exp(TemperatureRatio/AtomicNumber)/AtomicNumber);
+	double Potential = Phi;
 
+	bool condition = false;
+	do{	
+		double Phi = Potential;	
+		eta = -(Phi/Beta)*(1+(Beta/4.0)*(1-exp(-4.0/(DebyeLength*Beta))));
+		w = eta/(1+eta);
+	        A = 0.678*w+1.543*w*w-1.212*w*w*w;
+		double fx = ((AtomicNumber*sqrt(TemperatureRatio/MassRatio))/(A+(1.0-A)*i_star))
+				*(1-AtomicNumber*Phi/TemperatureRatio)-exp(Phi);
+		double fx_prime = -1*((AtomicNumber*sqrt(TemperatureRatio/MassRatio))/(A+(1.0-A)*i_star))
+				*(AtomicNumber/TemperatureRatio)-exp(Phi);
+		Potential = Phi - fx/fx_prime;
+
+//		std::cout << "\n\n" << Potential;
+//		std::cout << "\n" << Phi;
+//		std::cout << "\n" << fabs(Phi - Potential);
+
+		condition	= (fabs(Phi - Potential) >= 0.005);
+//		std::cout << "\n" << condition;	std::cin.get();
+	}while( condition );
+/*
 	// Iterate until we converge on the correct current
 	while( fabs(Phi - Potential) >= 0.005 ){
 		Phi = solvePHL(Potential, Beta, TemperatureRatio, MassRatio, AtomicNumber, DebyeLength);
@@ -43,8 +62,10 @@ double solvePHL(double Phi, double Beta, double TemperatureRatio, double MassRat
 	        A = 0.678*w+1.543*w*w-1.212*w*w*w;
 	
 	        Potential = TemperatureRatio/AtomicNumber
-                -LambertW((A+(1.0-A)*i_star)*sqrt(MassRatio*TemperatureRatio)*exp(TemperatureRatio/AtomicNumber)/AtomicNumber);
+                	-LambertW((A+(1.0-A)*i_star)*sqrt(MassRatio*TemperatureRatio)*exp(TemperatureRatio/AtomicNumber)
+			/(AtomicNumber*AtomicNumber));
 	}
+*/
 	return Potential;
 }
 
