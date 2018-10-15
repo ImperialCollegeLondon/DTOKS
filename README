@@ -1,0 +1,105 @@
+# README #
+=============
+
+## Author :	Luke Simons
+## Date :	20/08/2018
+## Description :
+This file describes the class structure and operation of DTOKSU code, 
+available at https://github.com/LukeSimons/DTOKS-U.
+Tests exist in local directory '/Tests' with a readme file available at '/Tests/README_TESTING'
+
+## Introduction
+At Imperial College, London the code Dust in TOKamaks (DTOKS) was developed in 2005 by James D. Martin, Michael Coppins and John Allen. Since, it has been further developed by Minas Bacharis and others. DTOKS represents a relatively independant and unique approach to computing dust tracks in tokamaks and has had some implementation modelling dust in MAST and radiofrequency discharges.
+For more information, see the Thesis of Dr. James Martin:
+Martin, J. D. (2006). Theory and Simulation of Dust in Tokamak Plasmas, (July).
+
+
+## How to Install/Setup DTOKSU
+
+DTOKS-U depends on several other packages for principally for providing the configuration file handling (config4cpp) and for extracting data from NETCDF files. For this reason, several other dependancies must first be installed. The setup.sh and install_netcdf4.sh scripts will attempt to perform this automatically though are liable to fail!
+
+To Install DTOKSU, follow the following steps:
+1) Git clone the repository
+git clone https://github.com/LukeSimons/DTOKS-U.git
+
+2) Run the setup script, this will in turn install the dependancies using the install_netcdf4.sh script
+. setup.sh
+
+3) If there are no significant errors or conflicts after this, setup the CMAKE build directory
+cd build
+cmake ../.
+
+4) DTOKSU can now be built with CMAKE. At this point, the dependencies must have been correctly installed or the build will fail!
+make
+
+5) Test the code by running the test scripts and the default main script
+cd ..
+./bin/init_test -h
+
+./bin/init_test -m Gravity
+
+./bin/unit_test -h
+
+./bin/unit_test -m DeltaSec
+
+./bin/main -h
+
+./bin/main
+
+
+## How to Run DTOKSU
+
+./main -h <help message> -c <Config File> -t <Inital Temperature> -m <'w', 'g', 'b', 'd' or 'f'> 
+	-s <Initial Radius> 
+	-vr <Radial Velocity> -vt <Angular Velocity> -vz <longitudinal velocity>
+	-rr <Radial position> -rt <Angular position> -rz <longitudinal position>
+	-op <Output File Pre-fix> -om <MetaData filename>
+
+Files Included With This Project:
+	Beryllium.cpp      DTOKSU.cpp          Functions.cpp     Iron.cpp        Model.cpp
+	ChargingModel.cpp  DTOKSU_Manager.cpp  Graphite.cpp      MathHeader.cpp  threevector.cpp
+	Constants.cpp      ForceModel.cpp      HeatingModel.cpp  Matter.cpp      Tungsten.cpp
+
+	Beryllium.h      Constants.h  DTOKSU_Manager.h  Functions.h     Graphite.h      Iron.h        
+	Matter.h  PlasmaData.h   Tungsten.h	ChargingModel.h  DTOKSU.h     ForceModel.h
+	GrainStructs.h  HeatingModel.h  MathHeader.h  Model.h   threevector.h
+
+
+## DTOKSU Class Structure and Design
+DTOKSU follows an object oriented programing (oop) style with a few different class heirarchies and data structures being used to manage the information. These have been designed with simplicity and security in mind and with maximal modular capability.
+The two principal classes are the Matter.h class and the Model.h class.
+These classes and their children are used by the wrapper class DTOKSU to conduct the entire simulation.
+
+
+# Matter class
+The Matter class is used to contain all the information about the dust grain but also to simulate all the physical models 
+directly related to the information contained. It owns an instance of both the 'GrainData' and 'ElementConsts' which stores 
+the non-constant and constant information about the material. In addition to this, it stores information on what models are 
+being allowed to vary with temperature. The matter class requires that classes which inherit from it define the functions 
+"update_radius()", "update_heatcapacity()" and "update_vapourpressure()" which define the variation of radius, heat capacity
+and vapour pressure with temperature.
+It contains functions able to alter the description of a dust grain including it's motion, these are namely "update_temperature",
+"update_motion", "update_charge" and "update_mass"
+Finally, a range of getter and one setter methods exist for classes external to the heirarchy, mainly DTOKSU to access this 
+information. This class requires the definition of the "threevector.h" class, the "COnstants.h", additionaly "Functions.h" and 
+obviously the data structures in "GrainStructs.h"
+
+The class can be constructed simply by passing a pointer to the element constants data structure which contains all the unmutable
+information about a materials properties. The default values for it's variable properaties are set by default.
+
+Inforamtion about the plasma and dust particle are held within the PlasmaData.h and GrainStructs.h structures.
+Constants.h contains physical constants and preprocessor directives for debugging
+Functions.h contains a warning function, a rounding function and as well as methods used to calculate physical models.
+The DTOKSU_Manager.h class is used to read in and hold the information about a plasma background with spatial dependance over a cartesian grid.
+The PlasmaGenerator.cpp file is used to generate grids of data for different plasma backgrounds which can be fed to the PlasmaGrid class.
+
+
+# PlasmaBackground
+First, the dust particle is located within the Plasma grid and assigned integer coordinates giving it's position.
+The plasma velocity is defined by the direction of the magnetic field and the mean plasma velocity provided the densities sum is non-zero
+he value of the potential on the grid points are taken from input files for each machine type (MAST or ITER). The electric field in the radial direction is calculated from the difference in potential between two points.
+and similarly calculated for the other three dimensions in cylindrical coordinates.
+
+------------------------------------------------------------------------------------------
+
+------------------------------------------------------------------------------------------
