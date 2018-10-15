@@ -16,11 +16,10 @@ class ChargingModel : public Model{
 
 		
 		double solveOML(double a, double guess);
-		double solveOML_LambertW(double DeltaTot);
+		double solvePosOML(double a, double guess);
 		double solveNegSchottkyOML(double guess);
 		double solvePosSchottkyOML();
 		double solvePHL(double Phi);
-		double solveBIBHAS(double guess);
 		double solveMOML();
 		double solveSOML();
 		double solveSMOML();

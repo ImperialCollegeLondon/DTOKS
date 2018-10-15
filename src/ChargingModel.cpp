@@ -140,7 +140,7 @@ void ChargingModel::Charge(double timestep){
 		if ( (DSec + DTherm) >= 1.0 ){ // If dust grain is actually positive, (negative normalised potential) recalculate it...
 			Potential = solvePosSchottkyOML(); // Quasi-neutrality assumed, we take ni as ni=ne
 		}else{
-			Potential = solveNegSchottkyOML(Potential);
+			Potential = solveNegSchottkyOML(0.0);
 			if( Potential < 0.0 ){
 				Potential = solvePosSchottkyOML();
 			}
@@ -148,24 +148,48 @@ void ChargingModel::Charge(double timestep){
 	}else if( UseModel[2] ){ // In this case, maintain a potential well for entire temperature range
 		Potential = solveOML( 0.0, Sample->get_potential()) 
 			- Kb*Sample->get_temperature()/(Pdata->ElectronTemp*Kb);
-//		Potential = solveOML_LambertW(DSec+DTherm);//-Sample->get_temperature()/Pdata->ElectronTemp;
-//		Potential = solveOML( DSec + DTherm, Sample->get_potential());
-//		if( (DSec+ DTherm) >= 1.0 )
+		if( Potential < 0 ){ // In this case we have a positive grain! Assume well disappears
+			Potential = solvePosOML( 0.0, Sample->get_potential());
+		}
 	}else if( UseModel[3] ){	// In this case, use Hutchinson, Patterchini and Lapenta
-		Potential = solvePHL(Potential);
-	}else if( UseModel[4] ){	// MOML-EM Charging model
-		Potential = solveBIBHAS(Potential);
+		Potential = solvePHL(0.0);
+		if( Potential < 0 ){ // In this case we have a positive grain! PHL breaks down, use Pos Schottky OML
+			Potential = solvePosOML( 0.0, Sample->get_potential());
+		}
+	}else if( UseModel[4] ){	// OML Charging model
+		Potential = solveOML(0.0,Potential);
+		if( Potential < 0 ){ // In this case we have a positive grain!
+			Potential = solvePosOML( 0.0, Sample->get_potential());
+		}
 	}else if( UseModel[5] ){	// MOML Charging model
 		Potential = solveMOML();
+		if( Potential < 0 ){ // In this case we have a positive grain!
+			Potential = solvePosOML( 0.0, Sample->get_potential());
+		}
 	}else if( UseModel[6] ){	// SOML Charging model
 		Potential = solveSOML();
-	}else if( UseModel[7] ){	// MOML-EM Charging model
+		if( Potential < 0 ){ // In this case we have a positive grain!
+			Potential = solvePosOML(0.0, Sample->get_potential());
+		}
+	}else if( UseModel[7] ){	// SMOML Charging model
 		Potential = solveSMOML();
-	}else if( UseModel[8] ){	// MOML-EM Charging model
+		if( Potential < 0 ){ // In this case we have a positive grain!
+			Potential = solvePosOML(0.0, Sample->get_potential());
+		}
+	}else if( UseModel[8] ){	// MOMLWEM Charging model
 		DSec = DeltaSec();
 		DTherm = DeltaTherm();
-		Potential = solveMOMLWEM(DSec + DTherm);
+		
+		if( (DSec + DTherm) >= 1.0 ){ // In this case we have a positive grain!
+			Potential = solvePosOML(0.0, Sample->get_potential());
+		}else{
+			Potential = solveMOMLWEM(DSec + DTherm);
+			if( Potential < 0.0 ){
+				Potential = solvePosOML(0.0, Sample->get_potential());
+			}
+		}
 	}
+
 	/*else if( UseModel[8] ){	// MOML-EM Charging model
 		Potential = solveMOMLEM(DSec + DTherm);
 	}*/
@@ -203,17 +227,48 @@ double ChargingModel::solveOML(double a, double guess){
 	return guess;
 }
 
+double ChargingModel::solvePosOML(double a, double guess){
+	C_Debug("\tIn ChargingModel::solvePosOML(double a, double guess)\n\n");
+	if( a >= 1.0 ){
+		static bool runOnce = true;
+		WarnOnce(runOnce,"DeltaTot >= 1.0. DeltaTot being set equal to unity.");
+		a = 1.0;
+	}
+	double b = Pdata->IonTemp/Pdata->ElectronTemp;
+
+	double C = Me/Pdata->mi;
+
+	double x1 = guess - ( (( 1-a)*(1+guess) - sqrt(b*C)*exp(-guess))/((1-a) + sqrt(b*C)*exp(-guess) ) );
+	
+	while( fabs(guess-x1) > Accuracy ){
+		guess = x1;
+		x1 = guess - ( (( 1-a)*(1+guess) - sqrt(b*C)*exp(-guess))/((1-a) + sqrt(b*C)*exp(-guess) ) );
+	}
+	return guess;
+}
+
 // Solve the Modified orbital motion limited potential for large dust grains.
 // See drews Thesis, pg 52
 // https://spiral.imperial.ac.uk/bitstream/10044/1/32003/1/Thomas-D-2016-PhD-thesis.pdf
 double ChargingModel::solveMOML(){
 	double TemperatureRatio = Pdata->IonTemp/Pdata->ElectronTemp;
 	double MassRatio = Pdata->mi/Me;
-	double IonThermalVelocity = sqrt((Kb*Pdata->IonTemp)/Pdata->mi);
 	double HeatCapacityRatio = 1.0;
+
+	double Arg = sqrt(2*PI*TemperatureRatio*(1+HeatCapacityRatio*TemperatureRatio))
+    		*exp(TemperatureRatio);
+	if( std::isinf(exp(TemperatureRatio)) ){
+		static bool runOnce = true;
+		WarnOnce(runOnce,"LambertW exp(TemperatureRatio) is infinite in solveSOML()! Assuming Potential = 0.0");
+		return 0;
+	}else if( std::isinf(Arg) || Arg < 0.0 ){
+		std::cout << "\nLambertW(Arg == " << Arg << ")!";
+		throw LambertWFailure();
+		return 0;
+	}
+
     return -1.0*(TemperatureRatio
-    		-LambertW(sqrt(2*PI*TemperatureRatio*(1+HeatCapacityRatio*TemperatureRatio))
-    		*exp(TemperatureRatio))+log(2*PI*(1+HeatCapacityRatio*TemperatureRatio)/MassRatio)/2);
+    		-LambertW(Arg)+log(2*PI*(1+HeatCapacityRatio*TemperatureRatio)/MassRatio)/2);
 }
 
 // Solve the shifted orbital motion limited potential for samll dust grains.
@@ -226,9 +281,19 @@ double ChargingModel::solveSOML(){
 	double PlasmaFlowSpeed = (Pdata->PlasmaVel-Sample->get_velocity()).mag3()/IonThermalVelocity;
 	double s1 = sqrt(PI)*(1+2*pow(PlasmaFlowSpeed,2))*erf(PlasmaFlowSpeed)/(4*PlasmaFlowSpeed)+exp(-pow(PlasmaFlowSpeed,2))/2;
 	double s2 = sqrt(PI)*erf(PlasmaFlowSpeed)/(2*PlasmaFlowSpeed);
-
-	return TemperatureRatio*s1/s2-LambertW(sqrt(MassRatio*TemperatureRatio)*exp(TemperatureRatio*s1/s2)/s2);
+	double Arg = sqrt(MassRatio*TemperatureRatio)*exp(TemperatureRatio*s1/s2)/s2;
+	if( std::isinf(exp(TemperatureRatio*s1/s2)) ){
+		static bool runOnce = true;
+		WarnOnce(runOnce,"LambertW exp(TemperatureRatio*s1/s2) is infinite in solveSOML()! Assuming Potential = 0.0");
+		return 0;
+	}else if( std::isinf(Arg) || Arg < 0.0 ){
+		std::cout << "\nLambertW(Arg == " << Arg << ")!";
+		throw LambertWFailure();
+		return 0;
+	}
+	return -1.0*(TemperatureRatio*s1/s2-LambertW(Arg));
 }
+
 
 // Solve the shifted orbital motion limited potential for samll dust grains.
 // See drews Thesis, pg 55
@@ -242,10 +307,20 @@ double ChargingModel::solveSMOML(){
 
     double s1 = sqrt(PI)*(1+2*pow(PlasmaFlowSpeed,2))*erf(PlasmaFlowSpeed)/(4*PlasmaFlowSpeed)+exp(-pow(PlasmaFlowSpeed,2))/2;
     double s2 = sqrt(PI)*erf(PlasmaFlowSpeed)/(2*PlasmaFlowSpeed);
+    double Arg = sqrt(2*PI*TemperatureRatio
+    	*(1+HeatCapacityRatio*TemperatureRatio))*exp(TemperatureRatio*s1/s2)/s2;
+    if( std::isinf(exp(TemperatureRatio*s1/s2)) ){
+		static bool runOnce = true;
+		WarnOnce(runOnce,"LambertW exp(TemperatureRatio*s1/s2) is infinite in solveSMOML()! Assuming Potential = 0.0");
+		return 0;
+	}else if( std::isinf(Arg) || Arg < 0.0 ){
+		std::cout << "\nLambertW(Arg == " << Arg << ")!";
+		throw LambertWFailure();
+		return 0;
+	}
 
-    return TemperatureRatio*s1/s2-LambertW(sqrt(2*PI*TemperatureRatio
-    	*(1+HeatCapacityRatio*TemperatureRatio))*exp(TemperatureRatio*s1/s2)/s2)
-    	+log(2*PI*(1+HeatCapacityRatio*TemperatureRatio)/MassRatio)/2;
+    return -1.0*(TemperatureRatio*s1/s2-LambertW(Arg)
+    	+log(2*PI*(1+HeatCapacityRatio*TemperatureRatio)/MassRatio)/2);
 }
 
 // Solve the Modified orbital motion limited potential for large emitting dust grains.
@@ -264,8 +339,16 @@ double ChargingModel::solveMOMLWEM(double DeltaTot){
     //std::cout << DeltaTot << "\t" << Delta_Phi_em << "\n";
     double Arg = (1.0-DeltaTot)*sqrt(MassRatio*TemperatureRatio)
                     *exp(TemperatureRatio/Ionization+Delta_Phi_em/Ionization)/Ionization;
-
-    return TemperatureRatio/Ionization+Delta_Phi_em/Ionization-LambertW(Arg);
+	if( std::isinf(exp(TemperatureRatio/Ionization+Delta_Phi_em/Ionization)) ){
+		static bool runOnce = true;
+		WarnOnce(runOnce,"LambertW exp(TemperatureRatio/Ionization+Delta_Phi_em/Ionization) is infinite in solveMOMLWEM()! Assuming Potential = 0.0");
+		return 0;
+	}else if( std::isinf(Arg) || Arg < 0.0 ){
+		std::cout << "\nLambertW(Arg == " << Arg << ")!";
+		throw LambertWFailure();
+		return 0;
+	}
+    return -1.0*(TemperatureRatio/Ionization+Delta_Phi_em/Ionization-LambertW(Arg));
 }
 
 // Solve the orbital motion limited potential for small dust grains accounting for electron emission.
@@ -273,7 +356,7 @@ double ChargingModel::solveMOMLWEM(double DeltaTot){
 // See drews Thesis, pg 52
 // https://spiral.imperial.ac.uk/bitstream/10044/1/32003/1/Thomas-D-2016-PhD-thesis.pdf
 double ChargingModel::solvePosSchottkyOML(){
-
+	C_Debug("\tIn ChargingModel::solvePosSchottkyOML()\n\n");
 	double Wf = echarge*Sample->get_workfunction();
 	double TemperatureRatio = Pdata->IonTemp/Pdata->ElectronTemp;
 	double Ionization = Pdata->Z; 		// Ionization
@@ -282,7 +365,11 @@ double ChargingModel::solvePosSchottkyOML(){
 	double Arg = TemperatureRatio*exp(TemperatureRatio)*(vi+Richardson*pow(Sample->get_temperature(),2)
 			*exp(-Wf/(Kb*Sample->get_temperature()))/(Ionization*echarge*Pdata->IonDensity))/(ve*(1-DeltaSec()));
 
-	if( std::isinf(Arg) || Arg < 0.0 ){
+	if( std::isinf(exp(TemperatureRatio)) ){
+		static bool runOnce = true;
+		WarnOnce(runOnce,"LambertW exp(TemperatureRatio) is infinite in solvePosSchottkyOML()! Assuming Potential = 0.0");
+		return 0;
+	}else if( std::isinf(Arg) || Arg < 0.0 ){
 		std::cout << "\nLambertW(Arg == " << Arg << ")!";
 		throw LambertWFailure();
 		return 0;
@@ -295,6 +382,8 @@ double ChargingModel::solvePosSchottkyOML(){
 // Solve the orbital motion limited potential for small dust grains accounting for electron emission.
 // WARNING: This is only valid for negatively charged dust grains.
 double ChargingModel::solveNegSchottkyOML(double guess){
+	C_Debug("\tIn ChargingModel::solveNegSchottkyOML()\n\n");
+
 	double Vi = sqrt(Kb*Pdata->IonTemp/(2*PI*Pdata->mi));
 	double Ve = sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
 
@@ -321,27 +410,6 @@ double ChargingModel::solveNegSchottkyOML(double guess){
 }
 
 
-double ChargingModel::solveOML_LambertW(double DeltaTot){
-	double TemperatureRatio = Pdata->IonTemp/Pdata->ElectronTemp;
-
-	double Ionization = Pdata->Z;
-	double MassRatio = Pdata->mi/Me;
-	double LW(0);
-	try{
-		double Arg = (1.0-DeltaTot)*sqrt(MassRatio*TemperatureRatio)*exp(TemperatureRatio/Ionization)/Ionization;
-		if( std::isinf(Arg) ){
-			std::cout << "\nLambertW(Arg == " << Arg << ")! Using solveOML";
-			return solveOML( -0.5, Sample->get_potential()) 
-					- Sample->get_temperature()/Pdata->ElectronTemp;
-		}
-		LW = LambertW((1.0-DeltaTot)*sqrt(MassRatio*TemperatureRatio)*exp(TemperatureRatio/Ionization)/Ionization);
-		
-	}catch( LambertWFailure &e ){
-		std::cout << e.what();
-	}
-	return -(TemperatureRatio/Ionization-LW);
-}
-
 // Solve the Potential for a sphere in a collisionless magnetoplasma following
 // L. Patacchini, I. H. Hutchinson, and G. Lapenta, Phys. Plasmas 14, (2007).
 // Assuming that Lambda_s >> r_p, i.e dust grain is small.
@@ -355,7 +423,7 @@ double ChargingModel::solvePHL(double Phi){
 		static bool runOnce = true;
 		WarnOnce(runOnce,"Beta/MassRatio > 0.01 in solvePHL! Model may not be valid in this range! see Fig 11. of  L. Patacchini, I. H. Hutchinson, and G. Lapenta, Phys. Plasmas 14, (2007).");
 	}
-	double AtomicNumber = 1.0;	
+	double AtomicNumber = Pdata->Z;	
 	double DebyeLength=sqrt((epsilon0*Kb*Pdata->ElectronTemp)/(Pdata->ElectronDensity*pow(echarge,2)));
 
 	double z = Beta/(1+Beta);
@@ -374,126 +442,24 @@ double ChargingModel::solvePHL(double Phi){
 	
 	double A = 0.678*w+1.543*w*w-1.212*w*w*w;
 
-	double Arg = (A+(1.0-A)*i_star)*sqrt(MassRatio*TemperatureRatio)*exp(TemperatureRatio/AtomicNumber)/AtomicNumber;
+	double Potential = Phi;
 
-	if( std::isinf(Arg) ){
-		std::cout << "\nLambertW(Arg == " << Arg << ")!";
-		throw LambertWFailure();
-		return 0.0;
-	}
-	double Potential = TemperatureRatio/AtomicNumber
-		-LambertW(Arg);
-	
-	while( fabs(Phi - Potential) >= Accuracy ){
-		Phi = solvePHL(Potential);
-	
-		eta = -(Phi/Beta)*(1+(Beta/4.0)*(1-exp(-4.0/(DebyeLength*Beta))));
-		double w(1.0);
-		if( Beta == 0.0 || eta == -1.0 ){
-			w = 1.0;
-		}else if( std::isnan(eta) ){
-			std::cout << "\nWarning! w being set to 1.0 (Assuming high B field limit) but Phi/Beta is nan while Beta != 0.";
-			w = 1.0;
-		}else{
-			w = eta/(1+eta);
-		} 
+	bool Condition = false;
+	do{
+        Phi = Potential;
+        eta = -(Phi/Beta)*(1+(Beta/4.0)*(1-exp(-4.0/(DebyeLength*Beta))));
+        w = eta/(1+eta);
+        A = 0.678*w+1.543*w*w-1.212*w*w*w;
+        double fx = ((AtomicNumber*sqrt(TemperatureRatio/MassRatio))/(A+(1.0-A)*i_star))
+                        *(1-AtomicNumber*Phi/TemperatureRatio)-exp(Phi);
+        double fx_prime = -1*((AtomicNumber*sqrt(TemperatureRatio/MassRatio))/(A+(1.0-A)*i_star))
+                        *(AtomicNumber/TemperatureRatio)-exp(Phi);
+        Potential = Phi - fx/fx_prime;
 
-	        A = 0.678*w+1.543*w*w-1.212*w*w*w;
-		
-		Arg = (A+(1.0-A)*i_star)*sqrt(MassRatio*TemperatureRatio)*exp(TemperatureRatio/AtomicNumber)/AtomicNumber;
-		if( std::isinf(Arg) ){
-			std::cout << "\nLambertW(Arg == " << Arg << ")!";
-			throw LambertWFailure();
-			return 0.0;
-		}
+        Condition = (fabs(Phi - Potential) >= Accuracy);
 
-		Potential = TemperatureRatio/AtomicNumber
-			-LambertW(Arg);
-	}
-	return Potential;
-}
-
-
-// BIBHAS Charging Test:
-// This test is designed to find the floating potential for arbitary sized dust grain
-// The calculation follows the work by R. DE Bibhas,
-// see R. DE Bibhas, Astrophys. Space Sci. 30, (1974).
-double ChargingModel::solveBIBHAS(double guess){ 
-        double MassRatio = Pdata->mi/Me;
-        double Ionization = Pdata->Z;
-        double DebyeLength=sqrt((epsilon0*Kb*Pdata->ElectronTemp)/(Pdata->ElectronDensity*pow(echarge,2)));
-        double Radius = Sample->get_radius(); // Normalised
-        double s = Radius+DebyeLength;
-        
-        double x1 = guess;
-
-//      double r = Radius*(1.0-0.17/sqrt(Ionization))*sqrt(1.0/(2.0*Ionization))*(1.0+sqrt(1.0+2.0*Ionization));
-//      double Pot_m = (Ionization*echarge*echarge/r - echarge*echarge*Radius/(2.0*(r*r-Radius*Radius))
-//                      +ehcarge*echarge*Radius/(2*r*r))/(echarge*Pdata->ElectronTemp);
-/*
-        double Coeff = Ionization*sqrt(Pdata->Ion/temp/(Pdata->ElectronTemp*MassRatio))*(s*s/(Radius*Radius));
-        double a = Coeff;
-        double b = Coeff*((s*s-1.0)/(s*s));
-        do{
-                guess = x1;
-
-                double fx = a-b*exp(guess/(s*s-1.0*1.0))-exp(guess);
-                double fxprime = -(b/(s*s-1.0*1.0))*exp(guess*Pdata->IonTemp/(Pdata->ElectronTemp*(s*s-1.0*1.0)))-exp(guess);
-                x1 = guess - fx/fxprime;
-
-        }while(fabs(guess-x1)>1e-4);// >1e-2){
-*/
-        if( Pdata->IonTemp != Pdata->ElectronTemp ){
-                std::cerr << "\nWarning! Mopel is invalid for Pdata->IonTemp != Pdata->ElectronTemp";
-        }
-        do{
-                guess = x1;
-                double u_d = sqrt(Kb*Pdata->IonTemp/(2.0*PI*MassRatio*Me))*exp(-guess)*(s*s/(Radius*Radius))
-                        *(1.0-((s*s-Radius*Radius)/(s*s))*exp(guess*Radius*Radius*Pdata->IonTemp/(Pdata->ElectronTemp*(s*s-Radius*Radius))));
-                double u_dprime = -1.0*u_d-sqrt(Kb*Pdata->IonTemp/(2.0*PI*MassRatio*Me))
-                        *exp(-guess)*exp(guess*Radius*Radius*Pdata->IonTemp/(Pdata->ElectronTemp*(s*s-Radius*Radius)));
-
-//              std::cout << "\nu_dprime = " << u_dprime;
-//              std::cout << "\nexp(-x) = " << exp(-guess);
-//              std::cout << "\nexp(x*a^2/(s^2-a^2)) = " << exp(guess*Radius*Radius*Pdata->IonTemp/(Pdata->ElectronTemp*(s*s-Radius*Radius)));
-//              std::cout << "\nU = " << sqrt(Kb*Pdata->IonTemp/(2.0*PI*MassRatio*Me));
-
-                double p = sqrt(MassRatio*Me/(2.0*Kb*Pdata->IonTemp))*u_d;
-                double p_prime = sqrt(MassRatio*Me/(2.0*Kb*Pdata->IonTemp))*u_dprime;
-                double q = sqrt((s*s/(s*s-Radius*Radius))*MassRatio*Me/(2.0*Kb*Pdata->IonTemp))*u_d;
-                double q_prime = sqrt((s*s/(s*s-Radius*Radius))*MassRatio*Me/(2.0*Kb*Pdata->IonTemp))*u_dprime;
-
-//              std::cout << "\nsqrt(MassRatio*Me/(2.0*Kb*Pdata->IonTemp)) = " << sqrt(MassRatio*Me/(2.0*echarge*Pdata->IonTemp));
-//              std::cout << "\nu_d = " << u_d;
-//              std::cout << "\nu_d_lim = " << sqrt(Kb*Pdata->IonTemp/(2.0*PI*MassRatio*Me))*exp(-guess)*(1.0-guess);
-//              std::cout << "\n\nPot = " << guess;
-//              std::cout << "\nPot_lim = " << 1.11;
-//              std::cout << "\n\nP = " << p;
-//              std::cout << "\nQ = " << q;
-//              std::cout << "\n\nP' = " << p_prime;
-//              std::cout << "\nQ' = " << q_prime;
-
-                double Coeff = Ionization*sqrt(Pdata->IonTemp/(Pdata->ElectronTemp*MassRatio))*(s*s/(Radius*Radius));
-                double a = Coeff*(exp(-p*p)+sqrt(PI)*p*(1.0+erf(p)));
-                double b = Coeff*(((s*s-Radius*Radius)/(s*s))*exp(Radius*Radius*guess*Pdata->IonTemp/(Pdata->ElectronTemp*(s*s-Radius*Radius)))
-                                *(exp(-q*q)+sqrt(PI)*q*(1.0+erf(q))));
-
-                double a_prime = Coeff*(sqrt(PI)*p_prime*(1.0+erf(p)));
-                double b_prime = Coeff*(((s*s-Radius*Radius)/(s*s))*exp(Radius*Radius*guess*Pdata->IonTemp/(Pdata->ElectronTemp*(s*s-Radius*Radius)))
-                                *sqrt(PI)*q_prime*(1.0+erf(q))+b*Radius*Radius*Pdata->IonTemp/(Coeff*Pdata->ElectronTemp*(s*s-Radius*Radius)));
-//              double b_prime = Coeff*(((s*s-Radius*Radius)/(s*s))*exp(Radius*Radius*guess*Pdata->IonTemp/(Pdata->ElectronTemp*(s*s-Radius*Radius)))
-//                              *sqrt(PI)*q_prime*(1.0+erf(q))
-//                              +(Radius*Radius*Pdata->IonTemp/(Pdata->ElectronTemp*s*s))*exp(Radius*Radius*guess*Pdata->IonTemp/(Pdata->ElectronTemp*(s*s-Radius*Radius)))
-//                              *(exp(-q*q)+sqrt(PI)*q*(1.0+erf(q))));
-
-                double fx = a-b-exp(guess);
-                double fxprime = a_prime-b_prime-exp(guess);
-                x1 = guess - fx/fxprime;
-
-        }while(fabs(guess-x1)>1e-4);// >1e-2){
-
-
-        return guess;
+	}while( Condition );
+	return -1.0*Potential;
 }
 
 double ChargingModel::DeltaTherm()const{
