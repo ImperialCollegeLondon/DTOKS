@@ -11,7 +11,9 @@ build/
 CMakeFiles/
 Plotting/
 
-bin/main
+
+bin/dtoksu
+bin/model_test
 bin/unit_test
 bin/int_test
 bin/lib*
