@@ -191,19 +191,27 @@ int DTOKSU::Run(){
 					break; // Can't do this: MaxTimeStep = j*MinTimeStep; as we change MaxTimeStep...
 				}
 
-				if( HM_ProbeTime == 1) break;			// Thermal Equilibrium Reached
+				if( HM_ProbeTime == 1 ) break;			// Thermal Equilibrium Reached
 			}
 
 			// Take a time step in the slower time process
 			D1_Debug("\n*STEP* = " << (j-1)*MinTimeStep << "\nMaxTimeStep = " << MaxTimeStep << "\nj = " << j << "\n");
 				
+			
 			if( MaxTimeStep == HeatTime ){
-				HM.Heat((j-1)*MinTimeStep); 
+				if( j > 1 )
+					HM.Heat((j-1)*MinTimeStep);
+				else
+					HM.AddTime(MinTimeStep)
 				D_Debug("\nHeat Step Taken."); 
-			}else if( MaxTimeStep == ForceTime ){	
-				FM.Force((j-1)*MinTimeStep); 
+			}else if( MaxTimeStep == ForceTime ){
+				if( j > 1 )
+					FM.Force((j-1)*MinTimeStep); 
+				else
+					FM.AddTime(MinTimeStep)
 				D_Debug("\nForce Step Taken."); 
 			}else{	std::cerr << "\nUnexpected Timescale Behaviour! (2)";	}
+
 			TotalTime += (j-1)*MinTimeStep;
 			// This is effectively 'an extra step' which is necessary because we need the last step to be charging
 			// So we set the time step to be arbitrarily small... Not the best practice ever but okay.
@@ -239,6 +247,9 @@ int DTOKSU::Run(){
 		}else if( Sample->is_gas() ){
 			std::cout << "\n\nSample has vapourised";
 			break;
+		}else if( HeatTime == 1 ){
+			std::cout << "\n\nThermal Equilibrium reached!";
+			break;
 		}
 		// ***** END OF : DETERMINE IF END CONDITION HAS BEEN REACHED ***** //
 	}
@@ -260,9 +271,9 @@ int DTOKSU::Run(){
 	}else if( Sample->is_gas() ){
 		std::cout << "\nSample has boiled, evaporated or vapourised!\n\n";
 		return 4;
-        }else if( ErrorFlag ){
-               std::cout << "\nGeneric run-time error!\n\n";
-               return 10;
+    }else if( ErrorFlag ){
+		std::cout << "\nGeneric run-time error!\n\n";
+		return 10;
 	}
 
 	std::cout << "\nFinished DTOKS-U run.";
