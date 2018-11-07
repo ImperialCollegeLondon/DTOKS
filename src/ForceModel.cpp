@@ -50,16 +50,19 @@ void ForceModel::CreateFile(std::string filename){
 	F_Debug("\tIn ForceModel::CreateFile(std::string filename)\n\n");
 	FileName=filename;
 	ModelDataFile.open(FileName);
-	ModelDataFile << std::fixed << std::setprecision(16) << std::endl;
+	ModelDataFile << std::scientific << std::setprecision(16) << std::endl;
 	ModelDataFile << "Time\tPosition\tVelocity\tRotationFreq";
 	bool PrintGravity = true; // Lol
 	if( UseModel[0] && PrintGravity ) 	ModelDataFile << "\tGravity";
 	if( UseModel[1] ) 			ModelDataFile << "\tCentrifugal";
 	if( UseModel[2] ) 			ModelDataFile << "\tLorentz";
-	if( UseModel[3] ) 			ModelDataFile << "\tIonDrag";
-	if( UseModel[4] ) 			ModelDataFile << "\tHybridIonDrag";
-	if( UseModel[5] ) 			ModelDataFile << "\tNeutralDrag";
-	if( UseModel[6] ) 			ModelDataFile << "\tRocketForce";
+	if( UseModel[3] ) 			ModelDataFile << "\tSOMLIonDrag";
+	if( UseModel[4] ) 			ModelDataFile << "\tSMOMLIonDrag";
+	if( UseModel[5] ) 			ModelDataFile << "\tDTOKSIonDrag";
+	if( UseModel[6] ) 			ModelDataFile << "\tDUSTTIonDrag";
+	if( UseModel[7] ) 			ModelDataFile << "\tHybridIonDrag";
+	if( UseModel[8] ) 			ModelDataFile << "\tNeutralDrag";
+	if( UseModel[9] ) 			ModelDataFile << "\tRocketForce";
 	
 	ModelDataFile << "\n";
 	ModelDataFile.close();
@@ -76,10 +79,13 @@ void ForceModel::Print(){
 	if( UseModel[0] && PrintGravity ) 	ModelDataFile << "\t" << Gravity(); 
 	if( UseModel[1] ) 			ModelDataFile << "\t" << Centrifugal();
 	if( UseModel[2] ) 			ModelDataFile << "\t" << LorentzForce();
-	if( UseModel[3] ) 			ModelDataFile << "\t" << DTOKSIonDrag();
-	if( UseModel[4] ) 			ModelDataFile << "\t" << HybridIonDrag();
-	if( UseModel[5] ) 			ModelDataFile << "\t" << NeutralDrag();
-	if( UseModel[6] ) 			ModelDataFile << "\t" << RocketForce();
+	if( UseModel[3] ) 			ModelDataFile << "\t" << SOMLIonDrag();
+	if( UseModel[4] ) 			ModelDataFile << "\t" << SMOMLIonDrag();
+	if( UseModel[5] ) 			ModelDataFile << "\t" << DTOKSIonDrag();
+	if( UseModel[6] ) 			ModelDataFile << "\t" << DUSTTIonDrag();
+	if( UseModel[7] ) 			ModelDataFile << "\t" << HybridIonDrag();
+	if( UseModel[8] ) 			ModelDataFile << "\t" << NeutralDrag();
+	if( UseModel[9] ) 			ModelDataFile << "\t" << RocketForce();
 	ModelDataFile << "\n";
 	ModelDataFile.close();
 	ModelDataFile.clear();
@@ -108,14 +114,14 @@ double ForceModel::ProbeTimeStep()const{
 	}
 	
 	// Check if the timestep is limited by the gyration of the particle in a magnetic field.
-	double GyromotionTimeStep = 0.1*pow(Sample->get_radius(),2)*Sample->get_density()
-			*sqrt(1-(Pdata->MagneticField.getunit()*Sample->get_velocity().getunit()))
-			/(3.0*epsilon0*Pdata->ElectronTemp*fabs(Sample->get_potential())*Pdata->MagneticField.mag3());
+	double GyromotionTimeStep = Accuracy*Sample->get_velocity().mag3()*Sample->get_mass()
+								*sqrt(1-(Pdata->MagneticField.getunit()*Sample->get_velocity().getunit()))
+								/(echarge*Pdata->MagneticField.mag3());
 
-/*	if( GyromotionTimeStep < timestep && GyromotionTimeStep > 0.0 ){
+	if( GyromotionTimeStep < timestep && GyromotionTimeStep > 0.0 ){
 		std::cout << "\ntimestep limited by magnetic field (Gyromotion)\n";
 		timestep = GyromotionTimeStep;
-	}*/
+	}
 
 	F1_Debug( "\t\tAcceleration = " << Acceleration << "\n\t\ttimestep = " << timestep << "\n");
 	assert(timestep == timestep);
@@ -176,6 +182,7 @@ void ForceModel::Force(double timestep){
 //	std::cout << "\nTe = " << Pdata->ElectronTemp; std::cin.get();
 
 	Sample->update_motion(ChangeInPosition,ChangeInVelocity,RotationalSpeedUp);
+
 	if( !ContinuousPlasma )
 		assert( Sample->get_position().getx() > 0.0 );
 	F1_Debug( "\nChangeInPosition : " << ChangeInPosition << "\nChangeInVelocity : " << ChangeInVelocity << "\nAcceleration : " << Acceleration << "\nTimeStep : " << TimeStep << "\n");
@@ -197,15 +204,21 @@ threevector ForceModel::CalculateAcceleration()const{
 	if( UseModel[0] ) Accel += Gravity();
 	if( UseModel[1] ) Accel += Centrifugal(); // Centrifugal terms. CHECK THESE TWO LINES AT SOME POINT
 	if( UseModel[2] ) Accel += LorentzForce();
-	if( UseModel[3] ) Accel += DTOKSIonDrag();
-	if( UseModel[4] ) Accel += HybridIonDrag();
-	if( UseModel[5] ) Accel += NeutralDrag();
-	if( UseModel[6] ) Accel += RocketForce();
+	if( UseModel[3] ) Accel += SOMLIonDrag();
+	if( UseModel[4] ) Accel += SMOMLIonDrag();
+	if( UseModel[5] ) Accel += DTOKSIonDrag();
+	if( UseModel[6] ) Accel += DUSTTIonDrag();
+	if( UseModel[7] ) Accel += HybridIonDrag();
+	if( UseModel[8] ) Accel += NeutralDrag();
+	if( UseModel[9] ) Accel += RocketForce();
 
 	F1_Debug( "\n\t\tg = " << Gravity() );
 	F1_Debug( "\n\t\tcentrifugal = " << Centrifugal() );
 	F1_Debug( "\n\t\tlorentzforce = " << LorentzForce() );
+	F1_Debug( "\n\t\tSOMLIonDrag = " << SOMLIonDrag() );
+	F1_Debug( "\n\t\tSMOMLIonDrag = " << SMOMLIonDrag() );
 	F1_Debug( "\n\t\tDTOKSIonDrag = " << DTOKSIonDrag() );
+	F1_Debug( "\n\t\tDUSTTIonDrag = " << DUSTTIonDrag() );
 	F1_Debug( "\n\t\tHybridIonDrag = " << HybridIonDrag() );
 	F1_Debug( "\n\t\tNeutralDrag = " << NeutralDrag() );
 	F1_Debug( "\n\t\tRocketForce = " << RocketForce() );
@@ -216,6 +229,14 @@ threevector ForceModel::CalculateAcceleration()const{
 
 threevector ForceModel::Gravity()const{
 	return Pdata->Gravity;
+}
+
+threevector ForceModel::SOMLIonDrag()const{
+	return (Pdata->PlasmaVel-Sample->get_velocity())*Pdata->mi*(1.0/sqrt(Kb*Pdata->IonTemp/Pdata->mi))*SOMLIonFlux(Sample->get_potential());
+}
+
+threevector ForceModel::SMOMLIonDrag()const{
+	return (Pdata->PlasmaVel-Sample->get_velocity())*Pdata->mi*(1.0/sqrt(Kb*Pdata->IonTemp/Pdata->mi))*SMOMLIonFlux(Sample->get_potential());
 }
 
 threevector ForceModel::HybridIonDrag()const{
@@ -296,13 +317,58 @@ threevector ForceModel::DTOKSIonDrag()const{
 	return Fid*(3/(4*PI*pow(Sample->get_radius(),3)*Sample->get_density()));
 }
 
+threevector ForceModel::DUSTTIonDrag()const{
+	F_Debug("\tIn ForceModel::DUSTTIonDrag()\n\n");
+	// Pre-define commonly used quantities
+	double Chi = Sample->get_potential(); 
+	double Tau = Pdata->IonTemp/Pdata->ElectronTemp;
+	double uz = (Pdata->PlasmaVel-Sample->get_velocity()).mag3()/sqrt(2.0*Kb*Pdata->IonTemp/Pdata->mi);
+	double uzp = uz+sqrt(-Pdata->Z*Chi/Tau);
+	double uzm = uz-sqrt(-Pdata->Z*Chi/Tau);
+	double wzp = uz*uz+Pdata->Z*Chi/Tau;
+	double wzm = uz*uz-Pdata->Z*Chi/Tau;
+
+	double CircularArea = PI*Sample->get_radius()*Sample->get_radius();
+	double G = (erf(uz)-2.0*uz*exp(-uz*uz))/(2.0*uz*uz*sqrt(PI));
+	// Predefine scattering 
+	double CoulombLogarithm = 17.0;		// Approximation of coulomb logarithm	
+	double IonScatter = 2.0*CircularArea*Pdata->mi*Pdata->IonDensity*(Pdata->PlasmaVel-Sample->get_velocity()).mag3()
+						*(Pdata->Z*Chi/Tau)*(Pdata->Z*Chi/Tau)*G*log(CoulombLogarithm);
+	double IonCollect(0.0);
+	if( Chi <= 0 ) 
+		IonCollect = CircularArea*Pdata->mi*Pdata->IonDensity*sqrt(2.0*Kb*Pdata->IonTemp/Pdata->mi)*
+				(Pdata->PlasmaVel-Sample->get_velocity()).mag3()*(1.0/(4.0*uz*uz))*
+				((1.0/sqrt(PI))*((1.0+2.0*uz*uz+(1.0-2.0*uz*uz)*sqrt(-Pdata->Z*Sample->get_potential()/Tau))*exp(-uzp*uzp)
+					+(1.0+2.0*uz*uz-(1.0-2.0*uz*uz)*sqrt(-Pdata->Z*Sample->get_potential()/Tau))*exp(-uzm*uzm))
+					+uz*(1.0+2*wzp-(1.0-2.0*wzm)/(2.0*uz*uz))*(erf(uzp)+erf(uzm)));
+	else	
+		IonCollect = CircularArea*Pdata->mi*Pdata->IonDensity*sqrt(2.0*Kb*Pdata->IonTemp/Pdata->mi)*
+				(Pdata->PlasmaVel-Sample->get_velocity()).mag3()*(1.0/(2.0*uz*uz))*
+				((1.0/sqrt(PI))*(1.0+2.0*wzp)*exp(-uz*uz)
+				+uz*(1.0+2*wzp-(1.0-2.0*wzm)/(2.0*uz*uz))*erf(uz));
+
+	return (IonScatter+IonCollect)*((Pdata->PlasmaVel-Sample->get_velocity()).getunit());
+}
+
 // Calculations for Neutral Drag
 threevector ForceModel::NeutralDrag()const{
-	F_Debug("\tIn ForceModel::DTOKSIonDrag()\n\n");
-//	return (Pdata->PlasmaVel-Sample->get_velocity())*Pdata->NeutralDensity*sqrt(2*Kb*Pdata->IonTemp*Pdata->mi)*PI
-//			*pow(Sample->get_radius(),2);
+	F_Debug("\tIn ForceModel::NeutralDrag()\n\n");
+	// Assuming OML flux of neutrals, with neutrals flowing with the background plasma
 //	return (Pdata->PlasmaVel-Sample->get_velocity())*Pdata->mi*sqrt(4*PI)*NeutralFlux()*PI*pow(Sample->get_radius(),2)*(1.0/Sample->get_mass());
-	return -1.0*Sample->get_velocity()*Pdata->mi*sqrt(4*PI)*NeutralFlux()*PI*pow(Sample->get_radius(),2)*(1.0/Sample->get_mass());
+
+	// Assuming OML flux of neutrals, neutrals stationary with respect to dust grain and not flowing with plasma
+//	return -1.0*Sample->get_velocity()*Pdata->mi*sqrt(4*PI)*NeutralFlux()*PI*pow(Sample->get_radius(),2)*(1.0/Sample->get_mass());
+
+	// (1) Pigarov A Yu, Krasheninnikov S I, Soboleva T K and Rognlien T D 2005 Phys. Plasmas 12 122508
+	// (2) Baines M J, Williams I P and Asebiomo A S 1965 Mon. Not. R. Astron. Soc. 130 63
+	// Assuming DUSTT flux of neutrals flowing 
+	//double ua = (Pdata->PlasmaVel-Sample->get_velocity()).mag3()/sqrt(2.0*Kb*Pdata->NeutralTemp/Pdata->mi);
+
+	// Assuming DUSTT flux of neutrals, neutrals stationary
+	double ua = -Sample->get_velocity().mag3()/sqrt(2.0*Kb*Pdata->NeutralTemp/Pdata->mi);
+	return PI*Sample->get_radius()*Sample->get_radius()*Pdata->mi*Pdata->NeutralDensity*sqrt(2.0*Kb*Pdata->NeutralTemp/Pdata->mi)
+			*(1.0/ua)*((1.0/sqrt(PI))*(ua+1/(2.0*ua))*exp(-ua*ua)
+			+(1.0+ua*ua-1.0/(4.0*ua*ua))*erf(ua))*-1.0*Sample->get_velocity();
 }
 
 threevector ForceModel::LorentzForce()const{
@@ -334,7 +400,6 @@ threevector ForceModel::RocketForce()const{
 		double Pv_minus = Sample->probe_vapourpressure(OldTemp);
 		returnvec = (3.0/(4.0*sqrt(2.*PI)*Sample->get_density()))*((Pv_plus-Pv_minus)/Sample->get_radius())*Pdata->MagneticField.getunit();
 	}
-	//assert( returnval == returnval );
 	return returnvec;
 }
 

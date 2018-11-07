@@ -42,9 +42,14 @@ DTOKSU_Manager::DTOKSU_Manager(int argc, char* argv[], std::string filename){
 
 
 void DTOKSU_Manager::config_message()const{
-	if( Config_Status == -1 ){ // Configuration hasn't been processed
+	
+	if( Config_Status == -3 ){ // Configuration was processed successfully
+		std::cout << "\n * DTOKS SUCCESSFULLY CONFIGURED WITHOUT BREAKUP * \n";
+	}else if( Config_Status == -2 ){ // Configuration was processed successfully
+		std::cout << "\n * DTOKS SUCCESSFULLY CONFIGURED WITH BREAKUP * \n";
+	}else if( Config_Status == -1 ){ // Configuration hasn't been processed
 		std::cout << "\n * DTOKS UNCONFIGURED * \n";
-	}if( Config_Status == 0 ){ // Configuration was processed successfully
+	}else if( Config_Status == 0 ){ // Configuration was processed successfully
 		std::cout << "\n * DTOKS SUCCESSFULLY CONFIGURED * \n";
 	}else if( Config_Status == 1 ){	// Help message was displayed
 		std::cout << "\n\n * HELP MESSAGE DISPLAYED * \n\n";
@@ -54,6 +59,10 @@ void DTOKSU_Manager::config_message()const{
 		std::cout << "\n\n * ERROR CODE 3! FAILURE CONFIGURING PLASMA DATA * \n\n";
 	}else if( Config_Status == 4 ){ // Invalid element option selected
 		std::cout << "\n\n * ERROR CODE 4! FAILURE CONFIGURING SAMPLE * \n\n";
+	}else if( Config_Status == 5 ){ // Invalid element option selected
+		std::cout << "\n\n * ERROR CODE 5! FAILURE CONFIGURING BREAKUP * \n\n";
+	}else if( Config_Status == 6 ){ // Failed to configure boundary data
+		std::cout << "\n\n * ERROR CODE 6! FAILURE CONFIGURING BOUNDARY DATA * \n\n";
 	}else{
 		std::cout << "\n\n * UNKNOWN CONFIGURATION STATUS * \n\n";
 	}
@@ -168,11 +177,14 @@ int DTOKSU_Manager::Configure(std::string Config_Filename){
 int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filename){
 	DM_Debug("\n\nIn DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filename=Config_Files/DTOKSU_Config.cfg)\n\n");
 
-	// ------------------- PARSE CONFIGURATION FILE ------------------- //
+	// Default data file prefix and plasma data directory
 	std::string MetaDataFilename = "Data/DTOKSU.txt";
 	std::string DataFilePrefix = "Data/DTOKSU";
-	std::string dir_name = "PlasmaData/";
+	std::string PlasmaData_dir = "PlasmaData/";
+	std::string WallData_dir = "PlasmaData/";
+	std::string CoreData_dir = "PlasmaData/";
 
+	// ------------------- PARSE COMMAND LINE INPUT ------------------- //
 	// Check user input for specifying the configuration file.
 	// We want other command line options to over-ride the configuration file.
 	std::vector <std::string> sources;
@@ -187,15 +199,6 @@ int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filenam
 			sources.push_back(argv[i]);
 		}
 	}
-
-	// Coordinates are r, theta, z.
-	// z is the vertical direction.
-	// r and theta map out the toroidal plane.
-	// Therefore a plot in r, z provides a poloidal cross section
-//	threevector xinit(0.147,0.01,0.1575);	// MAGNUM-PSI: Coordinates are r,theta,z
-//	threevector xinit(1.15,0.0,-1.99);// default injection right hand side
-//	threevector vinit(-1.4,0.0,0.0);		// MAGNUM-PSI
-//	threevector vinit(0.0,0.0,100.0);
 
 	// ------------------- DUST VARIABLE DEFAULTS ------------------- //
 	char Element='W';
@@ -234,7 +237,9 @@ int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filenam
 		IonSpecies  			= cfg->lookupString("plasma", "Plasma")[0];
 		Pdata.Z   			= cfg->lookupFloat("plasma", "MeanIonization");
 		if( !ContinuousPlasma ){
-			dir_name 				= cfg->lookupString("plasma", "plasmagrid.Dirname");
+			PlasmaData_dir			= cfg->lookupString("plasma", "plasmagrid.Plasmadir");
+			WallData_dir			= cfg->lookupString("plasma", "plasmagrid.Walldir");
+			CoreData_dir			= cfg->lookupString("plasma", "plasmagrid.Coredir");
 			Pgrid.device  			= cfg->lookupString("plasma", "plasmagrid.Machine")[0];
 			Pgrid.dlx 				= cfg->lookupFloat("plasma", "plasmagrid.xSpacing");
 			Pgrid.dlz	 			= cfg->lookupFloat("plasma", "plasmagrid.zSpacing");
@@ -289,25 +294,30 @@ int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filenam
 		HeatModels = 
 			{
 				cfg->lookupBoolean("heatingmodels","RadiativeCooling"), cfg->lookupBoolean("heatingmodels","EvaporativeCooling"), 
-				cfg->lookupBoolean("heatingmodels","NewtonCooling"), cfg->lookupBoolean("heatingmodels","IonHeatFlux"), 
-				cfg->lookupBoolean("heatingmodels","ElectronHeatFlux"), cfg->lookupBoolean("heatingmodels","NeutralHeatFlux"), 
-				cfg->lookupBoolean("heatingmodels","NeutralRecomb"), cfg->lookupBoolean("heatingmodels","SEE"), 
-				cfg->lookupBoolean("heatingmodels","TEE"), cfg->lookupBoolean("heatingmodels","DUSTTIonHeatFlux")
+				cfg->lookupBoolean("heatingmodels","NewtonCooling"), cfg->lookupBoolean("heatingmodels","NeutralHeatFlux"), 
+				cfg->lookupBoolean("heatingmodels","SOMLIonHeatFlux"), cfg->lookupBoolean("heatingmodels","SOMLNeutralRecombination"), 
+				cfg->lookupBoolean("heatingmodels","SMOMLIonHeatFlux"), cfg->lookupBoolean("heatingmodels","SMOMLNeutralRecombination"), 
+				cfg->lookupBoolean("heatingmodels","PHLSEE"), cfg->lookupBoolean("heatingmodels","PHLTEE"), 
+				cfg->lookupBoolean("heatingmodels","PHLElectronHeatFlux"), cfg->lookupBoolean("heatingmodels","OMLElectronHeatFlux"),
+				cfg->lookupBoolean("heatingmodels","DTOKSSEE"), cfg->lookupBoolean("heatingmodels","DTOKSTEE"), 
+				cfg->lookupBoolean("heatingmodels","DTOKSIonHeatFlux"), cfg->lookupBoolean("heatingmodels","DTOKSNeutralRecombination"), 
+				cfg->lookupBoolean("heatingmodels","DTOKSElectronHeatFlux"), cfg->lookupBoolean("heatingmodels","DUSTTIonHeatFlux") 
 			};
 		ForceModels =
 			{
 				cfg->lookupBoolean("forcemodels","Gravity"), cfg->lookupBoolean("forcemodels","Centrifugal"),
-				cfg->lookupBoolean("forcemodels","Lorentz"), cfg->lookupBoolean("forcemodels","IonDrag"),
-				cfg->lookupBoolean("forcemodels","HybridDrag"), cfg->lookupBoolean("forcemodels","NeutralDrag"),
-				cfg->lookupBoolean("forcemodels","RocketForce")
+				cfg->lookupBoolean("forcemodels","Lorentz"), cfg->lookupBoolean("forcemodels","SOMLIonDrag"), 
+				cfg->lookupBoolean("forcemodels","SMOMLIonDrag"), cfg->lookupBoolean("forcemodels","DTOKSIonDrag"),
+				cfg->lookupBoolean("forcemodels","DUSTTIonDrag"), cfg->lookupBoolean("forcemodels","HybridDrag"), 
+				cfg->lookupBoolean("forcemodels","NeutralDrag"), cfg->lookupBoolean("forcemodels","RocketForce")
 			};
 		ChargeModels =
 			{
-				cfg->lookupBoolean("chargemodels","DTOKSOML"), cfg->lookupBoolean("chargemodels","SchottkyOML"),
-				cfg->lookupBoolean("chargemodels","DTOKSWell"), cfg->lookupBoolean("chargemodels","PHL"),
+				cfg->lookupBoolean("chargemodels","SOML"), cfg->lookupBoolean("chargemodels","SMOML"),
+				cfg->lookupBoolean("chargemodels","PHL"), cfg->lookupBoolean("chargemodels","DYNAMIC"), 
 				cfg->lookupBoolean("chargemodels","OML"), cfg->lookupBoolean("chargemodels","MOML"), 
-				cfg->lookupBoolean("chargemodels","SOML"), cfg->lookupBoolean("chargemodels","SMOML"), 
-				cfg->lookupBoolean("chargemodels","MOMLWEM")
+				cfg->lookupBoolean("chargemodels","DTOKSOML"), cfg->lookupBoolean("chargemodels","DTOKSWell"), 
+				cfg->lookupBoolean("chargemodels","SchottkyOML"), cfg->lookupBoolean("chargemodels","MOMLWEM")
 			};//cfg->lookupBoolean("chargemodels","MOMLEM")
 		
 		AccuracyLevels = 
@@ -321,6 +331,26 @@ int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filenam
         cfg->destroy();
         Config_Status = 2;
         return Config_Status;
+    }
+
+    if( std::count(ChargeModels.begin(),ChargeModels.end(),true) > 1){
+    	std::cout <<"\n* More than one Charging model selected! *";
+    	Config_Status = 2;
+    	return Config_Status;
+    }
+
+    // Tell user if the simulation is self-consistent.
+    if( HeatModels[4] && HeatModels[5] && ForceModels[3] && ChargeModels[0] ){
+    	std::cout << "\n* SOML Self-Consistent Simulation! *";
+    }else if( HeatModels[6] && HeatModels[7] && ForceModels[4] && ChargeModels[1] ){
+    	std::cout << "\n* SMOML Self-Consistent Simulation! *";
+    }else if( HeatModels[8] && HeatModels[9] && HeatModels[10] && ChargeModels[2] ){
+    	std::cout << "\n* PHL Self-Consistent Simulation! *";
+    }else if( HeatModels[12] && HeatModels[13] && HeatModels[14] && HeatModels[15] 
+    			&& HeatModels[16] && ForceModels[5] && (ChargeModels[6] || ChargeModels[7]) ){
+    	std::cout << "\n* DTOKS Simulation! Non-self Consistent fluxes!*";
+    }else{
+    	std::cout << "\n* Non-self Consistent fluxes!";
     }
 
     cfg->destroy();
@@ -344,22 +374,48 @@ int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filenam
     }
 
 	// ------------------- CONFIGURE PLASMAGRID ------------------- //
+    Boundary_Data WallBound, CoreBound;
 	if( !ContinuousPlasma ){
 		std::cout << "\n\n* Full Machine Simulation! *\n\n* Creating PlasmaGrid_Data Structure *";
     	std::cout << "\n\t* Plasma:\t" << IonSpecies << "\n\t* Machine:\t" << Pgrid.device;
     	std::cout << "\n\t* xSpacing:\t" << Pgrid.dlx << "\n\t* zSpacing:\t" << Pgrid.dlz;
-    	if( configure_plasmagrid(dir_name) != 0 ){ // Failed to configure plasma data
+    	if( configure_plasmagrid(PlasmaData_dir) != 0 ){ // Failed to configure plasma data
     		std::cerr << "\nFailed to configure plasma data!";
     		Config_Status = 3;
     		return Config_Status;
     	}
-		std::cout << "\n* PlasmaGrid_Data Structure created successfully! *\n";
+    	std::cout << "\n* PlasmaGrid_Data Structure created successfully! *";
+    	if( WallData_dir != ""){
+    		if( configure_boundary(WallData_dir,"WallData.txt",WallBound) != 0 ){ // Failed to configure plasma data
+    			std::cerr << "\nFailed to configure plasma data!";
+    			Config_Status = 6;
+    			return Config_Status;
+    		}
+    		std::cout << "\n* Wall_Data Structure created successfully! *\n";
+    	}else{
+    		std::cout << "\n* No Wall Data Used! *\n";
+    	}
+    	if( CoreData_dir != "" ){
+    		if(Pgrid.device == 'p'){ // In case of magnum-PSI
+    			std::cout << "\n* Core boundary not valid for Magnum-PSI! Ignoring filepath:"
+    				<< CoreData_dir << " *\n";
+    		}else{
+    			std::cout << "\n* Trajectories ending at Core Boundary! *\n";
+    			if( configure_boundary(CoreData_dir,"CoreData.txt",CoreBound) != 0 ){ // Failed to configure plasma data
+    				std::cerr << "\nFailed to configure plasma data!";
+    				Config_Status = 6;
+    				return Config_Status;
+    			}
+    		std::cout << "\n* Core_Boundary Structure created successfully! *\n";
+    		}
+    	}else if(Pgrid.device != 'p'){ // In case of magnum-PSI
+    		std::cout << "\n* Trajectories pass through Core Boundary with interpolated plasma data!";
+    	}
+		
     }else{
     	std::cout << "\n\n* ContinuousPlasma! *";
     	std::cout << "\n* PlasmaData Structure created successfully! *\n";
     }
-
-
 
 	// ------------------- PROCESS USER-INPUT ------------------- //
 	std::cout << "\n* Processing command line input *";
@@ -401,6 +457,8 @@ int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filenam
 	else if (Element == 'F') Sample = new Iron(size,Temp,ConstModels,xinit,vinit);
 	else if (Element == 'G') Sample = new Graphite(size,Temp,ConstModels,xinit,vinit);
 	else if (Element == 'D') Sample = new Deuterium(size,Temp,ConstModels,xinit,vinit);
+	else if (Element == 'M') Sample = new Molybdenum(size,Temp,ConstModels,xinit,vinit);
+	else if (Element == 'L') Sample = new Lithium(size,Temp,ConstModels,xinit,vinit);
 	else{ 
 		std::cerr << "\nInvalid Option entered for Element";
 		Config_Status = 4;
@@ -422,7 +480,7 @@ int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filenam
 			<<Pgrid.gridtheta<<"\t"<<Pgrid.dlx<<"\t"<<Pgrid.dlz<<"\n"
 			<<"\nxmin (m)\txmax (m)\tzmin (m)\tzmax (m)\n"
 			<<Pgrid.gridxmin<<"\t\t"<<Pgrid.gridxmax<<"\t\t"<<Pgrid.gridzmin<<"\t\t"<<Pgrid.gridzmax << "\n";
-		Sim = new DTOKSU(AccuracyLevels, Sample, Pgrid, Pdata, HeatModels, ForceModels, ChargeModels);
+		Sim = new DTOKSU(AccuracyLevels, Sample, Pgrid, Pdata, WallBound, CoreBound, HeatModels, ForceModels, ChargeModels);
 	}else{
 		MetaDataFile <<"\n\n#PLASMA DATA PARAMETERS"
 			<<"\n\nNn (m^-3)\tNi (m^-3)\tNe (m^-3)\n"
@@ -434,22 +492,37 @@ int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filenam
 		Sim = new DTOKSU(AccuracyLevels, Sample, Pdata, HeatModels, ForceModels, ChargeModels);
 	}
 	MetaDataFile <<"\n\n##MODEL SWITHES\n#HEATING MODELS\n"
-		<<"RadiativeCooling:\t" << HeatModels[0] << "\n"<<"EvaporativeCooling:\t" << HeatModels[1] << "\n"
-		<<"NewtonCooling:\t\t" << HeatModels[2] << "\n"<<"NeutralHeatFlux:\t" << HeatModels[3] << "\n"
-		<<"ElectronHeatFlux:\t" << HeatModels[4] << "\n"
-		<<"IonHeatFlux:\t\t" << HeatModels[5] << "\n"<<"NeutralRecomb:\t\t" << HeatModels[6] << "\n"
-		<<"TEE:\t\t\t" << HeatModels[7] << "\n"<<"SEE:\t\t\t" << HeatModels[8] << "\n"
+		<<"RadiativeCooling:\t" << HeatModels[0] << "\nEvaporativeCooling:\t" << HeatModels[1] << "\n"
+		<<"NewtonCooling:\t\t" << HeatModels[2] << "\nNeutralHeatFlux:\t" << HeatModels[3] << "\n"
+		<<"SOMLIonHeatFlux:\t" << HeatModels[4] <<"\nSOMLNeutralRecomb:\t" << HeatModels[5] << "\n"
+		<<"SMOMLIonHeatFlux:\t" << HeatModels[6] <<"\nSMOMLNeutralRecomb:\t" << HeatModels[7] << "\n"
+		<<"PHLSEE:\t\t\t" << HeatModels[8] <<"\nPHLTEE:\t\t\t" << HeatModels[9] << "\n"
+		<<"PHLElectronHeatFlux:\t" << HeatModels[10] <<"\nOMLElectronHeatFlux:\t" << HeatModels[11] << "\n"
+		<<"DTOKSSEE:\t\t" << HeatModels[12] <<"\nDTOKSTEE:\t\t" << HeatModels[13] << "\n"
+		<<"DTOKSIonHeatFlux:\t" << HeatModels[14] <<"\nDTOKSNeutralRecomb:\t" << HeatModels[15] << "\n"
+		<<"DTOKSElectronHeatFlux:\t" << HeatModels[16] <<"\nDUSTTIonHeatFlux:\t" << HeatModels[17] << "\n"
 		<<"\n#FORCING MODELS\n"
 		<<"Gravity:\t\t" << ForceModels[0] << "\n"<<"Centrifugal:\t\t" << ForceModels[1] << "\n"
-		<<"Lorentz:\t\t" << ForceModels[2] << "\n"<<"IonDrag:\t\t" << ForceModels[3] << "\n"
-		<<"HybridDrag:\t\t" << ForceModels[4] << "\n"<<"NeutralDrag:\t\t" << ForceModels[5] << "\n"
+		<<"Lorentz:\t\t" << ForceModels[2] << "\n"<<"SOMLIonDrag:\t\t" << ForceModels[3] << "\n"
+		<<"SMOMLIonDrag:\t\t" << ForceModels[4] << "\n"<<"DTOKSIonDrag:\t\t" << ForceModels[5] << "\n"
+		<<"DUSTTIonDrag:\t\t" << ForceModels[6] << "\n"<<"HybridDrag:\t\t" << ForceModels[7] << "\n"
+		<<"NeutralDrag:\t\t" << ForceModels[8] << "\n"<<"RocketForce:\t\t" << ForceModels[9] << "\n"
 		<<"\n#CHARGING MODELS\n"
-		<<"DTOKSOML:\t\t" << ChargeModels[0] << "\n"<<"SchottkyOML:\t\t" << ChargeModels[1] << "\n" 
-		<< "DTOKSWell:\t\t" << ChargeModels[2] << "\n" << "PHL:\t\t\t" << ChargeModels[3];
+		<<"SOML:\t\t\t" << ChargeModels[0] << "\n"<<"SMOML:\t\t\t" << ChargeModels[1] << "\n" 
+		<<"PHL:\t\t\t" << ChargeModels[2] << "\n"<<"DYNAMIC:\t\t" << ChargeModels[3] << "\n" 
+		<<"OML:\t\t\t" << ChargeModels[4] << "\n"<<"MOML:\t\t\t" << ChargeModels[5] << "\n" 
+		<<"DTOKSOML:\t\t" << ChargeModels[6] << "\n"<<"DTOKSWell:\t\t" << ChargeModels[7] << "\n" 
+		<<"SchottkyOML:\t\t" << ChargeModels[8] << "\n" << "MOMLWEM:\t\t" << ChargeModels[9];
 	MetaDataFile.close();
 
 	Sim->OpenFiles(DataFilePrefix,0);
-	Config_Status = 0;
+	if( ConstModels[4] == 'n' || ConstModels[4] == 'e' ){
+		Config_Status = -3;
+	}else if( ConstModels[4] == 'r' || ConstModels[4] == 'b' ){
+		Config_Status = -2;
+	}else{
+		Config_Status = 5;
+	}
 	config_message();
 	return Config_Status;
 }
@@ -487,8 +560,8 @@ int DTOKSU_Manager::configure_plasmagrid(std::string plasma_dirname){
 		Pgrid.gridzmax = 2.0;
 		std::cout << "\n\n\tCalculation for JET" << std::endl;
 	}else if(Pgrid.device=='d'){
-		Pgrid.gridx = 83;
-		Pgrid.gridz = 50;
+		Pgrid.gridx = 141;
+		Pgrid.gridz = 301;
 		Pgrid.gridtheta=0;
 		Pgrid.gridxmin = 1.0;
 		Pgrid.gridzmin = -1.5;
@@ -514,6 +587,15 @@ int DTOKSU_Manager::configure_plasmagrid(std::string plasma_dirname){
 		Pgrid.gridzmax = 1.9;
 //		Pgrid.gridzmax = 1.0;
 		std::cout << "\n\n\t* Calculation for Magnum-PSI *\n";
+	}else if(Pgrid.device=='e'){
+		Pgrid.gridx = 141;
+		Pgrid.gridz = 301;
+		Pgrid.gridtheta=0;
+		Pgrid.gridxmin = 1.0;
+		Pgrid.gridzmin = -1.5;
+		Pgrid.gridxmax = 2.4;
+		Pgrid.gridzmax = 1.5;
+		std::cout << "\n\n\tCalculation for EAST" << std::endl;
 	}else{ 
 		std::cout << "Invalid tokamak" << std::endl;
 	}
@@ -531,6 +613,30 @@ int DTOKSU_Manager::configure_plasmagrid(std::string plasma_dirname){
 	}
 	return 0;
 }
+
+// Function to configure boundary ready for simulation. 
+// Wall data and core data are read from files in 'dirname/filename'
+// into BoundaryData&BD. Data files must be polygons (contain more than 2 points)
+int DTOKSU_Manager::configure_boundary(std::string dirname, std::string filename, Boundary_Data& BD){
+	std::ifstream BoundaryGrid_File;
+	double R_temp(0.0), Z_temp(0.0);
+	char Dummy;
+	BoundaryGrid_File.open(dirname+filename);
+	assert( BoundaryGrid_File.is_open() );
+
+	while( BoundaryGrid_File >> R_temp >> Dummy >>  Z_temp ){
+		BD.Grid_Pos.push_back( std::make_pair(R_temp,Z_temp) );
+		//std::cout << "\n" << R_temp << "\t" << Z_temp;
+		if( R_temp <= 0.0 ){
+			std::cerr << "\nError reading boundary data in DTOKSU_Manager::configure_boundary! R_temp < 0";
+			return 1;
+		}
+	}
+	assert( BD.Grid_Pos.size() > 2 );
+	BoundaryGrid_File.close();
+	return 0;
+}
+
 
 int DTOKSU_Manager::read_data(std::string plasma_dirname){
 	P_Debug("\tIn DTOKSU_Manager::read_data(std::string plasma_dirname)\n\n");
@@ -580,7 +686,7 @@ int DTOKSU_Manager::read_data(std::string plasma_dirname){
 			threevectors >> dummy_char;
 		}
 		// Now actually loop over the grid and feed in the data into the vectors
-		double convertJtoK = 7.242971666667e22 ;
+		double convertJtoK = 7.242971666667e22;
 		for(unsigned int k=0; k<=Pgrid.gridz-1; k++){
 			for(unsigned int i=0; i<=Pgrid.gridx-1; i++){
 				scalars >> Pgrid.x[i][k] >> Pgrid.z[i][k] >> Pgrid.Te[i][k]
@@ -727,7 +833,7 @@ int DTOKSU_Manager::read_MPSIdata(std::string plasma_dirname){
 // Run DTOKS Normally a single time
 int DTOKSU_Manager::Run(){
 	DM_Debug("\n\nIn DTOKSU_Manager::Run()\n\n");
-	if( Config_Status != 0 ){
+	if( Config_Status != -2 && Config_Status != -3 ){
 		std::cerr << "\nDTOKSU Is not configured! Please configure first.";
 		config_message();
 		return 1;
@@ -737,7 +843,16 @@ int DTOKSU_Manager::Run(){
 	clock_t begin = clock();	// Measure start time
 
 	// Actually running DTOKS
-	int RunStatus = Sim->Run();
+	int RunStatus(-1);
+	if( Config_Status == -3 )
+		RunStatus = Sim->Run();
+	else if( Config_Status == -2 )
+		Breakup();
+	else{
+		std::cerr << "\nBreakup Is not configured! Please configure correctly.";
+		config_message();
+		return 1;
+	}
 
 	clock_t end = clock();		// Measure end time
 	double elapsd_secs = double(end-begin)/CLOCKS_PER_SEC;	
@@ -855,10 +970,7 @@ int DTOKSU_Manager::Breakup(){
 		}
 		DM_Debug("\n***** END OF : DUST DIDN'T BREAKUP *****\n!");
 	}
-	clock_t end = clock();
-	double elapsd_secs = double(end-begin)/CLOCKS_PER_SEC;	
-	std::cout << "\n\n*****\n\nCompleted in " << elapsd_secs << "s\n";
-	std::cout << "\n\n * DTOKS COMPLETED SUCCESSFULLY * \n\n";
+
 	//	Pgrid.datadump(); // Print the plasma grid data
 	return 0;
 }

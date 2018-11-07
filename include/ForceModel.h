@@ -4,7 +4,7 @@
 #include "Model.h"
 #include "MathHeader.h" // This is weird
 
-const unsigned int FMN = 7;	// CHARGE MODEL NUMBER, the number of charge models
+const unsigned int FMN = 10;	// CHARGE MODEL NUMBER, the number of charge models
 
 class ForceModel : public Model {
 
@@ -19,7 +19,10 @@ class ForceModel : public Model {
 		// Different Force terms
 		threevector CalculateAcceleration()const;	// Sum of Force terms
 		threevector Gravity()const;
+		threevector SOMLIonDrag()const;
+		threevector SMOMLIonDrag()const;
 		threevector DTOKSIonDrag()const;
+		threevector DUSTTIonDrag()const;
 		threevector HybridIonDrag()const;
 		threevector NeutralDrag()const;
 		threevector LorentzForce()const;

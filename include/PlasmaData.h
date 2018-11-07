@@ -58,18 +58,11 @@ struct PlasmaGrid_Data{
 	double mi;			// mi is the mass of the gas (kg)
 	char device;		// device is a character specifying the machine type ('m', 'j', 'i', 'p' or 'd')
 };
-// PlasmaData():NeutralDensity(0.0), ElectronDensity(0.0), IonDensity(0.0),
-// 		IonTemp(0.0), ElectronTemp(0.0), NeutralTemp(0.0),
-// 		AmbientTemp(0.0), PlasmaVel(threevector()), Gravity(threevector()),
-// 		ElectricField(threevector()), MagneticField(threevector()){}
-// PlasmaGrid_Data():Te(std::vector< std::vector<double> >()),Ti(std::vector< std::vector<double> >()),
-// 				na0(std::vector< std::vector<double> >()), na1(std::vector< std::vector<double> >()),
-// 				po(std::vector< std::vector<double> >()), ua1(std::vector< std::vector<double> >()),
-// 				ua0(std::vector< std::vector<double> >()), bx(std::vector< std::vector<double> >()),
-// 				by(std::vector< std::vector<double> >()), bz(std::vector< std::vector<double> >()),
-// 				x(std::vector< std::vector<double> >()), z(std::vector< std::vector<double> >()),
-// 				gridflag(std::vector< std::vector<int> >()), gridx(0), gridz(0), gridtheta(0),
-// 				gridxmin(0.0), gridxmax(0.0), gridzmin(0.0), gridzmax(0.0), dlx(0.0), dlz(0.0),
-// 				mi(0.0), gas('n'), device('n'){}
+
+struct Boundary_Data{
+
+	// Plasma Parameters
+	std::vector< std::pair<double,double> > Grid_Pos;	// R, Z Position of Grid Point
+};
 
 #endif

@@ -3,7 +3,7 @@
 
 #include "Model.h"
 
-const unsigned int CMN = 9;	// CHARGE MODEL NUMBER, the number of charge models
+const unsigned int CMN = 10;	// CHARGE MODEL NUMBER, the number of charge models
 
 class ChargingModel : public Model{
 
@@ -19,10 +19,10 @@ class ChargingModel : public Model{
 		double solvePosOML(double a, double guess);
 		double solveNegSchottkyOML(double guess);
 		double solvePosSchottkyOML();
-		double solvePHL(double Phi);
+		double solvePHL(double a, double guess);
 		double solveMOML();
-		double solveSOML();
-		double solveSMOML();
+		double solveSOML(double a, double guess);
+		double solveSMOML(double a, double guess);
 		double solveMOMLWEM(double );
 		//double solveMOMLEM();
 		double DeltaTherm()const;

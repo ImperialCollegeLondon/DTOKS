@@ -3,7 +3,7 @@
 
 #include "Model.h"
 
-const unsigned int HMN = 10;	// CHARGE MODEL NUMBER, the number of charge models
+const unsigned int HMN = 18;	// CHARGE MODEL NUMBER, the number of charge models
 
 class HeatingModel : public Model{
 
@@ -23,20 +23,34 @@ class HeatingModel : public Model{
 		void Defaults(); // Sets default settings
 		double RungeKutta4(double timestep);
 
-		// Heating Models
-		const double EmissivityModel		(double DustTemperature)const;
-		const double EvaporationModel		(double DustTemperature)const;
-		const double NewtonCooling			(double DustTemperature)const;
-		const double SEE					(double DustTemperature)const;
-		const double TEE					(double DustTemperature)const;
-		const double NeutralRecombination	(double DustTemperature)const;
-		const double DTOKSIonHeatFlux		(double DustTemperature)const;
-		const double DUSTTIonHeatFlux		(double DustTemperature)const;
-		const double ElectronHeatFlux		(double DustTemperature)const;
-		const double NeutralHeatFlux		(double DustTemperature)const;
-
 		// Fluxes of particles and coefficients
-		const double EvaporationFlux		(double DustTemperature)const;
+		const double EmissivityModel			(double DustTemperature)const;
+		const double EvaporationFlux			(double DustTemperature)const;
+
+		// Heating Models
+		const double EvaporationModel			(double DustTemperature)const;
+		const double NewtonCooling				(double DustTemperature)const;
+		const double NeutralHeatFlux			(double DustTemperature)const;
+
+		const double SOMLIonHeatFlux			(double DustTemperature)const;
+		const double SOMLNeutralRecombination	(double DustTemperature)const;
+
+		const double SMOMLIonHeatFlux			(double DustTemperature)const;
+		const double SMOMLNeutralRecombination	(double DustTemperature)const;
+
+		const double PHLSEE						(double DustTemperature)const;
+		const double PHLTEE						(double DustTemperature)const;
+		const double PHLElectronHeatFlux		(double DustTemperature)const;
+
+		const double OMLElectronHeatFlux		(double DustTemperature)const;
+
+		const double DTOKSSEE					(double DustTemperature)const;
+		const double DTOKSTEE					(double DustTemperature)const;
+		const double DTOKSIonHeatFlux			(double DustTemperature)const;
+		const double DTOKSNeutralRecombination	(double DustTemperature)const;
+		const double DTOKSElectronHeatFlux		(double DustTemperature)const;
+
+		const double DUSTTIonHeatFlux			(double DustTemperature)const;
 
 	public:
 		// Constructors

@@ -10,6 +10,8 @@
 #include "Graphite.h"
 #include "Beryllium.h"
 #include "Deuterium.h"
+#include "Lithium.h"
+#include "Molybdenum.h"
 
 static struct PlasmaData PlasmaDataDefaults = {
 	1e19,				// m^-3, Neutral Density
@@ -66,12 +68,6 @@ class Model{
 		int i;								// x Position
 		int k;								// y Position
 
-		// Functions used accross different models (Heating, Charging, Forces etc.)
-		const double DTOKSIonFlux(double DustTemperature)const;
-		const double OMLIonFlux(double DustTemperature)const;
-		const double DTOKSElectronFlux(double DustTemperature)const;
-		const double OMLElectronFlux(double DustTemperature)const;
-
 		const bool locate(int &i, int &k, threevector xd)const; // Locate dust particle in the plasma grid		
 		const bool checkingrid(int i, int k)const;
 		const double interpolatepdata(const int i,const int k)const;
@@ -94,8 +90,16 @@ class Model{
 		virtual double UpdateTimeStep()=0;	// Update Time Scale of development, returns the time step
 		virtual double ProbeTimeStep()const=0;	// Check Time Scale of development, returns the time step
 
-		const double IonFlux(double DustTemperature)const;
-		const double ElectronFlux(double DustTemperature)const;
+		// Functions used to provide consistency accross different models (Heating, Charging, Forces etc.)
+		const double DTOKSIonFlux(double Potential)const;
+		const double OMLIonFlux(double Potential)const;
+		const double SOMLIonFlux(double Potential)const;
+		const double SMOMLIonFlux(double Potential)const;
+		const double PHLElectronFlux(double Potential)const;
+		
+		const double DTOKSElectronFlux(double Potential)const;
+		const double OMLElectronFlux(double Potential)const;
+
 		const double NeutralFlux()const;
 
 	public:

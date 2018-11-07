@@ -3,9 +3,12 @@
 //#define DTOKSU_DEEP_DEBUG
 #include "DTOKSU.h"
 
+
+
 DTOKSU::DTOKSU( std::array<float,MN> acclvls, Matter *& sample, PlasmaData &pdata,
 				std::array<bool,HMN> &heatmodels, std::array<bool,FMN> &forcemodels, 
-				std::array<bool,CMN> &chargemodels): Sample(sample),
+				std::array<bool,CMN> &chargemodels) : Sample(sample), 
+				WallBound(BoundaryDefaults), CoreBound(BoundaryDefaults),
 				CM("Data/breakup_cm_0.txt",acclvls[0],chargemodels,sample,pdata),
 				HM("Data/breakup_hm_0.txt",acclvls[1],heatmodels,sample,pdata),
 				FM("Data/breakup_fm_0.txt",acclvls[2],forcemodels,sample,pdata){
@@ -19,8 +22,8 @@ DTOKSU::DTOKSU( std::array<float,MN> acclvls, Matter *& sample, PlasmaData &pdat
 
 DTOKSU::DTOKSU( std::array<float,MN> acclvls, Matter *& sample, PlasmaGrid_Data &pgrid,
 				std::array<bool,HMN> &heatmodels, std::array<bool,FMN> &forcemodels, 
-				std::array<bool,CMN> &chargemodels)
-				: Sample(sample),
+				std::array<bool,CMN> &chargemodels) : Sample(sample), 
+				WallBound(BoundaryDefaults), CoreBound(BoundaryDefaults),
 				CM("Data/breakup_cm_0.txt",acclvls[0],chargemodels,sample,pgrid),
 				HM("Data/breakup_hm_0.txt",acclvls[1],heatmodels,sample,pgrid),
 				FM("Data/breakup_fm_0.txt",acclvls[2],forcemodels,sample,pgrid){
@@ -36,7 +39,24 @@ DTOKSU::DTOKSU( std::array<float,MN> acclvls, Matter *& sample, PlasmaGrid_Data 
 DTOKSU::DTOKSU( std::array<float,MN> acclvls, Matter *& sample, PlasmaGrid_Data &pgrid, 
 				PlasmaData &pdata,	std::array<bool,HMN> &heatmodels, 
 				std::array<bool,FMN> &forcemodels, std::array<bool,CMN> &chargemodels)
-				: Sample(sample),
+				: Sample(sample), WallBound(BoundaryDefaults), CoreBound(BoundaryDefaults),
+				CM("Data/breakup_cm_0.txt",acclvls[0],chargemodels,sample,pgrid,pdata),
+				HM("Data/breakup_hm_0.txt",acclvls[1],heatmodels,sample,pgrid,pdata),
+				FM("Data/breakup_fm_0.txt",acclvls[2],forcemodels,sample,pgrid,pdata){
+        D_Debug("\n\nIn DTOKSU::DTOKSU( ... )\n\n");
+        D_Debug("\n\n************************************* SETUP FINISHED ************************************* \n\n");
+
+//	D_Debug("\nHeatModels = " << heatmodels[0]);
+//	std::cout << "\nacclvls[0] = " << acclvls[0];
+	TotalTime = 0;
+	create_file("Data/df.txt");
+}
+
+DTOKSU::DTOKSU( std::array<float,MN> acclvls, Matter *& sample, PlasmaGrid_Data &pgrid, 
+				PlasmaData &pdata, Boundary_Data &wbound, Boundary_Data &cbound, 
+				std::array<bool,HMN> &heatmodels, std::array<bool,FMN> &forcemodels, 
+				std::array<bool,CMN> &chargemodels) 
+				: Sample(sample), WallBound(wbound), CoreBound(cbound),
 				CM("Data/breakup_cm_0.txt",acclvls[0],chargemodels,sample,pgrid,pdata),
 				HM("Data/breakup_hm_0.txt",acclvls[1],heatmodels,sample,pgrid,pdata),
 				FM("Data/breakup_fm_0.txt",acclvls[2],forcemodels,sample,pgrid,pdata){
@@ -81,6 +101,88 @@ void DTOKSU::print(){
 	D_Debug("\tIn DTOKSU::print()\n\n");
 	MyFile 	<< TotalTime;
 	MyFile << "\n";
+}
+
+void DTOKSU::SpecularReflection(){
+	double x = Sample->get_position().getx();
+	double y = Sample->get_position().getz();
+
+	double MinDist = 100.0;
+	int MinIndex(0),SecondMinIndex(0);
+	for (int i=0; i<WallBound.Grid_Pos.size(); i++) {
+		// Calculate distance to point i
+		double DistanceToPoint = sqrt((WallBound.Grid_Pos[i].first-x)*(WallBound.Grid_Pos[i].first-x)+
+                        (WallBound.Grid_Pos[i].second-y)*(WallBound.Grid_Pos[i].second-y));
+		if( DistanceToPoint < MinDist ){ // if this is the smallest distance so far
+			MinIndex = i; // save index of nearest point
+			MinDist = DistanceToPoint;
+		}
+		//std::cout << "\n" << i << "\t" << WallBound.Grid_Pos[i].first << "\t" << WallBound.Grid_Pos[i].first;
+	}
+
+	if( MinIndex == (WallBound.Grid_Pos.size()-1) ) // If MinIndex is last element of array
+		MinIndex = -1; // Go back to start of the array
+	double Dist1 = sqrt((WallBound.Grid_Pos[MinIndex+1].first-x)*(WallBound.Grid_Pos[MinIndex+1].first-x)+
+    	                (WallBound.Grid_Pos[MinIndex+1].second-y)*(WallBound.Grid_Pos[MinIndex+1].second-y));
+	if( MinIndex == 0 ) // If MinIndex is first element of array,
+		MinIndex = WallBound.Grid_Pos.size(); // Go to end of array
+	double Dist2 = sqrt((WallBound.Grid_Pos[MinIndex-1].first-x)*(WallBound.Grid_Pos[MinIndex-1].first-x)+
+    	                (WallBound.Grid_Pos[MinIndex-1].second-y)*(WallBound.Grid_Pos[MinIndex-1].second-y));
+	// Determine which of Dist1 or Dist2 is closer	
+	if( Dist1 < Dist2 )
+		SecondMinIndex = MinIndex+1;
+	else
+		SecondMinIndex = MinIndex-1;
+
+	double dr = WallBound.Grid_Pos[MinIndex].first-WallBound.Grid_Pos[SecondMinIndex].first;
+	double dz = WallBound.Grid_Pos[MinIndex].second-WallBound.Grid_Pos[SecondMinIndex].second;
+
+	threevector normal(dz,0.0,-1.0*dr);
+	threevector Zeroes(0.0,0.0,0.0);
+	threevector SpecularReflDir = -2.0*(normal.getunit()*Sample->get_velocity())*normal.getunit()+Sample->get_velocity();
+	threevector ReflectedVel(SpecularReflDir.getx(),Sample->get_velocity().gety(),SpecularReflDir.getz());
+
+	//std::cout << "\n" << WallBound.Grid_Pos[MinIndex].first << "\t" <<  WallBound.Grid_Pos[MinIndex].second;
+	//std::cout << "\t" << x << "\t" <<  y << "\t" << normal << "\t" << Sample->get_velocity() << "\t" << normal.getunit()*Sample->get_velocity() << "\t" << SpecularReflDir << "\t" << ReflectedVel;
+	//std::cout << "\n" << WallBound.Grid_Pos[SecondMinIndex].first << "\t" <<  WallBound.Grid_Pos[SecondMinIndex].second;
+
+	Sample->update_motion(Zeroes,ReflectedVel-Sample->get_velocity(),0.0);
+}
+
+// http://alienryderflex.com/polygon/
+bool DTOKSU::Boundary_Check(bool InOrOut){
+	Boundary_Data Edge;
+	// Determine if it's core or wall boundary
+	if( InOrOut )
+		Edge = CoreBound;
+	else
+		Edge = WallBound;
+	
+	int j=Edge.Grid_Pos.size()-1 ;
+	bool oddNodes=false;
+	double x = Sample->get_position().getx();
+	double y = Sample->get_position().getz();
+
+	for (int i=0; i<Edge.Grid_Pos.size(); i++) {
+		if ((Edge.Grid_Pos[i].second < y && Edge.Grid_Pos[j].second >= y
+			||   Edge.Grid_Pos[j].second < y && Edge.Grid_Pos[i].second >= y)
+			&&  (Edge.Grid_Pos[i].first <= x || Edge.Grid_Pos[j].first <= x)) {
+			oddNodes^=(Edge.Grid_Pos[i].first+(y-Edge.Grid_Pos[i].second)
+					/(Edge.Grid_Pos[j].second-Edge.Grid_Pos[i].second)
+					*(Edge.Grid_Pos[j].first-Edge.Grid_Pos[i].first)<x);
+		}
+		j=i; 
+	}
+	// In this case, it's a wall and the particle has gone through it,
+	// Here we implement specular refulection
+	if( !InOrOut && !oddNodes ){
+		SpecularReflection();
+		return oddNodes; // Pretend we're still inside
+	}
+	if( InOrOut )
+		return oddNodes;
+	else
+		return !oddNodes;
 }
 
 int DTOKSU::Run(){
@@ -132,7 +234,7 @@ int DTOKSU::Run(){
 		
 		if( HeatTime == 10 ){
 			D1_Debug("\nNo Net Power Region...");
-			FM.Force();
+			FM.Force(); 
 			HM.AddTime(ForceTime);
 			CM.Charge(ForceTime);
 			TotalTime += ForceTime;
@@ -160,7 +262,7 @@ int DTOKSU::Run(){
 					D1_Debug("\nHeat Step Taken.");
 					// Check that time scales haven't changed significantly whilst looping... 
 				}else if( MinTimeStep == ForceTime ){
-					FM.Force(MinTimeStep);	
+					FM.Force(MinTimeStep);
 					CM.Charge(MinTimeStep);	// This has to go here, Think break; statement
 					if( FM.new_cell() ){
 						D1_Debug("\nWe have stepped into a new cell!");
@@ -249,6 +351,12 @@ int DTOKSU::Run(){
 			break;
 		}else if( HeatTime == 1 ){
 			std::cout << "\n\nThermal Equilibrium reached!";
+			break;
+		}else if( Boundary_Check(false) ){
+			std::cout << "\n\nCollision with Wall!";
+			break;
+		}else if( Boundary_Check(true) ){
+			std::cout << "\n\nCollision with Core!";
 			break;
 		}
 		// ***** END OF : DETERMINE IF END CONDITION HAS BEEN REACHED ***** //

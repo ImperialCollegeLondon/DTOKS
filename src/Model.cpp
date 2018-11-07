@@ -106,7 +106,8 @@ void Model::update_plasmadata(PlasmaData &pdata){
 
 // Interpolate between grid points to determine plasma data
 const double Model::interpolatepdata(const int i,const int k)const{
-	Mo_Debug( "\tIn Model::interpolatepdata()\n\n");
+	Mo_Debug( "\tIn Model::interpolatepdata(const int i,const int k)const\n\n");
+	threevector vp1, vp2, E, B, gravity(0.0,0.0,-9.81);
 
 	if( PG_data->dlx != PG_data->dlz ){
 		static bool runOnce = true;
@@ -186,6 +187,49 @@ const double Model::interpolatepdata(const int i,const int k)const{
 								+sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->Ta[i+1*sgn(i_diff)][k]
 								+sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->Ta[i][k+1*sgn(k_diff)]
 								+sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->Ta[i+1*sgn(i_diff)][k+1*sgn(k_diff)]);
+		B.setx(	Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->bx[i][k]
+								+sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->bx[i+1*sgn(i_diff)][k]
+								+sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->bx[i][k+1*sgn(k_diff)]
+								+sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->bx[i+1*sgn(i_diff)][k+1*sgn(k_diff)]));
+
+		B.sety(	Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->by[i][k]
+								+sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->by[i+1*sgn(i_diff)][k]
+								+sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->by[i][k+1*sgn(k_diff)]
+								+sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->by[i+1*sgn(i_diff)][k+1*sgn(k_diff)]));
+
+		B.setz(	Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->bz[i][k]
+								+sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->bz[i+1*sgn(i_diff)][k]
+								+sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->bz[i][k+1*sgn(k_diff)]
+								+sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->bz[i+1*sgn(i_diff)][k+1*sgn(k_diff)]));
+
+		// Ion Plasma velocity parallel to the B field
+		vp1.setx(Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->ua0[i][k]
+								+sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->ua0[i+1*sgn(i_diff)][k]
+								+sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->ua0[i][k+1*sgn(k_diff)]
+								+sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->ua0[i+1*sgn(i_diff)][k+1*sgn(k_diff)])*(B.getunit().getx()));
+		vp1.sety(Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->ua0[i][k]
+								+sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->ua0[i+1*sgn(i_diff)][k]
+								+sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->ua0[i][k+1*sgn(k_diff)]
+								+sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->ua0[i+1*sgn(i_diff)][k+1*sgn(k_diff)])*(B.getunit().gety()));
+		vp1.setz(Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->ua0[i][k]
+								+sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->ua0[i+1*sgn(i_diff)][k]
+								+sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->ua0[i][k+1*sgn(k_diff)]
+								+sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->ua0[i+1*sgn(i_diff)][k+1*sgn(k_diff)])*(B.getunit().getz()));
+
+		// Electron Plasma velocity parallel to the B field
+		vp2.setx(Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->ua1[i][k]
+								+sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->ua1[i+1*sgn(i_diff)][k]
+								+sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->ua1[i][k+1*sgn(k_diff)]
+								+sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->ua1[i+1*sgn(i_diff)][k+1*sgn(k_diff)])*(B.getunit().getx()));
+		vp2.sety(Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->ua1[i][k]
+								+sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->ua1[i+1*sgn(i_diff)][k]
+								+sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->ua1[i][k+1*sgn(k_diff)]
+								+sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->ua1[i+1*sgn(i_diff)][k+1*sgn(k_diff)])*(B.getunit().gety()));
+		vp2.setz(Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->ua1[i][k]
+								+sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->ua1[i+1*sgn(i_diff)][k]
+								+sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->ua1[i][k+1*sgn(k_diff)]
+								+sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->ua1[i+1*sgn(i_diff)][k+1*sgn(k_diff)])*(B.getunit().getz()));
+
 	}else{
 		Pdata->NeutralDensity 	= PG_data->na2[i][k];  
 		Pdata->ElectronDensity 	= PG_data->na1[i][k];  
@@ -194,7 +238,39 @@ const double Model::interpolatepdata(const int i,const int k)const{
 		Pdata->ElectronTemp 	= PG_data->Te[i][k];
 		Pdata->NeutralTemp		= PG_data->Tn[i][k];
 		Pdata->AmbientTemp		= PG_data->Ta[i][k];
+
+		B.setx(PG_data->bx[i][k]);
+		B.sety(PG_data->by[i][k]);
+		B.setz(PG_data->bz[i][k]);
+
+		vp1.setx(PG_data->ua0[i][k]*(B.getunit().getx()));
+		vp1.sety(PG_data->ua0[i][k]*(B.getunit().gety()));
+		vp1.setz(PG_data->ua0[i][k]*(B.getunit().getz()));
+
+		vp2.setx(PG_data->ua1[i][k]*(B.getunit().getx()));
+		vp2.sety(PG_data->ua1[i][k]*(B.getunit().gety()));
+		vp2.setz(PG_data->ua1[i][k]*(B.getunit().getz()));
 	}
+
+	E.setx(-(PG_data->po[i+1][k]-PG_data->po[i-1][k])/(2.0*PG_data->dlx));
+	E.sety(0.0);
+	E.setz(-(PG_data->po[i][k+1]-PG_data->po[i][k-1])/(2.0*PG_data->dlz));
+
+	
+	// Setup for Magnum-PSI
+	// For Magnum PSI, Gravity is not in -z direction but has a radial & Azimuthal
+	if( PG_data->device == 'p' ){ 
+		double Theta = Sample->get_position().gety();
+		gravity.setx(-1.0*gravity.mag3()*cos(Theta));
+		gravity.sety(gravity.mag3()*sin(Theta));
+		gravity.setz(0.0);
+	}else{
+		gravity = Pdata->Gravity;
+	}
+	Pdata->PlasmaVel		= vp1;
+	Pdata->ElectricField	= E;
+	Pdata->MagneticField	= B;
+	Pdata->Gravity			= gravity;
 	return true;
 }
 
@@ -204,16 +280,15 @@ const bool Model::update_plasmadata(){
 	bool InGrid = locate(i,k,Sample->get_position());
 	if( !InGrid ) return InGrid;			// Particle has escaped simulation domain
 	if( ContinuousPlasma ) return InGrid;
-	update_fields(i,k);
-
-	Pdata->NeutralDensity 	= PG_data->na2[i][k];  
-	Pdata->ElectronDensity 	= PG_data->na1[i][k];  
-	Pdata->IonDensity 		= PG_data->na0[i][k];
-	Pdata->IonTemp			= PG_data->Ti[i][k];
-	Pdata->ElectronTemp 	= PG_data->Te[i][k];
-	Pdata->NeutralTemp		= PG_data->Tn[i][k];
-	Pdata->AmbientTemp		= PG_data->Ta[i][k];
-	//interpolatepdata(i,k);
+	// update_fields(i,k);
+	//Pdata->NeutralDensity 	= PG_data->na2[i][k];  
+	//Pdata->ElectronDensity 	= PG_data->na1[i][k];  
+	//Pdata->IonDensity 		= PG_data->na0[i][k];
+	//Pdata->IonTemp			= PG_data->Ti[i][k];
+	//Pdata->ElectronTemp 	= PG_data->Te[i][k];
+	//Pdata->NeutralTemp		= PG_data->Tn[i][k];
+	//Pdata->AmbientTemp		= PG_data->Ta[i][k];
+	interpolatepdata(i,k); //RecordPlasmadata("pd.txt");
 	return true;
 }
 
@@ -288,55 +363,114 @@ void Model::RecordPlasmadata(std::string filename){
 	PlasmaDataFile.clear();
 }
 
-const double Model::ElectronFlux(double DustTemperature)const{
-	return DTOKSElectronFlux(DustTemperature);
-//	return OMLElectronFlux(DustTemperature);
-}
-
-const double Model::IonFlux(double DustTemperature)const{
-	return DTOKSIonFlux(DustTemperature);
-//	return OMLIonFlux(DustTemperature);
-}
-
-const double Model::DTOKSIonFlux(double DustTemperature)const{
-	H_Debug("\n\tIn Model::IonFlux():");
-
-	double IonFlux=0;
-
-	if( Sample->is_positive() ) IonFlux = DTOKSElectronFlux(DustTemperature); //Positive grain, DeltaTot() > 1
-	else	IonFlux = DTOKSElectronFlux(DustTemperature)*(1-Sample->get_deltatot());
-	assert(IonFlux >= 0);
-	return IonFlux;
-}
-
-const double Model::DTOKSElectronFlux(double DustTemperature)const{
-	H_Debug("\n\tIn Model::ElectronFlux():\n\n");
-	return Pdata->ElectronDensity*exp(-Sample->get_potential())*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
-}
-
-const double Model::OMLIonFlux(double DustTemperature)const{
-	H_Debug("\n\tIn Model::IonFlux():");
-
-	double IonFlux=0;
-
-	if( Pdata->IonTemp <= 0 ){
-		static bool runOnce = true;
-		WarnOnce(runOnce,"\nWarning!  Pdata->IonTemp <= 0!");
-		return 0.0;
+const double Model::SOMLIonFlux(double Potential)const{
+	double IonThermalVelocity = sqrt((Kb*Pdata->IonTemp)/Pdata->mi);
+	double uz = (Pdata->PlasmaVel-Sample->get_velocity()).mag3()/IonThermalVelocity;
+	double Tau = Pdata->IonTemp/Pdata->ElectronTemp;
+	if( Potential >= 0.0 ){
+		double s1 = sqrt(PI)*(1.0+2.0*uz*uz)*erf(uz)/(4.0*uz)+exp(-uz*uz)/2.0;
+		double s2 = sqrt(PI)*erf(uz)/(2.0*uz);
+		return Pdata->IonDensity*(IonThermalVelocity/sqrt(2.0*PI))*
+				(s1+s2*Pdata->Z*Potential/Tau);
+	}else{
+		double uzp = uz+sqrt(-Pdata->Z*Potential/Tau);
+		double uzm = uz-sqrt(-Pdata->Z*Potential/Tau);
+		return Pdata->IonDensity*IonThermalVelocity*(1.0/(16.0*uz))*
+				((1.0+2.0*(uz*uz+Pdata->Z*Potential/Tau))*(erf(uzp)+erf(uzm))
+				+(2.0/sqrt(PI))*(uzp*exp(-uzm*uzm)+uzm*exp(-uzp*uzp)));
 	}
-	if( Sample->is_positive() ) IonFlux = Pdata->IonDensity*sqrt(Kb*Pdata->IonTemp/(2*PI*Pdata->mi))*exp(Sample->get_potential());
-	else	IonFlux = Pdata->IonDensity*sqrt(Kb*Pdata->IonTemp/(2*PI*Pdata->mi))*(1+Sample->get_potential()*(Pdata->ElectronTemp/Pdata->IonTemp));
+}
+
+const double Model::SMOMLIonFlux(double Potential)const{
+	double HeatCapacityRatio = 5.0/3.0;
+	double MassRatio = Pdata->mi/Me;
+	double Tau = Pdata->IonTemp/Pdata->ElectronTemp;
+	double IonThermalVelocity = sqrt((Kb*Pdata->IonTemp)/Pdata->mi);
+	double uz = (Pdata->PlasmaVel-Sample->get_velocity()).mag3()/IonThermalVelocity;
+
+	if( Potential >= 0.0 ){ // For negative dust, do SMOML
+		double s1 = sqrt(PI)*(1.0+2.0*uz*uz)*erf(uz)/(4.0*uz)+exp(-uz*uz)/2.0;
+		double s2 = sqrt(PI)*erf(uz)/(2.0*uz);
+		return Pdata->IonDensity*(IonThermalVelocity/sqrt(2.0*PI))*(s1+(s2*Pdata->Z/Tau)*
+			(Potential-0.5*log(2.0*PI*(1.0+HeatCapacityRatio*Tau)/MassRatio)));
+	}else{	// For Positive dust, do SOML
+		double uzp = uz+sqrt(-Pdata->Z*Potential/Tau);
+		double uzm = uz-sqrt(-Pdata->Z*Potential/Tau);
+		return Pdata->IonDensity*IonThermalVelocity*(1.0/(16.0*uz))*
+				((1.0+2.0*(uz*uz+Pdata->Z*Potential/Tau))*(erf(uzp)+erf(uzm))
+				+(2.0/sqrt(PI))*(uzp*exp(-uzm*uzm)+uzm*exp(-uzp*uzp)));
+	}
+}
+
+const double Model::PHLElectronFlux(double Potential)const{
+	double Tau = Pdata->ElectronTemp/Pdata->IonTemp;
+	double Beta = Sample->get_radius()
+			/(sqrt(PI*Pdata->ElectronTemp*Me)/(2.0*echarge*echarge*Pdata->MagneticField*Pdata->MagneticField));
+	double MassRatio = Pdata->mi/Me;
+
+	if( Beta/MassRatio > 0.01 ){
+		static bool runOnce = true;
+		WarnOnce(runOnce,"Beta/MassRatio > 0.01 in solvePHL! Model may not be valid in this range! see Fig 11. of  L. Patacchini, I. H. Hutchinson, and G. Lapenta, Phys. Plasmas 14, (2007).");
+	}
+	double AtomicNumber = Pdata->Z;	
+	double DebyeLength=sqrt((epsilon0*Kb*Pdata->ElectronTemp)/(Pdata->ElectronDensity*pow(echarge,2)));
+
+	double z = Beta/(1+Beta);
+	double i_star = 1.0-0.0946*z-0.305*z*z+0.950*z*z*z-2.2*z*z*z*z+1.150*z*z*z*z*z;
+	double eta = -(Potential/Beta)*(1.0+(Beta/4.0)*(1-exp(-4.0/(DebyeLength*Beta))));
+
+	double w(1.0);
+	if( Beta == 0.0 || eta == -1.0 ){
+		w = 1.0;
+	}else if( std::isnan(eta) ){
+		std::cout << "\nWarning! w being set to 1.0 (Assuming high B field limit) but Phi/Beta is nan while Beta != 0.";
+		w = 1.0;
+	}else{
+		w = eta/(1+eta);
+	} 
+	
+	double A = 0.678*w+1.543*w*w-1.212*w*w*w;
+
+	if( Potential >= 0.0 ){ // For negative dust, do PHL
+		return Pdata->ElectronDensity*sqrt(Kb*Pdata->ElectronTemp/(2.0*PI*Me))*(A+(1.0-A)*i_star)*exp(-Potential);
+	}else{ // For positive dust, do OML
+		return Pdata->ElectronDensity*sqrt(Kb*Pdata->ElectronTemp/(2.0*PI*Me))*(1.0+Potential);
+	}
+}
+
+const double Model::DTOKSIonFlux(double Potential)const{
+	H_Debug("\n\tIn Model::IonFlux():");
+
+	double IonFlux=0;
+
+	if( Sample->is_positive() ) IonFlux = DTOKSElectronFlux(Potential); //Positive grain, DeltaTot() > 1
+	else	IonFlux = DTOKSElectronFlux(Potential)*(1-Sample->get_deltatot());
 	assert(IonFlux >= 0);
 	return IonFlux;
 }
 
-const double Model::OMLElectronFlux(double DustTemperature)const{
+const double Model::DTOKSElectronFlux(double Potential)const{
+	H_Debug("\n\tIn Model::ElectronFlux():\n\n");
+	return Pdata->ElectronDensity*exp(-Potential)*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
+}
+
+const double Model::OMLIonFlux(double Potential)const{
+	H_Debug("\n\tIn Model::IonFlux():");
+
+	double IonFlux=0;
+
+	if( Sample->is_positive() ) IonFlux = Pdata->IonDensity*sqrt(Kb*Pdata->IonTemp/(2*PI*Pdata->mi))*exp(Potential);
+	else	IonFlux = Pdata->IonDensity*sqrt(Kb*Pdata->IonTemp/(2*PI*Pdata->mi))*(1+Potential*(Pdata->ElectronTemp/Pdata->IonTemp));
+	assert(IonFlux >= 0);
+	return IonFlux;
+}
+
+const double Model::OMLElectronFlux(double Potential)const{
 	H_Debug("\n\tIn Model::ElectronFlux():\n\n");
 	if( Sample->is_positive() ) 
-		return Pdata->ElectronDensity*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me))*(1-Sample->get_potential()*(Pdata->ElectronTemp/Pdata->IonTemp));
-
+		return Pdata->ElectronDensity*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me))*(1-Potential*(Pdata->ElectronTemp/Pdata->IonTemp));
 	else 	
-		return Pdata->ElectronDensity*exp(-Sample->get_potential())*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
+		return Pdata->ElectronDensity*exp(-Potential)*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
 }
 
 const double Model::NeutralFlux()const{

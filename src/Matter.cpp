@@ -142,7 +142,7 @@ void Matter::update_dim(){ // Assuming spherical particle.
 	}
 	St.Volume = (4*PI*pow(St.Radius,3))/3;
 	St.SurfaceArea = 4*PI*pow(St.Radius,2);
-        St.Mass = St.Density*St.Volume; 
+	St.Mass = St.Density*St.Volume; 
 
 //	assert( abs((St.Density - St.Mass/St.Volume)/St.Density) < 0.000001 ); // Sanity Check, this may be an issue
 	
@@ -168,10 +168,10 @@ void Matter::update_emissivity(){
 		}else{
 			assert(St.Temperature > 275);
 			std::string DirName, FileName("/Temp_"), TempString, txtstring(".txt");
-			if(Ec.Elem == 'w' || Ec.Elem == 'W' ) DirName = "Models/EmissivityData/EmissivityDataTungsten";
-			else if(Ec.Elem == 'f' || Ec.Elem == 'F' ) DirName = "Models/EmissivityData/EmissivityDataIron";
-			else if(Ec.Elem == 'g' || Ec.Elem == 'G' ) DirName = "Models/EmissivityData/EmissivityDataGraphite";
-			else if(Ec.Elem == 'b' || Ec.Elem == 'B' ) DirName = "Models/EmissivityData/EmissivityDataBeryllium";
+			if(Ec.Elem == 'w' || Ec.Elem == 'W' ) DirName = "EmissivityData/EmissivityDataTungsten";
+			else if(Ec.Elem == 'f' || Ec.Elem == 'F' ) DirName = "EmissivityData/EmissivityDataIron";
+			else if(Ec.Elem == 'g' || Ec.Elem == 'G' ) DirName = "EmissivityData/EmissivityDataGraphite";
+			else if(Ec.Elem == 'b' || Ec.Elem == 'B' ) DirName = "EmissivityData/EmissivityDataBeryllium";
 			std::ifstream TempFile;
 			std::stringstream ss;
 

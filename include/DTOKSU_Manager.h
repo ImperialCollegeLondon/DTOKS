@@ -36,11 +36,14 @@ class DTOKSU_Manager{
 		bool check_pdata_range()const;
 
 		int configure_plasmagrid(std::string plasma_dirname);
+		int configure_boundary(std::string dirname, std::string filename, Boundary_Data& BD);
+		int configure_coregrid(std::string wall_dirname);
 		int read_data(std::string plasma_dirname);
 		#ifdef NETCDF_SWITCH
 		int read_MPSIdata(std::string plasma_dirname);
 		#endif
-	
+		int Breakup();
+
 	public:
 		DTOKSU_Manager();
 		DTOKSU_Manager( int argc, char* argv[] );
@@ -52,8 +55,6 @@ class DTOKSU_Manager{
 		int Configure(std::string = "Config_Files/DTOKSU_Config.cfg");
 		int Configure(int argc, char* argv[], std::string = "Config_Files/DTOKSU_Config.cfg");
 
-
-		int Breakup();
 		int Run();
 };
 

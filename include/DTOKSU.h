@@ -7,6 +7,10 @@
 
 #include <algorithm>
 
+static struct Boundary_Data BoundaryDefaults = {
+	std::vector<std::pair<double,double>> ()
+};
+
 class DTOKSU{
 
 	private:
@@ -19,11 +23,16 @@ class DTOKSU{
 		ForceModel FM;				// Force Model 
 		ChargingModel CM;			// Charge Model
 
+		Boundary_Data WallBound, CoreBound;
+
 		std::ofstream MyFile;			// Output data file
 	
 		// Private Functions
 		void print();				// Write to output data file
 		void create_file(std::string filename);
+
+		void SpecularReflection();
+		bool Boundary_Check(bool InOrOut);
 
 	public:
 		static const unsigned int MN = 3;	// MODEL NUMBER, the number of physical models in DTOKS
@@ -38,6 +47,10 @@ class DTOKSU{
 		DTOKSU( std::array<float,MN> alvls, Matter *& sample, PlasmaGrid_Data &pgrid,
 				PlasmaData &pdata,	std::array<bool,HMN> &heatmodels, 
 				std::array<bool,FMN> &forcemodels, std::array<bool,CMN> &chargemodels);
+		DTOKSU( std::array<float,MN> alvls, Matter *& sample, PlasmaGrid_Data &pgrid,
+				PlasmaData &pdata, Boundary_Data &wbound, Boundary_Data &cbound,
+				std::array<bool,HMN> &heatmodels, std::array<bool,FMN> &forcemodels, 
+				std::array<bool,CMN> &chargemodels);
 
 		~DTOKSU(){
 		};
