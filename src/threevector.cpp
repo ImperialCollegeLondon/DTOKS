@@ -103,13 +103,8 @@ double threevector::getphi()const
 // Calculate a unit threevector
 threevector threevector::getunit()const
 {
-	threevector unitvec(0.0,0.0,0.0);
-	if(mag3()!=0.0){
-		unitvec.setx(xcoord/mag3());
-		unitvec.sety(ycoord/mag3());
-		unitvec.setz(zcoord/mag3());
-	}
-	return unitvec;
+	threevector unitvec(xcoord,ycoord,zcoord);
+	return unitvec*(1.0/mag3());
 }
 
 // Overload the + operator
