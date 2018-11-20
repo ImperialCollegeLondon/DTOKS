@@ -23,6 +23,7 @@ static struct PlasmaData PlasmaDataDefaults = {
 	300,				// K, Ambient Temperature
 	1.66054e-27,		// kg, Mass of ions
 	1.0,			// (1/e), Mean Ionization state of plasma
+	1.0,			// (1/mu), Mean Atomic Mass of plasma
 	threevector(),		// m s^-1, Plasma Velocity (Should eventually be normalised to sound speed cs)
 	threevector(),		// m s^-2, Acceleration due to gravity
 	threevector(),		// V m^-1, Electric field at dust location (Normalised later) 

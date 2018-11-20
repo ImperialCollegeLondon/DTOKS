@@ -38,8 +38,8 @@ class HeatingModel : public Model{
 		const double SMOMLIonHeatFlux			(double DustTemperature)const;
 		const double SMOMLNeutralRecombination	(double DustTemperature)const;
 
-		const double PHLSEE						(double DustTemperature)const;
-		const double PHLTEE						(double DustTemperature)const;
+		const double SEE						(double DustTemperature)const;
+		const double TEE						(double DustTemperature)const;
 		const double PHLElectronHeatFlux		(double DustTemperature)const;
 
 		const double OMLElectronHeatFlux		(double DustTemperature)const;

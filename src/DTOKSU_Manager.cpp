@@ -235,7 +235,7 @@ int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filenam
 		DataFilePrefix 			= cfg->lookupString("", "DataFilePrefix");
 		ContinuousPlasma		= cfg->lookupBoolean("plasma", "ContinuousPlasma");
 		IonSpecies  			= cfg->lookupString("plasma", "Plasma")[0];
-		Pdata.Z   			= cfg->lookupFloat("plasma", "MeanIonization");
+		Pdata.Z   				= cfg->lookupFloat("plasma", "MeanIonization");
 		if( !ContinuousPlasma ){
 			PlasmaData_dir			= cfg->lookupString("plasma", "plasmagrid.Plasmadir");
 			WallData_dir			= cfg->lookupString("plasma", "plasmagrid.Walldir");
@@ -297,7 +297,7 @@ int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filenam
 				cfg->lookupBoolean("heatingmodels","NewtonCooling"), cfg->lookupBoolean("heatingmodels","NeutralHeatFlux"), 
 				cfg->lookupBoolean("heatingmodels","SOMLIonHeatFlux"), cfg->lookupBoolean("heatingmodels","SOMLNeutralRecombination"), 
 				cfg->lookupBoolean("heatingmodels","SMOMLIonHeatFlux"), cfg->lookupBoolean("heatingmodels","SMOMLNeutralRecombination"), 
-				cfg->lookupBoolean("heatingmodels","PHLSEE"), cfg->lookupBoolean("heatingmodels","PHLTEE"), 
+				cfg->lookupBoolean("heatingmodels","SEE"), cfg->lookupBoolean("heatingmodels","TEE"), 
 				cfg->lookupBoolean("heatingmodels","PHLElectronHeatFlux"), cfg->lookupBoolean("heatingmodels","OMLElectronHeatFlux"),
 				cfg->lookupBoolean("heatingmodels","DTOKSSEE"), cfg->lookupBoolean("heatingmodels","DTOKSTEE"), 
 				cfg->lookupBoolean("heatingmodels","DTOKSIonHeatFlux"), cfg->lookupBoolean("heatingmodels","DTOKSNeutralRecombination"), 
@@ -313,11 +313,11 @@ int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filenam
 			};
 		ChargeModels =
 			{
-				cfg->lookupBoolean("chargemodels","SOML"), cfg->lookupBoolean("chargemodels","SMOML"),
-				cfg->lookupBoolean("chargemodels","PHL"), cfg->lookupBoolean("chargemodels","DYNAMIC"), 
-				cfg->lookupBoolean("chargemodels","OML"), cfg->lookupBoolean("chargemodels","MOML"), 
-				cfg->lookupBoolean("chargemodels","DTOKSOML"), cfg->lookupBoolean("chargemodels","DTOKSWell"), 
-				cfg->lookupBoolean("chargemodels","SchottkyOML"), cfg->lookupBoolean("chargemodels","MOMLWEM")
+				cfg->lookupBoolean("chargemodels","DYNAMIC"), cfg->lookupBoolean("chargemodels","OML"), 
+				cfg->lookupBoolean("chargemodels","MOML"), cfg->lookupBoolean("chargemodels","SOML"), 
+				cfg->lookupBoolean("chargemodels","SMOML"), cfg->lookupBoolean("chargemodels","CW"),
+				cfg->lookupBoolean("chargemodels","PHL"), cfg->lookupBoolean("chargemodels","DTOKSOML"), 
+				cfg->lookupBoolean("chargemodels","DTOKSWell"), cfg->lookupBoolean("chargemodels","MOMLWEM")
 			};//cfg->lookupBoolean("chargemodels","MOMLEM")
 		
 		AccuracyLevels = 
@@ -340,14 +340,14 @@ int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filenam
     }
 
     // Tell user if the simulation is self-consistent.
-    if( HeatModels[4] && HeatModels[5] && ForceModels[3] && ChargeModels[0] ){
+    if( HeatModels[4] && HeatModels[5] && ForceModels[3] && ChargeModels[3] ){
     	std::cout << "\n* SOML Self-Consistent Simulation! *";
-    }else if( HeatModels[6] && HeatModels[7] && ForceModels[4] && ChargeModels[1] ){
+    }else if( HeatModels[6] && HeatModels[7] && ForceModels[4] && ChargeModels[4] ){
     	std::cout << "\n* SMOML Self-Consistent Simulation! *";
-    }else if( HeatModels[8] && HeatModels[9] && HeatModels[10] && ChargeModels[2] ){
+    }else if( HeatModels[8] && HeatModels[9] && HeatModels[10] && ChargeModels[8] ){
     	std::cout << "\n* PHL Self-Consistent Simulation! *";
     }else if( HeatModels[12] && HeatModels[13] && HeatModels[14] && HeatModels[15] 
-    			&& HeatModels[16] && ForceModels[5] && (ChargeModels[6] || ChargeModels[7]) ){
+    			&& HeatModels[16] && ForceModels[5] && (ChargeModels[7] || ChargeModels[8]) ){
     	std::cout << "\n* DTOKS Simulation! Non-self Consistent fluxes!*";
     }else{
     	std::cout << "\n* Non-self Consistent fluxes!";
@@ -364,6 +364,7 @@ int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filenam
     if( IonSpecies == 'h' ){ // For Hydrogen plasma, we have hydrogen ions of mass Mp
         Pgrid.mi = Mp;
         Pdata.mi = Mp;
+        Pdata.A = 1.0;
         if( Pdata.Z > 1.0 ){
             std::cout << "\nPdata.Z < 1.0 for Hydrogen! Assuming Pdata.Z = 1.0";
         }
@@ -596,6 +597,15 @@ int DTOKSU_Manager::configure_plasmagrid(std::string plasma_dirname){
 		Pgrid.gridxmax = 2.4;
 		Pgrid.gridzmax = 1.5;
 		std::cout << "\n\n\tCalculation for EAST" << std::endl;
+	}else if(Pgrid.device=='t'){
+		Pgrid.gridx = 120;
+		Pgrid.gridz = 280;
+		Pgrid.gridtheta=0;
+		Pgrid.gridxmin = 0.2;
+		Pgrid.gridzmin = -2.0;
+		Pgrid.gridxmax = 1.4;
+		Pgrid.gridzmax = 0.8;
+		std::cout << "\n\n\tCalculation for TEST plasma" << std::endl;
 	}else{ 
 		std::cout << "Invalid tokamak" << std::endl;
 	}

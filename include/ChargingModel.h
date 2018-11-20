@@ -13,19 +13,19 @@ class ChargingModel : public Model{
 		std::string FileName;						// Variable to hold data file name
 		
 		void Print();			// Write to output data file
-
+		void Test();			// Test all charging models
 		
 		double solveOML(double a, double guess);
 		double solvePosOML(double a, double guess);
-		double solveNegSchottkyOML(double guess);
-		double solvePosSchottkyOML();
-		double solvePHL(double a, double guess);
+		double solvePHL(double guess);
+		double solveCW(double guess);
 		double solveMOML();
-		double solveSOML(double a, double guess);
-		double solveSMOML(double a, double guess);
+		double solveSOML(double guess);
+		double solveSMOML(double guess);
 		double solveMOMLWEM(double );
 		//double solveMOMLEM();
 		double DeltaTherm()const;
+		double ThermFluxSchottky(double Potential)const;
 		double DeltaSec()const;
 
 	public:

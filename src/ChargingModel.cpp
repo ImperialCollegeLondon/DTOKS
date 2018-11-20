@@ -44,30 +44,60 @@ ChargingModel::ChargingModel(std::string filename, float accuracy, std::array<bo
 
 void ChargingModel::CreateFile(std::string filename){
 	C_Debug("\tIn ChargingModel::CreateFile(std::string filename)\n\n");
+	std::cout << "\nTime\tOML\t\tOML\tMOML\tSOML\t\tSMOML\t\tCW\t\tPHL\t\tDTOKSOML\t\tDTOKSWell\n";//\t\tMOMLWEM\n");
 	FileName = filename;
 	ModelDataFile.open(FileName);
 	ModelDataFile << std::scientific << std::setprecision(16) << std::endl;
-	ModelDataFile << "Time\tChargeOfGrain";
-	ModelDataFile << "\tPositive\tDeltaTot\tPotential";
-	ModelDataFile << "\n";
+	ModelDataFile << "Time\t\n";
 	ModelDataFile.close();
 	ModelDataFile.clear();
 	Print();
 }
 
 void ChargingModel::Print(){
-	C_Debug("\tIn ChargingModel::Print()\n\n");
+	C_Debug("\tIn ChargingModel::Print()\n\n";
 	ModelDataFile.open(FileName,std::ofstream::app);
 	ModelDataFile << TotalTime << "\t" << -(4.0*PI*epsilon0*Sample->get_radius()*Sample->get_potential()*Kb*Pdata->ElectronTemp)/(echarge*echarge);
 	if( Sample->is_positive() )  ModelDataFile << "\tPos";
 	if( !Sample->is_positive() ) ModelDataFile << "\tNeg";
-	ModelDataFile << "\t" << Sample->get_deltatot();
-	ModelDataFile << "\t" << Sample->get_potential();
-	ModelDataFile << "\n";
+	ModelDataFile << "\t" << Sample->get_deltatot() << "\t" << Sample->get_potential() << "\n";
+	//Test();
 	ModelDataFile.close();
 	ModelDataFile.clear();
 }
 
+void ChargingModel::Test(){
+	double DSec = DeltaSec();
+	double DTherm = DeltaTherm();
+
+	std::cout << "\n"; std::cout << Sample->get_temperature()); std::cout << "\t";
+	std::cout << solveOML(DSec+DTherm,Sample->get_potential())); std::cout << "\t";
+	std::cout << solveMOML()); std::cout << "\t";
+	std::cout << solveSOML(Sample->get_potential())); std::cout << "\t";
+	std::cout << solveSMOML(Sample->get_potential())); std::cout << "\t";
+	std::cout << solveCW(Sample->get_potential())); std::cout << "\t";
+	std::cout << solvePHL(Sample->get_potential())); std::cout << "\t";
+	
+	double Potential(0.0);
+	if( (DSec + DTherm) >= 1.0 ){ 	// If electron emission yield exceeds unity, we have potential well...
+					// Take away factor of temperature ratios for depth of well
+					// This is not explained further...
+		Potential = solveOML( 0.0, Sample->get_potential()) 
+				- (Kb*Sample->get_temperature())/(Pdata->ElectronTemp*Kb); 
+	}else{ // If the grain is negative...
+		// Calculate the potential with the normal current balance including electron emission
+		Potential = solveOML( DSec + DTherm,Sample->get_potential());
+		if( Potential < 0.0 ){
+			// But! If it's now positive, our assumptions must be wrong!
+			// So now we assume it's positive and calculate the potential with a well.
+			Potential = solveOML(0.0,Sample->get_potential())-(Kb*Sample->get_temperature())
+					/(Pdata->ElectronTemp*Kb);
+		}
+	}
+	std::cout << Potential); std::cout << "\t";
+	std::cout << solveOML(0.0,Sample->get_potential())-Sample->get_temperature()/Pdata->ElectronTemp); std::cout << "\n";
+	//std::cout << solveMOMLWEM(Sample->get_potential())); std::cout << "\n");
+}
 double ChargingModel::ProbeTimeStep()const{
 	C_Debug( "\tIn ChargingModel::ProbeTimeStep()\n\n" );
 
@@ -114,46 +144,77 @@ void ChargingModel::Charge(double timestep){
 	double DTherm = 0.0;
 
 	double Potential;
-	if( UseModel[0] ){	// SOML Charging model
-		DSec = DeltaSec();
-		DTherm = DeltaTherm();
-		Potential = solveSOML(DSec+DTherm, Sample->get_potential());
-
-	}else if( UseModel[1] ){	// SMOML Charging model
-		DSec = DeltaSec();
-		DTherm = DeltaTherm();
-		Potential = solveSMOML(DSec+DTherm, Sample->get_potential());
-
-	}else if( UseModel[2] ){	// In this case, use Hutchinson, Patterchini and Lapenta
-		DSec = DeltaSec();
-		DTherm = DeltaTherm();
-		Potential = solvePHL(DSec+DTherm, Sample->get_potential());
-
-	}else if( UseModel[3] ){	// Dynamically choose charging model
+	if( UseModel[0] ){	// Dynamically choose charging model
 		double DebyeRatio = Sample->get_radius()/sqrt((epsilon0*Kb*Pdata->ElectronTemp)/(Pdata->ElectronDensity*pow(echarge,2)));
 		double Betae = Sample->get_radius()
-			/(sqrt(PI*Pdata->ElectronTemp*Me)/(2.0*echarge*echarge*Pdata->MagneticField*Pdata->MagneticField));
+			/(sqrt(PI*Kb*Pdata->ElectronTemp*Me/(2.0*echarge*echarge*Pdata->MagneticField.mag3()*Pdata->MagneticField.mag3())));
+		DSec = DeltaSec();
+		DTherm = ThermFluxSchottky(Potential)/OMLElectronFlux(Sample->get_potential());
+		if( (DSec+DTherm) <= Accuracy ){// Emission IS NOT important
+			if( Betae <= 0.01*Accuracy ){ // electrons are un-magnetised
+				// Chris-Willis fit to OM Theory
+				//std::cout << "\nSolving CW!";
+				Potential = solveCW(Sample->get_potential());
 
-		if( DebyeRatio <= 0.1 && Betae <= 0.01 ){ // Unmagnetised, small dust grains
-			Potential = solveSOML(0.0, Sample->get_potential());
-		}else if( DebyeRatio > 0.1 && Betae <= 0.01 ){ // Unmagnetised, large dust grains
-			Potential = solveSMOML(0.0, Sample->get_potential());
-		}else if( DebyeRatio <= 0.1 && Betae > 0.01 ){ // Magnetised, small dust grains
-			Potential = solvePHL(0.0, Sample->get_potential());
-		}else if( DebyeRatio <= 0.1 && Betae > 0.01 ){ // Magnetised, large dust grains!!!
-			Potential = solvePHL(0.0, Sample->get_potential());
+			}else{ // electrons are magnetised
+				// THS fit to POT and DiMPl results DOESN'T EXIST YET
+				// So instead, we do PHL
+				//std::cout << "\nSolving PHL!";
+				Potential = solvePHL(Sample->get_potential());
+				if( Sample->get_potential() >= 0.0 ){
+					DTherm = Richardson*pow(Sample->get_temperature(),2)*
+						exp(-echarge*Sample->get_workfunction()/(Kb*Sample->get_temperature()))
+						/(echarge*PHLElectronFlux(Sample->get_potential()));
+				}else{	// OML Electron flux, SOML Ion Flux
+					DTherm = Richardson*pow(Sample->get_temperature(),2)*(1.0-Sample->get_potential()
+							*(Pdata->ElectronTemp/Sample->get_temperature()))
+							*exp((-echarge*Sample->get_workfunction()+Sample->get_potential()*Kb*Pdata->ElectronTemp)
+							/(Kb*Sample->get_temperature()))/(echarge*PHLElectronFlux(Sample->get_potential()));
+				}
+			}
+		}else{ // Emission IS important
+			if( DebyeRatio <= 0.1*Accuracy ){ // Small dust grains wrt the debye length
+				// OMLWEM like Nikoleta's theory MOML-EM, DOESN'T EXIST YET
+				// So instead, we do SOMLWEM
+				//std::cout << "\nSolving SOMLWEM!";
+				Potential = solveSOML( Sample->get_potential());
+			}else{ // large dust grains wrt the debye length
+				// MOML-EM since emission is far more important than magnetic field effects
+				// HASN'T BEEN IMPLEMENTED YET, solve SMOMLWEM
+				//std::cout << "\nSolving SMOMLWEM!";
+				Potential = solveSMOML(Sample->get_potential());
+			}
 		}
-	}else if( UseModel[4] ){	// OML Charging model
+		
+	}else if( UseModel[1] ){	// OML Charging model
 		Potential = solveOML(0.0,Potential);
 		if( Potential < 0 ){ // In this case we have a positive grain!
 			Potential = solvePosOML( 0.0, Sample->get_potential());
 		}
-	}else if( UseModel[5] ){	// MOML Charging model
+	}else if( UseModel[2] ){	// MOML Charging model
 		Potential = solveMOML();
 		if( Potential < 0 ){ // In this case we have a positive grain!
 			Potential = solvePosOML( 0.0, Sample->get_potential());
 		}
-	}else if( UseModel[6] ){ // Original DTOKS Charging scheme
+	}else if( UseModel[3] ){	// SOML Charging model
+
+		Potential = solveSOML(Sample->get_potential());
+		DSec = DeltaSec();
+		DTherm = ThermFluxSchottky(Potential);
+	}else if( UseModel[4] ){	// SMOML Charging model
+		Potential = solveSMOML(Sample->get_potential());
+		DSec = DeltaSec();
+		DTherm = ThermFluxSchottky(Potential);
+	}else if(UseModel[5] ){		// CW Charging Model, Chris willis fit to Sceptic results
+		Potential = solveCW(Sample->get_potential());
+		DSec = DeltaSec();
+		DTherm = ThermFluxSchottky(Potential);
+	}else if( UseModel[6] ){	// In this case, use Hutchinson, Patterchini and Lapenta
+		Potential = solvePHL(Sample->get_potential());
+		DSec = DeltaSec();
+		DTherm = ThermFluxSchottky(Potential);
+
+	}else if( UseModel[7] ){ // Original DTOKS Charging scheme
 //		WARNING! THIS SCHEME FOR THE CHARGING MODEL CREATES DISCONTINUITIES WHEN FORMING A WELL!
 		DSec = DeltaSec();
 		DTherm = DeltaTherm();
@@ -172,23 +233,11 @@ void ChargingModel::Charge(double timestep){
 						/(Pdata->ElectronTemp*Kb);
 			}
 		}
-	}else if( UseModel[7] ){ // In this case, maintain a potential well for entire temperature range
+	}else if( UseModel[8] ){ // In this case, maintain a potential well for entire temperature range
 		Potential = solveOML( 0.0, Sample->get_potential()) 
 			- Kb*Sample->get_temperature()/(Pdata->ElectronTemp*Kb);
 		if( Potential < 0 ){ // In this case we have a positive grain! Assume well disappears
 			Potential = solvePosOML( 0.0, Sample->get_potential());
-		}
-	}else if( UseModel[8] ){ // 
-		// Assume the grain is negative and calculate potential
-		DSec = DeltaSec();
-		DTherm = DeltaTherm();
-		if ( (DSec + DTherm) >= 1.0 ){ // If dust grain is actually positive, (negative normalised potential) recalculate it...
-			Potential = solvePosSchottkyOML(); // Quasi-neutrality assumed, we take ni as ni=ne
-		}else{
-			Potential = solveNegSchottkyOML(0.0);
-			if( Potential < 0.0 ){
-				Potential = solvePosSchottkyOML();
-			}
 		}
 	}else if( UseModel[9] ){	// MOMLWEM Charging model
 		DSec = DeltaSec();
@@ -227,184 +276,259 @@ void ChargingModel::Charge(){
 // or
 // R. D. Smirnov, A. Y. Pigarov, M. Rosenberg, S. I. Krasheninnikov, and D. a Mendis, 
 // Plasma Phys. Control. Fusion 49, 347 (2007). Equation [1] & [2] 
-double ChargingModel::solveSOML(double a, double guess){
-	C_Debug("\tIn ChargingModel::solveSOML(double a, double guess)\n\n");
+double ChargingModel::solveSOML(double guess){
+	C_Debug("\tIn ChargingModel::solveSOML(double guess)\n\n");
 
 	double IonThermalVelocity = sqrt((Kb*Pdata->IonTemp)/Pdata->mi);
 	double Tau = Pdata->IonTemp/Pdata->ElectronTemp;
 	double uz = (Pdata->PlasmaVel-Sample->get_velocity()).mag3()/IonThermalVelocity;
 
 	
-	double IonFluxDiff(0.0);
-	if( guess >= 0.0 ){
-		IonFluxDiff = (1.0/4.0)*Pdata->IonDensity*Pdata->Z*
-			(IonThermalVelocity/uz)*Pdata->Z*erf(uz)/Tau;
-	}else{
-		double uzp = uz+sqrt(-Pdata->Z*guess/Tau);
-		double uzm = uz-sqrt(-Pdata->Z*guess/Tau);
-		IonFluxDiff = Pdata->IonDensity*Pdata->Z*
-			IonThermalVelocity*(1.0/(16.0*uz))*(2.0*(Pdata->Z/Tau)*(erf(uzp)+erf(uzm))
-				+(1.0+2.0*(uz*uz+Pdata->Z*guess/Tau))*sqrt(Pdata->Z/(Tau*PI*guess))*(exp(-uzm*uzm)-exp(-uzp*uzp))
-				+(1.0/sqrt(PI))*sqrt(Pdata->Z/(Tau*guess))*(2.0*uz*uz+2.0*Pdata->Z*guess/Tau+1.0)*(exp(-uzp*uzp)-exp(-uzm*uzm)));
-			//std::cout << "\n" << (1.0+2.0*(uz*uz+Pdata->Z*guess/Tau))*sqrt(Pdata->Z/(Tau*PI*guess))*(exp(-uzm*uzm)-exp(-uzp*uzp)) << "\t" 
-			//	<< (1.0/sqrt(PI))*sqrt(Pdata->Z/(Tau*guess))*(2.0*uz*uz+2.0*Pdata->Z*guess/Tau+1.0)*(exp(-uzp*uzp)-exp(-uzm*uzm));
-	}
+	double IonFluxDiff(0.0), ElectronFluxDiff(0.0), x1(0.0), dT(0.0), dTdiff(0.0);
+	int i(0);
+	double guessinit = guess;
+	do{
+		if( i > 0 ) // If first time in loop, don't update guess. Avoids numerical instabilities.
+			guess = x1;
+		if( i == 1000 ){ // Too many loops! Maybe we need to flip sign?
 
-	double x1 = guess - ( ((1.0-a)*OMLElectronFlux(guess) - Pdata->Z*SOMLIonFlux(guess))/((a-1)*OMLElectronFlux(guess) - IonFluxDiff ) );
-	//std::cout << "\n" << guess << "\t" << x1 << "\t" << guess << "\t" << OMLElectronFlux(guess) << "\t" << SOMLIonFlux(guess) << "\t" << IonFluxDiff;
-	
-	while( fabs(guess-x1) > Accuracy ){
-		guess = x1;
-
-		//std::cout << "\n" << guess << "\t" << x1 << "\t" << guess << "\t" << OMLElectronFlux(guess) << "\t" << SOMLIonFlux(guess) << "\t" << IonFluxDiff;
-		if( guess >= 0.0 ){
-			IonFluxDiff = (1.0/4.0)*Pdata->IonDensity*Pdata->Z*
-				(IonThermalVelocity/uz)*Pdata->Z*erf(uz)/Tau;
-		}else{
-			double uzp = uz+sqrt(-Pdata->Z*guess/Tau);
-			double uzm = uz-sqrt(-Pdata->Z*guess/Tau);
-			IonFluxDiff = Pdata->IonDensity*Pdata->Z*
-				IonThermalVelocity*(1.0/(4.0*uz))*(2.0*(Pdata->Z/Tau)*(erf(uzp)+erf(uzm))
-					+(1.0+2.0*(uz*uz+Pdata->Z*guess/Tau))*sqrt(Pdata->Z/(Tau*PI*guess))*(exp(-uzm*uzm)-exp(-uzp*uzp))
-					+sqrt(Pdata->Z/(PI*Tau*guess))*(2.0*uz*uz-2.0*Pdata->Z*guess/Tau+1.0)*(exp(-uzp*uzp)-exp(-uzm*uzm)));
-			//std::cout << "\n" << (1.0+2.0*(uz*uz+Pdata->Z*guess/Tau))*sqrt(Pdata->Z/(Tau*PI*guess))*(exp(-uzm*uzm)-exp(-uzp*uzp)) << "\t" 
-			//	<< (1.0/sqrt(PI))*sqrt(Pdata->Z/(Tau*guess))*(2.0*uz*uz+2.0*Pdata->Z*guess/Tau+1.0)*(exp(-uzp*uzp)-exp(-uzm*uzm));
+			std::cerr << "\nError in ChargingModel::solveSOML()! Newton Rhapson Method didn't converge to accuracy: " << Accuracy;
+			return 0.0;
 		}
 
-		//std::cin.get();
-		x1 = guess - ( (( 1.0-a)*OMLElectronFlux(guess) - Pdata->Z*SOMLIonFlux(guess))/((a-1)*OMLElectronFlux(guess) - IonFluxDiff ) );
-	}
+		if( guessinit >= 0.0 ){ // OML Electron flux, SOML Ion flux
+			if( uz == 0.0 ){
+				IonFluxDiff = Pdata->IonDensity*(IonThermalVelocity/sqrt(2.0*PI))*Pdata->Z/Tau;
+			}else{
+				IonFluxDiff = (Pdata->IonDensity*IonThermalVelocity/(2.0*sqrt(2.0)*uz))*
+					Pdata->Z*erf(uz)/Tau;
+			}
+			ElectronFluxDiff = -OMLElectronFlux(fabs(guess));
+			dT = Richardson*pow(Sample->get_temperature(),2)*exp(-echarge*Sample->get_workfunction()/(Kb*Sample->get_temperature()))/echarge;
+			dTdiff = 0.0;
+		}else{ // OML Electron flux, SOML Ion flux
+			double uzp = uz+sqrt(-Pdata->Z*guess/Tau);
+			double uzm = uz-sqrt(-Pdata->Z*guess/Tau);
+			if( uz == 0.0 ){
+				IonFluxDiff = (Pdata->ElectronTemp/Pdata->IonTemp)*SOMLIonFlux(guess);
+			}else{
+				IonFluxDiff = Pdata->IonDensity*
+					IonThermalVelocity*(1.0/(4.0*sqrt(2.0)*uz))*(Pdata->Z/Tau)*(erf(uzp)+erf(uzm));
+			}
+			
+			ElectronFluxDiff = -Pdata->ElectronDensity*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
+			
+			dTdiff = (Pdata->ElectronTemp/Sample->get_temperature())*(dT-
+					Richardson*pow(Sample->get_temperature(),2)
+					*exp((-echarge*Sample->get_workfunction()-guess*Kb*Pdata->ElectronTemp)
+					/(Kb*Sample->get_temperature()))/echarge);
+		}
+
+		x1 = guess - ( (( 1.0-DeltaSec())*OMLElectronFlux(guess) - dT - SOMLIonFlux(guess))
+			/((1.0-DeltaSec())*ElectronFluxDiff - dTdiff - IonFluxDiff ) );
+		i ++;
+	}while( fabs(guess-x1) > Accuracy );
+	assert( dT != INFINITY );
 	return guess;
 }
 
 // Solve the shifted orbital motion limited potential for samll dust grains.
 // See drews Thesis, pg 55
 // https://spiral.imperial.ac.uk/bitstream/10044/1/32003/1/Thomas-D-2016-PhD-thesis.pdf
-double ChargingModel::solveSMOML(double a, double guess){
-	C_Debug("\tIn ChargingModel::solveSMOML(double a, double guess)\n\n");
+double ChargingModel::solveSMOML(double guess){
+	C_Debug("\tIn ChargingModel::solveSMOML(double guess)\n\n");
 
 	double IonThermalVelocity = sqrt((Kb*Pdata->IonTemp)/Pdata->mi);
 	double Tau = Pdata->IonTemp/Pdata->ElectronTemp;
 	double uz = (Pdata->PlasmaVel-Sample->get_velocity()).mag3()/IonThermalVelocity;
 	
 	
-	double IonFluxDiff(0.0);
-	double x1(0.0);
+	double IonFluxDiff(0.0), ElectronFluxDiff(0.0), x1(0.0), dT(0.0), dTdiff(0.0);
+	int i(0);
+	double guessinit = guess;
+	do{
+		if( i > 0 ) // If first time in loop, don't update guess. Avoids numerical instabilities.
+			guess = x1;
 
-	if( guess >= 0.0 ){ // OML Electron flux, SMOML Ion Flux
-		IonFluxDiff = Pdata->IonDensity*Pdata->Z*(IonThermalVelocity/sqrt(2.0*PI))*sqrt(PI)*erf(uz)/(Tau*2.0*uz);
-		x1 = guess - ( ((1.0-a)*OMLElectronFlux(guess) - Pdata->Z*SMOMLIonFlux(guess))/((a-1)*OMLElectronFlux(guess) - IonFluxDiff ) );
-	}else{ // OML Electron flux, SOML Ion Flux
-		double uzp = uz+sqrt(-Pdata->Z*guess/Tau);
-		double uzm = uz-sqrt(-Pdata->Z*guess/Tau);
-		IonFluxDiff = Pdata->IonDensity*Pdata->Z*IonThermalVelocity*(1.0/(16.0*uz))*(2.0*(Pdata->Z/Tau)*(erf(uzp)+erf(uzm))
-				+(1.0+2.0*(uz*uz+Pdata->Z*guess/Tau))*sqrt(Pdata->Z/(Tau*PI*guess))*(exp(-uzm*uzm)-exp(-uzp*uzp))
-				+(1.0/sqrt(PI))*sqrt(Pdata->Z/(Tau*guess))*(2.0*uz*uz+2.0*Pdata->Z*guess/Tau+1.0)*(exp(-uzp*uzp)-exp(-uzm*uzm)));
-		x1 = guess - ( ((1.0-a)*OMLElectronFlux(guess) - Pdata->Z*SMOMLIonFlux(guess))/((a-1)*OMLElectronFlux(guess) - IonFluxDiff ) );
-	}
-	
-	while( fabs(guess-x1) > Accuracy ){
-		guess = x1;
-
-		if( guess >= 0.0 ){  // PHL Electron flux, SMOML Ion Flux
-			IonFluxDiff = Pdata->IonDensity*Pdata->Z*(IonThermalVelocity/sqrt(2.0*PI))*sqrt(PI)*erf(uz)/(Tau*2.0*uz);
-			x1 = guess - ( ((1.0-a)*OMLElectronFlux(guess) - Pdata->Z*SMOMLIonFlux(guess))/((a-1)*OMLElectronFlux(guess) - IonFluxDiff ) );
+		if( i == 2000 ){
+			std::cerr << "\nError in ChargingModel::solveSMOML()! Newton Rhapson Method didn't converge to accuracy: " << Accuracy;
+			return 0.0;
+		}
+		if( guessinit >= 0.0 ){  // OML Electron flux, SMOML Ion Flux
+			if( uz == 0.0 ){
+				IonFluxDiff = Pdata->IonDensity*(IonThermalVelocity/sqrt(2.0))*(Pdata->Z/Tau);
+			}else{
+				IonFluxDiff = (Pdata->IonDensity*IonThermalVelocity/(2.0*sqrt(2.0)*uz))*
+					Pdata->Z*erf(uz)/Tau;
+			}
+			ElectronFluxDiff = -OMLElectronFlux(guess);
+			dT = Richardson*pow(Sample->get_temperature(),2)*exp(-echarge*Sample->get_workfunction()/(Kb*Sample->get_temperature()))/echarge;
+			dTdiff = 0.0;
 		}else{	// OML Electron flux, SOML Ion Flux
 			double uzp = uz+sqrt(-Pdata->Z*guess/Tau);
 			double uzm = uz-sqrt(-Pdata->Z*guess/Tau);
-			IonFluxDiff = Pdata->IonDensity*Pdata->Z*IonThermalVelocity*(1.0/(16.0*uz))*(2.0*(Pdata->Z/Tau)*(erf(uzp)+erf(uzm))
-					+(1.0+2.0*(uz*uz+Pdata->Z*guess/Tau))*sqrt(Pdata->Z/(Tau*PI*guess))*(exp(-uzm*uzm)-exp(-uzp*uzp))
-					+(1.0/sqrt(PI))*sqrt(Pdata->Z/(Tau*guess))*(2.0*uz*uz+2.0*Pdata->Z*guess/Tau+1.0)*(exp(-uzp*uzp)-exp(-uzm*uzm)));
-			x1 = guess - ( ((1.0-a)*OMLElectronFlux(guess) - Pdata->Z*SMOMLIonFlux(guess))/((a-1)*OMLElectronFlux(guess) - IonFluxDiff ) );
+			if( uz == 0.0 ){
+				IonFluxDiff = Pdata->IonDensity*(IonThermalVelocity/sqrt(2.0))*(Pdata->Z/Tau);
+			}else{
+				IonFluxDiff = Pdata->IonDensity*
+					IonThermalVelocity*(1.0/(4.0*sqrt(2.0)*uz))*(Pdata->Z/Tau)*(erf(uzp)+erf(uzm));
+			}
+			
+			ElectronFluxDiff = -Pdata->ElectronDensity*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
+			
+			dT = Richardson*pow(Sample->get_temperature(),2)*(1.0-guess
+					*(Pdata->ElectronTemp/Sample->get_temperature()))
+					*exp((-echarge*Sample->get_workfunction()-guess*Kb*Pdata->ElectronTemp)
+					/(Kb*Sample->get_temperature()))/echarge;
+			dTdiff = (Pdata->ElectronTemp/Sample->get_temperature())*(dT-
+					Richardson*pow(Sample->get_temperature(),2)
+					*exp((-echarge*Sample->get_workfunction()-guess*Kb*Pdata->ElectronTemp)
+					/(Kb*Sample->get_temperature()))/echarge);
 		}
-	}
+
+
+		x1 = guess - ( ((1.0 - DeltaSec())*OMLElectronFlux(guess) - dT - SMOMLIonFlux(guess))
+			/((1.0-DeltaSec())*ElectronFluxDiff - dTdiff - IonFluxDiff ) );
+		i ++;
+
+	}while( fabs(guess-x1) > Accuracy );
+	assert( dT != -INFINITY );
 	return guess;
 }
 
 // Solve the Potential for a sphere in a collisionless magnetoplasma following
 // L. Patacchini, I. H. Hutchinson, and G. Lapenta, Phys. Plasmas 14, (2007).
 // Assuming that Lambda_s >> r_p, i.e dust grain is small.
-double ChargingModel::solvePHL(double a, double guess){
-	C_Debug("\tIn ChargingModel::solvePHL(double a, double guess)\n\n");
-	double x1(0.0);
+double ChargingModel::solvePHL(double guess){
+	C_Debug("\tIn ChargingModel::solvePHL(double guess)\n\n");
 
 	double IonThermalVelocity = sqrt((Kb*Pdata->IonTemp)/Pdata->mi);
 	double Tau = Pdata->IonTemp/Pdata->ElectronTemp;
 	double uz = (Pdata->PlasmaVel-Sample->get_velocity()).mag3()/IonThermalVelocity;
 
 	double Beta = Sample->get_radius()
-			/(sqrt(PI*Pdata->ElectronTemp*Me)/(2.0*echarge*echarge*Pdata->MagneticField*Pdata->MagneticField));
+			/(sqrt(PI*Kb*Pdata->ElectronTemp*Me/(2.0*echarge*echarge*Pdata->MagneticField.mag3()*Pdata->MagneticField.mag3())));
 	
 	double AtomicNumber = Pdata->Z;	
 	double DebyeLength=sqrt((epsilon0*Kb*Pdata->ElectronTemp)/(Pdata->ElectronDensity*pow(echarge,2)));
 
 	double z = Beta/(1+Beta);
 	double i_star = 1.0-0.0946*z-0.305*z*z+0.950*z*z*z-2.2*z*z*z*z+1.150*z*z*z*z*z;
-	double eta = -(guess/Beta)*(1.0+(Beta/4.0)*(1-exp(-4.0/(DebyeLength*Beta))));
-	double d_eta = -(1.0/Beta)*(1.0+(Beta/4.0)*(1-exp(-4.0/(DebyeLength*Beta))));
+	double eta = (guess/Beta)*(1.0+(Beta/4.0)*(1-exp(-4.0/(DebyeLength*Beta))));
+	double d_eta = (1.0/Beta)*(1.0+(Beta/4.0)*(1-exp(-4.0/(DebyeLength*Beta))));
 	
 	double w = (eta/(1.0+eta));
-	double d_w = (d_eta/(1.0+eta)-eta*d_eta/pow(1.0+eta,2.0));
+	double d_w = d_eta/pow(1.0+eta,2.0);
 	double d_A = 0.678*d_w+1.543*2.0*w*d_w-1.212*3.0*w*w*d_w;
 
-	double IonFluxDiff(0.0);
-
-
-	if( guess >= 0.0 ){ // PHL Electron flux, SOML Ion Flux
-		IonFluxDiff = (1.0/4.0)*Pdata->IonDensity*Pdata->Z*(IonThermalVelocity/uz)*Pdata->Z*erf(uz)/Tau;
-		double ElectronFluxDiff=Pdata->ElectronDensity*sqrt(Kb*Pdata->ElectronTemp/(2.0*PI*Me))*(d_A-d_A*i_star)-PHLElectronFlux(guess);
-		x1 = guess - ( ((1.0-a)*PHLElectronFlux(guess) - Pdata->Z*SOMLIonFlux(guess))/((1.0-a)*ElectronFluxDiff - IonFluxDiff ) );
-	}else{ // OML Electron flux, SOML Ion Flux
-		double uzp = uz+sqrt(-Pdata->Z*guess/Tau);
-		double uzm = uz-sqrt(-Pdata->Z*guess/Tau);
-		IonFluxDiff = Pdata->IonDensity*Pdata->Z*
-			IonThermalVelocity*(1.0/(16.0*uz))*(2.0*(Pdata->Z/Tau)*(erf(uzp)+erf(uzm))
-				+(1.0+2.0*(uz*uz+Pdata->Z*guess/Tau))*sqrt(Pdata->Z/(Tau*PI*guess))*(exp(-uzm*uzm)-exp(-uzp*uzp))
-				+(1.0/sqrt(PI))*sqrt(Pdata->Z/(Tau*guess))*(2.0*uz*uz+2.0*Pdata->Z*guess/Tau+1.0)*(exp(-uzp*uzp)-exp(-uzm*uzm)));
-		x1 = guess - ( ((1.0-a)*OMLElectronFlux(guess) - Pdata->Z*SOMLIonFlux(guess))/((a-1)*OMLElectronFlux(guess) - IonFluxDiff ) );
-	}
-
-	while( fabs(guess-x1) > Accuracy ){
-		guess = x1;
-
+	double IonFluxDiff(0.0), ElectronFluxDiff(0.0), x1(0.0), dT(0.0), dTdiff(0.0);
+	int i(0);
+	double guessinit = guess;
+	do{
+		if( i > 0 ) // If first time in loop, don't update guess. Avoids numerical instabilities.
+			guess = x1;
+		if( i == 1000 ){ // Too many loops! Maybe we need to flip sign?
+			guessinit = -guessinit;
+		}
+		if( i == 2000 ){
+			//std::cerr << "\nError in ChargingModel::solvePHL()! Newton Rhapson Method didn't converge to accuracy: " << Accuracy;
+			return 0.0;
+		}
 		if( guess >= 0.0 ){  // PHL Electron flux, SOML Ion Flux
 			eta = -(guess/Beta)*(1.0+(Beta/4.0)*(1-exp(-4.0/(DebyeLength*Beta))));
 			w = (eta/(1.0+eta));
 			d_w = (d_eta/(1.0+eta)-eta*d_eta/pow(1.0+eta,2.0));
 			d_A = 0.678*d_w+1.543*2.0*w*d_w-1.212*3.0*w*w*d_w;
-			double ElectronFluxDiff=Pdata->ElectronDensity*sqrt(Kb*Pdata->ElectronTemp/(2.0*PI*Me))*(d_A-d_A*i_star)-PHLElectronFlux(guess);
-			IonFluxDiff = (1.0/4.0)*Pdata->IonDensity*Pdata->Z*(IonThermalVelocity/uz)*Pdata->Z*erf(uz)/Tau;
-			x1 = guess - ( ((1.0-a)*PHLElectronFlux(guess) - Pdata->Z*SOMLIonFlux(guess))/((1.0-a)*ElectronFluxDiff - IonFluxDiff ) );
+			ElectronFluxDiff=Pdata->ElectronDensity*sqrt(Kb*Pdata->ElectronTemp/(2.0*PI*Me))*(d_A-d_A*i_star)-PHLElectronFlux(guess);
+			IonFluxDiff = (Pdata->IonDensity*IonThermalVelocity/(2.0*sqrt(2.0)*uz))*
+				Pdata->Z*erf(uz)/Tau;
+			dT = Richardson*pow(Sample->get_temperature(),2)*exp(-echarge*Sample->get_workfunction()/(Kb*Sample->get_temperature()))/echarge;
+			dTdiff = 0.0;
+			x1 = guess - ( ((1.0-DeltaSec())*PHLElectronFlux(guess) - dT - SOMLIonFlux(guess))/((1.0-DeltaSec())*ElectronFluxDiff - dTdiff - IonFluxDiff ) );
 		}else{	// OML Electron flux, SOML Ion Flux
 			double uzp = uz+sqrt(-Pdata->Z*guess/Tau);
 			double uzm = uz-sqrt(-Pdata->Z*guess/Tau);
-			IonFluxDiff = Pdata->IonDensity*Pdata->Z*
-				IonThermalVelocity*(1.0/(16.0*uz))*(2.0*Pdata->Z/Tau*(erf(uzp)+erf(uzm))
-					+(1.0+2.0*(uz*uz+Pdata->Z*guess/Tau))*sqrt(Pdata->Z/(Tau*PI*guess))*(exp(-uzm*uzm)-exp(-uzp*uzp))
-					+(1.0/sqrt(PI))*sqrt(Pdata->Z/(Tau*guess))*(2.0*uz*uz+2.0*Pdata->Z*guess/Tau+1.0)*(exp(-uzp*uzp)-exp(-uzm*uzm)));
-			x1 = guess - ( ((1.0-a)*OMLElectronFlux(guess) - Pdata->Z*SOMLIonFlux(guess))/((a-1)*OMLElectronFlux(guess) - IonFluxDiff ) );
+			IonFluxDiff = Pdata->IonDensity*
+				IonThermalVelocity*(1.0/(4.0*sqrt(2.0)*uz))*(Pdata->Z/Tau)*(erf(uzp)+erf(uzm));
+			
+			ElectronFluxDiff = -Pdata->ElectronDensity*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
+			dT = Richardson*pow(Sample->get_temperature(),2)*(1.0-guess
+					*(Pdata->ElectronTemp/Sample->get_temperature()))
+					*exp((-echarge*Sample->get_workfunction()+guess*Kb*Pdata->ElectronTemp)
+					/(Kb*Sample->get_temperature()))/echarge;
+			dTdiff = (Pdata->ElectronTemp/Sample->get_temperature())*dT-
+					Richardson*pow(Sample->get_temperature(),2)
+					*(Pdata->ElectronTemp/Sample->get_temperature())
+					*exp((-echarge*Sample->get_workfunction()+guess*Kb*Pdata->ElectronTemp)
+					/(Kb*Sample->get_temperature()))/echarge;
+			x1 = guess - ( ((1.0-DeltaSec())*OMLElectronFlux(guess) - dT - SOMLIonFlux(guess))
+				/((1.0-DeltaSec())*ElectronFluxDiff - dTdiff - IonFluxDiff ) );
 		}
-	}
+
+		i ++;
+	}while( fabs(guess-x1) > Accuracy );
 	return guess;
+}
+
+// Following Semi-empirical fit to Sceptic results as detailed in Chris Willis Thesis,
+// https://spiral.imperial.ac.uk/handle/10044/1/9329, pages 68-70
+double ChargingModel::solveCW(double guess){
+	C_Debug("\tIn ChargingModel::solveCW()\n\n");
+	double A = Pdata->mi;
+	double b = Pdata->IonTemp/Pdata->ElectronTemp;
+	double DebyeLength=sqrt((epsilon0*Kb*Pdata->ElectronTemp)/(Pdata->ElectronDensity*pow(echarge,2)));
+	double Rho = Sample->get_radius()/DebyeLength;
+	double Rho_OML = 1.25*pow(b,0.4);
+	double Rho_Upper = 50.0;
+	double Potential(0.0);
+	if( Rho <= Rho_OML ){ // This is the OML Limit
+		if( b <=2 ){ 	// Ti <= 2.0*Te
+			Potential = 0.405*log(Pdata->A)+(0.253+0.021*log(Pdata->A))*log(b)+2.454;
+		}else{ 			// Ti > 2.0*Te
+			Potential = 0.401*log(Pdata->A)+(-0.122+0.029*log(Pdata->A))*log(b)+2.698;
+		}
+	}else if( Rho <= Rho_Upper && Rho > Rho_OML ){ // This is the transition region
+		double Gradient = (log(Rho/Rho_Upper)/log(Rho_Upper/Rho_OML))+1.0;
+		double DeltaPhi = 0.5*log(2.0*PI*(Me/Pdata->mi)*(1.0+5.0*b/3.0))*Gradient;
+		int i(0);
+		do{
+			if( i > 0 ) // If first time in loop, don't update guess. Avoids numerical instabilities.
+				guess = Potential;
+			Potential = guess - ( ( exp(-guess) - sqrt(b*(Me/Pdata->mi))*(1+guess/b-DeltaPhi/b) ) /( -exp(-guess) - sqrt((Me/Pdata->mi)/b) ) );
+			i ++;
+		}while( fabs(guess-Potential) > Accuracy );
+		return guess;
+	}else if( Rho > Rho_Upper ){ // This is the MOML limit
+		if( b <=2 ){ 	// Ti <= 2.0*Te
+			Potential = 0.456*log(Pdata->A)+3.179;
+		}else{ 			// Ti > 2.0*Te
+			Potential = 0.557*log(Pdata->A)-(0.386+0.024*log(Pdata->A))*log(b)+3.399;
+		}
+	}else{
+		std::cerr << "\nError in ChargingModel::solveCW()! Rho is poorly defined!\n\n";
+	}
+	return Potential;
 }
 
 double ChargingModel::solveOML(double a, double guess){
 	C_Debug("\tIn ChargingModel::solveOML(double a, double guess)\n\n");
 	if( a >= 1.0 ){
 		static bool runOnce = true;
-		WarnOnce(runOnce,"DeltaTot >= 1.0. DeltaTot being set equal to unity.");
+		WarnOnce(runOnce,"DeltaTot >= 1.0 in solveOML(). DeltaTot being set equal to unity.\n");
 		a = 1.0;
 	}
 	double b = Pdata->IonTemp/Pdata->ElectronTemp;
 
 	double C = Me/Pdata->mi;
 
-	double x1 = guess - ( (( 1-a)*exp(-guess) - sqrt(b*C)*(1+guess/b))/((a-1)*exp(-guess) - sqrt(C/b) ) );
-	
-	while( fabs(guess-x1) > Accuracy ){
-		guess = x1;
+	double x1(0.0);
+	int i(0);
+	do{
+		if( i > 0 )
+			guess = x1;
 		x1 = guess - ( ( (1-a)*exp(-guess) - sqrt(b*C)*(1+guess/b) ) /( (a-1)*exp(-guess) - sqrt(C/b) ) );
-	}
+		i ++;
+	}while( fabs(guess-x1) > Accuracy );
 	return guess;
 }
 
@@ -440,7 +564,7 @@ double ChargingModel::solveMOML(){
     		*exp(TemperatureRatio);
 	if( std::isinf(exp(TemperatureRatio)) ){
 		static bool runOnce = true;
-		WarnOnce(runOnce,"LambertW exp(TemperatureRatio) is infinite in solveSOML()! Assuming Potential = 0.0");
+		WarnOnce(runOnce,"LambertW exp(TemperatureRatio) is infinite in solveMOML()! Assuming Potential = 0.0");
 		return 0;
 	}else if( std::isinf(Arg) || Arg < 0.0 ){
 		std::cout << "\nLambertW(Arg == " << Arg << ")!";
@@ -480,72 +604,31 @@ double ChargingModel::solveMOMLWEM(double DeltaTot){
     return -1.0*(TemperatureRatio/Ionization+Delta_Phi_em/Ionization-LambertW(Arg));
 }
 
-// Solve the orbital motion limited potential for small dust grains accounting for electron emission.
-// WARNING: This is only valid for positively charged dust grains.
-// See drews Thesis, pg 52
-// https://spiral.imperial.ac.uk/bitstream/10044/1/32003/1/Thomas-D-2016-PhD-thesis.pdf
-double ChargingModel::solvePosSchottkyOML(){
-	C_Debug("\tIn ChargingModel::solvePosSchottkyOML()\n\n");
-	double Wf = echarge*Sample->get_workfunction();
-	double TemperatureRatio = Pdata->IonTemp/Pdata->ElectronTemp;
-	double Ionization = Pdata->Z; 		// Ionization
-	double vi = sqrt(Kb*Pdata->IonTemp/(2*PI*Pdata->mi));
-	double ve = sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
-	double Arg = TemperatureRatio*exp(TemperatureRatio)*(vi+Richardson*pow(Sample->get_temperature(),2)
-			*exp(-Wf/(Kb*Sample->get_temperature()))/(Ionization*echarge*Pdata->IonDensity))/(ve*(1-DeltaSec()));
-
-	if( std::isinf(exp(TemperatureRatio)) ){
-		static bool runOnce = true;
-		WarnOnce(runOnce,"LambertW exp(TemperatureRatio) is infinite in solvePosSchottkyOML()! Assuming Potential = 0.0");
-		return 0;
-	}else if( std::isinf(Arg) || Arg < 0.0 ){
-		std::cout << "\nLambertW(Arg == " << Arg << ")!";
-		throw LambertWFailure();
-		return 0;
-	}
-	double Coeff = TemperatureRatio;
-	return +Coeff - LambertW(Arg); 	// NOTE! Should be "return -Coeff + LambertW(Arg);" but we've reversed sign as equation
-					// as potential definition is reversed ( Positive potential for positive dust in this case)
-}
-
-// Solve the orbital motion limited potential for small dust grains accounting for electron emission.
-// WARNING: This is only valid for negatively charged dust grains.
-double ChargingModel::solveNegSchottkyOML(double guess){
-	C_Debug("\tIn ChargingModel::solveNegSchottkyOML()\n\n");
-
-	double Vi = sqrt(Kb*Pdata->IonTemp/(2*PI*Pdata->mi));
-	double Ve = sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
-
-	double a = Pdata->ElectronDensity*Ve*(DeltaSec()-1);
-	double b = Pdata->IonDensity*Vi*(Pdata->ElectronTemp/Pdata->IonTemp);
-	double C = Pdata->IonDensity*Vi;
-	double d = Richardson*pow(Sample->get_temperature(),2)/echarge;
-	double f = (echarge*Sample->get_workfunction())/(Kb*Sample->get_temperature());
-
-	double fx = a*exp(-guess)+b*guess+C+d*exp(guess-f);	
-	double fxprime = (-a*exp(-guess)+b+d*exp(guess-f));
-
-	double x1 = guess - fx/fxprime;
-	while(fabs(guess-x1)>Accuracy){
-		guess = x1;
-
-		fx = a*exp(-guess)+b*guess+C+d*exp(guess-f);	
-		fxprime = (-a*exp(-guess)+b+d*exp(guess-f));
-		x1 = guess - fx/fxprime;
-
-	}// >1e-2){
-
-	return guess;
-}
-
 double ChargingModel::DeltaTherm()const{
 	C_Debug("\tIn ChargingModel::DeltaTherm()\n\n");
 
 	double dtherm = (Richardson*pow(Sample->get_temperature(),2)*exp(-(Sample->get_workfunction()*echarge)
 					/(Kb*Sample->get_temperature())))/(echarge*OMLElectronFlux(Sample->get_potential()));
-
 	assert(dtherm >= 0.0 && dtherm == dtherm && dtherm != INFINITY );
 	return dtherm;
+}
+
+double ChargingModel::ThermFluxSchottky( double Potential )const{
+	C_Debug("\tIn ChargingModel::DeltaTherm()\n\n");
+	// Returns the flux of electrons due to Thermionic emission
+	// Following the Richard-Dushmann formula with Schottky Correction.
+	// Negative Dust grains have the normal Richard-Dushmann form, dependant on work funciton
+	// Positive Dust grains are the same flux multiplied by (1-phi)e^(-e phi/(kb Td))
+	if( Potential >= 0.0 ){
+		return Richardson*pow(Sample->get_temperature(),2)
+					*exp(-echarge*Sample->get_workfunction()/(Kb*Sample->get_temperature()))/echarge;
+	}else{
+
+		return Richardson*pow(Sample->get_temperature(),2)*(1.0-Potential
+					*(Pdata->ElectronTemp/Sample->get_temperature()))
+					*exp((-echarge*Sample->get_workfunction()-Potential*Kb*Pdata->ElectronTemp)
+					/(Kb*Sample->get_temperature()))/echarge;
+	}
 }
 
 double ChargingModel::DeltaSec()const{

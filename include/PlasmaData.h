@@ -15,8 +15,9 @@ struct PlasmaData{
 	double ElectronTemp;		// K, Electron Temperature
 	double NeutralTemp;			// K, Neutral Temperature
 	double AmbientTemp;			// K, Ambient Temperature
-	double mi;					// mi is the mass of the gas
-	double Z;			// (1/e), Z is the mean ionisation of the gas
+	double mi;					// kg, mi is the mass of the gas
+	double Z;					// (1/e), Z is the mean ionisation of the gas
+	double A;					// (1/mu), A is the Atomic Number of the gas
 	threevector PlasmaVel;		// m s^-1, Plasma Velocity (Should eventually be normalised to sound speed cs)
 	threevector Gravity;		// m s^-2, Acceleration due to gravity 
 	threevector ElectricField;	// V m^-1, Electric field at dust location (Normalised later) 

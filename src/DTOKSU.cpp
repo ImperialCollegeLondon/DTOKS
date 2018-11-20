@@ -14,7 +14,6 @@ DTOKSU::DTOKSU( std::array<float,MN> acclvls, Matter *& sample, PlasmaData &pdat
 				FM("Data/breakup_fm_0.txt",acclvls[2],forcemodels,sample,pdata){
         D_Debug("\n\nIn DTOKSU::DTOKSU( ... )\n\n");
         D_Debug("\n\n************************************* SETUP FINISHED ************************************* \n\n");
-//	std::cout << "\nacclvls[0] = " << acclvls[0];
 
 	TotalTime = 0;
 	create_file("Data/df.txt");
@@ -31,7 +30,6 @@ DTOKSU::DTOKSU( std::array<float,MN> acclvls, Matter *& sample, PlasmaGrid_Data 
         D_Debug("\n\n************************************* SETUP FINISHED ************************************* \n\n");
 
 //	D_Debug("\nHeatModels = " << heatmodels[0]);
-//	std::cout << "\nacclvls[0] = " << acclvls[0];
 	TotalTime = 0;
 	create_file("Data/df.txt");
 }
@@ -47,7 +45,6 @@ DTOKSU::DTOKSU( std::array<float,MN> acclvls, Matter *& sample, PlasmaGrid_Data 
         D_Debug("\n\n************************************* SETUP FINISHED ************************************* \n\n");
 
 //	D_Debug("\nHeatModels = " << heatmodels[0]);
-//	std::cout << "\nacclvls[0] = " << acclvls[0];
 	TotalTime = 0;
 	create_file("Data/df.txt");
 }
@@ -64,7 +61,6 @@ DTOKSU::DTOKSU( std::array<float,MN> acclvls, Matter *& sample, PlasmaGrid_Data 
         D_Debug("\n\n************************************* SETUP FINISHED ************************************* \n\n");
 
 //	D_Debug("\nHeatModels = " << heatmodels[0]);
-//	std::cout << "\nacclvls[0] = " << acclvls[0];
 	TotalTime = 0;
 	create_file("Data/df.txt");
 }
@@ -304,13 +300,13 @@ int DTOKSU::Run(){
 				if( j > 1 )
 					HM.Heat((j-1)*MinTimeStep);
 				else
-					HM.AddTime(MinTimeStep)
+					HM.AddTime(MinTimeStep);
 				D_Debug("\nHeat Step Taken."); 
 			}else if( MaxTimeStep == ForceTime ){
 				if( j > 1 )
 					FM.Force((j-1)*MinTimeStep); 
 				else
-					FM.AddTime(MinTimeStep)
+					FM.AddTime(MinTimeStep);
 				D_Debug("\nForce Step Taken."); 
 			}else{	std::cerr << "\nUnexpected Timescale Behaviour! (2)";	}
 

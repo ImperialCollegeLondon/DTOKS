@@ -77,8 +77,8 @@ void HeatingModel::CreateFile(std::string filename, bool PrintPhaseData){
 	if( UseModel[5] )					ModelDataFile << "\tSOMLNeutralRecomb";
 	if( UseModel[6] )					ModelDataFile << "\tSMOMLIonFlux\tSMOMLIonHeatFlux";
 	if( UseModel[7] )					ModelDataFile << "\tSMOMLNeutralRecomb";
-	if( UseModel[8] )					ModelDataFile << "\tPHLSEE";
-	if( UseModel[9] )					ModelDataFile << "\tPHLTEE";
+	if( UseModel[8] )					ModelDataFile << "\tSEE";
+	if( UseModel[9] )					ModelDataFile << "\tTEE";
 	if( UseModel[10] )					ModelDataFile << "\tPHLElectronFlux\tPHLElectronHeatFlux";
 	if( UseModel[11] )					ModelDataFile << "\tOMLElectronFlux\tOMLElectronHeatFlux";
 	if( UseModel[12] )					ModelDataFile << "\tDTOKSSEE";
@@ -86,7 +86,7 @@ void HeatingModel::CreateFile(std::string filename, bool PrintPhaseData){
 	if( UseModel[14] )					ModelDataFile << "\tDTOKSIonFlux\tDTOKSIonHeatFlux";
 	if( UseModel[15] )					ModelDataFile << "\tDTOKSNeutralRecomb";
 	if( UseModel[16] )					ModelDataFile << "\tDTOKSElectronFlux\tDTOKSElectronHeatFlux";
-	if( UseModel[17] )					ModelDataFile << "\tDUSTTIonHeatFlux";
+	if( UseModel[17] )					ModelDataFile << "\tDUSTTIonFlux\tDUSTTIonHeatFlux";
 
 	ModelDataFile << "\n";
 	Print();
@@ -106,8 +106,8 @@ double HeatingModel::ProbeTimeStep()const{
 	// If this timestep is quicker than current step, change timestep
 	if( TotalPower != 0 ){
 		if( UseModel[1] && Sample->is_liquid() ){
-			double MassTimeStep = (0.01*Sample->get_mass()*AvNo)
-						/(EvaporationFlux(Sample->get_temperature())*Sample->get_atomicmass());
+			double MassTimeStep = fabs((0.01*Sample->get_mass()*AvNo)
+						/(EvaporationFlux(Sample->get_temperature())*Sample->get_atomicmass()));
 			if( MassTimeStep < timestep ){
 				H_Debug("\nMass is limiting time step\nMassTimeStep = " << MassTimeStep << "\ntimestep = " << timestep);
 				timestep = MassTimeStep;
@@ -143,7 +143,7 @@ double HeatingModel::ProbeTimeStep()const{
 		}
 	}
 
-	H1_Debug("\nSample->get_mass() = " << Sample->get_mass() << "\nSample->get_heatcapacity() = " << 
+	H1_Debug("\ntimestep = " << timestep << "Sample->get_mass() = " << Sample->get_mass() << "\nSample->get_heatcapacity() = " << 
 		Sample->get_heatcapacity() << "\nTotalPower = " << TotalPower << "\nAccuracy = " << Accuracy);
 	assert(timestep > 0 && timestep != INFINITY && timestep == timestep);
 
@@ -187,20 +187,20 @@ void HeatingModel::Print(){
 	if( UseModel[6] )	ModelDataFile << "\t" << SMOMLIonFlux(Sample->get_potential()) 
 					<< "\t" << SMOMLIonHeatFlux(Sample->get_temperature());
 	if( UseModel[7] )	ModelDataFile << "\t" << SMOMLNeutralRecombination(Sample->get_temperature());
-	if( UseModel[8] )	ModelDataFile << PHLSEE(Sample->get_temperature());
-	if( UseModel[9] )	ModelDataFile << PHLTEE(Sample->get_temperature());
+	if( UseModel[8] )	ModelDataFile << "\t" << SEE(Sample->get_temperature());
+	if( UseModel[9] )	ModelDataFile << "\t" << TEE(Sample->get_temperature());
 	if( UseModel[10] )	ModelDataFile << "\t" << PHLElectronFlux(Sample->get_potential()) 
 					<< "\t" << PHLElectronHeatFlux(Sample->get_temperature());
 	if( UseModel[11] )	ModelDataFile << "\t" << OMLElectronFlux(Sample->get_potential()) 
 					<< "\t" << OMLElectronHeatFlux(Sample->get_temperature());
-	if( UseModel[12] )	ModelDataFile << DTOKSSEE(Sample->get_temperature());
-	if( UseModel[13] )	ModelDataFile << DTOKSTEE(Sample->get_temperature());
+	if( UseModel[12] )	ModelDataFile << "\t" << DTOKSSEE(Sample->get_temperature());
+	if( UseModel[13] )	ModelDataFile << "\t" << DTOKSTEE(Sample->get_temperature());
 	if( UseModel[14] )	ModelDataFile << "\t" << DTOKSIonFlux(Sample->get_potential()) 
 					<< "\t" << DTOKSIonHeatFlux(Sample->get_temperature());
 	if( UseModel[15] )	ModelDataFile << "\t" << DTOKSNeutralRecombination(Sample->get_temperature());
 	if( UseModel[16] )	ModelDataFile << "\t" << DTOKSElectronFlux(Sample->get_potential()) 
 					<< "\t" << DTOKSElectronHeatFlux(Sample->get_temperature());
-	if( UseModel[17] )	ModelDataFile << "\t" << DUSTTIonHeatFlux(Sample->get_temperature());
+	if( UseModel[17] )	ModelDataFile << "\t" << SOMLIonFlux(Sample->get_potential()) << "\t" << DUSTTIonHeatFlux(Sample->get_temperature());
 
 	ModelDataFile << "\n";
 	ModelDataFile.close();
@@ -292,8 +292,8 @@ double HeatingModel::CalculatePower(double DustTemperature)const{
 	if( UseModel[5] )				TotalPower += SOMLNeutralRecombination	(DustTemperature);
 	if( UseModel[6] )				TotalPower += SMOMLIonHeatFlux		(DustTemperature);
 	if( UseModel[7] )				TotalPower += SMOMLNeutralRecombination	(DustTemperature);
-	if( UseModel[8] )				TotalPower -= PHLSEE				(DustTemperature);	
-	if( UseModel[9] )				TotalPower -= PHLTEE				(DustTemperature);
+	if( UseModel[8] )				TotalPower -= SEE				(DustTemperature);	
+	if( UseModel[9] )				TotalPower -= TEE					(DustTemperature);
 	if( UseModel[10] )				TotalPower += PHLElectronFlux		(DustTemperature);
 	if( UseModel[11] )				TotalPower += OMLElectronFlux		(DustTemperature);
 	if( UseModel[12] )				TotalPower -= DTOKSSEE				(DustTemperature);	
@@ -312,8 +312,8 @@ double HeatingModel::CalculatePower(double DustTemperature)const{
 	H1_Debug("\n\tNeutralHeatFlux() = \t" 	<< NeutralHeatFlux(DustTemperature) 		<< "W");
 	H1_Debug("\n\tSOMLIonHeatFlux() = \t" 	<< SOMLIonHeatFlux(DustTemperature) 		<< "W");
 	H1_Debug("\n\tSOMLNeutralRecombination() = \t" 	<< SOMLNeutralRecombination(DustTemperature) 		<< "W");
-	H1_Debug("\n\tPHLSEE(DustTemperature) = \t" 	<< PHLSEE(DustTemperature) 				<< "W");
-	H1_Debug("\n\tPHLTEE() = \t"<< PHLTEE(DustTemperature)	<< "W");
+	H1_Debug("\n\tSEE() = \t" 				<< SEE(DustTemperature) 				<< "W");
+	H1_Debug("\n\tTEE() = \t"				<< TEE(DustTemperature)	<< "W");
 	H1_Debug("\n\tPHLElectronFlux() = \t"<< PHLElectronFlux(DustTemperature)	<< "W");
 	H1_Debug("\n\tOMLElectronFlux() = \t"<< OMLElectronFlux(DustTemperature)	<< "W");
 	H1_Debug("\n\tDTOKSSEE() = \t"<< DTOKSSEE(DustTemperature)	<< "W");
@@ -396,7 +396,7 @@ const double HeatingModel::EvaporationModel(double DustTemperature)const{
 const double HeatingModel::EvaporationFlux(double DustTemperature)const{
 	H_Debug("\n\tIn HeatingModel::EvaporationFlux():\n\n");
 	double AmbientPressure = Pdata->NeutralDensity*Kb*Pdata->NeutralTemp;
-	std::cout << "\n" << Sample->get_vapourpressure() << "\t" << AmbientPressure;
+	//std::cout << "\n" << Sample->get_vapourpressure() << "\t" << AmbientPressure;
 	double StickCoeff = 1.0;
 	return (StickCoeff*Sample->get_surfacearea()*AvNo*(Sample->get_vapourpressure()-AmbientPressure))/
 			sqrt(2*PI*Sample->get_atomicmass()*R*DustTemperature);
@@ -419,16 +419,26 @@ const double HeatingModel::NeutralHeatFlux(double DustTemperature)const{
 
 // *************************************************** SOML/OML/PHL MODELS *************************************************** //
 
-const double HeatingModel::PHLSEE(double DustTemperature)const{
-	H_Debug("\n\tIn HeatingModel::PHLSEE():\n\n");
-	return Sample->get_surfacearea()*PHLElectronFlux(Sample->get_potential())*Sample->get_deltasec()*echarge*
-     (3.0+Sample->get_workfunction()); 
+const double HeatingModel::SEE(double DustTemperature)const{
+	H_Debug("\n\tIn HeatingModel::SEE():\n\n");
+	double ConvertKtoev(8.6173303e-5);
+	return Sample->get_surfacearea()*PHLElectronFlux(Sample->get_potential())*
+			sec(Pdata->ElectronTemp*ConvertKtoev,Sample->get_elem())*echarge*(3.0+Sample->get_workfunction()); 
 }
 
-const double HeatingModel::PHLTEE(double DustTemperature)const{
-	H_Debug("\n\tIn HeatingModel::PHLTEE():\n\n");
-	return Sample->get_surfacearea()*Sample->get_deltatherm()*PHLElectronFlux(Sample->get_potential())*
-			(2.0*Kb*DustTemperature+echarge*Sample->get_workfunction());
+const double HeatingModel::TEE(double DustTemperature)const{
+	H_Debug("\n\tIn HeatingModel::TEE():\n\n");
+	if( Sample->get_potential() >= 0.0){
+		return Sample->get_surfacearea()*Richardson*pow(DustTemperature,2)*exp(-Sample->get_workfunction()*echarge
+					/(Kb*DustTemperature))*(2.0*Kb*DustTemperature+echarge*Sample->get_workfunction())/echarge;
+	}else{
+		// See [1] V. E. Fortov, A. V. Ivlev, S. A. Khrapak, A. G. Khrapak, and G. E. Morfill, Phys. Rep. 421, 1 (2005).
+		// Page 23, section 3.3
+		return Sample->get_surfacearea()*Richardson*pow(DustTemperature,2)*(1.0-Sample->get_potential()
+					*(Pdata->ElectronTemp/Sample->get_temperature()))
+					*exp((Sample->get_potential()*Kb*Pdata->ElectronTemp-Sample->get_workfunction()*echarge)
+					/(Kb*DustTemperature))*(2.0*Kb*DustTemperature+echarge*Sample->get_workfunction())/echarge;
+	}
 }
 
 const double HeatingModel::PHLElectronHeatFlux(double DustTemperature)const{ // Only for a negative grain
@@ -531,25 +541,35 @@ const double HeatingModel::DUSTTIonHeatFlux(double DustTemperature)const{ // Ass
 	double RelativeVelocity = (Pdata->PlasmaVel-Sample->get_velocity()).mag3()/IonThermalVelocity;
 	double RenormalisedPotential = (Pdata->Z*Sample->get_potential())/TemperatureRatio;
 	double Term1(0.0);
-	double Term2(0.0);
-	double Term2Coeff = (1.0/(4.0*RelativeVelocity))*(3.0+12.0*RelativeVelocity*RelativeVelocity
-					+4.0*pow(RelativeVelocity,4.0)+2.0*RenormalisedPotential*(1+2.0*RelativeVelocity*RelativeVelocity));
+	double Term2(0.0), Term2Coeff(0.0);
+	if( RelativeVelocity != 0.0 ){
+		Term2Coeff = (1.0/(4.0*RelativeVelocity))*(3.0+12.0*RelativeVelocity*RelativeVelocity
+			+4.0*pow(RelativeVelocity,4.0)+2.0*RenormalisedPotential*
+			(1+2.0*RelativeVelocity*RelativeVelocity));
+	}else{
+		Term2Coeff = 0.0;
+	}
 	if( RenormalisedPotential >= 0.0 ){ // Negative dust grain
 		Term1 =(1.0/(2.0*sqrt(PI)))*(5.0+2.0*RelativeVelocity*RelativeVelocity
 				-2.0*RenormalisedPotential)*exp(-RelativeVelocity*RelativeVelocity); 
 		Term2 = erf(RelativeVelocity)*Term2Coeff; 
 	}else{ // Positive dust grain
 		assert( Sample->get_potential() <= 0.0 );
-		double Coeff1 = 5.0+2.0*RelativeVelocity*RelativeVelocity
+		double Coeff1 = 5.0; 
+		double Coeff2 = 5.0; 
+		if( RelativeVelocity != 0.0 ){
+			Coeff1 = 5.0+2.0*RelativeVelocity*RelativeVelocity
 				-((3.0+2.0*RelativeVelocity*RelativeVelocity)/RelativeVelocity)*sqrt(-RenormalisedPotential);
-		double Coeff2 = 5.0+2.0*RelativeVelocity*RelativeVelocity
+			Coeff2 = 5.0+2.0*RelativeVelocity*RelativeVelocity
 				+((3.0+2.0*RelativeVelocity*RelativeVelocity)/RelativeVelocity)*sqrt(-RenormalisedPotential);
+		}
+
 		double uip = RelativeVelocity+sqrt(-RenormalisedPotential);
 		double uim = RelativeVelocity-sqrt(-RenormalisedPotential);
 		Term1 = (1.0/(4.0*sqrt(PI)))*(Coeff1*exp(-uip*uip) + Coeff2*exp(-uim*uim)); 
 		Term2 = (Term2Coeff/2.0)*(erf(uip)+erf(uim));
 	}
-	//std::cout << "\nTerm2Coeff = " << Term2Coeff << "\tTerm1 = " << Term1 << "\tTerm2 = " << Term2;	
+	//std::cout << "\nRenormalisedPotential = " << RenormalisedPotential << "\tTerm2Coeff = " << Term2Coeff << "\tTerm1 = " << Term1 << "\tTerm2 = " << Term2;	
 	assert((Term1 + Term2) > 0 && (Term1 + Term2) != INFINITY && (Term1 + Term2) == (Term1 + Term2));
 	return Sample->get_surfacearea()*(1.0-RE)*Pdata->IonDensity
 				*Pdata->IonTemp*Kb*IonThermalVelocity*(Term1 + Term2);
