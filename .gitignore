@@ -6,6 +6,7 @@ PlasmaData/DIII-D
 PlasmaData/EAST
 Dependencies/
 Tests/TemperatureVariationOfConstants
+PlasmaData/PlasmaGenerator/main
 Backups/
 Data/
 build/

@@ -8,8 +8,8 @@ const struct ElementConsts BerylliumConsts = {
 	1560, 			// K, Melting temperature at atmospheric pressure
 	2742,			// K, Boiling temperature at atmospheric pressure
 	320.3,	 		// Units of kJ/mol, Bond Energy http://www.periodni.com/be.html
-	3.4,			// ev, Work Function
-				// goodfellow//5.0;//from http://hyperphysics.phy-astr.gsu.edu/hbase/tables/photoelec.html
+	5.0,			// ev, Work Function
+				// goodfellow;//from http://hyperphysics.phy-astr.gsu.edu/hbase/tables/photoelec.html
 	5.7, 			// HeatTransfer coefficient 
 				// http://www.engineeringtoolbox.com/overall-heat-transfer-coefficients-d_284.html
 	0.009012182,		// AMU in kg mol^-1, (+/- 0.00001) Atomic Mass

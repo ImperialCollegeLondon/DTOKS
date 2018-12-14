@@ -5,41 +5,71 @@
 // See drews Thesis, pg 55
 // https://spiral.imperial.ac.uk/bitstream/10044/1/32003/1/Thomas-D-2016-PhD-thesis.pdf
 double solveSOML(double TemperatureRatio, double PlasmaFlowSpeed, double MassRatio){
-	PlasmaFlowSpeed = PlasmaFlowSpeed/sqrt(2);
+	PlasmaFlowSpeed = PlasmaFlowSpeed;
 	double s1 = sqrt(PI)*(1+2*pow(PlasmaFlowSpeed,2))*erf(PlasmaFlowSpeed)/(4*PlasmaFlowSpeed)+exp(-pow(PlasmaFlowSpeed,2))/2;
 	double s2 = sqrt(PI)*erf(PlasmaFlowSpeed)/(2*PlasmaFlowSpeed);
 
 	return TemperatureRatio*s1/s2-LambertW(sqrt(MassRatio*TemperatureRatio)*exp(TemperatureRatio*s1/s2)/s2);
 }
+/* 17/11/18, got half-way through implementing this, realised it might become too complicated.
+	C_Debug("\tIn ChargingModel::solveSOML(double guess)\n\n");
+Will continue to test inside of DTOKS-U code
+double solveSOML_Plus(double IonDensity, double IonTemperature, double ElectronTemperature, 
+			double PlasmaFlowSpeed, double MassRatio, double Z, double guess){
 
-/*
-double solvePosSOML(double guess, double TemperatureRatio, double PlasmaFlowSpeed, double MassRatio){
-	PlasmaFlowSpeed = PlasmaFlowSpeed/sqrt(2);
-	double Z = 1.0;
-	double uip = PlasmaFlowSpeed+sqrt(fabs(Potential));
-	double uim = PlasmaFlowSpeed-sqrt(fabs(Potential));
+	double IonThermalVelocity = sqrt((Kb*IonTemperature)/(MassRatio*Me));
+	double Tau = IonTemperature/ElectronTemperature;
+	double uz = PlasmaFlowSpeed/IonThermalVelocity;
 
-	// Ion Current Term 1 and Term 2
-	double Ti1 = (PlasmaFlowSpeed+(1.0/(2.0*PlasmaFlowSpeed))*(1-2.0*Z*Potential/TemperatureRatio))
-			*(erf(uip)+erf(uim));
-	double Ti2 = (1.0/(PlasmaFlowSpeed*sqrt(PI)))*(uip*exp(-uim*uim)+uim*exp(-uip*uip));
-	double Ecurr = (1.0/sqrt(Z*Z*TemperatureRatio*MassRatio))*(1.0+Potential);
-
-	double x1 = guess;
+	
+	double IonFluxDiff(0.0), ElectronFluxDiff(0.0), x1(0.0), dT(0.0), dTdiff(0.0);
+	int i(0);
+	double guessinit = guess;
 	do{
-		guess = x1;
+		if( i > 0 ) // If first time in loop, don't update guess. Avoids numerical instabilities.
+			guess = x1;
+		if( i == 1000 ){ // Too many loops! Maybe we need to flip sign?
 
-		double fx = Ti1+Ti2-Ecurr;
+			std::cerr << "\nError in ChargingModel::solveSOML()! Newton Rhapson Method didn't converge to accuracy: " << Accuracy;
+			return 0.0;
+		}
 
-		// Attempted to differentiate Ion Current Term 1 and Term 2... This becomes very complex
-		double fxprime = (1.0/sqrt(PI*x1))*exp(-pow(PlasmaFlowSpeed+sqrt(x1),2.0))*exp(-uim*uim)+ 
-				(1.0/sqrt(PI*x1))*exp(-pow(PlasmaFlowSpeed-sqrt(x1),2.0))*exp(-uip*uip)+
-				
-				-(1.0/sqrt(Z*Z*TemperatureRatio*MassRatio)); // d Ecurr / dPotential
-		x1 = guess - fx/fxprime;
+		if( guessinit >= 0.0 ){ // OML Electron flux, SOML Ion flux
+			if( uz == 0.0 ){
+				IonFluxDiff = IonDensity*(IonThermalVelocity/sqrt(2.0*PI))*Z/Tau;
+			}else{
+				IonFluxDiff = (IonDensity*IonThermalVelocity/(2.0*sqrt(2.0)*uz))*
+					Z*erf(uz)/Tau;
+			}
+			ElectronFluxDiff = -OMLElectronFlux(fabs(guess));
+			dT = Richardson*pow(Sample->get_temperature(),2)*exp(-echarge*Sample->get_workfunction()/(Kb*Sample->get_temperature()))/echarge;
+			dTdiff = 0.0;
+		}else{ // OML Electron flux, SOML Ion flux
+			double uzp = uz+sqrt(-Pdata->Z*guess/Tau);
+			double uzm = uz-sqrt(-Pdata->Z*guess/Tau);
+			if( uz == 0.0 ){
+				IonFluxDiff = (Pdata->ElectronTemp/Pdata->IonTemp)*SOMLIonFlux(guess);
+			}else{
+				IonFluxDiff = Pdata->IonDensity*
+					IonThermalVelocity*(1.0/(4.0*sqrt(2.0)*uz))*(Pdata->Z/Tau)*(erf(uzp)+erf(uzm));
+			}
+			
+			ElectronFluxDiff = -Pdata->ElectronDensity*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
+			dT = Richardson*pow(Sample->get_temperature(),2)*(1.0-guess
+					*(Pdata->ElectronTemp/Sample->get_temperature()))
+					*exp((-echarge*Sample->get_workfunction()+guess*Kb*Pdata->ElectronTemp)
+					/(Kb*Sample->get_temperature()))/echarge;
+			dTdiff = (Pdata->ElectronTemp/Sample->get_temperature())*(dT-
+					Richardson*pow(Sample->get_temperature(),2)
+					*exp((-echarge*Sample->get_workfunction()+guess*Kb*Pdata->ElectronTemp)
+					/(Kb*Sample->get_temperature()))/echarge);
+		}
 
-	}while(fabs(guess-x1)>1e-4);// >1e-2){
+		x1 = guess - ( (( 1.0-DeltaSec())*OMLElectronFlux(guess) - dT - SOMLIonFlux(guess))
+			/((1.0-DeltaSec())*ElectronFluxDiff - dTdiff - IonFluxDiff ) );
+		i ++;
+	}while( fabs(guess-x1) > Accuracy );
 
-	return TemperatureRatio*s1/s2-LambertW(sqrt(MassRatio*TemperatureRatio)*exp(TemperatureRatio*s1/s2)/s2);
+	return guess;
 }
 */

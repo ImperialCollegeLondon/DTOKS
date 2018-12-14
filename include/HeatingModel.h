@@ -74,6 +74,7 @@ class HeatingModel : public Model{
 		void Heat();
 		void Heat(double timestep);
 
+		void UpdateRERN();
 		double CalculatePower(double DustTemperature)const;
 
 		double ProbeTimeStep()const;		// Check time step

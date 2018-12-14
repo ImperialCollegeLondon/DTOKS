@@ -51,7 +51,7 @@ void ForceModel::CreateFile(std::string filename){
 	FileName=filename;
 	ModelDataFile.open(FileName);
 	ModelDataFile << std::scientific << std::setprecision(16) << std::endl;
-	ModelDataFile << "Time\tPosition\tVelocity\tRotationFreq";
+	ModelDataFile << "Time\tPotential\tPosition\tVelocity\tRotationFreq";
 	bool PrintGravity = true; // Lol
 	if( UseModel[0] && PrintGravity ) 	ModelDataFile << "\tGravity";
 	if( UseModel[1] ) 			ModelDataFile << "\tCentrifugal";
@@ -73,7 +73,7 @@ void ForceModel::CreateFile(std::string filename){
 void ForceModel::Print(){
 	F_Debug("\tIn ForceModel::Print()\n\n");
 	ModelDataFile.open(FileName,std::ofstream::app);
-	ModelDataFile << TotalTime << "\t" 
+	ModelDataFile << TotalTime << "\t" << Sample->get_potential() << "\t"
 			<< Sample->get_position() << "\t" << Sample->get_velocity() << "\t" << Sample->get_rotationalfreq();
 	bool PrintGravity = true; // Lol
 	if( UseModel[0] && PrintGravity ) 	ModelDataFile << "\t" << Gravity(); 
@@ -232,13 +232,18 @@ threevector ForceModel::Gravity()const{
 }
 
 threevector ForceModel::SOMLIonDrag()const{
-	return (Pdata->PlasmaVel-Sample->get_velocity())*Pdata->mi*(1.0/sqrt(Kb*Pdata->IonTemp/Pdata->mi))*SOMLIonFlux(Sample->get_potential());
+	return (Pdata->PlasmaVel-Sample->get_velocity())*
+			Pdata->mi*(1.0/sqrt(Kb*Pdata->IonTemp/Pdata->mi))*
+			SOMLIonFlux(Sample->get_potential())*(1.0/Sample->get_mass());
 }
 
 threevector ForceModel::SMOMLIonDrag()const{
-	return (Pdata->PlasmaVel-Sample->get_velocity())*Pdata->mi*(1.0/sqrt(Kb*Pdata->IonTemp/Pdata->mi))*SMOMLIonFlux(Sample->get_potential());
+	return (Pdata->PlasmaVel-Sample->get_velocity())*
+			Pdata->mi*(1.0/sqrt(Kb*Pdata->IonTemp/Pdata->mi))*
+			SMOMLIonFlux(Sample->get_potential())*(1.0/Sample->get_mass());
 }
-
+// Taken from :
+// S. A. Khrapak, A. V. Ivlev, S. K. Zhdanov, and G. E. Morfill, Phys. Plasmas 12, 1 (2005).
 threevector ForceModel::HybridIonDrag()const{
 	double IonThermalVelocity = sqrt(Kb*Pdata->IonTemp/Pdata->mi);
 	double u = Pdata->PlasmaVel.mag3()*(1.0/IonThermalVelocity); 	// Normalised ion flow velocity
@@ -347,7 +352,9 @@ threevector ForceModel::DUSTTIonDrag()const{
 				((1.0/sqrt(PI))*(1.0+2.0*wzp)*exp(-uz*uz)
 				+uz*(1.0+2*wzp-(1.0-2.0*wzm)/(2.0*uz*uz))*erf(uz));
 
-	return (IonScatter+IonCollect)*((Pdata->PlasmaVel-Sample->get_velocity()).getunit());
+	return (IonScatter+IonCollect)*
+			((Pdata->PlasmaVel-Sample->get_velocity()).getunit())*
+			(1.0/Sample->get_mass());
 }
 
 // Calculations for Neutral Drag
@@ -366,9 +373,15 @@ threevector ForceModel::NeutralDrag()const{
 
 	// Assuming DUSTT flux of neutrals, neutrals stationary
 	double ua = -Sample->get_velocity().mag3()/sqrt(2.0*Kb*Pdata->NeutralTemp/Pdata->mi);
-	return PI*Sample->get_radius()*Sample->get_radius()*Pdata->mi*Pdata->NeutralDensity*sqrt(2.0*Kb*Pdata->NeutralTemp/Pdata->mi)
+
+	if( ua == 0.0 ){
+		threevector Zeros(0.0,0.0,0.0);
+		return Zeros;
+	}else{
+		return PI*Sample->get_radius()*Sample->get_radius()*Pdata->mi*Pdata->NeutralDensity*sqrt(2.0*Kb*Pdata->NeutralTemp/Pdata->mi)
 			*(1.0/ua)*((1.0/sqrt(PI))*(ua+1/(2.0*ua))*exp(-ua*ua)
-			+(1.0+ua*ua-1.0/(4.0*ua*ua))*erf(ua))*-1.0*Sample->get_velocity();
+			+(1.0+ua*ua-1.0/(4.0*ua*ua))*erf(ua))*-1.0*Sample->get_velocity()*(1.0/Sample->get_mass());;
+	}
 }
 
 threevector ForceModel::LorentzForce()const{
@@ -398,9 +411,9 @@ threevector ForceModel::RocketForce()const{
 	if( Sample->is_liquid() ){
 		double Pv_plus = Sample->probe_vapourpressure(Sample->get_temperature());
 		double Pv_minus = Sample->probe_vapourpressure(OldTemp);
-		returnvec = (3.0/(4.0*sqrt(2.*PI)*Sample->get_density()))*((Pv_plus-Pv_minus)/Sample->get_radius())*Pdata->MagneticField.getunit();
+		returnvec = Sample->get_surfacearea()*((Pv_plus-Pv_minus)/Sample->get_radius())*Pdata->MagneticField.getunit();
 	}
-	return returnvec;
+	return returnvec*(1.0/Sample->get_mass());;
 }
 
 threevector ForceModel::Centrifugal()const{

@@ -64,12 +64,14 @@ void HeatingModel::CreateFile(std::string filename, bool PrintPhaseData){
 	ModelDataFile.open(FileName);
 	ModelDataFile << std::scientific << std::setprecision(16) << std::endl;
 	ModelDataFile << "Time\tTemp\tMass\tDensity";
+
 	if( PrintPhaseData ) 				ModelDataFile << "\tFusionE\tVapourE";
-	if( Sample->get_c(0) == 'v' || Sample->get_c(0) == 'V' ) 	ModelDataFile << "\tCv";
-	if( Sample->get_c(1) == 'v' || Sample->get_c(1) == 'V' ) 	ModelDataFile << "\tVapourP";
-	if( Sample->get_c(2) == 'v' || Sample->get_c(2) == 'V' ) 	ModelDataFile << "\tLinearExpansion";
+	if( Sample->get_c(1) == 'v' || Sample->get_c(1) == 'V' ) 	ModelDataFile << "\tLinearExpansion";
+	if( Sample->get_c(2) == 'v' || Sample->get_c(2) == 'V' ) 	ModelDataFile << "\tCv";
+	if( Sample->get_c(3) == 'v' || Sample->get_c(3) == 'V' ) 	ModelDataFile << "\tVapourP";
 	if( UseModel[0] )					ModelDataFile << "\tEmissLoss";
-	if( UseModel[0] && Sample->get_c(3) == 'v' )   			ModelDataFile << "\tEmissiv";
+	if( UseModel[0] && (Sample->get_c(0) == 'f' || Sample->get_c(0) == 'F') )   			
+										ModelDataFile << "\tEmissiv";
 	if( UseModel[1] )					ModelDataFile << "\tEvapRate\tEvapLoss\tEvapMassLoss";
 	if( UseModel[2] )					ModelDataFile << "\tNewton";
 	if( UseModel[3] )					ModelDataFile << "\tNeutralFlux\tNeutralHeatFlux";
@@ -169,9 +171,11 @@ void HeatingModel::Print(){
 
 //	bool PrintPhaseData = false; // Lol
 //	if( PrintPhaseData )	ModelDataFile 	<< "\t" << Sample->get_fusionenergy() << "\t" << Sample->get_vapourenergy();
-
+	if( Sample->get_c(1) == 'v' || Sample->get_c(1) == 'V' ) 	ModelDataFile << "\t" << Sample->get_linearexpansion();
+	if( Sample->get_c(2) == 'v' || Sample->get_c(2) == 'V' ) 	ModelDataFile << "\t" << Sample->get_heatcapacity();
+	if( Sample->get_c(3) == 'v' || Sample->get_c(3) == 'V' ) 	ModelDataFile << "\t" << Sample->get_vapourpressure();
 	if( UseModel[0] ) 	ModelDataFile 	<< "\t" << EmissivityModel(Sample->get_temperature());
-	if( UseModel[0] && Sample->get_c(3) == 'v' )
+	if( UseModel[0] && (Sample->get_c(0) == 'f' || Sample->get_c(0) == 'F') )
 				ModelDataFile	<< "\t" << Sample->get_emissivity();
 	if( UseModel[1] && Sample->is_liquid() )	
 				ModelDataFile 	<< "\t" << EvaporationFlux(Sample->get_temperature()) 
@@ -235,30 +239,32 @@ const int HeatingModel::Vapourise(){
 	return rValue; // 0, running normally. 1; Sample boiled. 2; Sample Evaporated. 3; Thermal equilibrium.
 }
 
+void HeatingModel::UpdateRERN(){
+	if( Sample->is_positive() ){ // If it's positive, Ions aren't backscattered
+		RN = 0.0;
+		RE = 0.0;
+	}else{
+		backscatter(Pdata->ElectronTemp,Pdata->IonTemp,Pdata->mi,Sample->get_potential(),Sample->get_elem(),RE,RN);
+	}
+
+	if( RN > 0.1 ){ // Uncomment when RN is calculated
+		static bool runOnce = true;
+		WarnOnce(runOnce,"In HeatingModel::UpdateRERN()\nRN > 0.1. Neutral Recombination affected by backscattering by more than 10%!");
+	}	
+	if( RE > 0.1 ){ // Uncomment when RE is calculated
+		static bool runOnce = true;
+		WarnOnce(runOnce,"In HeatingModel::UpdateRERN()\nRE > 0.1. Ion Heat Flux affected by backscattering by more than 10%!");
+	}
+}
+
 void HeatingModel::Heat(double timestep){
 	H_Debug("\tIn HeatingModel::Heat(double timestep)\n\n");
 	
 
 	// Make sure timestep input time is valid. Shouldn't exceed the timescale of the process.
 	assert(timestep > 0 && timestep <= TimeStep );
-
-	assert( Sample->get_mass() > 0 );
-
-	//backscatter(Pdata->ElectronTemp,Pdata->IonTemp,Pdata->mi,Sample->get_potential(),Sample->get_elem(),RE,RN);
-	/*
-	if( RN > 0.1 ){ // Uncomment when RN is calculated
-		static bool runOnce = true;
-		WarnOnce(runOnce,"In HeatingModel::SOMLNeutralRecombination(double DustTemperature)\nRN > 0.1. Neutral Recombination affected by backscattering by more than 10%!");
-	}	
-	if( RE > 0.1 ){ // Uncomment when RE is calculated
-		static bool runOnce = true;
-		WarnOnce(runOnce,"In HeatingModel::SMOMLIonHeatFlux(double DustTemperature)\nRE > 0.1. Ion Heat Flux affected by backscattering by more than 10%!");
-	}
-	if( Sample->is_positive() ){ // If it's positive, Ions aren't backscatterd
-		RN = 0.0;
-		RE = 0.0;
-	}
-	*/
+	assert( Sample->get_mass() > 0 );	
+	
 	double TotalEnergy = RungeKutta4(timestep);// Calculate total energy through RungeKutta4 method
 	H1_Debug( "\tTotalEnergy = " << TotalEnergy << "\n");
 	Sample->update_temperature(TotalEnergy);  // Update Temperature

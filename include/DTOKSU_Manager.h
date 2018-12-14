@@ -55,6 +55,10 @@ class DTOKSU_Manager{
 		int Configure(std::string = "Config_Files/DTOKSU_Config.cfg");
 		int Configure(int argc, char* argv[], std::string = "Config_Files/DTOKSU_Config.cfg");
 
+		int ChargeTest(double accuracy,std::array<bool,CMN> ChargeModels);
+		int ForceTest(double accuracy,std::array<bool,FMN> ForceModels);
+		int HeatTest(double accuracy,std::array<bool,HMN> HeatModels);
+
 		int Run();
 };
 

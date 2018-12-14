@@ -1,20 +1,20 @@
-#include "Constants.h"
-#include "Functions.h"
+#include "solveMOMLEM.h"
 #include <math.h>
-#include <assert.h>	// for assert()
+#include <iostream>
+#include <assert.h>
 
 // Equation for PI_1 as defined in equation (47)
 // See the paper by Minas and Nikoleta,
 // N. Rizopoulou, A. P. L. Robinson, M. Coppins, and M. Bacharis, Phys. Plasmas 21, (2014).
 double Pi_1(double x){
-	return exp(x*x)-exp(x*x)*erf(x)+(2.0*x)/sqrt(PI);
+	return exp(x*x)-exp(x*x)*erf(x)+(2.0*x)/sqrt(3.14159265359);
 }
 
 // Equation for PI_2 as defined in equation (50)
 // See the paper by Minas and Nikoleta,
 // N. Rizopoulou, A. P. L. Robinson, M. Coppins, and M. Bacharis, Phys. Plasmas 21, (2014).
 double Pi_2(double x){
-	return exp(x*x)+exp(x*x)*erf(x)-(2.0*x)/sqrt(PI);
+	return exp(x*x)+exp(x*x)*erf(x)-(2.0*x)/sqrt(3.14159265359);
 }
 
 // Equation for PI_2 as defined in equation (22)
@@ -99,21 +99,7 @@ double WFB_f(double phic, double phiw, double Tau, double Chi, double Delta, dou
 
 	return T1-T2+T3-DensityRatio*T4;
 }
-/*
-double WFB_f(double phic, double phiw, double Tau, double Chi, double Delta, double Mu){
-	double DensityRatio = 1.0;
-	double T1 = exp(phiw);
-	double T2 = Chi*sqrt(Delta)*exp((phiw-phic)/Delta);
-	double T3(0.0);
-	
-	if( phic >= 0.0 ){
-		T3 = sqrt(Tau*Mu)*exp(-phic/Tau);
-	}else{
-		T3 = sqrt(Tau*Mu);
-	}
 
-	return T1-T2-DensityRatio*T3;
-}*/
 
 // Equation for density integral balance in case with a potential well as defined in equation (55), (46), (49) and (52)
 // See the paper by Minas and Nikoleta,
@@ -168,12 +154,6 @@ double CWP_f(double x, double Tau, double Chi, double Delta, double Mu, char Cri
 			-(1.0-Pi_2(sqrt(Phis-Phic)))-x*Delta*(1.0-Pi_1(sqrt((Phis-Phic)/Delta)));
 	}else if( CritValue == 'd' ){
 //		std::cout << "\tT:\t" << Tau << "\tC:\t" << Chi << "\tD:\t" << x;
-//		std::cout << "\nPhis = " << Phis;
-//		std::cout << "\tPhic = " << Phic;
-//		std::cout << "\n\nT1 = " << DensityRatio*Tau*exp(-Phic)*(Pi_1(sqrt(-Phis/Tau))-Pi_1(sqrt(-Phic/Tau)));
-//		std::cout << "\nT2 = " << (1.0-Pi_2(sqrt(Phis-Phic)));
-//		std::cout << "\nT3 = " << x*Chi*(1.0-Pi_1(sqrt((Phis-Phic)/x)));
-
 		return DensityRatio*Tau*exp(-Phic)*(Pi_1(sqrt(-Phis/Tau))-Pi_1(sqrt(-Phic/Tau)))
                         -(1.0-Pi_2(sqrt(Phis-Phic)))-x*Chi*(1.0-Pi_1(sqrt((Phis-Phic)/x)));
 	}else if( CritValue == 't' ){
@@ -388,13 +368,6 @@ double solveWellCase( double &phis, double & phic, double &phiw, double tau, dou
 			std::cin.get();
 			return s;
 		}
-/*		if( phiw < -2.2 ){
-			if( phic <= phis ){
-				phiw = phic-dz;
-			}else{
-				phiw = phis-dz;
-			}
-		}*/
 		
 //		std::cout << "\n" << StepNumber << " " << index << " " << phis << " " << phic << " " << phiw;
 //		std::cout << " " << s << " " << s1 << " " << s2 << " " << s3 << " " << s4;
@@ -406,85 +379,24 @@ double solveWellCase( double &phis, double & phic, double &phiw, double tau, dou
 
 	return s;
 }
-// Do 3Dimensional hill climbing to try and find the solution for the well case,
-// Solving equations [53-55].
-// See the paper by Minas and Nikoleta,
-// N. Rizopoulou, A. P. L. Robinson, M. Coppins, and M. Bacharis, Phys. Plasmas 21, (2014).
-void exploreWellCase( double tau, double chi, double delta, double mu){
-//	std::cout << "\n\n* IN void exploreWellCase( double tau, double chi, double delta, double mu)*\n";
-
-	double steps = 0.01;
-	double dx_max = -1.7;
-	double dy_max = -1.6;
-	double dz_max = -1.8;
-	int StepNumber(0.0);
-
-	// CURRENTLY:
-	// phis can only get more positive starting from -1.85
-	// phiw can only get more negative starting from phic
-
-	for( double phis(-2.0); phis < dx_max; phis += steps){
-		for( double phic(-2.1); phic < dy_max; phic += steps){
-			for( double phiw(-2.2); phiw < dz_max; phiw += steps){
-				double s=0.0;
-				double s1=0.0;
-				double s2=0.0;
-				double s3=0.0;
-				if( phis > phiw ){
-					s = fabs(WDB_f(phis,phic,phiw,tau,chi,delta) + WIB_f(phis,phiw,tau,chi,delta)
-				                + WFB_f(phic,phiw,tau,chi,delta,mu));
-					s1 = WDB_f(phis,phic,phiw,tau,chi,delta);
-					s3 = WIB_f(phis,phiw,tau,chi,delta);
-				}
-
-				s2 = WFB_f(phic,phiw,tau,chi,delta,mu);
-
-				std::cout << "\n" << StepNumber << " "
-					<< phis << " " << phic << " " << phiw << " " 
-					<< s << " " << s1 << " " << s2 << " " << s3;
-				StepNumber ++;
-			}
-		}
-	}
-}
-
-
 
 // Solve the Modified orbital motion limited potential for large emitting dust grains.
 // See the paper by Minas and Nikoleta, equation (1) and (2)
 // N. Rizopoulou and M. Bacharis, Phys. Plasmas 25, (2018).
-double solveMOMLEM(double Tau, double MassRatio, double Chi, double Delta){
+double solveDeltaMOMLEM(double Tau, double MassRatio, double Chi, double Delta){
 	double Mu = 1.0/MassRatio;
-	double DensityRatio = 1.0;
 	double Phic = log(sqrt(Tau*Mu)+Chi*sqrt(Delta));
 
-	double Phis(-0.0001), NWSP(0.0);
-
-//	double CritVal =  FindCriticalVal(Tau, Chi, MassRatio,'d'){
-	assert(Phic <= Phis);
-	do{
-		NWSP = NWSP_f(Phis,Tau,Chi,Delta,Phic);
-		Phis = Phis-0.0001;
-	}while( fabs(NWSP) > 0.001 && Phis > Phic );
-	std::cerr << "\nIN solveMOMLEM()! NO-WELL ROOT CAN'T BE FOUND!";
-
-
-	if( fabs(NWSP) > 0.001 ){
-
-		Phis = Phic + 0.1;
-		double Phiw = Phic-0.1;
-		std::cerr << "\n\n* BEFORE *\n\tPhic:\t" << Phic << "\tPhis:\t" << Phis << "\tPhiw:\t" << Phiw;
-		std::cerr << "\nT:\t" << Tau << "\tC:\t" << Chi << "\tD:\t" << Delta;
-
+	double CWP_Result = CWP_f(Tau,Tau,Chi,Delta,Mu,'t');
+	double Phis(-0.0001);
+	double Phiw(Phic-0.0001);
+	if( CWP_Result != 0.0 ){ // In this case, there is no well!
+		return exp(Phic);
+	}else{ // In this case, there is a well!
+		
 		double GoodnessOfFit = solveWellCase(Phis,Phic,Phiw,Tau,Chi,Delta,Mu);
-		std::cerr << "\n\n* AFTER *\n\tPhic:\t" << Phic << "\tPhis:\t" << Phis << "\tPhiw:\t" << Phiw;
-		std::cerr << "\nT:\t" << Tau << "\tC:\t" << Chi << "\tD:\t" << Delta;
-		std::cout << "\n" << GoodnessOfFit << "\t" << Tau << "\t" << Chi << "\t" << Delta << "\t" 
-				<< Phic << "\t" << Phis << "\t" << Phiw;
-		return Phis;
+		return exp((Phiw-Phic)/Delta)/exp(Phiw);
 	}
-
 
 	return Phis;
 }
-

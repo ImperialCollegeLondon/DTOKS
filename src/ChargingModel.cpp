@@ -44,24 +44,27 @@ ChargingModel::ChargingModel(std::string filename, float accuracy, std::array<bo
 
 void ChargingModel::CreateFile(std::string filename){
 	C_Debug("\tIn ChargingModel::CreateFile(std::string filename)\n\n");
-	std::cout << "\nTime\tOML\t\tOML\tMOML\tSOML\t\tSMOML\t\tCW\t\tPHL\t\tDTOKSOML\t\tDTOKSWell\n";//\t\tMOMLWEM\n");
 	FileName = filename;
 	ModelDataFile.open(FileName);
 	ModelDataFile << std::scientific << std::setprecision(16) << std::endl;
-	ModelDataFile << "Time\t\n";
+	ModelDataFile << "Time\tCharge\tSign\tDeltatot\tPotential\n";
 	ModelDataFile.close();
 	ModelDataFile.clear();
 	Print();
 }
 
 void ChargingModel::Print(){
-	C_Debug("\tIn ChargingModel::Print()\n\n";
+	C_Debug("\tIn ChargingModel::Print()\n\n");
 	ModelDataFile.open(FileName,std::ofstream::app);
-	ModelDataFile << TotalTime << "\t" << -(4.0*PI*epsilon0*Sample->get_radius()*Sample->get_potential()*Kb*Pdata->ElectronTemp)/(echarge*echarge);
+	ModelDataFile << TotalTime << "\t" 
+				<< -(4.0*PI*epsilon0*Sample->get_radius()*Sample->get_potential()*Kb*Pdata->ElectronTemp)
+				/(echarge*echarge);
 	if( Sample->is_positive() )  ModelDataFile << "\tPos";
 	if( !Sample->is_positive() ) ModelDataFile << "\tNeg";
 	ModelDataFile << "\t" << Sample->get_deltatot() << "\t" << Sample->get_potential() << "\n";
+
 	//Test();
+
 	ModelDataFile.close();
 	ModelDataFile.clear();
 }
@@ -70,13 +73,13 @@ void ChargingModel::Test(){
 	double DSec = DeltaSec();
 	double DTherm = DeltaTherm();
 
-	std::cout << "\n"; std::cout << Sample->get_temperature()); std::cout << "\t";
-	std::cout << solveOML(DSec+DTherm,Sample->get_potential())); std::cout << "\t";
-	std::cout << solveMOML()); std::cout << "\t";
-	std::cout << solveSOML(Sample->get_potential())); std::cout << "\t";
-	std::cout << solveSMOML(Sample->get_potential())); std::cout << "\t";
-	std::cout << solveCW(Sample->get_potential())); std::cout << "\t";
-	std::cout << solvePHL(Sample->get_potential())); std::cout << "\t";
+	std::cout << "\n"; std::cout << Sample->get_temperature(); std::cout << "\t";
+	std::cout << solveOML(DSec+DTherm,Sample->get_potential()); std::cout << "\t";
+	std::cout << solveMOML(); std::cout << "\t";
+	std::cout << solveSOML(Sample->get_potential()); std::cout << "\t";
+	std::cout << solveSMOML(Sample->get_potential()); std::cout << "\t";
+	std::cout << solveCW(Sample->get_potential()); std::cout << "\t";
+	std::cout << solvePHL(Sample->get_potential()); std::cout << "\t";
 	
 	double Potential(0.0);
 	if( (DSec + DTherm) >= 1.0 ){ 	// If electron emission yield exceeds unity, we have potential well...
@@ -94,10 +97,11 @@ void ChargingModel::Test(){
 					/(Pdata->ElectronTemp*Kb);
 		}
 	}
-	std::cout << Potential); std::cout << "\t";
-	std::cout << solveOML(0.0,Sample->get_potential())-Sample->get_temperature()/Pdata->ElectronTemp); std::cout << "\n";
+	std::cout << Potential; std::cout << "\t";
+	std::cout << solveOML(0.0,Sample->get_potential())-Sample->get_temperature()/Pdata->ElectronTemp;
 	//std::cout << solveMOMLWEM(Sample->get_potential())); std::cout << "\n");
 }
+
 double ChargingModel::ProbeTimeStep()const{
 	C_Debug( "\tIn ChargingModel::ProbeTimeStep()\n\n" );
 
@@ -200,19 +204,19 @@ void ChargingModel::Charge(double timestep){
 
 		Potential = solveSOML(Sample->get_potential());
 		DSec = DeltaSec();
-		DTherm = ThermFluxSchottky(Potential);
+		DTherm = ThermFluxSchottky(Potential)/OMLElectronFlux(Sample->get_potential());
 	}else if( UseModel[4] ){	// SMOML Charging model
 		Potential = solveSMOML(Sample->get_potential());
 		DSec = DeltaSec();
-		DTherm = ThermFluxSchottky(Potential);
+		DTherm = ThermFluxSchottky(Potential)/OMLElectronFlux(Sample->get_potential());
 	}else if(UseModel[5] ){		// CW Charging Model, Chris willis fit to Sceptic results
 		Potential = solveCW(Sample->get_potential());
 		DSec = DeltaSec();
-		DTherm = ThermFluxSchottky(Potential);
+		DTherm = ThermFluxSchottky(Potential)/OMLElectronFlux(Sample->get_potential());
 	}else if( UseModel[6] ){	// In this case, use Hutchinson, Patterchini and Lapenta
 		Potential = solvePHL(Sample->get_potential());
 		DSec = DeltaSec();
-		DTherm = ThermFluxSchottky(Potential);
+		DTherm = ThermFluxSchottky(Potential)/PHLElectronFlux(Sample->get_potential());
 
 	}else if( UseModel[7] ){ // Original DTOKS Charging scheme
 //		WARNING! THIS SCHEME FOR THE CHARGING MODEL CREATES DISCONTINUITIES WHEN FORMING A WELL!
@@ -586,7 +590,7 @@ double ChargingModel::solveMOMLWEM(double DeltaTot){
 	double Ionization = Pdata->Z; 		// Ionization
 	double IonThermalVelocity = sqrt((Kb*Pdata->IonTemp)/Pdata->mi);
 	double PlasmaFlowSpeed = (Pdata->PlasmaVel-Sample->get_velocity()).mag3()/IonThermalVelocity;
-	double Delta_Phi_em = 0.5*log((2.0*PI/MassRatio)*(1+HeatCapacityRatio*TemperatureRatio)/pow(1.0-DeltaTot,2.0));
+	double Delta_Phi_em = 0.5*log((2.0*PI/MassRatio)*(1.0+HeatCapacityRatio*TemperatureRatio)/pow(1.0-DeltaTot,2.0));
     // Uncomment following line to compare MOMLWEM results with figure (1) of paper:
     // N. Rizopoulou and M. Bacharis, Phys. Plasmas 25, (2018).
     //std::cout << DeltaTot << "\t" << Delta_Phi_em << "\n";
@@ -602,6 +606,44 @@ double ChargingModel::solveMOMLWEM(double DeltaTot){
 		return 0;
 	}
     return -1.0*(TemperatureRatio/Ionization+Delta_Phi_em/Ionization-LambertW(Arg));
+}
+
+// Solve the Modified orbital motion limited potential for large emitting dust grains.
+// See the paper by Minas and Nikoleta, equation (10) using (1), (2), (5) & (9)
+// N. Rizopoulou and M. Bacharis, Phys. Plasmas 25, (2018).
+double ChargingModel::solveMOMLEM(){
+	double Tau = Pdata->IonTemp/Pdata->ElectronTemp;
+	double MassRatio = Pdata->mi/Me;
+	double Chi = 2.0*Sample->get_temperature()/(Pdata->ElectronTemp);
+	double Delta = 0.01; // Ratio of emitted electron density to sheath edge density
+	double PotentialWellDiff = solveDeltaMOMLEM(Tau, MassRatio, Chi, Delta);
+	double DeltaTot = 0.0;
+	if( PotentialWellDiff == 0.0 ){ // No potential well has formed!
+		DeltaTot = Chi*sqrt(Delta)/PotentialWellDiff;
+	}else{ // Potential well has formed!
+		DeltaTot = Chi*sqrt(Delta)*PotentialWellDiff;
+	}
+
+	double HeatCapacityRatio = 1.0;
+	double Ionization = Pdata->Z; 	// Ionization
+	double IonThermalVelocity = sqrt((Kb*Pdata->IonTemp)/Pdata->mi);
+	double PlasmaFlowSpeed = (Pdata->PlasmaVel-Sample->get_velocity()).mag3()/IonThermalVelocity;
+	double Delta_Phi_em = 0.5*log((2.0*PI/MassRatio)*(1.0+HeatCapacityRatio*Tau)/pow(1.0-DeltaTot,2.0));
+    // Uncomment following line to compare MOMLWEM results with figure (1) of paper:
+    // N. Rizopoulou and M. Bacharis, Phys. Plasmas 25, (2018).
+    //std::cout << DeltaTot << "\t" << Delta_Phi_em << "\n";
+    double Arg = (1.0-DeltaTot)*sqrt(MassRatio*Tau)
+                    *exp(Tau/Ionization+Delta_Phi_em/Ionization)/Ionization;
+	if( std::isinf(exp(Tau/Ionization+Delta_Phi_em/Ionization)) ){
+		static bool runOnce = true;
+		WarnOnce(runOnce,"LambertW exp(Tau/Ionization+Delta_Phi_em/Ionization) is infinite in solveMOMLWEM()! Assuming Potential = 0.0");
+		return 0;
+	}else if( std::isinf(Arg) || Arg < 0.0 ){
+		std::cout << "\nLambertW(Arg == " << Arg << ")!";
+		throw LambertWFailure();
+		return 0;
+	}
+    return -1.0*(Tau/Ionization+Delta_Phi_em/Ionization-LambertW(Arg));
 }
 
 double ChargingModel::DeltaTherm()const{

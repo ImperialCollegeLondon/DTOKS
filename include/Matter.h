@@ -106,7 +106,7 @@ class Matter{
 		bool is_liquid				()const{ return St.Liquid;						};
 		bool is_split				()const{ return St.Breakup;						};
 		bool is_positive			()const{ return St.Positive;					};
-		bool get_c		  	 (int i)const{ assert(i < CM); return ConstModels[i];	};		
+		char get_c		  	 (int i)const{ assert(i < CM); return ConstModels[i];	};		
 
 		void set_potential              (double potential){ St.Potential = potential;   };
 		void set_mass			(double mass){ assert(mass > MinMass*10); St.Mass = mass;	};

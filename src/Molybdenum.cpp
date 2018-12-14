@@ -83,52 +83,51 @@ void Molybdenum::molybdenum_defaults(){
 
 void Molybdenum::update_heatcapacity(){ // Calculates the heat capacity in units of J mol^-1 K^-2
 	E_Debug("\tIn Molybdenum::update_heatcapacity()\n\n");
-/*
-	if( St.Temperature < 300 ){ 
 
-		static bool runOnce = true;
-		WarnOnce(runOnce,
-			"In Molybdenum::update_heatcapacity():\nExtending heat capacity model outside temperature range! T < 300K");
+	double Temperatures[104] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 15, 16, 18, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 110, 120, 130,
+	140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 260, 270, 280, 290, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000, 1050, 1100, 1150, 1200,
+	1250, 1300, 1350, 1400, 1450, 1500, 1550, 1600, 1650, 1700, 1750, 1800, 1850, 1900, 1950, 2000, 2050, 2100, 2150, 2200, 2250, 2300, 2350, 2400, 2450, 2500, 2550, 2600, 2650, 2700, 2750, 2800, 2850, 2896};
 
-		St.HeatCapacity = 24.943 - 7.72e4*pow(St.Temperature,-2) + 2.33e-3*St.Temperature + 1.18e-13*pow(St.Temperature,4);
-	}else if( St.Temperature > 300 && St.Temperature < Ec.MeltingTemp ){ 
-		// http://nvlpubs.nist.gov/nistpubs/jres/75a/jresv75an4p283_a1b.pdf
-		St.HeatCapacity = 24.943 - 7.72e4*pow(St.Temperature,-2) + 2.33e-3*St.Temperature + 1.18e-13*pow(St.Temperature,4);
-	}else{
-		// http://webbook.nist.gov/cgi/inchi?ID=C7440337&Mask=2
-
-		double t = St.Temperature/1000;
-                St.HeatCapacity = 35.56404 -1.551741e-7*t + 2.915253e-8*pow(t,2) -1.891725e-9*pow(t,3)-4.107702e-7*pow(t,-2);
+	double HeatCapacities[104] = {0.0021, 0.0047, 0.0071, 0.0092, 0.0132, 0.0172, 0.0219, 0.0275, 0.0333, 0.0444, 0.067, 0.092, 0.108, 0.129, 0.188, 0.255, 0.494, 0.891, 1.43, 2.14, 2.89, 3.76, 4.69, 5.72, 6.81, 7.89, 9.03, 9.96,
+	10.93, 11.83, 12.62, 13.45, 14.88, 16.08, 17.11,
+	17.98, 18.78, 19.45, 20.03, 20.56, 21.01, 21.44, 21.81, 22.15, 22.48, 22.76, 22.99, 23.21, 23.40, 23.59, 23.76, 23.92, 24.59, 25.10, 25.49, 25.83, 26.14, 26.41, 26.67, 26.89, 27.14, 27.36, 27.58, 27.81, 28.03, 28.27, 28.51, 28.78, 29.05, 29.36,
+	29.68, 30.04, 30.38, 30.75, 31.13, 31.53, 31.96, 32.39, 32.83, 33.28, 33.76, 34.29, 34.77, 35.31, 35.88, 36.43, 37.09, 37.71, 38.36, 39.03, 39.74, 40.45, 41.24, 42.03, 42.86, 43.79, 44.72, 45.72, 46.82, 47.97, 49.15, 50.49, 51.86, 53.29};
+	double MinDiff(1000.0);
+	int MinIndex(0);
+	for(int i(0); i < 104; i ++){
+		double Diff = Temperatures[i] - St.Temperature;
+		if( Diff < MinDiff ){
+			MinDiff = Diff;
+			MinIndex = i;
+		}
 	}
 
-//	E1_Debug("\n\nTemperature is : " << St.Temperature << "\nSt.Gas = " << St.Gas << "\nSt.Liquid = " << St.Liquid 
-//				<< "\nCv of Solid: " << St.HeatCapacity/Ec.AtomicMass << "[kJ/(kg K)]"; );
-	St.HeatCapacity = (St.HeatCapacity /(1000 * Ec.AtomicMass)); // Conversion kJ/(mol K) to kJ/( kg K ), AtomicMass [kg mol^-1]
-	*/
-	St.HeatCapacity = St.HeatCapacity;
+	St.HeatCapacity = HeatCapacities[MinIndex]/(1000 * Ec.AtomicMass); // Conversion J/(mol K) to kJ/( kg K ), AtomicMass [kg mol^-1]
 }
 
 void Molybdenum::update_radius(){
 	E_Debug("\tIn Molybdenum::update_radius()\n\n");
-	/*
-	if( St.Temperature > 173 && St.Temperature <= 1500 ){
-		static bool runOnce = true;
-		WarnOnce(runOnce,
-				"In Molybdenum::update_radius():\nExtending model outside temperature range!(from 738K to 1500K)");
-		St.LinearExpansion = 1+(4.28*St.Temperature)*1e-6;
-	}else if( St.Temperature > 1500 && St.Temperature < Ec.MeltingTemp ){
-		St.LinearExpansion = 1+3.9003e-4+1.3896*1e-3-8.2797*1e-7*St.Temperature + 4.0557*1e-9*pow(St.Temperature,2)
-					-1.2164*1e-12*pow(St.Temperature,3)+1.7034*1e-16*pow(St.Temperature,4);
-		// 1.02648269488
-	}else if( St.Temperature == Ec.MeltingTemp ){ // Model while it's melting
-		// http://nvlpubs.nist.gov/nistpubs/jres/75a/jresv75an4p283_a1b.pdf
-		St.LinearExpansion = 1.02105 + 0.03152*St.FusionEnergy/(Ec.LatentFusion*St.Mass);
-		// 1.02648269488 - 1.05257238281 = 0.02608968793
-	}else if( St.Temperature > Ec.MeltingTemp && St.Temperature <= St.SuperBoilingTemp){
-		St.LinearExpansion = pow(1.18+6.20*1e-5*(St.Temperature-3680)+3.23*1e-8*pow((St.Temperature-3680),2),(1./3.));
+	
+	double Temperatures[104] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 15, 16, 18, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 110, 120, 130,
+	140, 150, 160, 170, 180, 190, 200, 210, 220, 230, 240, 250, 260, 270, 280, 290, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800, 850, 900, 950, 1000, 1050, 1100, 1150, 1200,
+	1250, 1300, 1350, 1400, 1450, 1500, 1550, 1600, 1650, 1700, 1750, 1800, 1850, 1900, 1950, 2000, 2050, 2100, 2150, 2200, 2250, 2300, 2350, 2400, 2450, 2500, 2550, 2600, 2650, 2700, 2750, 2800, 2850, 2896};
+
+	double Extensions[104] = {0.0026, 0.0053, 0.0083, 0.0115, 0.0152, 0.0195, 0.0244, 0.0301, 0.0366, 0.0442, 0.063, 0.087, 0.101, 0.116, 0.153, 0.198, 0.351, 0.572, 0.876, 1.28, 1.79, 2.42, 3.11, 3.75, 4.42, 5.06, 5.63, 6.24, 6.79, 7.34, 7.81, 8.35, 9.26, 10.02, 10.70,
+	11.33, 11.77, 12.27, 12.71, 13.11, 13.41, 13.73, 13.97, 14.19, 14.40, 14.55, 14.71, 14.81, 14.94, 15.04, 15.14, 15.21, 15.61, 15.93, 16.21, 16.41, 16.62, 16.81, 17.02, 17.24, 17.48, 17.65, 17.94, 18.16, 18.40, 18.64, 18.97, 19.25, 19.55, 19.91,
+	20.35, 20.72, 21.15, 21.60, 21.99, 22.44, 22.86, 23.34, 23.82, 24.35, 24.84, 25.38, 25.86, 26.35, 26.96, 27.61, 28.24, 28.94, 29.71, 30.51, 31.38, 32.3,
+	33.18, 34.02, 34.95, 35.98, 36.96, 37.99, 39.12, 40.32, 41.64, 42.94, 44.38, 45.80};
+
+	double MinDiff(1000.0);
+	int MinIndex(0);
+	for(int i(0); i < 104; i ++){
+		double Diff = Temperatures[i] - St.Temperature;
+		if( Diff < MinDiff ){
+			MinDiff = Diff;
+			MinIndex = i;
+		}
 	}
-	*/
-	St.LinearExpansion = 1.0;
+
+	St.LinearExpansion = pow(Extensions[MinIndex]*1e-6,1.0/3.0);
 	St.Radius=St.UnheatedRadius*St.LinearExpansion;
 
 	E1_Debug("\nTemperature = " << St.Temperature << "\n\nSt.LinearExpansion = " << St.LinearExpansion

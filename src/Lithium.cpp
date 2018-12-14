@@ -69,7 +69,7 @@ void Lithium::lithium_defaults(){
 	E_Debug("\tIn Lithium::lithium_defaults()\n\n");
 
 	// https://www.engineersedge.com/materials/specific_heat_capacity_of_metals_13259.htm
-	St.HeatCapacity = 3.55878; 		// kJ/(kg-K)         
+	St.HeatCapacity = 4.169; 		// kJ/(kg-K)         
 	St.Emissivity = 0.1;			// http://www.fusion.ucla.edu/APEX/meeting15/Apex4_01-tanaka.pdf
 	St.SuperBoilingTemp = Ec.BoilingTemp; 	// K, At any pressure
 	St.Density = 534;			// (kg/m^3) from Wikipedia
@@ -83,52 +83,34 @@ void Lithium::lithium_defaults(){
 
 void Lithium::update_heatcapacity(){ // Calculates the heat capacity in units of J mol^-1 K^-2
 	E_Debug("\tIn Lithium::update_heatcapacity()\n\n");
-	/*
-	if( St.Temperature < 300 ){ 
-
+	// Temperature dependant heat capacity for Lithium taken from:
+	// D. Harry W., Lewis Reserch Cent. 24 (1968), pg 8, figure 4
+	if( St.Temperature < Ec.MeltingTemp ){ 
 		static bool runOnce = true;
 		WarnOnce(runOnce,
 			"In Lithium::update_heatcapacity():\nExtending heat capacity model outside temperature range! T < 300K");
 
-		St.HeatCapacity = 24.943 - 7.72e4*pow(St.Temperature,-2) + 2.33e-3*St.Temperature + 1.18e-13*pow(St.Temperature,4);
-	}else if( St.Temperature > 300 && St.Temperature < Ec.MeltingTemp ){ 
-		// http://nvlpubs.nist.gov/nistpubs/jres/75a/jresv75an4p283_a1b.pdf
-		St.HeatCapacity = 24.943 - 7.72e4*pow(St.Temperature,-2) + 2.33e-3*St.Temperature + 1.18e-13*pow(St.Temperature,4);
+		St.HeatCapacity = 4169-0.2427*St.Temperature+1.045e-3*pow(St.Temperature,2.0);
+	}else if( St.Temperature >= Ec.MeltingTemp && St.Temperature <= Ec.BoilingTemp ){ 
+		St.HeatCapacity = 4169-0.2427*St.Temperature+1.045e-3*pow(St.Temperature,2.0);
 	}else{
-		// http://webbook.nist.gov/cgi/inchi?ID=C7440337&Mask=2
+		static bool runOnce = true;
+		WarnOnce(runOnce,
+			"In Lithium::update_heatcapacity():\nExtending heat capacity model outside temperature range! T > Ec.BoilingTemp");
 
-		double t = St.Temperature/1000;
-                St.HeatCapacity = 35.56404 -1.551741e-7*t + 2.915253e-8*pow(t,2) -1.891725e-9*pow(t,3)-4.107702e-7*pow(t,-2);
+		St.HeatCapacity = 4169-0.2427*St.Temperature+1.045e-3*pow(St.Temperature,2.0);
 	}
 
-//	E1_Debug("\n\nTemperature is : " << St.Temperature << "\nSt.Gas = " << St.Gas << "\nSt.Liquid = " << St.Liquid 
-//				<< "\nCv of Solid: " << St.HeatCapacity/Ec.AtomicMass << "[kJ/(kg K)]"; );
-	St.HeatCapacity = (St.HeatCapacity /(1000 * Ec.AtomicMass)); // Conversion kJ/(mol K) to kJ/( kg K ), AtomicMass [kg mol^-1]
-
-	*/
-	St.HeatCapacity = St.HeatCapacity;
+	E1_Debug("\n\nTemperature is : " << St.Temperature << "\nSt.Gas = " << St.Gas << "\nSt.Liquid = " << St.Liquid 
+				<< "\nCv of Solid: " << St.HeatCapacity/Ec.AtomicMass << "[kJ/(kg K)]"; );
+	St.HeatCapacity = (St.HeatCapacity /1000); // Conversion J/(Kg K) to kJ/( kg K ),
 }
 
 void Lithium::update_radius(){
 	E_Debug("\tIn Lithium::update_radius()\n\n");
-	/*
-	if( St.Temperature > 173 && St.Temperature <= 1500 ){
-		static bool runOnce = true;
-		WarnOnce(runOnce,
-				"In Lithium::update_radius():\nExtending model outside temperature range!(from 738K to 1500K)");
-		St.LinearExpansion = 1+(4.28*St.Temperature)*1e-6;
-	}else if( St.Temperature > 1500 && St.Temperature < Ec.MeltingTemp ){
-		St.LinearExpansion = 1+3.9003e-4+1.3896*1e-3-8.2797*1e-7*St.Temperature + 4.0557*1e-9*pow(St.Temperature,2)
-					-1.2164*1e-12*pow(St.Temperature,3)+1.7034*1e-16*pow(St.Temperature,4);
-		// 1.02648269488
-	}else if( St.Temperature == Ec.MeltingTemp ){ // Model while it's melting
-		// http://nvlpubs.nist.gov/nistpubs/jres/75a/jresv75an4p283_a1b.pdf
-		St.LinearExpansion = 1.02105 + 0.03152*St.FusionEnergy/(Ec.LatentFusion*St.Mass);
-		// 1.02648269488 - 1.05257238281 = 0.02608968793
-	}else if( St.Temperature > Ec.MeltingTemp && St.Temperature <= St.SuperBoilingTemp){
-		St.LinearExpansion = pow(1.18+6.20*1e-5*(St.Temperature-3680)+3.23*1e-8*pow((St.Temperature-3680),2),(1./3.));
-	}*/
-	St.LinearExpansion = 1.0;
+	
+	double DensityTemp = 562.0-0.1*St.Temperature;
+	St.LinearExpansion = 1.0+pow(534/DensityTemp,1.0/3.0);
 	St.Radius=St.UnheatedRadius*St.LinearExpansion;
 	E1_Debug("\nTemperature = " << St.Temperature << "\n\nSt.LinearExpansion = " << St.LinearExpansion
 			<< "\nSt.Radius = " << St.Radius);
@@ -144,7 +126,7 @@ void Lithium::update_vapourpressure(){
 
 double Lithium::probe_vapourpressure(double Temperature)const{
 	double VapourPressure(0.0);
-	if( Temperature < 298 ){
+	if( Temperature < Ec.MeltingTemp ){
 		static bool runOnce = true;
 		WarnOnce(runOnce,
 				"In Lithium::update_vapourpressure():\nExtending model outside temperature range!(from 298K< to 0K<)");
@@ -156,6 +138,7 @@ double Lithium::probe_vapourpressure(double Temperature)const{
 		VapourPressure = 101325*pow(10,10.015-8064.5/Temperature);
 	}else{
 		std::cerr << "\nError! Negative Temperature in Lithium::probe_vapourpressure(double Temperature)";
+		std::cout << "\nTemperature = " << Temperature;
 	}
 	
 	return VapourPressure;

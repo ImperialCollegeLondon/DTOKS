@@ -12,10 +12,10 @@
 // Plot results using matlab
 void DeltaThermTest(){
 	clock_t begin = clock();
-	double electronDensity = 1e18;	// Density in m^(-3)
-	double NormalisedPotential = 2.5;
-	double WorkFunction = 3.4;	// Work function in eV
-	double Te = 10;			// Electron Temperature in eV
+	double electronDensity = 1e15;	// Density in m^(-3)
+	double NormalisedPotential = 0.7591;
+	double WorkFunction = 2.9;	// Work function in eV
+	double Te = 1;			// Electron Temperature in eV
 	for(double T(280); T < 5.5e3; T ++){ // Loop over temperatures
 		double gammae = electronDensity*exp(-NormalisedPotential)*sqrt(echarge*Te/(2*PI*Me));
 		std::cout << "\n" << T << ", " 

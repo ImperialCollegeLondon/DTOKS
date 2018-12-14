@@ -840,6 +840,34 @@ int DTOKSU_Manager::read_MPSIdata(std::string plasma_dirname){
 }
 #endif
 
+int DTOKSU_Manager::ChargeTest(double accuracy,std::array<bool,CMN> ChargeModels){
+	ChargingModel MyChargeModel("Data/DTOKS_ChargeTest.txt",accuracy,ChargeModels,Sample,Pdata);
+	bool cm_InGrid = MyChargeModel.update_plasmadata();
+
+	Sample->update();		// Need to manually update the first time as first step is not necessarily heating
+	double ChargeTime 	= MyChargeModel.UpdateTimeStep();
+	MyChargeModel.Charge(ChargeTime);
+
+}
+
+int DTOKSU_Manager::ForceTest(double accuracy,std::array<bool,FMN> ForceModels){
+	ForceModel MyForceModel("Data/DTOKS_ForceTest.txt",accuracy,ForceModels,Sample,Pdata);
+	bool fm_InGrid = MyForceModel.update_plasmadata();
+
+	Sample->update();		// Need to manually update the first time as first step is not necessarily heating
+	double ForceTime 	= MyForceModel.UpdateTimeStep();
+	MyForceModel.Force(ForceTime);
+}
+
+int DTOKSU_Manager::HeatTest(double accuracy,std::array<bool,HMN> HeatModels){
+	HeatingModel MyHeatModel("Data/DTOKS_HeatTest.txt",accuracy,HeatModels,Sample,Pdata);
+	bool hm_InGrid = MyHeatModel.update_plasmadata();
+
+	Sample->update();		// Need to manually update the first time as first step is not necessarily heating
+	double HeatTime 	= MyHeatModel.UpdateTimeStep();
+	MyHeatModel.Heat(HeatTime);
+}
+
 // Run DTOKS Normally a single time
 int DTOKSU_Manager::Run(){
 	DM_Debug("\n\nIn DTOKSU_Manager::Run()\n\n");
