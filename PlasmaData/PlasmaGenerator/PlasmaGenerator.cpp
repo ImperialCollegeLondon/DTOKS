@@ -26,7 +26,7 @@ double LinearRamp(double fx_init, double fx_fin, double fy_init, double fy_fin, 
 }
 
 void MagneticField(std::string magfieldtype, double Bmax){
-	std::string filename((magfieldtype + ".dat").c_str());
+	std::string filename("BField.dat");
 	std::ofstream fs;
 
 	fs.open(filename);
@@ -79,7 +79,7 @@ int main(){
 	double echarge(1.60217662e-19);
 	// Te: Electron Temperature, Ti: Ion Temperature, na0: Ion Density, na1: Electron Density
 	// po: Plasma Pressure, ua0: Ion Velocity, ua1: Electron Velocity
-	std::string PlasmaType = "TwoPointModel";	// Plasma Type, can be "Blank", "Constant", "Linear" or "TwoPointModel"
+	std::string PlasmaType = "Constant";	// Plasma Type, can be "Blank", "Constant", "Linear" or "TwoPointModel"
 
 	double Te(0.0), Ti(0.0), na0(0.0), na1(0.0), po(0.0), ua0(0.0), ua1(0.0);
 
@@ -98,13 +98,13 @@ int main(){
 
 
 	if	( PlasmaType == "Constant"	){
-		Te  = 15*echarge;//1.5*echarge;	// Convert ev to joules
-		Ti  = 15*echarge;//1.188*echarge;	// Convert ev to joules
+		Te  = 50*echarge;//1.5*echarge;	// Convert ev to joules
+		Ti  = 50*echarge;//1.188*echarge;	// Convert ev to joules
 		na0 = 1.0e18;//3.8e18; 
 		na1 = 1.0e18;
 		po  = 1.0;		// Varies between -20 and 20
-		ua0 = 0.0; 		// Varies between -10,000 and 10,000 (roughly), generally smaller than ua1
-		ua1 = 0.0; 		// Varies between -10,000 and 10,000 (roughly)
+		ua0 = 10000.0; 		// Varies between -10,000 and 10,000 (roughly), generally smaller than ua1
+		ua1 = 10000.0; 		// Varies between -10,000 and 10,000 (roughly)
 
 	}else if( PlasmaType == "Linear"	){
 		Te_i  = 1*echarge;
@@ -183,6 +183,9 @@ int main(){
 			                Ti  = Kb*TwoPointModelTempTt;   // Convert ev to joules
 				}
 			}
+
+			ua0 = sqrt(Ti/Mp);
+			ua1 = sqrt(Ti/Mp);
 			fs << x << "\t" << y  << "\t" << Te << "\t" << Ti << "\t" << na0 << "\t" 
 				<< na1 << "\t" << po << "\t" << ua0 << "\t" << ua1 << "\n";
 		}
