@@ -316,8 +316,9 @@ int DTOKSU_Manager::Configure(int argc, char* argv[], std::string Config_Filenam
 				cfg->lookupBoolean("chargemodels","DYNAMIC"), cfg->lookupBoolean("chargemodels","OML"), 
 				cfg->lookupBoolean("chargemodels","MOML"), cfg->lookupBoolean("chargemodels","SOML"), 
 				cfg->lookupBoolean("chargemodels","SMOML"), cfg->lookupBoolean("chargemodels","CW"),
-				cfg->lookupBoolean("chargemodels","PHL"), cfg->lookupBoolean("chargemodels","DTOKSOML"), 
-				cfg->lookupBoolean("chargemodels","DTOKSWell"), cfg->lookupBoolean("chargemodels","MOMLWEM")
+				cfg->lookupBoolean("chargemodels","PHL"), cfg->lookupBoolean("chargemodels","THS"),
+				cfg->lookupBoolean("chargemodels","DTOKSOML"), cfg->lookupBoolean("chargemodels","DTOKSWell"), 
+				cfg->lookupBoolean("chargemodels","MOMLWEM")
 			};//cfg->lookupBoolean("chargemodels","MOMLEM")
 		
 		AccuracyLevels = 

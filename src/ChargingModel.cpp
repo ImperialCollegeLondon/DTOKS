@@ -63,7 +63,7 @@ void ChargingModel::Print(){
 	if( !Sample->is_positive() ) ModelDataFile << "\tNeg";
 	ModelDataFile << "\t" << Sample->get_deltatot() << "\t" << Sample->get_potential() << "\n";
 
-	//Test();
+//	Test();
 
 	ModelDataFile.close();
 	ModelDataFile.clear();
@@ -80,6 +80,7 @@ void ChargingModel::Test(){
 	std::cout << solveSMOML(Sample->get_potential()); std::cout << "\t";
 	std::cout << solveCW(Sample->get_potential()); std::cout << "\t";
 	std::cout << solvePHL(Sample->get_potential()); std::cout << "\t";
+	std::cout << solveTHS(); std::cout << "\t";
 	
 	double Potential(0.0);
 	if( (DSec + DTherm) >= 1.0 ){ 	// If electron emission yield exceeds unity, we have potential well...
@@ -155,27 +156,7 @@ void ChargingModel::Charge(double timestep){
 		DSec = DeltaSec();
 		DTherm = ThermFluxSchottky(Potential)/OMLElectronFlux(Sample->get_potential());
 		if( (DSec+DTherm) <= Accuracy ){// Emission IS NOT important
-			if( Betae <= 0.01*Accuracy ){ // electrons are un-magnetised
-				// Chris-Willis fit to OM Theory
-				//std::cout << "\nSolving CW!";
-				Potential = solveCW(Sample->get_potential());
-
-			}else{ // electrons are magnetised
-				// THS fit to POT and DiMPl results DOESN'T EXIST YET
-				// So instead, we do PHL
-				//std::cout << "\nSolving PHL!";
-				Potential = solvePHL(Sample->get_potential());
-				if( Sample->get_potential() >= 0.0 ){
-					DTherm = Richardson*pow(Sample->get_temperature(),2)*
-						exp(-echarge*Sample->get_workfunction()/(Kb*Sample->get_temperature()))
-						/(echarge*PHLElectronFlux(Sample->get_potential()));
-				}else{	// OML Electron flux, SOML Ion Flux
-					DTherm = Richardson*pow(Sample->get_temperature(),2)*(1.0-Sample->get_potential()
-							*(Pdata->ElectronTemp/Sample->get_temperature()))
-							*exp((-echarge*Sample->get_workfunction()+Sample->get_potential()*Kb*Pdata->ElectronTemp)
-							/(Kb*Sample->get_temperature()))/(echarge*PHLElectronFlux(Sample->get_potential()));
-				}
-			}
+			Potential = solveTHS();
 		}else{ // Emission IS important
 			if( DebyeRatio <= 0.1*Accuracy ){ // Small dust grains wrt the debye length
 				// OMLWEM like Nikoleta's theory MOML-EM, DOESN'T EXIST YET
@@ -218,7 +199,11 @@ void ChargingModel::Charge(double timestep){
 		DSec = DeltaSec();
 		DTherm = ThermFluxSchottky(Potential)/PHLElectronFlux(Sample->get_potential());
 
-	}else if( UseModel[7] ){ // Original DTOKS Charging scheme
+	}else if( UseModel[7] ){	// In this case, use THS Model
+		Potential = solveTHS();
+		DSec = DeltaSec();
+		DTherm = ThermFluxSchottky(Potential)/PHLElectronFlux(Sample->get_potential());
+	}else if( UseModel[8] ){ // Original DTOKS Charging scheme
 //		WARNING! THIS SCHEME FOR THE CHARGING MODEL CREATES DISCONTINUITIES WHEN FORMING A WELL!
 		DSec = DeltaSec();
 		DTherm = DeltaTherm();
@@ -237,13 +222,13 @@ void ChargingModel::Charge(double timestep){
 						/(Pdata->ElectronTemp*Kb);
 			}
 		}
-	}else if( UseModel[8] ){ // In this case, maintain a potential well for entire temperature range
+	}else if( UseModel[9] ){ // In this case, maintain a potential well for entire temperature range
 		Potential = solveOML( 0.0, Sample->get_potential()) 
 			- Kb*Sample->get_temperature()/(Pdata->ElectronTemp*Kb);
 		if( Potential < 0 ){ // In this case we have a positive grain! Assume well disappears
 			Potential = solvePosOML( 0.0, Sample->get_potential());
 		}
-	}else if( UseModel[9] ){	// MOMLWEM Charging model
+	}else if( UseModel[10] ){	// MOMLWEM Charging model
 		DSec = DeltaSec();
 		DTherm = DeltaTherm();
 		
@@ -294,7 +279,7 @@ double ChargingModel::solveSOML(double guess){
 	do{
 		if( i > 0 ) // If first time in loop, don't update guess. Avoids numerical instabilities.
 			guess = x1;
-		if( i == 1000 ){ // Too many loops! Maybe we need to flip sign?
+		if( i == 1000 ){ // Too many loops! Something has gone wrong!
 
 			std::cerr << "\nError in ChargingModel::solveSOML()! Newton Rhapson Method didn't converge to accuracy: " << Accuracy;
 			return 0.0;
@@ -512,6 +497,39 @@ double ChargingModel::solveCW(double guess){
 		std::cerr << "\nError in ChargingModel::solveCW()! Rho is poorly defined!\n\n";
 	}
 	return Potential;
+}
+
+double ChargingModel::solveTHS(){
+
+	double TiTe = Pdata->IonTemp/Pdata->ElectronTemp;
+	double MassRatio = Pdata->mi/Me;
+	double DebyeLength=sqrt((epsilon0*Kb*Pdata->ElectronTemp)/(Pdata->ElectronDensity*pow(echarge,2)));
+	double DebyeLength_Tilde = DebyeLength/Sample->get_radius();
+	double Betai=Sample->get_radius()/(sqrt(2.0*Kb*Pdata->IonTemp/(PI*Pdata->mi))/(echarge*Pdata->MagneticField.mag3()/Pdata->mi));
+	double Betae=Betai*sqrt(TiTe*MassRatio);
+
+	double a = 1.522;
+	double b = -0.9321;
+	double c = 0.3333;
+	double d = 1.641;
+
+	double TDR=erf(a*pow(DebyeLength,b)*pow(TiTe,c));
+
+	double e = 2.82;
+	double f = 0.4772;
+	double g = 0.1315;
+	double h = 0.7364;
+	
+	double Repelled_Species_Current=(exp(-g*Betae)+e*exp(-DebyeLength_Tilde)*pow((Betai/(Betai+1)),h));
+	
+	double Coeff = Pdata->Z*sqrt(TiTe/MassRatio);
+	double Attacted_Species_Current_T1=Coeff*(exp(-f*Betai)*(TDR+(1-TDR)*d*(1.0/sqrt(TiTe)+1.0/sqrt(DebyeLength_Tilde)))+e*pow((Betai/(Betai+1)),h));
+	double Attacted_Species_Current_T2=(Coeff/TiTe)*exp(-f*Betai)*TDR;
+
+	double a1= Attacted_Species_Current_T1/Repelled_Species_Current;
+    double b1= Attacted_Species_Current_T2/Repelled_Species_Current;
+
+    return fabs(LambertW(exp(a1/b1)/b1)-a1/b1);
 }
 
 double ChargingModel::solveOML(double a, double guess){
