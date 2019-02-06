@@ -1,74 +1,76 @@
-// Structure containing all the intrinsic and extrinsic information about a material
-// Comprised of a particular element
+/** @file GrainStructs.h
+ *  @brief Data structures defining material constants and variables
+ *  
+ *  Structure containing all the intrinsic and extrinsic information about a 
+ *  material comprised of a particular element.
+ *  
+ *  @author Luke Simons (ls5115@ic.ac.uk)
+ *  @bug No known bugs.
+ */
 
-#ifndef __GRAINSTRUCTS_H_INCLUDED__   // if Matter.h hasn't been included yet...
+#ifndef __GRAINSTRUCTS_H_INCLUDED__
 #define __GRAINSTRUCTS_H_INCLUDED__
 
 #include "threevector.h"
 
-// NOTE THE FOLLOWING MUST BE WELL DEFINED BY CHILDREN OF MATTER UPON INITIALIZATION
-// VapourPressure; 		// N/m^2 or Pa, Pascals
-// Emissivity;			// Arb, deviation of EM radiation from black body spectrum
-// LinearExpansion; 	// Units of m K^-1
-// HeatCapacity;		// kJ/(kg·K)	(Constant Pressure!)
-
-// Data that varies with time and is generally a result of the simulation
+/** @brief Data that varies with time and is generally a result of the 
+ * simulation */
 struct GrainData{
-	// Define if the material is a liquid or a gas
-	bool Liquid, Gas;
-	bool Breakup;			// True if the dust has undergone liquid breakup
 
-	// ******************************** Do vary with Temperature  ******************************** \\
-	// Geometric Data
-	double UnheatedRadius;		// metres
-	double Mass; 			// Kilogrammes,
-	double Radius;			// metres
-	double SurfaceArea;		// metres^2
-	double Volume;			// metres^3
-	double Density;			// Kilogrammes / (metre^3)
+    bool Liquid, Gas; /* Define if the material is a liquid or a gas */
+    bool Breakup;     /* True if the dust has undergone liquid breakup */
 
-	// Thermal Data
-	double SuperBoilingTemp;	// Kelvin, Super heated boiling temperature
-	double Temperature; 		// Kelvin
-	double VapourPressure; 		// N/m^2 or Pa, Pascals
-	double Emissivity;		// Arb, deviation of EM radiation from black body spectrum
-	double LinearExpansion; 	// Units of m K^-1
-	double HeatCapacity;		// kJ/(kg·K)	(Constant Pressure!)
+    /* ********************* Do vary with Temperature  ********************* */
+    /* Geometric Data */
+    double UnheatedRadius;   /* m */
+    double Mass;             /* kg */
+    double Radius;           /* m */
+    double SurfaceArea;      /* m^2 */
+    double Volume;           /* m^3 */
+    double Density;          /* kg / m^3 */
 
-	// Charging Data
-	double DeltaSec;		// Secondary Electron Emission Yield (Arb)
-	double DeltaTherm;		// Thermionic Electron Emission Yield (Arb)
-	double Potential;		// Normalised Grain potential (Arb), Potential = -(e*phi) / (kB * Te)
-	bool Positive;			// Defines the sign of the grain charge.
+    // Thermal Data
+    double SuperBoilingTemp; /* K, Super heated boiling temperature */
+    double Temperature;      /* K */
+    double VapourPressure;   /* N/m^2 or Pa, Pascals */
+    double Emissivity;       /* Arb, deviation from black body spectrum */
+    double LinearExpansion;  /* m / K */
+    double HeatCapacity;     /* kJ/(kg·K)    (Constant Pressure!) */
 
-	// Force/Motion Data
-	threevector DustPosition;	// Dust position (m), radial, angular and vertical
-	threevector DustVelocity;	// Dust velocity (I guess this should be normalised to Cs, but for now: (m/s) )
-	double RotationalFrequency;     // Rotational Frequency (s^-1), This is the rate of rotation of the dust.
+    // Charging Data
+    double DeltaSec;         /* Secondary Electron Emission Yield (Arb) */
+    double DeltaTherm;       /* Thermionic Electron Emission Yield (Arb) */
+    double Potential;        /* Normalised Potential (-(e*phi) / (kB * Te)) */
+    bool Positive;           /* Defines the sign of the grain charge. */
 
-	// Latent Heat
-	double FusionEnergy;		// kJ, Energy put into the material to break bonds of solid
-	double VapourEnergy;		// kJ, Energy put into the material to break bond of liquid
+    // Force/Motion Data
+    threevector DustPosition;   /* m, Cylindrical Coordinates */
+    threevector DustVelocity;   /* m/s */
+    double RotationalFrequency; /* s^-1, in B Field direction */
 
+    // Latent Heat
+    double FusionEnergy;        /* kJ, Energy of formed solid bonds */
+    double VapourEnergy;        /* kJ, Energy of formed liquid bonds */
 };
 
-// Input parameters which are specific to the type of matter being tested
+/** @brief Input parameters which are specific to the type of matter being 
+ * tested, these are fixed once this structure is initialised. */
 struct ElementConsts{
-	char Elem;		// Element, (W) : Tungsten, (G) : Graphite, (B) : Beryllium or (F) : Iron.
+    /* Variable identifying the element material
+     *(W) : Tungsten, (G) : Graphite, (B) : Beryllium or (F) : Iron. */
+    char Elem;
 
-	// Don't vary with Temperature
-	double MeltingTemp;	// Kelvin
-	double BoilingTemp;	// Kelvin
-	double BondEnergy; 	// kJ/mol Amount of energy required to break a single atomic bond
-	double WorkFunction;	// eV, Amount of energy required to remove an electron
-	double HeatTransAir; 	// W/m^2 K 
-	double AtomicMass;	// kg/mol
-	double LatentFusion;	// kJ/kg, Energy required to melt 1kg of solid
-	double LatentVapour; 	// kJ/kg, Energy required to vapourize 1kg of liquid
-	double SurfaceTension;	// N/m,
-	double RTDensity;	// Kilogrammes / (metre^3), Denisty at room temperature
-	double ThermConduct; 	// KiloWatts / (Metre * Kelvin) 
-
+    double MeltingTemp;    /* K */
+    double BoilingTemp;    /* K */
+    double BondEnergy;     /* kJ/mol, Energy to break an atomic bond */
+    double WorkFunction;   /* eV, Energy to remove an electron */
+    double HeatTransAir;   /* W/m^2 K */
+    double AtomicMass;     /* kg/mol */
+    double LatentFusion;   /* kJ/kg, Energy to melt 1kg of solid */
+    double LatentVapour;   /* kJ/kg, Energy to vapourize 1kg of liquid */
+    double SurfaceTension; /* N/m */
+    double RTDensity;      /* Kg /m^3, Denisty at room temperature */
+    double ThermConduct;   /* kW /m K */ 
 };
 
-#endif
+#endif /* __GRAINSTRUCTS_H_INCLUDED__ */

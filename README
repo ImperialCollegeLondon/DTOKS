@@ -2,103 +2,224 @@
 =============
 
 ## Author :	Luke Simons
-## Date :	20/08/2018
+## Date :	06/02/2019
 ## Description :
 This file describes the class structure and operation of DTOKSU code, 
 available at https://github.com/LukeSimons/DTOKS-U.
-Tests exist in local directory '/Tests' with a readme file available at '/Tests/README_TESTING'
+Tests exist in local directory '/Tests' with a readme file available at 
+'/Tests/README_TESTING'
+
+
+===============================================================================
 
 ## Introduction
-At Imperial College, London the code Dust in TOKamaks (DTOKS) was developed in 2005 by James D. Martin, Michael Coppins and John Allen. Since, it has been further developed by Minas Bacharis and others. DTOKS represents a relatively independant and unique approach to computing dust tracks in tokamaks and has had some implementation modelling dust in MAST and radiofrequency discharges.
-For more information, see the Thesis of Dr. James Martin:
-Martin, J. D. (2006). Theory and Simulation of Dust in Tokamak Plasmas, (July).
+At Imperial College, London the code Dust in TOKamaks (DTOKS) was developed in 
+2005 by James D. Martin, Michael Coppins and John Allen. Since, it has been 
+further developed by Minas Bacharis and others. DTOKS represents a relatively 
+independant and unique approach to computing dust tracks in tokamaks and has had
+some implementation modelling dust in MAST, ITER, JET and radiofrequency 
+discharges.
 
+For more information on the physical models implemented, see the Thesis of Dr. 
+James Martin, and various papers:
+J. D. Martin, M. Coppins, and G. F. Counsell, J. Nucl. Mater. 337–339, 114 
+(2005).
+Martin, J. D. (2006). Theory and Simulation of Dust in Tokamak Plasmas, (July).
+M. Bacharis, M. Coppins, and J. E. Allen, Phys. Rev. E - Stat. Nonlinear, 
+Soft Matter Phys. 82, 1 (2010).
+M. Bacharis, M. Coppins, W. Fundamenski, and J. E. Allen, Plasma Phys. Control.
+Fusion 54, 085010 (2012).
+
+
+===============================================================================
+
+## Directory Structure in DTOKSU
+
+Files Included With This Project,
+build:
+	FindNetCDF.cmake
+
+Config_Files:
+	DTOKSU_Config.cfg
+
+Dependencies:
+	install_netcdf4.sh
+
+src:
+	Beryllium.cpp   Deuterium.cpp  ForceModel.cpp      HeatingModel.cpp  
+	MathHeader.cpp  Molybdenum.cpp Tungsten.cpp        ChargingModel.cpp  
+	DTOKSU.cpp      Functions.cpp  ron.cpp             Matter.cpp      
+	solveMOMLEM.cpp	Constants.cpp  DTOKSU_Manager.cpp  Graphite.cpp 
+	Lithium.cpp     Model.cpp      threevector.cpp
+
+include:
+	Beryllium.h    Constants.h     DTOKSU.h    ForceModel.h GrainStructs.h  
+	HeatingModel.h Lithium.h       Matter.h    Molybdenum.h solveMOMLEM.h 
+	Tungsten.h     ChargingModel.h Deuterium.h DTOKSU_Manager.h 
+	Functions.h    Graphite.h      Iron.h      MathHeader.h Model.h  
+	PlasmaData.h  threevector.h
+
+PlasmaData/PlasmaGenerator:
+	build.sh PlasmaGenerator.cpp
+
+Tests:
+	IntegrationTests/ ModelTests/ UnitTests/ CMakeLists.txt README_TESTING
+
+
+===============================================================================
 
 ## How to Install/Setup DTOKSU
 
-DTOKS-U depends on several other packages for principally for providing the configuration file handling (config4cpp) and for extracting data from NETCDF files. For this reason, several other dependancies must first be installed. The setup.sh and install_netcdf4.sh scripts will attempt to perform this automatically though are liable to fail!
+DTOKS-U depends on several other packages for principally for providing the 
+configuration file handling (config4cpp) and for extracting data from NETCDF 
+files. For this reason, several other dependancies must first be installed. 
+The setup.sh and install_netcdf4.sh scripts will attempt to perform this 
+automatically though are liable to fail! 
 
-To Install DTOKSU, follow the following steps:
-1) Git clone the repository
-git clone https://github.com/LukeSimons/DTOKS-U.git
+By Default, DTOKS-U is built with netcdf capability enabled. To disable this,
+you must avoid running the install_netcdf4.sh script, by commenting this line
+out of the setup.sh script.
 
-2) Run the setup script, this will in turn install the dependancies using the install_netcdf4.sh script
-. setup.sh
+To Install DTOKSU, follow steps 1 to 5 given below:
+1) First, we need to download the files. To Git clone the repository
 
-3) If there are no significant errors or conflicts after this, setup the CMAKE build directory
-cd build
-cmake ../.
+	git clone https://github.com/LukeSimons/DTOKS-U.git
 
-4) DTOKSU can now be built with CMAKE. At this point, the dependencies must have been correctly installed or the build will fail!
-make
 
-5) Test the code by running the test scripts and the default main script
-cd ..
-./bin/init_test -h
+2) Run the setup script, this will in turn install the dependancies using the 
+install_netcdf4.sh script. IF YOU DON'T WANT THESE DEPENDENCIES, COMMENT THIS
+LINE OUT OF THE SETUP SCRIPT BEFORE RUNNING.
 
-./bin/init_test -m Gravity
+	. setup.sh
 
-./bin/unit_test -h
 
-./bin/unit_test -m DeltaSec
+3) If there are no significant errors or conflicts after this, setup the CMAKE
+build directory. By default, the NETCDF support is enabled and the test
+directory is not build. So there are a few options available
 
-./bin/main -h
+a) Configure DTOKS core files with config4cpp dependency
 
-./bin/main
+	cd build
+	cmake ../. -DBUILD_NETCDF=OFF
 
+b) Configure DTOKS core files with config4cpp and build test directory
+
+	cd build
+	cmake ../. -DBUILD_TESTS=ON
+
+c) Configure DTOKS core files with config4cpp and NETCDF dependency
+
+	cd build
+	cmake ../.
+
+
+4) DTOKSU can now be built with CMAKE.
+	make
+
+5a) The code can then be run in default mode:
+
+	cd ..
+	./bin/dtoksu -h
+	./bin/dtoksu
+
+
+5b) Alternatively, if the test directory has been built following step 3b), the
+tests can be ran
+
+	cd ..
+	./bin/init_test -h
+	./bin/init_test -m Gravity
+	./bin/unit_test -h
+	./bin/unit_test -m DeltaSec
+
+
+===============================================================================
 
 ## How to Run DTOKSU
+The built executable and library files are kept in the /bin/ directory. There 
+are four executables named:
+	dtoksu  int_test model_test  unit_test
 
-./main -h <help message> -c <Config File> -t <Inital Temperature> -m <'w', 'g', 'b', 'd' or 'f'> 
-	-s <Initial Radius> 
+For details on how to use the three test executables, see the file:
+Tests/README_TESTING
+
+The 'dtoksu' executable is used to run the code, with the following command
+line options available:
+	
+./bin/dtoks -h <help message> -c <Config File> -t <Inital Temperature> 
+	-m <'w', 'g', 'b', 'd' or 'f'> 	-s <Initial Radius> 
 	-vr <Radial Velocity> -vt <Angular Velocity> -vz <longitudinal velocity>
 	-rr <Radial position> -rt <Angular position> -rz <longitudinal position>
 	-op <Output File Pre-fix> -om <MetaData filename>
 
-Files Included With This Project:
-	Beryllium.cpp      DTOKSU.cpp          Functions.cpp     Iron.cpp        Model.cpp
-	ChargingModel.cpp  DTOKSU_Manager.cpp  Graphite.cpp      MathHeader.cpp  threevector.cpp
-	Constants.cpp      ForceModel.cpp      HeatingModel.cpp  Matter.cpp      Tungsten.cpp
-
-	Beryllium.h      Constants.h  DTOKSU_Manager.h  Functions.h     Graphite.h      Iron.h        
-	Matter.h  PlasmaData.h   Tungsten.h	ChargingModel.h  DTOKSU.h     ForceModel.h
-	GrainStructs.h  HeatingModel.h  MathHeader.h  Model.h   threevector.h
-
 
 ## DTOKSU Class Structure and Design
-DTOKSU follows an object oriented programing (oop) style with a few different class heirarchies and data structures being used to manage the information. These have been designed with simplicity and security in mind and with maximal modular capability.
-The two principal classes are the Matter.h class and the Model.h class.
-These classes and their children are used by the wrapper class DTOKSU to conduct the entire simulation.
+DTOKSU follows an object oriented programing (oop) style with a few different 
+class heirarchies and data structures being used to manage the information. 
+These have been designed with simplicity and security in mind and with maximal 
+modular capability.
 
+The two principal abstract base classes are the Matter.h class and the Model.h 
+class. These classes and their children are operated by the wrapper class DTOKSU 
+to conduct the entire simulation. The class DTOKSU_Manager is used to setup 
+and correctly configure instances of DTOKSU.
 
 # Matter class
-The Matter class is used to contain all the information about the dust grain but also to simulate all the physical models 
-directly related to the information contained. It owns an instance of both the 'GrainData' and 'ElementConsts' which stores 
-the non-constant and constant information about the material. In addition to this, it stores information on what models are 
-being allowed to vary with temperature. The matter class requires that classes which inherit from it define the functions 
-"update_radius()", "update_heatcapacity()" and "update_vapourpressure()" which define the variation of radius, heat capacity
-and vapour pressure with temperature.
-It contains functions able to alter the description of a dust grain including it's motion, these are namely "update_temperature",
-"update_motion", "update_charge" and "update_mass"
-Finally, a range of getter and one setter methods exist for classes external to the heirarchy, mainly DTOKSU to access this 
-information. This class requires the definition of the "threevector.h" class, the "COnstants.h", additionaly "Functions.h" and 
-obviously the data structures in "GrainStructs.h"
+The Matter class is used to contain all the information about the dust grain 
+but also to simulate all the physical models directly related to the information
+contained. It owns an instance of both the 'GrainData' and 'ElementConsts' which
+are found in the GrainStructs.h file. This stores the non-constant and constant 
+information about the material. In addition to this, Matter.h stores information
+on what models are being allowed to vary with temperature. The matter class 
+requires that classes which inherit from it define the functions 
+"update_radius()", "update_heatcapacity()" and "update_vapourpressure()" which 
+define the variation of radius, heat capacity and vapour pressure with 
+temperature.
 
-The class can be constructed simply by passing a pointer to the element constants data structure which contains all the unmutable
-information about a materials properties. The default values for it's variable properaties are set by default.
+It contains functions able to alter the description of a dust grain including 
+it's motion, these are namely "update_temperature", "update_motion", 
+"update_charge" and "update_mass". Finally, a range of getter and one setter 
+methods exist for classes external to the heirarchy, mainly DTOKSU to access 
+this information. This class requires the definition of the "threevector.h" 
+class, the "Constants.h", additionaly "Functions.h" and obviously the data 
+structures in "GrainStructs.h"
 
-Inforamtion about the plasma and dust particle are held within the PlasmaData.h and GrainStructs.h structures.
-Constants.h contains physical constants and preprocessor directives for debugging
-Functions.h contains a warning function, a rounding function and as well as methods used to calculate physical models.
-The DTOKSU_Manager.h class is used to read in and hold the information about a plasma background with spatial dependance over a cartesian grid.
-The PlasmaGenerator.cpp file is used to generate grids of data for different plasma backgrounds which can be fed to the PlasmaGrid class.
+The class can be constructed simply by passing a pointer to the element 
+constants data structure which contains all the unmutable information about a 
+materials properties. The default values for it's variable properaties are set 
+by default.
 
+Inforamtion about the plasma and dust particle are held within the PlasmaData.h
+and GrainStructs.h structures. Constants.h contains physical constants and 
+preprocessor directives for debugging Functions.h contains a warning function,
+ a rounding function and as well as methods used to calculate physical models.
+The DTOKSU_Manager.h class is used to read in and hold the information about a
+plasma background with spatial dependance over a cartesian grid. The 
+PlasmaGenerator.cpp file is used to generate grids of data for different plasma 
+backgrounds which can be fed to the PlasmaGrid class.
 
-# PlasmaBackground
-First, the dust particle is located within the Plasma grid and assigned integer coordinates giving it's position.
-The plasma velocity is defined by the direction of the magnetic field and the mean plasma velocity provided the densities sum is non-zero
-he value of the potential on the grid points are taken from input files for each machine type (MAST or ITER). The electric field in the radial direction is calculated from the difference in potential between two points.
-and similarly calculated for the other three dimensions in cylindrical coordinates.
+# Model.h class
+The Model.h class is used as the base for solving the four principal equations
+governing the behaviour of the dust. These are the force balance, current 
+balance and the equation for the heat flux. Instances of the Model class hold a 
+pointer to the Matter class which is established to be the pointer to the same
+Matter object as initialised by DTOKSU_Manager. They also share a pointer to 
+the same PlasmaData object. The Model class has information about the Plasma 
+Grid and has member data specifying the accuracy of the models, the time step,
+and total time elapsed as measured by that model. 
+
+The Model class owns two file streams, one of which is used to record the 
+plasma data at each time step and one of which records the model data.
+
+# PlasmaData/PlasmaBackground
+First, the dust particle is located within the Plasma grid and assigned integer 
+coordinates giving it's position. The plasma velocity is defined by the 
+direction of the magnetic field and the mean plasma velocity provided the 
+densities sum is non-zero. The value of the potential on the grid points are 
+taken from input files for each machine type (MAST, ITER, Magnum-PSI, EAST or
+DIII-D). The electric field in the radial direction is calculated from the 
+difference in potential between two points and similarly calculated for the 
+other three dimensions in cylindrical coordinates.
 
 ------------------------------------------------------------------------------------------
 
