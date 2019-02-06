@@ -1,7 +1,14 @@
-#ifndef __DTOKSU_Manager_H_INCLUDED__   // if Matter.h hasn't been included yet...
-#define __DTOKSU_Manager_H_INCLUDED__
+/** @file DTOKSU_Manager.h
+ *  @brief Class Wrapper for configuring and running DTOKSU 
+ *  
+ *  This contains
+ *  
+ *  @author Luke Simons (ls5115@ic.ac.uk)
+ *  @bug No known bugs.
+ */
 
-#define NETCDF_SWITCH
+#ifndef __DTOKSU_Manager_H_INCLUDED__
+#define __DTOKSU_Manager_H_INCLUDED__
 
 #include "DTOKSU.h"
 #include <random>	// for std::normal_distribution<> etc.
