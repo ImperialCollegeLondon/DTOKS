@@ -100,6 +100,7 @@ void DTOKSU::print(){
 }
 
 void DTOKSU::SpecularReflection(){
+	D_Debug("\tIn DTOKSU::SpecularReflection()\n\n");
 	double x = Sample->get_position().getx();
 	double y = Sample->get_position().getz();
 
@@ -147,6 +148,7 @@ void DTOKSU::SpecularReflection(){
 
 // http://alienryderflex.com/polygon/
 bool DTOKSU::Boundary_Check(bool InOrOut){
+	D_Debug("\tIn DTOKSU::Boundary_Check()\n\n");
 	Boundary_Data Edge;
 	// Determine if it's core or wall boundary
 	if( InOrOut )
@@ -154,6 +156,7 @@ bool DTOKSU::Boundary_Check(bool InOrOut){
 	else
 		Edge = WallBound;
 	
+	assert(Edge.Grid_Pos.size() > 2);
 	int j=Edge.Grid_Pos.size()-1 ;
 	bool oddNodes=false;
 	double x = Sample->get_position().getx();
@@ -350,12 +353,14 @@ int DTOKSU::Run(){
 		}else if( HeatTime == 1 ){
 			std::cout << "\n\nThermal Equilibrium reached!";
 			break;
-		}else if( Boundary_Check(false) ){
-			std::cout << "\n\nCollision with Wall!";
-			break;
-		}else if( Boundary_Check(true) ){
-			std::cout << "\n\nCollision with Core!";
-			break;
+		}else if( CoreBound.Grid_Pos.size() > 2 && WallBound.Grid_Pos.size() > 2 ){
+			if( Boundary_Check(false) ){
+				std::cout << "\n\nCollision with Wall!";
+				break;
+			}else if( Boundary_Check(true) ){
+				std::cout << "\n\nCollision with Core!";
+				break;
+			}
 		}
 		// ***** END OF : DETERMINE IF END CONDITION HAS BEEN REACHED ***** //
 	}
