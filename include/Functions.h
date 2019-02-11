@@ -1,54 +1,91 @@
-#ifndef __FUNCTIONS_H_INCLUDED__   // if Functions.h hasn't been included yet...
+/** @file Functions.h
+ *  @brief File defining functions which are used globally
+ *  
+ *  Funciton definitions which are used across the entire scope of the project
+ *  
+ *  @author Luke Simons (ls5115@ic.ac.uk)
+ *  @bug Functions should be placed within a namespace
+ *  @bug sec function should be placed within Model
+ *  @bug backscatter function should be placed within Model
+ *  @bug maxwellian function should be placed within Model
+ *  @bug ionback function should be placed within Model
+ *  @bug ionback function should be placed within Model
+ */
+
+#ifndef __FUNCTIONS_H_INCLUDED__
 #define __FUNCTIONS_H_INCLUDED__
 
-
 #include <string>
-
 #include <cmath>
 #include <math.h>
 #include <stdio.h>
 #include <exception>
 
+/** @brief Warning Message to be printed only once
+ *  
+ *  Function to print warning message to the screen only once. This is 
+ *  achieved by passing a static bool variable which is set to true. By default
+ *  the \p Message is preceeded by a warning string.
+ *  @param MessageNotDisplayed is true if the message has yet to be displayed
+ *  @param Message is the message to be displayed,
+ */
+void WarnOnce(bool &MessageNotDisplayed, std::string Message);
+
 // Empirical fit to secondary electron emission equation as in Stangeby
 double sec(double Te, char material);
 
-void WarnOnce(bool &T, std::string Message);
 
 double maxwellian(double E, double T);
 
 // Ion backscattering
 double ionback(double E, char isotope, char material, int flag);
 
-double backscatter(double Te, double Ti, double mi, double Vion, char material, double &RE, double &RN);
+double backscatter(double Te, double Ti, double mi, double Vion, char material, 
+    double &RE, double &RN);
 
-
+/** @brief Round a number to a specific number of digits
+ *  
+ *  Function to round \p value to a specific number of \p digits
+ *  achieved by passing a static bool variable which is set to true. By default
+ *  the \p Message is preceeded by a warning string.
+ *  @param value the number which is to be rounded
+ *  @param digits the number of digits to round to
+ *  @return the number rounded to \p digits
+ */
 double round_to_digits(double value, int digits);
 
-/* Lambert W function. 
-   Was ~/C/LambertW.c written K M Briggs Keith dot Briggs at bt dot com 97 May 21.  
-   Revised KMB 97 Nov 20; 98 Feb 11, Nov 24, Dec 28; 99 Jan 13; 00 Feb 23; 01 Apr 09
+/** @brief Lambert W function. 
+ *  Was ~/C/LambertW.c written K M Briggs Keith dot Briggs at bt dot com 97 
+ *  May 21.  
+ *  Revised KMB 97 Nov 20; 98 Feb 11, Nov 24, Dec 28; 99 Jan 13; 00 Feb 23; 
+ *  01 Apr 09
+ *
+ *  Computes Lambert W function, principal branch.
+ *  See LambertW1.c for -1 branch.
+ *
+ *  Returned value W(z) satisfies W(z)*exp(W(z))=z
+ *  test data...
+ *     W(1)= 0.5671432904097838730
+ *     W(2)= 0.8526055020137254914
+ *     W(20)=2.2050032780240599705
+ *  To solve (a+b*R)*exp(-c*R)-d=0 for R, use
+ *  R=-(b*W(-exp(-a*c/b)/b*d*c)+a*c)/b/c
+ *
+ *  Test: 
+ *    gcc -DTESTW LambertW.c -o LambertW -lm && LambertW
+ *  Library:
+ *    gcc -O3 -c LambertW.c 
+ *  @param z argument to LambertW funciton
+ */
+double LambertW(const double z);
 
-   Computes Lambert W function, principal branch.
-   See LambertW1.c for -1 branch.
-
-   Returned value W(z) satisfies W(z)*exp(W(z))=z
-   test data...
-      W(1)= 0.5671432904097838730
-      W(2)= 0.8526055020137254914
-      W(20)=2.2050032780240599705
-   To solve (a+b*R)*exp(-c*R)-d=0 for R, use
-   R=-(b*W(-exp(-a*c/b)/b*d*c)+a*c)/b/c
-
-   Test: 
-     gcc -DTESTW LambertW.c -o LambertW -lm && LambertW
-   Library:
-     gcc -O3 -c LambertW.c 
-*/
+/** @brief Lambert W Failer. 
+ *  
+ *  Used to throw an exception when the LambertW function fails
+ *  @see LambertW()
+ */
 struct LambertWFailure : public std::exception{
   const char * what () const throw ();
 };
 
-double LambertW(const double z);
-
-void CheckPos(double Value, std::string ErrorMssg);
-#endif
+#endif /* __FUNCTIONS_H_INCLUDED__ */

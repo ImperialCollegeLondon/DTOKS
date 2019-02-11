@@ -12,7 +12,8 @@ Data/
 build/
 CMakeFiles/
 Plotting/
-
+docs/latex
+docs/html
 
 bin/dtoksu
 bin/model_test

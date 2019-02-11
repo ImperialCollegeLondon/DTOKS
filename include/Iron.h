@@ -1,35 +1,47 @@
-//#include <math.h>
-#ifndef __IRON_H_INCLUDED__   // if Iron.h hasn't been included yet...
+/** @class Iron.h
+ *  @brief Class defining the elemental properties of iron
+ *  
+ *  A class which defines the elemental properties of iron relevant to the 
+ *  simulation of dust in plasmas. An instance of this class is used to 
+ *  represent a spherical mass of this element, with data structures and
+ *  functionality derived from the Matter class
+ *  @see Matter
+ */
+
+#ifndef __IRON_H_INCLUDED__
 #define __IRON_H_INCLUDED__
 
-#include <iostream>
 #include "Matter.h"
 
+/** @class Iron
+ *  @brief Class defining the elemental properties of iron
+ *  
+ *  A class which defines the elemental properties of iron relevant to the 
+ *  simulation of dust in plasmas. An instance of this class is used to 
+ *  represent a spherical mass of this element, with data structures and
+ *  functionality derived from the Matter class
+ *  @see Matter
+ */
 class Iron : public Matter{
 
-	private:
-		
-		// Functions called by Iron::update()
-		void update_radius	 	();
-		void update_heatcapacity 	();
-		void update_vapourpressure	();
-		
+    private:
+        void update_radius        ()override;
+        void update_heatcapacity  ()override;
+        void update_vapourpressure()override;
+        void set_defaults         ()override;
+        
 
-	public:
-		// Constructors
-		Iron();
-		Iron(double radius);
-		Iron(double radius, double tempin);
-		Iron(double radius, double tempin, std::array<char,CM> &constmodels);
-		Iron(double radius, double tempin, std::array<char,CM> &constmodels,
-				const threevector &position, const threevector &velocity);
+    public:
+        Iron();
+        Iron(double radius);
+        Iron(double radius, double tempin);
+        Iron(double radius, double tempin, std::array<char,CM> &constmodels);
+        Iron(double radius, double tempin, std::array<char,CM> &constmodels,
+                const threevector &position, const threevector &velocity);
 
-		// Destructor
-		~Iron(){};
-		
-		// Change Properties; Mass and Temperature
-		void set_defaults		();
-		double probe_vapourpressure	(double Temperature)const;
+        ~Iron(){};
+        
+        double probe_vapourpressure(double Temperature)const;
 };
 
-#endif
+#endif /* __IRON_H_INCLUDED__ */

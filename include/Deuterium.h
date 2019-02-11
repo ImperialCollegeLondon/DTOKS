@@ -1,34 +1,48 @@
-#ifndef __DEUTERIUM_H_INCLUDED__   // if Iron.h hasn't been included yet...
+/** @class Deuterium.h
+ *  @brief Class defining the elemental properties of deuterium
+ *  
+ *  A class which defines the elemental properties of deuterium relevant to the 
+ *  simulation of dust in plasmas. An instance of this class is used to 
+ *  represent a spherical mass of this element, with data structures and
+ *  functionality derived from the Matter class
+ *  @see Matter
+ */
+
+#ifndef __DEUTERIUM_H_INCLUDED__
 #define __DEUTERIUM_H_INCLUDED__
 
-#include <iostream>
 #include "Matter.h"
 
+/** @class Deuterium
+ *  @brief Class defining the elemental properties of deuterium
+ *  
+ *  A class which defines the elemental properties of deuterium relevant to the 
+ *  simulation of dust in plasmas. An instance of this class is used to 
+ *  represent a spherical mass of this element, with data structures and
+ *  functionality derived from the Matter class
+ *  @see Matter
+ */
 class Deuterium: public Matter{
 
-	private:
+    private:
+        void update_radius        ()override;
+        void update_heatcapacity  ()override;
+        void update_vapourpressure()override;
+        void set_defaults         ()override;
+        
+    public:
+        Deuterium();
+        Deuterium(double radius);
+        Deuterium(double radius, double tempin);
+        Deuterium(double radius, double tempin, 
+            std::array<char,CM> &constmodels);
+        Deuterium(double radius, double tempin, 
+            std::array<char,CM> &constmodels, const threevector& position, 
+            const threevector& velocity);
 
-		// Functions called by Deuterium::update()
-		void update_radius		();
-		void update_heatcapacity 	();
-		void update_vapourpressure	();
-		
-	public:
-		// Constructors
-		Deuterium();
-		Deuterium(double radius);
-		Deuterium(double radius, double tempin);
-		Deuterium(double radius, double tempin, std::array<char,CM> &constmodels);
-		Deuterium(double radius, double tempin, std::array<char,CM> &constmodels,
-			const threevector& position, const threevector& velocity);
+        ~Deuterium(){};
 
-		// Destructor
-		~Deuterium(){};
-
-		
-		// Change Properties; Mass and Temperature
-		void set_defaults		();
-		double probe_vapourpressure (double Temperature)const;
+        double probe_vapourpressure(double Temperature)const;
 };
 
-#endif
+#endif /* __DEUTERIUM_H_INCLUDED__ */

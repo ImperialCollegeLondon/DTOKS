@@ -1,5 +1,4 @@
-//#define PAUSE
-//#define DM_DEBUG
+
 #include "DTOKSU_Manager.h"
 
 namespace Overflows{
@@ -629,6 +628,7 @@ int DTOKSU_Manager::configure_plasmagrid(std::string plasma_dirname){
 // Wall data and core data are read from files in 'dirname/filename'
 // into BoundaryData&BD. Data files must be polygons (contain more than 2 points)
 int DTOKSU_Manager::configure_boundary(std::string dirname, std::string filename, Boundary_Data& BD){
+	DM_Debug("\n\nIn DTOKSU_Manager::configure_boundary(std::string dirname, std::string filename, Boundary_Data& BD)\n\n")
 	std::ifstream BoundaryGrid_File;
 	double R_temp(0.0), Z_temp(0.0);
 	char Dummy;
@@ -842,6 +842,11 @@ int DTOKSU_Manager::read_MPSIdata(std::string plasma_dirname){
 #endif
 
 int DTOKSU_Manager::ChargeTest(double accuracy,std::array<bool,CMN> ChargeModels){
+	if( Config_Status != -2 && Config_Status != -3 ){
+		std::cerr << "\nDTOKSU Is not configured! Please configure first.";
+		config_message();
+		return 1;
+	}
 	ChargingModel MyChargeModel("Data/DTOKS_ChargeTest.txt",accuracy,ChargeModels,Sample,Pdata);
 	bool cm_InGrid = MyChargeModel.update_plasmadata();
 
@@ -852,6 +857,11 @@ int DTOKSU_Manager::ChargeTest(double accuracy,std::array<bool,CMN> ChargeModels
 }
 
 int DTOKSU_Manager::ForceTest(double accuracy,std::array<bool,FMN> ForceModels){
+	if( Config_Status != -2 && Config_Status != -3 ){
+		std::cerr << "\nDTOKSU Is not configured! Please configure first.";
+		config_message();
+		return 1;
+	}
 	ForceModel MyForceModel("Data/DTOKS_ForceTest.txt",accuracy,ForceModels,Sample,Pdata);
 	bool fm_InGrid = MyForceModel.update_plasmadata();
 
@@ -861,6 +871,11 @@ int DTOKSU_Manager::ForceTest(double accuracy,std::array<bool,FMN> ForceModels){
 }
 
 int DTOKSU_Manager::HeatTest(double accuracy,std::array<bool,HMN> HeatModels){
+	if( Config_Status != -2 && Config_Status != -3 ){
+		std::cerr << "\nDTOKSU Is not configured! Please configure first.";
+		config_message();
+		return 1;
+	}
 	HeatingModel MyHeatModel("Data/DTOKS_HeatTest.txt",accuracy,HeatModels,Sample,Pdata);
 	bool hm_InGrid = MyHeatModel.update_plasmadata();
 
@@ -902,13 +917,13 @@ int DTOKSU_Manager::Run(){
 }
 
 // Run DTOKS many times with breakup turned on
-int DTOKSU_Manager::Breakup(){
+void DTOKSU_Manager::Breakup(){
 	DM_Debug("\n\nIn DTOKSU_Manager::Breakup()\n\n");
 
-	if( Config_Status != 0 ){
+	if( Config_Status != -2 ){
 		std::cerr << "\nDTOKSU Is not configured! Please configure first.";
 		config_message();
-		return 1;
+		return;
 	}
 	
 	
@@ -990,7 +1005,7 @@ int DTOKSU_Manager::Breakup(){
 			// Re-initialise simulation with new Velocity... 
 			// But we've already done this now when we saved the data previously...
 			// So we're good to go, just copy over the previous end conditions
-			Sample->update_graindata(GDvector[j]);
+			Sample->set_graindata(GDvector[j]);
 
 
 			// Reset Model Times, the only reason for this is to make the plotting work correctly...
@@ -1011,5 +1026,4 @@ int DTOKSU_Manager::Breakup(){
 	}
 
 	//	Pgrid.datadump(); // Print the plasma grid data
-	return 0;
 }

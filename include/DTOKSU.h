@@ -1,70 +1,176 @@
-#ifndef __DTOKSU_H_INCLUDED__   // if Matter.h hasn't been included yet...
+/** @file DTOKSU.h
+ *  @brief Contains a class which controls three physics models with matter
+ *  
+ *  This file contains the DTOKSU class which defines the DTOKSU program which
+ *  is used to simulate solid and liquid dust grains in tokamak plasmas.
+ *  
+ *  @author Luke Simons (ls5115@ic.ac.uk)
+ */
+
+#ifndef __DTOKSU_H_INCLUDED__
 #define __DTOKSU_H_INCLUDED__
+
+#include <algorithm>
 
 #include "HeatingModel.h"
 #include "ForceModel.h"
 #include "ChargingModel.h"
 
-#include <algorithm>
-
+/** @brief default boundary data is an empty vector of pairs, i.e no data
+ */
 static struct Boundary_Data BoundaryDefaults = {
-	std::vector<std::pair<double,double>> ()
+    std::vector<std::pair<double,double>> ()
 };
 
+/** @class DTOKSU
+ *  @brief Class bringing together dust grain data and physical models
+ *  
+ *  This class simulates the motion, charging and heating of a dust grain in a 
+ *  tokamak plasma. The charging model is assumed to act on the fastest time 
+ *  scale and is updated every global timestep. The heating and force models
+ *  compete and are solved to a relevant accuracy. Optional data specifying the
+ *  tokamak wall and core boundaries can also be provided and methods for 
+ *  performing reflection on these boundaries are provided.
+ */
 class DTOKSU{
 
-	private:
-		// Private member data
-		double TotalTime;			// Seconds, total time taken to perform simulation
+    private:
+        /** @name Private Member data
+         *  @brief Objects for physical models, plasma and matter data
+         *
+         *  The physics models are encapsulated in the \p HM, \p FM and \p CM
+         *  which represent the heating, force and charging models. These act
+         *  upon the \p Sample which contains data structures for the dust grain
+         *  sample. DTOKSU maintains a pointer to this here for easier access to
+         *  this information. The \p WallBound and \p CoreBound are two vectors
+         *  of pairs which are a series of points that define boundaries.
+         *  \p TotalTime is used to record the total time taken to perform a 
+         *  simulation and \p MyFile is a output file
+         */
+        ///@{
+        double TotalTime;
+        Matter *Sample;
+        HeatingModel HM;
+        ForceModel FM;
+        ChargingModel CM;
+        Boundary_Data WallBound, CoreBound;
+        std::ofstream MyFile;
+        ///@}
 
-		Matter *Sample;				// Matter sample can be either Tungsten, Beryllium, Graphite or Iron
+        /** @name Printing functions
+         *  @brief Functions used to print data to a master simulation file
+         *  @param filename is the name of the file to write to
+         */
+        ///@{
+        void print();
+        void create_file(std::string filename);
+        ///@}
 
-		HeatingModel HM;			// Heating Model 
-		ForceModel FM;				// Force Model 
-		ChargingModel CM;			// Charge Model
+        /** @name Boundary functions
+         *  @brief Functions used to check particle interaction with boundary
+         */
+        ///@{
+        /** @brief perform specular reflection on particle incident on boundary
+         */
+        void SpecularReflection();
+        /** @brief determine if the particle is inside or outside the boundary
+         *  @param InOrOut specifies if we are checking whether it is in or out
+         *  @return true if inside \p WallBound and false if outside.
+         *  viceversa for \p CoreBound
+         */
+        bool Boundary_Check(bool InOrOut);
+        ///@}
 
-		Boundary_Data WallBound, CoreBound;
+    public:
+        //!< MODEL NUMBER, the number of physical models in DTOKS
+        static const unsigned int MN = 3;   
 
-		std::ofstream MyFile;			// Output data file
-	
-		// Private Functions
-		void print();				// Write to output data file
-		void create_file(std::string filename);
+        /** @name Constructors
+         *  @brief functions to construct DTOKSU class
+         *
+         *  In all cases, we specify \p MN number of accuracies to solve the 
+         *  physics models to, as well as the \p sample, \p heatmodels, 
+         *  \p forcemodels and \p chargemodels to specify the simulation.
+         */
+        ///@{
+        /** @brief pdata constructor.
+         *
+         *  @param pdata the plasma data used in the simulation
+         */
+        DTOKSU( std::array<float,MN> alvls, Matter *& sample, PlasmaData &pdata,
+            std::array<bool,HMN> &heatmodels, std::array<bool,FMN> &forcemodels,
+            std::array<bool,CMN> &chargemodels);
 
-		void SpecularReflection();
-		bool Boundary_Check(bool InOrOut);
+        /** @brief pgrid constructor.
+         *
+         *  @param pgrid the plasma grid used in the simulation
+         */
+        DTOKSU( std::array<float,MN> alvls, Matter *& sample, 
+            PlasmaGrid_Data &pgrid, std::array<bool,HMN> &heatmodels, 
+            std::array<bool,FMN> &forcemodels, 
+            std::array<bool,CMN> &chargemodels);
 
-	public:
-		static const unsigned int MN = 3;	// MODEL NUMBER, the number of physical models in DTOKS
+        /** @brief pdata and pgrid constructor.
+         *
+         *  @param pdata the plasma data used in the simulation initially
+         *  @param pgrid the plasma grid used in the simulation
+         */
+        DTOKSU( std::array<float,MN> alvls, Matter *& sample, 
+            PlasmaGrid_Data &pgrid, PlasmaData &pdata, 
+            std::array<bool,HMN> &heatmodels, std::array<bool,FMN> &forcemodels,
+            std::array<bool,CMN> &chargemodels);
 
-//		DTOKSU();
-		DTOKSU( std::array<float,MN> alvls, Matter *& sample, PlasmaData &pdata,
-				std::array<bool,HMN> &heatmodels, std::array<bool,FMN> &forcemodels, 
-				std::array<bool,CMN> &chargemodels);
-		DTOKSU( std::array<float,MN> alvls, Matter *& sample, PlasmaGrid_Data &pgrid,
-				std::array<bool,HMN> &heatmodels, std::array<bool,FMN> &forcemodels, 
-				std::array<bool,CMN> &chargemodels);
-		DTOKSU( std::array<float,MN> alvls, Matter *& sample, PlasmaGrid_Data &pgrid,
-				PlasmaData &pdata,	std::array<bool,HMN> &heatmodels, 
-				std::array<bool,FMN> &forcemodels, std::array<bool,CMN> &chargemodels);
-		DTOKSU( std::array<float,MN> alvls, Matter *& sample, PlasmaGrid_Data &pgrid,
-				PlasmaData &pdata, Boundary_Data &wbound, Boundary_Data &cbound,
-				std::array<bool,HMN> &heatmodels, std::array<bool,FMN> &forcemodels, 
-				std::array<bool,CMN> &chargemodels);
+        /** @brief boundary constructor.
+         *
+         *  @param pgrid the plasma grid used in the simulation
+         *  @param cbound the list of points defining the core boundary
+         *  @param wbound the list of points defining the wall boundary
+         */
+        DTOKSU( std::array<float,MN> alvls, Matter *& sample, 
+            PlasmaGrid_Data &pgrid, PlasmaData &pdata, Boundary_Data &wbound, 
+            Boundary_Data &cbound, std::array<bool,HMN> &heatmodels, 
+            std::array<bool,FMN> &forcemodels, 
+            std::array<bool,CMN> &chargemodels);
+        ///@}
 
-		~DTOKSU(){
-		};
+        ~DTOKSU(){
+        };
 
-		int Run();
-		void OpenFiles(std::string filename, unsigned int i);
-		void CloseFiles();			// Close all model files
-		void ResetModelTime(double HMTime, double FMTime, double CMTime);
-	
-		double 		get_HMTime()const	{ 	return HM.get_totaltime(); }
-		double 		get_FMTime()const	{ 	return FM.get_totaltime(); }
-		double 		get_CMTime()const	{ 	return CM.get_totaltime(); }
-	
-		threevector get_bfielddir()const{	return (FM.get_bfield());	}
+        /** @brief Used to execute the program and solve the physics models
+         *
+         *  This function will continue to execute whilst the particle has not
+         *  satisified any of the following conditions:
+         *  1) Exited the simulation domain (return 1)
+         *  2) Reached thermal equilibrium in a continuous plasma (return 2)
+         *  3) Undergone a breakup process (return 3)
+         *  4) Evaporated, boiled or fallen below lower mass limit (return 4)
+         *  5) An error occures (return 5)
+         *  @return An integer code refering to a particular exit condition
+         */
+        int Run();
+
+        /** @brief Used to open all the model data files
+         *
+         *  @param filename files opened have the prefix filename
+         *  @param i files opened have the suffix i
+         */
+        void OpenFiles(std::string filename, unsigned int i);
+        /** @brief Used to close all the model data files
+         */
+        void CloseFiles();
+        /** @brief Reset the time as recorded by each model if necessary
+         */
+        void ResetModelTime(double HMTime, double FMTime, double CMTime);
+    
+        /** @name Public getter methods
+         *  @brief functions required to get member data
+         */
+        ///@{
+        double      get_HMTime()const   {   return HM.get_totaltime(); }
+        double      get_FMTime()const   {   return FM.get_totaltime(); }
+        double      get_CMTime()const   {   return CM.get_totaltime(); }
+        threevector get_bfielddir()const{   return (FM.get_bfield());  }
+        ///@}
 };
 
 #endif

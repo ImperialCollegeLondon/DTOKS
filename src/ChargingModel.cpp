@@ -1,5 +1,3 @@
-//#define PAUSE
-//#define CHARGING_DEBUG
 
 #include "ChargingModel.h"
 

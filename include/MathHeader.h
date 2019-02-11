@@ -1,7 +1,6 @@
 #ifndef __MATHHEADER_H_INCLUDED__   // if MathHeader.h hasn't been included yet...
 #define __MATHHEADER_H_INCLUDED__
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // File: exponential_integral_Ei.c                                            //
 // Routine(s):                                                                //

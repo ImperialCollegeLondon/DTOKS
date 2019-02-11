@@ -1,6 +1,4 @@
-//#define PAUSE
-//#define DTOKSU_DEBUG
-//#define DTOKSU_DEEP_DEBUG
+
 #include "DTOKSU.h"
 
 

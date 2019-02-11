@@ -1,33 +1,46 @@
-#ifndef __LITHIUM_H_INCLUDED__   // if Matter.h hasn't been included yet...
+/** @class Lithium.h
+ *  @brief Class defining the elemental properties of lithium
+ *  
+ *  A class which defines the elemental properties of lithium relevant to the 
+ *  simulation of dust in plasmas. An instance of this class is used to 
+ *  represent a spherical mass of this element, with data structures and
+ *  functionality derived from the Matter class
+ *  @see Matter
+ */
+
+#ifndef __LITHIUM_H_INCLUDED__
 #define __LITHIUM_H_INCLUDED__
 
-//#include <iostream>
 #include "Matter.h"
 
+/** @class Iron
+ *  @brief Class defining the elemental properties of lithium
+ *  
+ *  A class which defines the elemental properties of lithium relevant to the 
+ *  simulation of dust in plasmas. An instance of this class is used to 
+ *  represent a spherical mass of this element, with data structures and
+ *  functionality derived from the Matter class
+ *  @see Matter
+ */
 class Lithium: public Matter{
 
-	private:
+    private:
+        void update_radius        ()override;
+        void update_heatcapacity  ()override;
+        void update_vapourpressure()override;
+        void set_defaults         ()override;
+        
+    public:
+        Lithium();
+        Lithium(double radius);
+        Lithium(double radius, double tempin);
+        Lithium(double radius, double tempin, std::array<char,CM> &constmodels);
+        Lithium(double radius, double tempin, std::array<char,CM> &constmodels,
+            const threevector &position, const threevector &velocity);
 
-		// Functions called by Lithium::update()
-		void update_radius		();
-		void update_heatcapacity 	();
-		void update_vapourpressure	();
-		
-	public:
-		// Constructors
-		Lithium();
-		Lithium(double radius);
-		Lithium(double radius, double tempin);
-		Lithium(double radius, double tempin, std::array<char,CM> &constmodels);
-		Lithium(double radius, double tempin, std::array<char,CM> &constmodels,
-			const threevector &position, const threevector &velocity);
-
-		// Destructor
-		~Lithium(){};
-		
-		// Change Properties; Mass and Temperature
-		void lithium_defaults		();
-		double probe_vapourpressure(double Temperature)const;
+        ~Lithium(){};
+        
+        double probe_vapourpressure(double Temperature)const;
 };
 
-#endif
+#endif /* __LITHIUM_H_INCLUDED__ */

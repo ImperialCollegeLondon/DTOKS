@@ -3,6 +3,7 @@
 
 ## Author :	Luke Simons
 ## Date :	06/02/2019
+## email :	ls5115@ic.ac.uk
 ## Description :
 This file describes the class structure and operation of DTOKSU code, 
 available at https://github.com/LukeSimons/DTOKS-U.
@@ -48,7 +49,7 @@ Dependencies:
 src:
 	Beryllium.cpp   Deuterium.cpp  ForceModel.cpp      HeatingModel.cpp  
 	MathHeader.cpp  Molybdenum.cpp Tungsten.cpp        ChargingModel.cpp  
-	DTOKSU.cpp      Functions.cpp  ron.cpp             Matter.cpp      
+	DTOKSU.cpp      Functions.cpp  Iron.cpp            Matter.cpp      
 	solveMOMLEM.cpp	Constants.cpp  DTOKSU_Manager.cpp  Graphite.cpp 
 	Lithium.cpp     Model.cpp      threevector.cpp
 
