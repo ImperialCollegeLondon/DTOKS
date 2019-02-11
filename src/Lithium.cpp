@@ -33,20 +33,22 @@ const struct ElementConsts LithiumConsts = {
     0.0848    //!< kW/m K at 20 degrees celsius
 };
 
-Lithium::Lithium():Matter(LithiumConsts){
+Lithium::Lithium():
+Matter(LithiumConsts){
     E_Debug("\n\nIn Lithium::Lithium():Matter(&LithiumConsts)\n\n");
     set_defaults();
     update();
 }
 
-Lithium::Lithium(double radius):Matter(radius,LithiumConsts){
+Lithium::Lithium(double radius):
+Matter(radius,LithiumConsts){
     E_Debug("\n\nIn Lithium::Lithium(double radius):..\n\n");
     set_defaults();
     update();
 }
 
-Lithium::Lithium(double radius, double tempin)
-    :Matter(radius,tempin,LithiumConsts){
+Lithium::Lithium(double radius, double tempin):
+Matter(radius,tempin,LithiumConsts){
     E_Debug("\n\nIn Lithium::Lithium(double radius, double tempin):...\n\n");
     set_defaults();
     update_state(0.0);
@@ -56,8 +58,9 @@ Lithium::Lithium(double radius, double tempin)
         << "\nSt.Density = " << St.Density << "\nSt.Volume = " << St.Volume);
 }
 
-Lithium::Lithium(double radius, double tempin, std::array<char,CM> &constmodels)
-    :Matter(radius,tempin,LithiumConsts){
+Lithium::Lithium(double radius, double tempin, 
+std::array<char,CM> &constmodels):
+Matter(radius,tempin,LithiumConsts){
     E_Debug("\n\nIn Lithium::Lithium(double radius, double tempin, ...)\n\n\t");
     set_defaults();
 
@@ -69,8 +72,8 @@ Lithium::Lithium(double radius, double tempin, std::array<char,CM> &constmodels)
 }
 
 Lithium::Lithium(double radius, double tempin, std::array<char,CM> &constmodels, 
-    const threevector& position, const threevector& velocity)
-    :Matter(radius,tempin,LithiumConsts){
+const threevector& position, const threevector& velocity):
+Matter(radius,tempin,LithiumConsts){
     E_Debug("\n\nIn Lithium::Lithium(double radius, double tempin, ...)\n\n\t");
     set_defaults();
 

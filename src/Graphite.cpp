@@ -41,18 +41,20 @@ const struct ElementConsts GraphiteConsts = {
 };
 
 
-Graphite::Graphite():Matter(GraphiteConsts){
+Graphite::Graphite():
+Matter(GraphiteConsts){
     set_defaults();
     update();
 }
 
-Graphite::Graphite(double radius):Matter(radius,GraphiteConsts){
+Graphite::Graphite(double radius):
+Matter(radius,GraphiteConsts){
     set_defaults();
     update();
 }
 
 Graphite::Graphite(double radius, double tempin)
-    :Matter(radius,tempin,GraphiteConsts){
+:Matter(radius,tempin,GraphiteConsts){
     E_Debug("\n\nIn Graphite::Graphite(double radius, double tempin)");
     set_defaults();
 
@@ -65,7 +67,8 @@ Graphite::Graphite(double radius, double tempin)
 }
 
 Graphite::Graphite(double radius, double tempin, 
-    std::array<char,CM> &constmodels):Matter(radius,tempin,GraphiteConsts){
+std::array<char,CM> &constmodels):
+Matter(radius,tempin,GraphiteConsts){
     E_Debug("\n\nIn Graphite::Graphite(double radius, double tempin, ...)");
     set_defaults();
 
@@ -78,8 +81,9 @@ Graphite::Graphite(double radius, double tempin,
 }
 
 Graphite::Graphite(double radius, double tempin, 
-    std::array<char,CM> &constmodels, const threevector & position, 
-    const threevector& velocity):Matter(radius,tempin,GraphiteConsts){
+std::array<char,CM> &constmodels, const threevector & position, 
+const threevector& velocity):
+Matter(radius,tempin,GraphiteConsts){
     E_Debug("\n\nIn Graphite::Graphite(double radius, double tempin, ...)");
     set_defaults();
 

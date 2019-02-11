@@ -35,18 +35,20 @@ const struct ElementConsts DeuteriumConsts = {
 };
 
 
-Deuterium::Deuterium():Matter(DeuteriumConsts){
+Deuterium::Deuterium():
+Matter(DeuteriumConsts){
     set_defaults();
     update();
 }
 
-Deuterium::Deuterium(double radius):Matter(radius,DeuteriumConsts){
+Deuterium::Deuterium(double radius):
+Matter(radius,DeuteriumConsts){
     set_defaults();
     update();
 }
 
-Deuterium::Deuterium(double radius, double tempin)
-    :Matter(radius,tempin,DeuteriumConsts){
+Deuterium::Deuterium(double radius, double tempin):
+Matter(radius,tempin,DeuteriumConsts){
     E_Debug("\n\nIn Deuterium::Deuterium(double radius, double tempin)");
     set_defaults();
 
@@ -60,7 +62,8 @@ Deuterium::Deuterium(double radius, double tempin)
 }
 
 Deuterium::Deuterium(double radius, double tempin, 
-    std::array<char,CM> &constmodels):Matter(radius,tempin,DeuteriumConsts){
+std::array<char,CM> &constmodels):
+Matter(radius,tempin,DeuteriumConsts){
     E_Debug("\n\nIn Deuterium::Deuterium(double radius, double tempin, ...)");
     set_defaults();
 
@@ -73,8 +76,9 @@ Deuterium::Deuterium(double radius, double tempin,
 }
 
 Deuterium::Deuterium(double radius, double tempin, 
-    std::array<char,CM> &constmodels, const threevector& position, 
-    const threevector& velocity):Matter(radius,tempin,DeuteriumConsts){
+std::array<char,CM> &constmodels, const threevector& position, 
+const threevector& velocity):
+Matter(radius,tempin,DeuteriumConsts){
     E_Debug("\n\nIn Deuterium::Deuterium(double radius, double tempin, ...)");
     set_defaults();
 

@@ -32,20 +32,22 @@ const struct ElementConsts MolybdenumConsts = {
     0.138    //!< kW/m K at 20 degrees celsius
 };
 
-Molybdenum::Molybdenum():Matter(MolybdenumConsts){
+Molybdenum::Molybdenum():
+Matter(MolybdenumConsts){
     E_Debug("\n\nIn Molybdenum::Molybdenum():Matter(&MolybdenumConsts)\n\n");
     set_defaults();
     update();
 }
 
-Molybdenum::Molybdenum(double radius):Matter(radius,MolybdenumConsts){
+Molybdenum::Molybdenum(double radius):
+Matter(radius,MolybdenumConsts){
     E_Debug("\n\nIn Molybdenum::Molybdenum(double radius):...\n\n");
     set_defaults();
     update();
 }
 
-Molybdenum::Molybdenum(double radius, double tempin)
-    :Matter(radius,tempin,MolybdenumConsts){
+Molybdenum::Molybdenum(double radius, double tempin):
+Matter(radius,tempin,MolybdenumConsts){
     E_Debug("\n\nIn Molybdenum::Molybdenum(double radius, double tempin):\n\n");
     set_defaults();
     update_state(0.0);
@@ -56,7 +58,8 @@ Molybdenum::Molybdenum(double radius, double tempin)
 }
 
 Molybdenum::Molybdenum(double radius, double tempin, 
-    std::array<char,CM> &constmodels):Matter(radius,tempin,MolybdenumConsts){
+std::array<char,CM> &constmodels):
+Matter(radius,tempin,MolybdenumConsts){
     E_Debug("\n\nIn Molybdenum::Molybdenum(double radius, ...)\n\n\t");
     set_defaults();
 
@@ -68,8 +71,9 @@ Molybdenum::Molybdenum(double radius, double tempin,
 }
 
 Molybdenum::Molybdenum(double radius, double tempin, 
-    std::array<char,CM> &constmodels, const threevector& position, 
-    const threevector& velocity):Matter(radius,tempin,MolybdenumConsts){
+std::array<char,CM> &constmodels, const threevector& position, 
+const threevector& velocity):
+Matter(radius,tempin,MolybdenumConsts){
     E_Debug("\n\nIn Molybdenum::Molybdenum(double radius, ...)\n\n\t");
     set_defaults();
 

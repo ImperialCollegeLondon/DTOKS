@@ -35,17 +35,20 @@ const struct ElementConsts IronConsts = {
                      //!< /hbase/Tables/thrcn.html
 };
 
-Iron::Iron():Matter(IronConsts){
+Iron::Iron():
+Matter(IronConsts){
     set_defaults();
     update();
 }
 
-Iron::Iron(double radius):Matter(radius,IronConsts){
+Iron::Iron(double radius):
+Matter(radius,IronConsts){
     set_defaults();
     update();
 }
 
-Iron::Iron(double radius, double tempin):Matter(radius,tempin,IronConsts){
+Iron::Iron(double radius, double tempin):
+Matter(radius,tempin,IronConsts){
     E_Debug("\n\nIn Iron::Iron(double radius, double tempin)");
     set_defaults();
 
@@ -56,8 +59,8 @@ Iron::Iron(double radius, double tempin):Matter(radius,tempin,IronConsts){
         << "\nSt.Density = " << St.Density << "\nSt.Volume = " << St.Volume);
 }
 
-Iron::Iron(double radius, double tempin, std::array<char,CM> &constmodels)
-    :Matter(radius,tempin,IronConsts,constmodels){
+Iron::Iron(double radius, double tempin, std::array<char,CM> &constmodels):
+Matter(radius,tempin,IronConsts,constmodels){
     E_Debug("\n\nIn Iron::Iron(double radius, double tempin, ...)");
 
     set_defaults();
@@ -69,8 +72,8 @@ Iron::Iron(double radius, double tempin, std::array<char,CM> &constmodels)
 }
 
 Iron::Iron(double radius, double tempin, std::array<char,CM> &constmodels, 
-    const threevector &position, const threevector &velocity)
-    :Matter(radius,tempin,IronConsts,constmodels){
+const threevector &position, const threevector &velocity):
+Matter(radius,tempin,IronConsts,constmodels){
     E_Debug("\n\nIn Iron::Iron(double radius, double tempin, ...)");
 
     set_defaults();

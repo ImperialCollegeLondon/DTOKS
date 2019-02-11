@@ -1,7 +1,7 @@
 /** @file ForceModel.cpp
  *  @brief Implementation of class for physics models relevant to dust motion
  *  
- *  Implement the member functions of the Force class
+ *  Implement the member functions of the ForceModel class
  *  
  *  @author Luke Simons (ls5115@ic.ac.uk)
  *  @bug bugs, they definitely exist
@@ -10,7 +10,8 @@
 //#include <math.h>
 #include "ForceModel.h"
 
-ForceModel::ForceModel():Model(){
+ForceModel::ForceModel():
+Model(){
     F_Debug("\n\nIn ForceModel::ForceModel():Model()\n\n");
     UseModel = {false,false,false,false,false,false};
     OldTemp = Sample->get_temperature();

@@ -38,16 +38,16 @@ struct GrainData MatterDefaults = {
 };
 
 //!< Make sure dimensions of material are self-consistent after constructor
-Matter::Matter(const ElementConsts &elementconsts):Ec(elementconsts),
-        St(MatterDefaults){
+Matter::Matter(const ElementConsts &elementconsts):
+Ec(elementconsts),St(MatterDefaults){
     M_Debug("\n\nIn Matter::Matter(...)\n\n");
     ConstModels = {'c','c','c','y'};
     update_dim();
     PreBoilMass = St.Mass;
 };
 
-Matter::Matter(double rad, const ElementConsts &elementconsts):Ec(elementconsts)
-        ,St(MatterDefaults){
+Matter::Matter(double rad, const ElementConsts &elementconsts):
+Ec(elementconsts),St(MatterDefaults){
     M_Debug("\n\nIn Matter::Matter(...)\n\n");
     ConstModels = {'c','c','c','y'};
     St.Radius = rad;            // m
@@ -58,7 +58,7 @@ Matter::Matter(double rad, const ElementConsts &elementconsts):Ec(elementconsts)
 };
 
 Matter::Matter(double rad, double temp, const ElementConsts &elementconsts):
-        Ec(elementconsts),St(MatterDefaults){
+Ec(elementconsts),St(MatterDefaults){
     M_Debug("\n\nIn Matter::Matter(...)\n\n");
     ConstModels = {'c','c','c','y'};
     St.Radius = rad;                        // m
@@ -97,7 +97,8 @@ Matter::Matter(double rad, double temp, const ElementConsts &elementconsts):
 };
 
 Matter::Matter(double rad, double temp, const ElementConsts &elementconsts, 
-        std::array<char,CM> &constmodels):Ec(elementconsts),St(MatterDefaults){
+std::array<char,CM> &constmodels)
+:Ec(elementconsts),St(MatterDefaults){
     M_Debug("\n\nIn Matter::Matter(...)\n\n");
     ConstModels = constmodels;
     St.Radius = rad;                        // m

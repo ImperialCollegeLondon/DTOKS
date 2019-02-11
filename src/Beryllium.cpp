@@ -40,13 +40,14 @@ Beryllium::Beryllium():Matter(BerylliumConsts){
     update();
 }
 
-Beryllium::Beryllium(double radius):Matter(radius,BerylliumConsts){
+Beryllium::Beryllium(double radius):
+Matter(radius,BerylliumConsts){
     set_defaults();
     update();
 }
 
-Beryllium::Beryllium(double radius, double tempin)
-    :Matter(radius,tempin,BerylliumConsts){
+Beryllium::Beryllium(double radius, double tempin):
+Matter(radius,tempin,BerylliumConsts){
     E_Debug("\n\nIn Beryllium::Beryllium(double radius, double tempin)");
     set_defaults();
 
@@ -59,7 +60,8 @@ Beryllium::Beryllium(double radius, double tempin)
 }
 
 Beryllium::Beryllium(double radius, double tempin, 
-    std::array<char,CM> &constmodels):Matter(radius,tempin,BerylliumConsts){
+std::array<char,CM> &constmodels):
+Matter(radius,tempin,BerylliumConsts){
     E_Debug("\n\nIn Beryllium::Beryllium(double radius, double tempin, ...)");
     set_defaults();
 
@@ -72,8 +74,9 @@ Beryllium::Beryllium(double radius, double tempin,
 }
 
 Beryllium::Beryllium(double radius, double tempin, 
-    std::array<char,CM> &constmodels, const threevector& position, 
-    const threevector& velocity):Matter(radius,tempin,BerylliumConsts){
+std::array<char,CM> &constmodels, const threevector& position, 
+const threevector& velocity):
+Matter(radius,tempin,BerylliumConsts){
     E_Debug("\n\nIn Beryllium::Beryllium(double radius, double tempin, ...)");
     set_defaults();
 

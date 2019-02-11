@@ -11,7 +11,8 @@
 #include "Constants.h"
 #include "Functions.h"
 
-HeatingModel::HeatingModel():Model(){
+HeatingModel::HeatingModel():
+Model(){
     H_Debug("\n\nIn HeatingModel::HeatingModel():Model()\n\n");
     Defaults();
     CreateFile("Default_Heating_filename.txt",false);

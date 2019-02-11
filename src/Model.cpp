@@ -15,10 +15,11 @@ template <typename T> int sgn(T val) {
     return (T(0) < val) - (val < T(0));
 }
 
-Model::Model():Sample(new Tungsten),
-        PG_data(std::make_shared<PlasmaGrid_Data>(PlasmaGrid_DataDefaults)),
-        Pdata(&PlasmaDataDefaults),Accuracy(1.0),ContinuousPlasma(true),
-        TimeStep(0.0),TotalTime(0.0){
+Model::Model():
+Sample(new Tungsten),
+PG_data(std::make_shared<PlasmaGrid_Data>(PlasmaGrid_DataDefaults)),
+Pdata(&PlasmaDataDefaults),Accuracy(1.0),ContinuousPlasma(true),
+TimeStep(0.0),TotalTime(0.0){
     Mo_Debug("\n\nIn Model::Model():Sample(new Tungsten),...)\n\n");
     i = 0; k = 0;
     PlasmaDataFile.open("Data/pd.txt");
@@ -29,11 +30,11 @@ Model::Model():Sample(new Tungsten),
     update_plasmadata();
 }
 
-Model::Model( Matter *&sample, PlasmaData &pdata, float accuracy )
-        :Sample(sample),
-        PG_data(std::make_shared<PlasmaGrid_Data>(PlasmaGrid_DataDefaults)),
-        Pdata(std::make_shared<PlasmaData>(pdata)),Accuracy(accuracy),
-        ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
+Model::Model( Matter *&sample, PlasmaData &pdata, float accuracy ):
+Sample(sample),
+PG_data(std::make_shared<PlasmaGrid_Data>(PlasmaGrid_DataDefaults)),
+Pdata(std::make_shared<PlasmaData>(pdata)),Accuracy(accuracy),
+ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
     Mo_Debug("\n\nIn Model::Model( Matter *&sample, ...)\n\n");
     assert(Accuracy > 0);
     i = 0; k = 0;
@@ -45,10 +46,10 @@ Model::Model( Matter *&sample, PlasmaData &pdata, float accuracy )
     set_plasmadata(pdata);
 }
 
-Model::Model( Matter *&sample, PlasmaGrid_Data &pgrid, float accuracy )
-        :Sample(sample),PG_data(std::make_shared<PlasmaGrid_Data>(pgrid)),
-        Pdata(&PlasmaDataDefaults),Accuracy(accuracy),ContinuousPlasma(false),
-        TimeStep(0.0),TotalTime(0.0){
+Model::Model( Matter *&sample, PlasmaGrid_Data &pgrid, float accuracy ):
+Sample(sample),PG_data(std::make_shared<PlasmaGrid_Data>(pgrid)),
+Pdata(&PlasmaDataDefaults),Accuracy(accuracy),ContinuousPlasma(false),
+TimeStep(0.0),TotalTime(0.0){
     Mo_Debug("\n\nIn Model::Model( Matter *&sample, ...)\n\n");
     assert(Accuracy > 0);
     i = 0; k = 0;
@@ -65,10 +66,10 @@ Model::Model( Matter *&sample, PlasmaGrid_Data &pgrid, float accuracy )
 }
 
 Model::Model( Matter *&sample, PlasmaGrid_Data &pgrid, PlasmaData &pdata, 
-        float accuracy ):Sample(sample),
-        PG_data(std::make_shared<PlasmaGrid_Data>(pgrid)),
-        Pdata(std::make_shared<PlasmaData>(pdata)),Accuracy(accuracy),
-        ContinuousPlasma(false),TimeStep(0.0),TotalTime(0.0){
+float accuracy ):
+Sample(sample), PG_data(std::make_shared<PlasmaGrid_Data>(pgrid)),
+Pdata(std::make_shared<PlasmaData>(pdata)),Accuracy(accuracy),
+ContinuousPlasma(false),TimeStep(0.0),TotalTime(0.0){
 
     Mo_Debug("\n\nIn Model::Model( Matter *&sample, ...)\n\n");
     assert(Accuracy > 0);

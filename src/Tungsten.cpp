@@ -33,20 +33,22 @@ const struct ElementConsts TungstenConsts = {
     0.163         //!< kW/m K, at 20 degrees celsius
 };
 
-Tungsten::Tungsten():Matter(TungstenConsts){
+Tungsten::Tungsten():
+Matter(TungstenConsts){
     E_Debug("\n\nIn Tungsten::Tungsten():Matter(&TungstenConsts)\n\n");
     set_defaults();
     update();
 }
 
-Tungsten::Tungsten(double radius):Matter(radius,TungstenConsts){
+Tungsten::Tungsten(double radius):
+Matter(radius,TungstenConsts){
     E_Debug("\n\nIn Tungsten::Tungsten(double radius):\n\n");
     set_defaults();
     update();
 }
 
-Tungsten::Tungsten(double radius, double tempin)
-    :Matter(radius,tempin,TungstenConsts){
+Tungsten::Tungsten(double radius, double tempin):
+Matter(radius,tempin,TungstenConsts){
     E_Debug("\n\nIn Tungsten::Tungsten(double radius, double tempin):...\n\n");
     set_defaults();
     update_state(0.0);
@@ -57,7 +59,8 @@ Tungsten::Tungsten(double radius, double tempin)
 }
 
 Tungsten::Tungsten(double radius, double tempin, 
-    std::array<char,CM> &constmodels):Matter(radius,tempin,TungstenConsts){
+std::array<char,CM> &constmodels):
+Matter(radius,tempin,TungstenConsts){
     E_Debug("\n\nIn Tungsten::Tungsten(double radius, ...)\n\n\t");
     set_defaults();
 
@@ -69,8 +72,9 @@ Tungsten::Tungsten(double radius, double tempin,
 }
 
 Tungsten::Tungsten(double radius, double tempin, 
-    std::array<char,CM> &constmodels, const threevector& position, 
-    const threevector& velocity):Matter(radius,tempin,TungstenConsts){
+std::array<char,CM> &constmodels, const threevector& position, 
+const threevector& velocity):
+Matter(radius,tempin,TungstenConsts){
     E_Debug("\n\nIn Tungsten::Tungsten(double radius, ...)\n\n\t");
     set_defaults();
 
