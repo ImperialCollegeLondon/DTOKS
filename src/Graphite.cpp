@@ -41,29 +41,38 @@ const struct ElementConsts GraphiteConsts = {
 };
 
 
-Graphite::Graphite():
-Matter(GraphiteConsts){
+Graphite::Graphite():Matter(GraphiteConsts){
+    E_Debug("\n\nIn Graphite::Graphite(GraphiteConsts)");
     set_defaults();
     update();
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 Graphite::Graphite(double radius):
 Matter(radius,GraphiteConsts){
+    E_Debug("\n\nIn Graphite::Graphite(double radius):"
+        << "Matter(radius,GraphiteConsts)");
     set_defaults();
     update();
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 Graphite::Graphite(double radius, double tempin)
 :Matter(radius,tempin,GraphiteConsts){
-    E_Debug("\n\nIn Graphite::Graphite(double radius, double tempin)");
+    E_Debug("\n\nIn Graphite::Graphite(double radius, double tempin)"
+        << ":Matter(radius,tempin,GraphiteConsts)");
     set_defaults();
 
     update_state(0.0);      // Temperature dependent
     update_models('c','c','c','y','n');
     update();
-    E_Debug("\nMass after = " << St.Mass << "\nRadius After = " 
-        << St.Radius << "\nSt.Density = " << St.Density  
-        << "\nSt.Volume = " << St.Volume);
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 Graphite::Graphite(double radius, double tempin, 
@@ -76,15 +85,19 @@ Matter(radius,tempin,GraphiteConsts){
     update_models(constmodels);
     update();
 
-    E_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius 
-        << "\nSt.Density = " << St.Density << "\nSt.Volume = " << St.Volume);
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 Graphite::Graphite(double radius, double tempin, 
 std::array<char,CM> &constmodels, const threevector & position, 
 const threevector& velocity):
 Matter(radius,tempin,GraphiteConsts){
-    E_Debug("\n\nIn Graphite::Graphite(double radius, double tempin, ...)");
+    E_Debug("\n\nIn Graphite::Graphite(double radius, double tempin, "
+        << "std::array<char,CM> &constmodels, const threevector & position, "
+        << "const threevector& velocity):"
+        << "Matter(radius,tempin,GraphiteConsts)");
     set_defaults();
 
     update_state(0.0);      // Temperature dependent
@@ -92,12 +105,13 @@ Matter(radius,tempin,GraphiteConsts){
     update_motion(position,velocity,0.0);
     update();
 
-    E_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius 
-        << "\nSt.Density = " << St.Density << "\nSt.Volume = " << St.Volume);
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 void Graphite::set_defaults(){
-    E_Debug("\n\nIn Graphite::set_defaults()");
+    E_Debug("\n\n\tIn Graphite::set_defaults()");
     St.HeatCapacity = 0.846; //!< kJ/(kg-K), (+/- 0.001)
     //!<  http://www-eng.lbl.gov/~dw/projects/
     //!< DW4229_LHC_detector_analysis/calculations/emissivity2.pdf
@@ -108,7 +122,7 @@ void Graphite::set_defaults(){
 }
 
 void Graphite::update_heatcapacity(){
-    E_Debug("\n\nIn Graphite::update_heatcapacity()");
+    E_Debug("\n\n\tIn Graphite::update_heatcapacity()");
     //!< Heat capacity model
     //!< http://webbook.nist.gov/cgi/cbook.cgi?ID=C7440440&Type=JANAFG&Plot=on
     if( St.Temperature > 200 && St.Temperature <= 3500){
@@ -138,13 +152,13 @@ void Graphite::update_heatcapacity(){
         //!< Convert from calorie/gram to KiloJoule / Kilogramme 
         St.HeatCapacity = St.HeatCapacity*4.184; 
     }
-    E_Debug("\nTemperature is : " << St.Temperature << "\nSt.Gas = " << St.Gas 
-            << "\nSt.Liquid = " << St.Liquid << "\nCv of Solid: " 
-            << St.HeatCapacity/Ec.AtomicMass << "[kJ/(kg K)]"; );
+    E_Debug("\n\tTemperature is : " << St.Temperature << "\n\tSt.Gas = " 
+        << St.Gas << "\n\tSt.Liquid = " << St.Liquid << "\n\tCv of Solid: " 
+        << St.HeatCapacity/Ec.AtomicMass << "[kJ/(kg K)]"; );
 }
 
 void Graphite::update_radius(){
-    E_Debug("\n\nIn Graphite::update_radius():");
+    E_Debug("\n\n\tIn Graphite::update_radius()");
 /*  if( St.Temperature > 273 && St.Temperature <= 1800 ){
         // Day and sosman (1912) 
         St.LinearExpansion = 1+0.5*1e-6+3.2*1e-9*(St.Temperature-273);
@@ -161,16 +175,19 @@ void Graphite::update_radius(){
     assert(abs(St.Radius-St.UnheatedRadius*St.LinearExpansion)
         <(St.Radius*0.01));
     St.Radius=St.UnheatedRadius*St.LinearExpansion;
-    E_Debug("\nTemperature = " << St.Temperature << "\n\nSt.LinearExpansion = " 
-        << St.LinearExpansion << "\nSt.Radius = " << St.Radius);
+    E_Debug("\n\tTemperature = " << St.Temperature 
+        << "\n\tSt.LinearExpansion = " << St.LinearExpansion << "\nSt.Radius = "
+        << St.Radius);
     assert(St.Radius>0); //!< Assert radius is positive   
 }
 
 void Graphite::update_vapourpressure(){
+    E_Debug("\n\n\tIn Graphite::update_vapourpressure()");
     St.VapourPressure = probe_vapourpressure(St.Temperature);
 }
 
 double Graphite::probe_vapourpressure(double Temperature)const{
+    E_Debug("\n\n\tIn Graphite::probe_vapourpressure(double Temperature)const");
     //!< double AmbientPressure = 0;
     //!< http://pubs.acs.org/doi/pdf/10.1021/ja01161a081
 

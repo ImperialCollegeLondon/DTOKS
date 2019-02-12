@@ -347,14 +347,14 @@ void HeatingModel::UpdateRERN(){
         static bool runOnce = true;
         std::string Warning = "In HeatingModel::UpdateRERN()\nRN > 0.1. ";
         Warning += "Neutral Recombination affected by backscattering by more ";
-        Warning += "than 10%!"
-        WarnOnce(runOnce,);
+        Warning += "than 10%!";
+        WarnOnce(runOnce,Warning);
     }   
     if( RE > 0.1 ){ //!< Uncomment when RE is calculated
         static bool runOnce = true;
         std::string Warning = "In HeatingModel::UpdateRERN()\nRE > 0.1. ";
-        Warning += "Ion Heat Flux affected by backscattering by more than 10%!"
-        WarnOnce(runOnce,);
+        Warning += "Ion Heat Flux affected by backscattering by more than 10%!";
+        WarnOnce(runOnce,Warning);
     }
 }
 
@@ -722,7 +722,7 @@ const double HeatingModel::DUSTTIonHeatFlux(double DustTemperature)const{
         static bool runOnce = true;
         std::string Warning = "In HeatingModel::DUSTTIonHeatFlux(double ";
         Warning += "DustTemperature)\nRE > 0.1. Ion Heat Flux affected by ";
-        Warning += "backscattering by more than 10%!"
+        Warning += "backscattering by more than 10%!";
         WarnOnce(runOnce,Warning);
     }
     double TemperatureRatio = Pdata->IonTemp/Pdata->ElectronTemp;

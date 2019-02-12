@@ -35,16 +35,23 @@ const struct ElementConsts DeuteriumConsts = {
 };
 
 
-Deuterium::Deuterium():
-Matter(DeuteriumConsts){
+Deuterium::Deuterium():Matter(DeuteriumConsts){
+    E_Debug("\n\nIn Deuterium::Deuterium(DeuteriumConsts)");
     set_defaults();
     update();
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
-Deuterium::Deuterium(double radius):
-Matter(radius,DeuteriumConsts){
+Deuterium::Deuterium(double radius):Matter(radius,DeuteriumConsts){
+    E_Debug("\n\nIn Deuterium::Deuterium(double radius):"
+        << "Matter(radius,DeuteriumConsts)");
     set_defaults();
     update();
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 Deuterium::Deuterium(double radius, double tempin):
@@ -56,30 +63,36 @@ Matter(radius,tempin,DeuteriumConsts){
     update_models('c','c','c','y','n');
     update();
 
-    E_Debug("\nMass after = " << St.Mass << "\nRadius After = " 
-        << St.Radius << "\nSt.Density = " << St.Density 
-        << "\nSt.Volume = " << St.Volume);
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 Deuterium::Deuterium(double radius, double tempin, 
 std::array<char,CM> &constmodels):
 Matter(radius,tempin,DeuteriumConsts){
-    E_Debug("\n\nIn Deuterium::Deuterium(double radius, double tempin, ...)");
+    E_Debug("\n\nIn Deuterium::Deuterium(double radius, double tempin, "
+        << "std::array<char,CM> &constmodels):"
+        << "Matter(radius,tempin,DeuteriumConsts)");
     set_defaults();
 
     update_state(0.0);
     update_models(constmodels);
     update();
 
-    E_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius 
-        << "\nSt.Density = " << St.Density << "\nSt.Volume = " << St.Volume);
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 Deuterium::Deuterium(double radius, double tempin, 
 std::array<char,CM> &constmodels, const threevector& position, 
 const threevector& velocity):
 Matter(radius,tempin,DeuteriumConsts){
-    E_Debug("\n\nIn Deuterium::Deuterium(double radius, double tempin, ...)");
+    E_Debug("\n\nIn Deuterium::Deuterium(double radius, double tempin, "
+        << "std::array<char,CM> &constmodels, const threevector& position, "
+        << "const threevector& velocity):"
+        << "Matter(radius,tempin,DeuteriumConsts)");
     set_defaults();
 
     update_state(0.0);
@@ -87,12 +100,13 @@ Matter(radius,tempin,DeuteriumConsts){
     update_motion(position,velocity,0.0);
     update();
 
-    E_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius 
-        << "\nSt.Density = " << St.Density << "\nSt.Volume = " << St.Volume);
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 void Deuterium::set_defaults(){
-    E_Debug("\n\nIn Deuterium::set_defaults()");
+    E_Debug("\n\n\tIn Deuterium::set_defaults()");
     //!<  http://www.engineersedge.com
     //!< /materials/specific_heat_capacity_of_metals_13259.html
     St.HeatCapacity = 2.950;              //!< kJ/(kg-K), 
@@ -105,7 +119,7 @@ void Deuterium::set_defaults(){
 }
 
 void Deuterium::update_heatcapacity(){
-    E_Debug("\n\nIn Deuterium::update_heatcapacity()");
+    E_Debug("\n\n\tIn Deuterium::update_heatcapacity()");
     static bool runOnce = true;
     std::string WarningMessage = "Deuterium HeatCapacity assumed constant!\n";
     WarningMessage += "Variable heat capacity not possible";
@@ -114,7 +128,7 @@ void Deuterium::update_heatcapacity(){
 }
 
 void Deuterium::update_radius(){
-    E_Debug("\n\nIn Deuterium::update_radius():");
+    E_Debug("\n\n\tIn Deuterium::update_radius():");
     St.LinearExpansion=1.0;
     static bool runOnce = true;
     std::string WarningMessage = "Deuterium LinearExpansion == 1.0 assumed!\n";
@@ -125,10 +139,12 @@ void Deuterium::update_radius(){
 }
 
 void Deuterium::update_vapourpressure(){
+    E_Debug("\n\n\tIn Deuterium::update_vapourpressure()");    
     St.VapourPressure = probe_vapourpressure(St.Temperature);
 }
 
 double Deuterium::probe_vapourpressure(double Temperature)const{
+    E_Debug("\n\n\tIn Deuterium::update_vapourpressure(double Temperature):");    
     double VapourPressure(0.0);
     //!< Page 466, equation 7.15
     //!< Page 466, equation 7.14

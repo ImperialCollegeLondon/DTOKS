@@ -245,8 +245,8 @@ int DTOKSU::Run(){
         if( ChargeTime > MinTimeStep && ChargeTime != 1){
             static bool runOnce = true;
             std::string Warning = "*** Charging Time scale is not the shortest";
-            Warning += " timescale!! ***\n"
-            WarnOnce(runOnce,);
+            Warning += " timescale!! ***\n";
+            WarnOnce(runOnce,Warning);
             std::cout << "\nChargeTime = " << ChargeTime 
                 << "\t:\tMinTime = " << MinTimeStep;
             ErrorFlag = true;

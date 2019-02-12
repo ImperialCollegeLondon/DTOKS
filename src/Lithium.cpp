@@ -35,58 +35,74 @@ const struct ElementConsts LithiumConsts = {
 
 Lithium::Lithium():
 Matter(LithiumConsts){
-    E_Debug("\n\nIn Lithium::Lithium():Matter(&LithiumConsts)\n\n");
+    E_Debug("\n\nIn Lithium::Lithium():Matter(LithiumConsts)");
     set_defaults();
     update();
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 Lithium::Lithium(double radius):
 Matter(radius,LithiumConsts){
-    E_Debug("\n\nIn Lithium::Lithium(double radius):..\n\n");
+    E_Debug("\n\nIn Lithium::Lithium(double radius):"
+        << "Matter(radius,LithiumConsts)");
     set_defaults();
     update();
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 Lithium::Lithium(double radius, double tempin):
 Matter(radius,tempin,LithiumConsts){
-    E_Debug("\n\nIn Lithium::Lithium(double radius, double tempin):...\n\n");
+    E_Debug("\n\nIn Lithium::Lithium(double radius, double tempin):"
+        << "Matter(radius,tempin,LithiumConsts)");
     set_defaults();
     update_state(0.0);
     update_models('c','c','c','y','n');
     update();
-    E1_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius 
-        << "\nSt.Density = " << St.Density << "\nSt.Volume = " << St.Volume);
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 Lithium::Lithium(double radius, double tempin, 
 std::array<char,CM> &constmodels):
 Matter(radius,tempin,LithiumConsts){
-    E_Debug("\n\nIn Lithium::Lithium(double radius, double tempin, ...)\n\n\t");
+    E_Debug("\n\nIn Lithium::Lithium(double radius, double tempin, "
+        << "std::array<char,CM> &constmodels):"
+        << "Matter(radius,tempin,LithiumConsts))");
     set_defaults();
 
     update_state(0.0);
     update_models(constmodels);
     update();
-    E1_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius 
-        << "\nSt.Density = " << St.Density << "\nSt.Volume = " << St.Volume);
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 Lithium::Lithium(double radius, double tempin, std::array<char,CM> &constmodels, 
 const threevector& position, const threevector& velocity):
 Matter(radius,tempin,LithiumConsts){
-    E_Debug("\n\nIn Lithium::Lithium(double radius, double tempin, ...)\n\n\t");
+    E_Debug("\n\nIn Lithium::Lithium(double radius, double tempin, "
+        << "std::array<char,CM> &constmodels, "
+        << "const threevector& position, const threevector& velocity):"
+        << "Matter(radius,tempin,LithiumConsts)");
     set_defaults();
 
     update_state(0.0);
     update_models(constmodels);
     update_motion(position,velocity,0.0);
     update();
-    E1_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius 
-        << "\nSt.Density = " << St.Density << "\nSt.Volume = " << St.Volume);
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 void Lithium::set_defaults(){
-    E_Debug("\tIn Lithium::set_defaults()\n\n");
+    E_Debug("\n\n\tIn Lithium::set_defaults()");
 
     //!< https://www.engineersedge.com/
     //!< materials/specific_heat_capacity_of_metals_13259.htm
@@ -101,7 +117,7 @@ void Lithium::set_defaults(){
 }
 
 void Lithium::update_heatcapacity(){
-    E_Debug("\tIn Lithium::update_heatcapacity()\n\n");
+    E_Debug("\n\n\tIn Lithium::update_heatcapacity()");
     //!< Temperature dependant heat capacity for Lithium taken from:
     //!< D. Harry W., Lewis Reserch Cent. 24 (1968), pg 8, figure 4
     if( St.Temperature < Ec.MeltingTemp ){ 
@@ -128,31 +144,32 @@ void Lithium::update_heatcapacity(){
         1.045e-3*pow(St.Temperature,2.0);
     }
 
-    E1_Debug("\n\nTemperature is : " << St.Temperature << "\nSt.Gas = " 
-        << St.Gas << "\nSt.Liquid = " << St.Liquid << "\nCv of Solid: " 
+    E1_Debug("\n\tTemperature is : " << St.Temperature << "\n\tSt.Gas = " 
+        << St.Gas << "\n\tSt.Liquid = " << St.Liquid << "\n\tCv of Solid: " 
         << St.HeatCapacity/Ec.AtomicMass << "[kJ/(kg K)]"; );
     //!< Conversion J/(Kg K) to kJ/( kg K ),
     St.HeatCapacity = (St.HeatCapacity /1000); 
 }
 
 void Lithium::update_radius(){
-    E_Debug("\tIn Lithium::update_radius()\n\n");
+    E_Debug("\n\n\tIn Lithium::update_radius()");
     
     double DensityTemp = 562.0-0.1*St.Temperature;
     St.LinearExpansion = 1.0+pow(534/DensityTemp,1.0/3.0);
     St.Radius=St.UnheatedRadius*St.LinearExpansion;
-    E1_Debug("\nTemperature = " << St.Temperature 
-        << "\n\nSt.LinearExpansion = " << St.LinearExpansion << "\nSt.Radius = "
-        << St.Radius);
+    Eq_Debug("\n\tTemperature = " << St.Temperature 
+        << "\n\tSt.LinearExpansion = " << St.LinearExpansion 
+        << "\n\tSt.Radius = " << St.Radius);
     assert(St.Radius>0); // Assert radius is positive   
 }
 
 void Lithium::update_vapourpressure(){
-    E_Debug("\tIn Lithium::update_vapourpressure()\n\n");
+    E_Debug("\n\n\tIn Lithium::update_vapourpressure()");
     St.VapourPressure = probe_vapourpressure(St.Temperature);
 }
 
 double Lithium::probe_vapourpressure(double Temperature)const{
+    E_Debug("\n\n\tIn Lithium::update_vapourpressure(double Temperature)const");
     double VapourPressure(0.0);
     //!< Model being used:
     //!< http://mmrc.caltech.edu/PVD/manuals/Metals%20Vapor%20pressure.pdf

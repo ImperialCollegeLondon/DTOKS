@@ -37,56 +37,74 @@ const struct ElementConsts IronConsts = {
 
 Iron::Iron():
 Matter(IronConsts){
+    E_Debug("\n\nIn Iron::Iron():Matter(IronConsts)");
     set_defaults();
     update();
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 Iron::Iron(double radius):
 Matter(radius,IronConsts){
+    E_Debug("\n\nIn Iron::Iron(double radius):"
+        << "Matter(radius,tempin,IronConsts)");
     set_defaults();
     update();
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 Iron::Iron(double radius, double tempin):
 Matter(radius,tempin,IronConsts){
-    E_Debug("\n\nIn Iron::Iron(double radius, double tempin)");
+    E_Debug("\n\nIn Iron::Iron(double radius, double tempin):"
+        << "Matter(radius,tempin,IronConsts)");
     set_defaults();
 
     update_state(0.0);
     update_models('c','c','c','y','n');
     update();
-    E_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius 
-        << "\nSt.Density = " << St.Density << "\nSt.Volume = " << St.Volume);
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 Iron::Iron(double radius, double tempin, std::array<char,CM> &constmodels):
 Matter(radius,tempin,IronConsts,constmodels){
-    E_Debug("\n\nIn Iron::Iron(double radius, double tempin, ...)");
+    E_Debug("\n\nIn Iron::Iron(double radius, double tempin, "
+        << "std::array<char,CM> &constmodels):"
+        << "Matter(radius,tempin,IronConsts,constmodels)");
 
     set_defaults();
     update_state(0.0);
     update_models(constmodels);
     update();
-    E_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius 
-        << "\nSt.Density = " << St.Density << "\nSt.Volume = " << St.Volume);
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 Iron::Iron(double radius, double tempin, std::array<char,CM> &constmodels, 
 const threevector &position, const threevector &velocity):
 Matter(radius,tempin,IronConsts,constmodels){
-    E_Debug("\n\nIn Iron::Iron(double radius, double tempin, ...)");
+    E_Debug("\n\nIn Iron::Iron(double radius, double tempin, "
+        << "std::array<char,CM> &constmodels, "
+        << "const threevector &position, const threevector &velocity):"
+        << "Matter(radius,tempin,IronConsts,constmodels");
 
     set_defaults();
     update_state(0.0);
     update_models(constmodels);
     update_motion(position,velocity,0.0);
     update();
-    E_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius 
-        << "\nSt.Density = " << St.Density << "\nSt.Volume = " << St.Volume);
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 void Iron::set_defaults(){
-    E_Debug("\n\nIn Iron::set_defaults()");
+    E_Debug("\n\n\tIn Iron::set_defaults()");
 
     St.HeatCapacity = 0.450;               //!< KJ/(kg K)
     St.Emissivity = 0.2;                   //!< Arb, Emissivity
@@ -112,10 +130,8 @@ void Iron::set_defaults(){
 }
 
 void Iron::update_heatcapacity(){
-    E_Debug("\n\nIn Iron::update_heatcapacity()");
+    E_Debug("\n\n\tIn Iron::update_heatcapacity()");
     double t = St.Temperature / 1000;
-    E_Debug("\n St.Temperature is : " << St.Temperature << " K\n Gas=" << St.Gas 
-        << " \n Liquid = " << St.Liquid);
 
     if( St.Liquid == true ){
         if(St.Temperature < 2200){
@@ -168,7 +184,7 @@ void Iron::update_heatcapacity(){
 };
 
 void Iron::update_radius(){
-    E_Debug("\n\nIn Iron::update_radius()");
+    E_Debug("\n\n\tIn Iron::update_radius()");
 
     St.LinearExpansion = 1+(10.8*St.Temperature)*1e-6;
     St.Radius=St.UnheatedRadius*St.LinearExpansion;
@@ -176,19 +192,21 @@ void Iron::update_radius(){
         static bool runOnce;
         WarnOnce(runOnce,"Linear exansion Discontinuous in time");
     }
-    E_Debug("\nTemperature = " << St.Temperature << "\n\nSt.LinearExpansion = " 
-        << St.LinearExpansion << "\nSt.Radius = " << St.Radius);
+    E1_Debug("\n\tTemperature = " << St.Temperature 
+        << "\n\tSt.LinearExpansion = " << St.LinearExpansion 
+        << "\n\tSt.Radius = " << St.Radius);
     assert(St.Radius>0);
 //  std::cerr << "Error! Diameter variation with temperature not specified!";
 //  throw std::exception();
 }
 
 void Iron::update_vapourpressure(){
+    E_Debug("\n\n\tIn Iron::probe_vapourpressure()");
     St.VapourPressure = probe_vapourpressure(St.Temperature);
 }
 
 double Iron::probe_vapourpressure(double Temperature)const{
-    E_Debug("\n\nIn Iron::probe_vapourpressure()");
+    E_Debug("\n\n\tIn Iron::probe_vapourpressure(double Temperature)const");
     //!<  St.VapourPressure = pow(10,6.347 - 19574/St.Temperature); 
     //!< http://mmrc.caltech.edu/PVD/manuals/Metals%20Vapor%20pressure.pdf
     double VapourPressure(0.0);
@@ -209,6 +227,6 @@ double Iron::probe_vapourpressure(double Temperature)const{
         VapourPressure = pow(10,11.353 - 19574/Temperature);
     }
 
-    E_Debug("VapourPressure = " << St.VapourPressure);
+    E1_Debug("VapourPressure = " << St.VapourPressure);
     return VapourPressure;
 }

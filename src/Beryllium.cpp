@@ -36,48 +36,63 @@ const struct ElementConsts BerylliumConsts = {
 
 
 Beryllium::Beryllium():Matter(BerylliumConsts){
+    E_Debug("\n\nIn Beryllium::Beryllium():Matter(BerylliumConsts)");
     set_defaults();
     update();
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 Beryllium::Beryllium(double radius):
 Matter(radius,BerylliumConsts){
+    E_Debug("\n\nIn Beryllium::Beryllium(double radius):"
+        << "Matter(radius,BerylliumConsts)");
     set_defaults();
     update();
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 Beryllium::Beryllium(double radius, double tempin):
 Matter(radius,tempin,BerylliumConsts){
-    E_Debug("\n\nIn Beryllium::Beryllium(double radius, double tempin)");
+    E_Debug("\n\nIn Beryllium::Beryllium(double radius, double tempin):"
+        << " Matter(radius,tempin,BerylliumConsts)");
     set_defaults();
 
     update_state(0.0);
     update_models('c','c','c','y','n');
     update();
-
-    E_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius 
-        << "\nSt.Density = " << St.Density << "\nSt.Volume = " << St.Volume);
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 Beryllium::Beryllium(double radius, double tempin, 
 std::array<char,CM> &constmodels):
 Matter(radius,tempin,BerylliumConsts){
-    E_Debug("\n\nIn Beryllium::Beryllium(double radius, double tempin, ...)");
+    E_Debug("\n\nIn Beryllium::Beryllium(double radius, double tempin, "
+        << "std::array<char,CM> &constmodels):"
+        << "Matter(radius,tempin,BerylliumConsts)");
     set_defaults();
 
     update_state(0.0);
     update_models(constmodels);
     update();
-
-    E_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius 
-        << "\nSt.Density = " << St.Density << "\nSt.Volume = " << St.Volume);
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 Beryllium::Beryllium(double radius, double tempin, 
 std::array<char,CM> &constmodels, const threevector& position, 
 const threevector& velocity):
 Matter(radius,tempin,BerylliumConsts){
-    E_Debug("\n\nIn Beryllium::Beryllium(double radius, double tempin, ...)");
+    E_Debug("\n\nIn Beryllium::Beryllium(double radius, double tempin, "
+        << "std::array<char,CM> &constmodels, const threevector& position, "
+        << "const threevector& velocity):"
+        << "Matter(radius,tempin,BerylliumConsts)");
     set_defaults();
 
     update_state(0.0);
@@ -85,12 +100,13 @@ Matter(radius,tempin,BerylliumConsts){
     update_motion(position,velocity,0.0);
     update();
 
-    E_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius 
-        << "\nSt.Density = " << St.Density << "\nSt.Volume = " << St.Volume);
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 void Beryllium::set_defaults(){
-    E_Debug("\n\nIn Beryllium::set_defaults()");
+    E_Debug("\n\n\tIn Beryllium::set_defaults()");
     //!< http://www.engineersedge.com
     //!< /materials/specific_heat_capacity_of_metals_13259.html
     St.HeatCapacity = 1.8254448;          //!< kJ/(kg-K)         
@@ -101,7 +117,7 @@ void Beryllium::set_defaults(){
 }
 
 void Beryllium::update_heatcapacity(){ 
-    E_Debug("\n\nIn Beryllium::update_heatcapacity()");
+    E_Debug("\n\n\tIn Beryllium::update_heatcapacity()");
 
     double t = St.Temperature/1000;
     //!< Temperature dependent heat capacity model taken from:
@@ -127,15 +143,15 @@ void Beryllium::update_heatcapacity(){
             0.000287*pow(t,3)+0.003958/(pow(t,2));
     }
 
-    E_Debug("\n\nTemperature is : " << St.Temperature << "\nSt.Gas = " 
-        << St.Gas << "\nSt.Liquid = " << St.Liquid << "\nCv of Solid: " 
+    E1_Debug("\n\tTemperature is : " << St.Temperature << "\n\tSt.Gas = " 
+        << St.Gas << "\n\tSt.Liquid = " << St.Liquid << "\n\tCv of Solid: " 
         << St.HeatCapacity/Ec.AtomicMass << "[kJ/(kg K)]"; );
     //!< Conversion J/(mol K) to kJ/( kg K ), AtomicMass [kg mol^-1]
     St.HeatCapacity = (St.HeatCapacity /(1000 * Ec.AtomicMass)); 
 }
 
 void Beryllium::update_radius(){
-    E_Debug("\n\nIn Beryllium::update_radius():");
+    E_Debug("\n\n\tIn Beryllium::update_radius()");
     //!< Temperature dependent expansion model taken from:
     //!< www-ferp.ucsd.edu/LIB/PROPS/PANOS/be.html
     if( St.Temperature > 250 && St.Temperature <= 298 ){
@@ -161,18 +177,19 @@ void Beryllium::update_radius(){
             1.1464e-2*St.Temperature+2.9752e-6*pow(St.Temperature,2));   
     }
     St.Radius=St.UnheatedRadius*St.LinearExpansion;
-    E_Debug("\nTemperature = " << St.Temperature 
-        << "\n\nSt.LinearExpansion = " << St.LinearExpansion 
-        << "\nSt.Radius = " << St.Radius);
+    E1_Debug("\n\tTemperature = " << St.Temperature 
+        << "\n\tSt.LinearExpansion = " << St.LinearExpansion 
+        << "\n\tSt.Radius = " << St.Radius);
     assert(St.Radius>0); // Assert radius is positive   
 }
 
 void Beryllium::update_vapourpressure(){
+    E_Debug("\n\n\tIn Beryllium::update_vapourpressure()");    
     St.VapourPressure = probe_vapourpressure(St.Temperature);
 }
 
 double Beryllium::probe_vapourpressure(double Temperature)const{
-
+    E_Debug("\n\n\tIn Beryllium::update_vapourpressure(double Temperature)");
     //!< Also available from wikipedia in pascal: 
     //!< https://en.wikipedia.org
     //!< /wiki/Vapor_pressures_of_the_elements_(data_page)

@@ -40,7 +40,8 @@ struct GrainData MatterDefaults = {
 //!< Make sure dimensions of material are self-consistent after constructor
 Matter::Matter(const ElementConsts &elementconsts):
 Ec(elementconsts),St(MatterDefaults){
-    M_Debug("\n\nIn Matter::Matter(...)\n\n");
+    M_Debug("\n\nIn Matter::Matter(const ElementConsts &elementconsts):"
+        << "Ec(elementconsts),St(MatterDefaults)\n\n");
     ConstModels = {'c','c','c','y'};
     update_dim();
     PreBoilMass = St.Mass;
@@ -48,7 +49,8 @@ Ec(elementconsts),St(MatterDefaults){
 
 Matter::Matter(double rad, const ElementConsts &elementconsts):
 Ec(elementconsts),St(MatterDefaults){
-    M_Debug("\n\nIn Matter::Matter(...)\n\n");
+    M_Debug("\n\nIn Matter::Matter(double rad, const ElementConsts "
+        << "&elementconsts):Ec(elementconsts),St(MatterDefaults)\n\n");
     ConstModels = {'c','c','c','y'};
     St.Radius = rad;            // m
     St.UnheatedRadius = St.Radius;      // m
@@ -59,7 +61,8 @@ Ec(elementconsts),St(MatterDefaults){
 
 Matter::Matter(double rad, double temp, const ElementConsts &elementconsts):
 Ec(elementconsts),St(MatterDefaults){
-    M_Debug("\n\nIn Matter::Matter(...)\n\n");
+    M_Debug("\n\nIn Matter::Matter(double rad, double temp, const ElementConsts"
+        << " &elementconsts):Ec(elementconsts),St(MatterDefaults)\n\n");
     ConstModels = {'c','c','c','y'};
     St.Radius = rad;                        // m
     St.UnheatedRadius = St.Radius;          // m
@@ -90,16 +93,18 @@ Ec(elementconsts),St(MatterDefaults){
     assert(St.Radius > 0 && St.UnheatedRadius > 0 && St.Temperature > 0 
         && St.Temperature < St.SuperBoilingTemp );
     
-    M_Debug("\nSt.Radius = " << St.Radius << "\nSt.Mass = " << St.Mass 
-        << "\nSt.Temperature = " << St.Temperature);
-    M_Debug("\nEc.LatentVapour = " << Ec.LatentVapour << "\nEc.AtomicMass = " 
-        << Ec.AtomicMass);
+    M2_Debug("\n\tSt.Radius = " << St.Radius << "\n\tSt.Mass = " << St.Mass 
+        << "\n\tSt.Temperature = " << St.Temperature);
+    M2_Debug("\n\tEc.LatentVapour = " << Ec.LatentVapour 
+        << "\n\tEc.AtomicMass = " << Ec.AtomicMass);
 };
 
 Matter::Matter(double rad, double temp, const ElementConsts &elementconsts, 
 std::array<char,CM> &constmodels)
 :Ec(elementconsts),St(MatterDefaults){
-    M_Debug("\n\nIn Matter::Matter(...)\n\n");
+    M_Debug("\n\n(double rad, double temp, const ElementConsts &elementconsts," 
+        << " std::array<char,CM> &constmodels):Ec(elementconsts),"
+        << " St(MatterDefaults)\n\n");
     ConstModels = constmodels;
     St.Radius = rad;                        // m
     St.UnheatedRadius = St.Radius;          // m
@@ -130,9 +135,9 @@ std::array<char,CM> &constmodels)
     assert(St.Radius > 0 && St.UnheatedRadius > 0 && St.Temperature > 0 
         && St.Temperature < St.SuperBoilingTemp );
 
-    M_Debug("\nSt.Radius = " << St.Radius << "\nSt.Mass = " << St.Mass 
-        << "\nSt.Temperature = " << St.Temperature);
-    M_Debug("\nEc.LatentVapour = " << Ec.LatentVapour << "\nEc.AtomicMass = " 
+    M2_Debug("\tSt.Radius = " << St.Radius << "\n\tSt.Mass = " << St.Mass 
+        << "\n\tSt.Temperature = " << St.Temperature);
+    M2_Debug("\tEc.LatentVapour = " << Ec.LatentVapour << "\n\tEc.AtomicMass = " 
         << Ec.AtomicMass);
 };
 
@@ -171,8 +176,8 @@ void Matter::update_dim(){
     // Sanity Check, this may be an issue
     //  assert( abs((St.Density - St.Mass/St.Volume)/St.Density) < 0.000001 ); 
     
-    M2_Debug("\nSt.Mass = " << St.Mass << "\nSt.Volume = " << St.Volume 
-        << "\nSt.Density = " << St.Density << "\nSt.Mass/St.Volume = " 
+    M2_Debug("\n\tSt.Mass = " << St.Mass << "\n\tSt.Volume = " << St.Volume 
+        << "\n\tSt.Density = " << St.Density << "\n\tSt.Mass/St.Volume = " 
         << St.Mass/St.Volume);
 
     if( St.Gas == false ) assert( St.Mass > MinMass );
@@ -225,7 +230,7 @@ void Matter::update_emissivity(){
                 && Found != true ){
                 if(TestRad == round_to_digits(St.Radius,2)){ 
                     Found = true;
-                    M_Debug( "\nround(St.Radius,9) = " 
+                    M2_Debug("\nround(St.Radius,9) = " 
                         << round_to_digits(St.Radius,2) << "\nTestRad = " 
                         << TestRad );
                     //Pause();
@@ -436,7 +441,8 @@ void Matter::update(){
 
 void Matter::update_models(char emissivmodel, char linexpanmodel, 
     char heatcapacitymodel, char boilingmodel, char breakupmodel){
-    M_Debug("\tIn Matter::update_models(...)\n\n");
+    M_Debug("\tIn Matter::update_models(char emissivmodel, char linexpanmodel, "
+        << "char heatcapacitymodel, char boilingmodel, char breakupmodel)\n\n");
     ConstModels[0] = emissivmodel;
     ConstModels[1] = linexpanmodel;
     ConstModels[2] = heatcapacitymodel;
@@ -502,7 +508,8 @@ void Matter::update_temperature(double EnergyIn){
 
 void Matter::update_motion(const threevector &ChangeInPosition,
     const threevector &ChangeInVelocity, double Rotation){
-    M_Debug("\tIn Matter::update_motion(...)\n\n");
+    M_Debug("\tIn Matter::update_motion(const threevector &ChangeInPosition,"
+        << " const threevector &ChangeInVelocity, double Rotation)\n\n");
     
     //!< Calculate new position
     St.DustPosition = St.DustPosition + ChangeInPosition;
@@ -522,7 +529,8 @@ void Matter::update_motion(const threevector &ChangeInPosition,
 
 void Matter::update_charge(double charge, double potential, double deltat, 
     double deltas){
-    M_Debug("\tIn Matter::update_charge(double potential, ...\n\n");
+    M_Debug("\tIn Matter::update_charge(double charge, double potential, "
+        << "double deltat, double deltas)\n\n");
     St.Potential = potential;
     St.DeltaTherm = deltat;
     St.DeltaSec = deltas;

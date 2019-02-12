@@ -470,7 +470,7 @@ double ChargingModel::solvePHL(double guess){
         Pdata->MagneticField.mag3()*Pdata->MagneticField.mag3())));
     
     double AtomicNumber = Pdata->Z; 
-    double DebyeLength=sqrt((epsilon0*Kb*Pdata->ElectronTemp)/#
+    double DebyeLength=sqrt((epsilon0*Kb*Pdata->ElectronTemp)/
         (Pdata->ElectronDensity*pow(echarge,2)));
 
     double z = Beta/(1+Beta);
@@ -638,7 +638,7 @@ double ChargingModel::solveOML(double a, double guess){
     if( a >= 1.0 ){
         static bool runOnce = true;
         std::string Warning = "DeltaTot >= 1.0 in solveOML().";
-        Warning += " DeltaTot being set equal to unity.\n"
+        Warning += " DeltaTot being set equal to unity.\n";
         WarnOnce(runOnce,Warning);
         a = 1.0;
     }
