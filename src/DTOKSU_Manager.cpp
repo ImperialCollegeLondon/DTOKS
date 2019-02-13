@@ -235,6 +235,23 @@ std::string Config_Filename){
     std::string CoreData_dir = "PlasmaData/";
 
 
+    // ------------------- PARSE COMMAND LINE INPUT ------------------- //
+    // Check user input for specifying the configuration file.
+    // We want other command line options to over-ride the configuration file.
+    std::vector <std::string> sources;
+    std::stringstream ss0;
+    for (int i = 1; i < argc; ++i){ // Read command line input
+        std::string arg = argv[i];
+        if     ( arg == "--help"        || arg == "-h" ){   
+            Config_Status = 1; show_usage( argv[0] ); return Config_Status;         
+        }else if( arg == "--config"      || arg == "-c" ){
+            input_function(argc,argv,i,ss0,Config_Filename);
+        }else{
+            sources.push_back(argv[i]);
+        }
+    }
+
+
     // ------------------- DUST VARIABLE DEFAULTS ------------------- //
     char Element='W';
     char IonSpecies='h';
@@ -511,8 +528,6 @@ std::string Config_Filename){
 
     //!< Check user input for specifying the configuration file.
     //!< We want other command line options to over-ride the configuration file.
-    std::vector <std::string> sources;
-    std::stringstream ss0;
     for (int i = 1; i < argc; ++i){ //!< Read command line input
         std::string arg = argv[i];
         if(      arg == "--temperature" 
