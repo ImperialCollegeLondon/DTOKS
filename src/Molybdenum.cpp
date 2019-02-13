@@ -34,59 +34,75 @@ const struct ElementConsts MolybdenumConsts = {
 
 Molybdenum::Molybdenum():
 Matter(MolybdenumConsts){
-    E_Debug("\n\nIn Molybdenum::Molybdenum():Matter(&MolybdenumConsts)\n\n");
+    E_Debug("\n\nIn Molybdenum::Molybdenum():Matter(MolybdenumConsts)\n\n");
     set_defaults();
     update();
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 Molybdenum::Molybdenum(double radius):
 Matter(radius,MolybdenumConsts){
-    E_Debug("\n\nIn Molybdenum::Molybdenum(double radius):...\n\n");
+    E_Debug("\n\nIn Molybdenum::Molybdenum(double radius):"
+        << "Matter(radius,MolybdenumConsts)\n\n");
     set_defaults();
     update();
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 Molybdenum::Molybdenum(double radius, double tempin):
 Matter(radius,tempin,MolybdenumConsts){
-    E_Debug("\n\nIn Molybdenum::Molybdenum(double radius, double tempin):\n\n");
+    E_Debug("\n\nIn Molybdenum::Molybdenum(double radius, double tempin):"
+        << "Matter(radius,tempin,MolybdenumConsts)\n\n");
     set_defaults();
     update_state(0.0);
     update_models('c','c','c','y','n');
     update();
-    E1_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius 
-        << "\nSt.Density = " << St.Density  << "\nSt.Volume = " << St.Volume);
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 Molybdenum::Molybdenum(double radius, double tempin, 
 std::array<char,CM> &constmodels):
 Matter(radius,tempin,MolybdenumConsts){
-    E_Debug("\n\nIn Molybdenum::Molybdenum(double radius, ...)\n\n\t");
+    E_Debug("\n\nIn Molybdenum::Molybdenum(double radius, double tempin, "
+        << "std::array<char,CM> &constmodels):"
+        << "Matter(radius,tempin,MolybdenumConsts)\n\n");
     set_defaults();
 
     update_state(0.0);
     update_models(constmodels);
     update();
-    E1_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius 
-        << "\nSt.Density = " << St.Density << "\nSt.Volume = " << St.Volume);
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 Molybdenum::Molybdenum(double radius, double tempin, 
 std::array<char,CM> &constmodels, const threevector& position, 
 const threevector& velocity):
 Matter(radius,tempin,MolybdenumConsts){
-    E_Debug("\n\nIn Molybdenum::Molybdenum(double radius, ...)\n\n\t");
+    E_Debug("\n\nIn Molybdenum::Molybdenum(double radius, double tempin, "
+        << "std::array<char,CM> &constmodels, const threevector& position, "
+        << "const threevector& velocity):"
+        << "Matter(radius,tempin,MolybdenumConsts))\n\n");
     set_defaults();
 
     update_state(0.0);
     update_models(constmodels);
     update_motion(position,velocity,0.0);
     update();
-    E1_Debug("\nMass after = " << St.Mass << "\nRadius After = " << St.Radius 
-        << "\nSt.Density = " << St.Density << "\nSt.Volume = " << St.Volume);
+    E1_Debug("\n\tMass after = " << St.Mass << "\n\tRadius After = " 
+        << St.Radius << "\n\tSt.Density = " << St.Density << "\n\tSt.Volume = "
+        << St.Volume);
 }
 
 void Molybdenum::set_defaults(){
-    E_Debug("\tIn Molybdenum::set_defaults()\n\n");
+    E_Debug("\n\n\tIn Molybdenum::set_defaults()");
 
     //!< http://www.engineersedge.com/
     //!< materials/specific_heat_capacity_of_metals_13259.html
@@ -104,7 +120,7 @@ void Molybdenum::set_defaults(){
 }
 
 void Molybdenum::update_heatcapacity(){
-    E_Debug("\tIn Molybdenum::update_heatcapacity()\n\n");
+    E_Debug("\n\n\tIn Molybdenum::update_heatcapacity()");
 
     double Temperatures[104] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 15, 16, 
         18, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100, 
@@ -141,7 +157,7 @@ void Molybdenum::update_heatcapacity(){
 }
 
 void Molybdenum::update_radius(){
-    E_Debug("\tIn Molybdenum::update_radius()\n\n");
+    E_Debug("\n\n\tIn Molybdenum::update_radius()");
     
     double Temperatures[104] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 15, 16, 
         18, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100,
@@ -177,17 +193,20 @@ void Molybdenum::update_radius(){
     St.LinearExpansion = pow(Extensions[MinIndex]*1e-6,1.0/3.0);
     St.Radius=St.UnheatedRadius*St.LinearExpansion;
 
-    E1_Debug("\nTemperature = " << St.Temperature << "\n\nSt.LinearExpansion = "
-        << St.LinearExpansion << "\nSt.Radius = " << St.Radius);
+    E1_Debug("\n\tTemperature = " << St.Temperature 
+        << "\n\tSt.LinearExpansion = " << St.LinearExpansion 
+        << "\n\tSt.Radius = " << St.Radius);
     assert(St.Radius>0);
 }
 
 void Molybdenum::update_vapourpressure(){
-    E_Debug("\tIn Molybdenum::update_vapourpressure()\n\n");
+    E_Debug("\n\n\tIn Molybdenum::update_vapourpressure()");
     St.VapourPressure = probe_vapourpressure(St.Temperature);
 }
 
 double Molybdenum::probe_vapourpressure(double Temperature)const{
+    E_Debug("\n\n\tIn Molybdenum::probe_vapourpressure(double Temperature)"
+        << "const");
     double VapourPressure(0.0);
     
     if( Temperature < Ec.MeltingTemp ){

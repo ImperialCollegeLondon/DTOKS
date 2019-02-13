@@ -315,7 +315,7 @@ threevector ForceModel::DTOKSIonDrag()const{
     if( Pdata->IonTemp != 0 ) 
         Mt = (Pdata->PlasmaVel-Sample->get_velocity())*
             sqrt(Pdata->mi/(Kb*Pdata->IonTemp)); 
-        F_Debug("\nMt = " << Mt);
+        F1_Debug("\nMt = " << Mt);
 
         if( Pdata->IonDensity == 0 || Pdata->IonTemp == 0 
             || Pdata->ElectronTemp == 0  || Mt.mag3() == 0 ){ 
@@ -337,7 +337,7 @@ threevector ForceModel::DTOKSIonDrag()const{
                 double beta = Pdata->ElectronTemp*ConvertKelvsToeV*
                     Sample->get_radius()*fabs(Sample->get_potential())/
                     (lambda*Pdata->IonTemp*ConvertKelvsToeV);
-                F_Debug("\nlambda = " << lambda << "\nbeta = " << beta 
+                F1_Debug("\nlambda = " << lambda << "\nbeta = " << beta 
                     << "\nPot = " << Sample->get_potential());
 
                 if(beta>13.0) 
@@ -365,7 +365,7 @@ threevector ForceModel::DTOKSIonDrag()const{
 
 
                 Fid=FidS+FidC;
-                F_Debug("\nFidS = " << FidS << "\nFidC = " << FidC);
+                F1_Debug("\nFidS = " << FidS << "\nFidC = " << FidC);
         }else{ 
             //!< Relative speed greater than twice the mach number, 
             //!< use just plain collection area
@@ -380,7 +380,7 @@ threevector ForceModel::DTOKSIonDrag()const{
 }
 
 threevector ForceModel::DUSTTIonDrag()const{
-    F_Debug("\tIn ForceModel::DUSTTIonDrag()\n\n");
+    F_Debug("\tIn ForceModel::DUSTTIonDrag()const\n\n");
     //!< Pre-define commonly used quantities
     double Chi = Sample->get_potential(); 
     double Tau = Pdata->IonTemp/Pdata->ElectronTemp;
@@ -421,7 +421,7 @@ threevector ForceModel::DUSTTIonDrag()const{
 }
 
 threevector ForceModel::NeutralDrag()const{
-    F_Debug("\tIn ForceModel::NeutralDrag()\n\n");
+    F_Debug("\tIn ForceModel::NeutralDrag()const\n\n");
     // Assuming OML flux of neutrals, with neutrals flowing with the
     // background plasma
     // return (Pdata->PlasmaVel-Sample->get_velocity())*Pdata->mi*sqrt(4*PI)*
@@ -457,7 +457,7 @@ threevector ForceModel::NeutralDrag()const{
 }
 
 threevector ForceModel::LorentzForce()const{
-    F_Debug("\tIn ForceModel::LorentzForce()\n\n");
+    F_Debug("\tIn ForceModel::LorentzForce()const\n\n");
     //!< Dust grain charge to mass ratio
     double Charge = 4.0*PI*epsilon0*Sample->get_radius()*Kb*Pdata->ElectronTemp*
         Sample->get_potential()/echarge;
@@ -484,7 +484,7 @@ threevector ForceModel::LorentzForce()const{
 }
 
 threevector ForceModel::RocketForce()const{
-    F_Debug("\tIn ForceModel::RocketForce()\n\n");
+    F_Debug("\tIn ForceModel::RocketForce()const\n\n");
     threevector returnvec(0.0,0.0,0.0);
 
     if( Sample->is_liquid() ){
@@ -498,7 +498,7 @@ threevector ForceModel::RocketForce()const{
 }
 
 threevector ForceModel::Centrifugal()const{
-    F_Debug("\tIn ForceModel::Centrifugal()\n\n");
+    F_Debug("\tIn ForceModel::Centrifugal()const\n\n");
     threevector returnval(
         Sample->get_velocity().gety()*Sample->get_velocity().gety()/
         Sample->get_position().getx(),

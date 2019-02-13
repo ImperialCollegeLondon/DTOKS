@@ -152,7 +152,7 @@ void Matter::update_dim(){
         St.Radius = pow((3*St.Mass)/(4*PI*Ec.RTDensity),1./3.); 
         //!< @bug THIS WHOLE PART NEEDS CHECKING...
     }else if(ConstModels[1] == 'v' || ConstModels[1] == 'V'){ 
-        update_radius();
+        M_Debug("\t"); update_radius();
         //!< @bug SHOULD THIS BE : pow(2*St.LinearExpansion,3) ???
         St.Density = Ec.RTDensity / pow(St.LinearExpansion,3); 
         M2_Debug("\nUnheatedRadius was = " << St.UnheatedRadius);
@@ -399,7 +399,7 @@ void Matter::update(){
     M_Debug("\t"); update_dim();
     
     //!< ORDER INDEPENDENT UPDATES:
-    if( ConstModels[2] == 'v'|| ConstModels[2] == 'V')  update_heatcapacity();
+    if( ConstModels[2] == 'v'|| ConstModels[2] == 'V') update_heatcapacity();
     else if( ConstModels[2] == 'c'||ConstModels[2] == 'C')  
         St.HeatCapacity = St.HeatCapacity;
     else if( ConstModels[2] == 's'|| ConstModels[2] == 'S') 
@@ -434,9 +434,9 @@ void Matter::update(){
         }
     } 
     //!< Call update functions for models with variable constants
-    M_Debug("\t"); update_emissivity();
+    M_Debug("\n\n"); update_emissivity();
     M_Debug("\t"); update_vapourpressure();
-    M_Debug("\t"); update_boilingtemp();
+    M_Debug("\n\n\t"); update_boilingtemp();
 };
 
 void Matter::update_models(char emissivmodel, char linexpanmodel, 

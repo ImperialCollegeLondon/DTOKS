@@ -16,7 +16,17 @@ Sample(sample), WallBound(BoundaryDefaults), CoreBound(BoundaryDefaults),
 CM("Data/breakup_cm_0.txt",acclvls[0],chargemodels,sample,pdata),
 HM("Data/breakup_hm_0.txt",acclvls[1],heatmodels,sample,pdata),
 FM("Data/breakup_fm_0.txt",acclvls[2],forcemodels,sample,pdata){
-    D_Debug("\n\nIn DTOKSU::DTOKSU( ... )\n\n");
+    D_Debug("\n\nIn DTOKSU::DTOKSU( std::array<float,MN> acclvls, "
+        << "Matter *& sample, PlasmaData &pdata, "
+        << "std::array<bool,HMN> &heatmodels, "
+        << "std::array<bool,FMN> &forcemodels, "
+        << "std::array<bool,CMN> &chargemodels): "
+        << "Sample(sample), WallBound(BoundaryDefaults), "
+        << "CoreBound(BoundaryDefaults),"
+        << "CM(\"Data/breakup_cm_0.txt\",acclvls[0],chargemodels,sample,pdata),"
+        << "HM(\"Data/breakup_hm_0.txt\",acclvls[1],heatmodels,sample,pdata),"
+        << "FM(\"Data/breakup_fm_0.txt\",acclvls[2],forcemodels,sample,pdata)"
+        << "\n\n");
     D_Debug("\n\n******************* SETUP FINISHED ******************* \n\n");
 
     TotalTime = 0;
@@ -30,7 +40,17 @@ Sample(sample), WallBound(BoundaryDefaults), CoreBound(BoundaryDefaults),
 CM("Data/breakup_cm_0.txt",acclvls[0],chargemodels,sample,pgrid),
 HM("Data/breakup_hm_0.txt",acclvls[1],heatmodels,sample,pgrid),
 FM("Data/breakup_fm_0.txt",acclvls[2],forcemodels,sample,pgrid){
-    D_Debug("\n\nIn DTOKSU::DTOKSU( ... )\n\n");
+    D_Debug("\n\nIn DTOKSU::DTOKSU( std::array<float,MN> acclvls, "
+        << "Matter *& sample, PlasmaGrid_Data &pgrid, "
+        << "std::array<bool,HMN> &heatmodels, "
+        << "std::array<bool,FMN> &forcemodels, "
+        << "std::array<bool,CMN> &chargemodels): "
+        << "Sample(sample), WallBound(BoundaryDefaults), "
+        << "CoreBound(BoundaryDefaults),"
+        << "CM(\"Data/breakup_cm_0.txt\",acclvls[0],chargemodels,sample,pdata),"
+        << "HM(\"Data/breakup_hm_0.txt\",acclvls[1],heatmodels,sample,pdata),"
+        << "FM(\"Data/breakup_fm_0.txt\",acclvls[2],forcemodels,sample,pdata)"
+        << "\n\n");
     D_Debug("\n\n******************* SETUP FINISHED ******************* \n\n");
 
     TotalTime = 0;
@@ -44,7 +64,17 @@ Sample(sample), WallBound(BoundaryDefaults), CoreBound(BoundaryDefaults),
 CM("Data/breakup_cm_0.txt",acclvls[0],chargemodels,sample,pgrid,pdata),
 HM("Data/breakup_hm_0.txt",acclvls[1],heatmodels,sample,pgrid,pdata),
 FM("Data/breakup_fm_0.txt",acclvls[2],forcemodels,sample,pgrid,pdata){
-    D_Debug("\n\nIn DTOKSU::DTOKSU( ... )\n\n");
+    D_Debug("\n\nIn DTOKSU::DTOKSU( std::array<float,MN> acclvls, "
+        << "Matter *& sample, PlasmaGrid_Data &pgrid, PlasmaData &pdata,"
+        << "std::array<bool,HMN> &heatmodels, "
+        << "std::array<bool,FMN> &forcemodels, "
+        << "std::array<bool,CMN> &chargemodels): "
+        << "Sample(sample), WallBound(BoundaryDefaults), "
+        << "CoreBound(BoundaryDefaults),"
+        << "CM(\"Data/breakup_cm_0.txt\",acclvls[0],chargemodels,sample,pdata),"
+        << "HM(\"Data/breakup_hm_0.txt\",acclvls[1],heatmodels,sample,pdata),"
+        << "FM(\"Data/breakup_fm_0.txt\",acclvls[2],forcemodels,sample,pdata)"
+        << "\n\n");
     D_Debug("\n\n******************* SETUP FINISHED ******************* \n\n");
 
     TotalTime = 0;
@@ -59,7 +89,18 @@ Sample(sample), WallBound(wbound), CoreBound(cbound),
 CM("Data/breakup_cm_0.txt",acclvls[0],chargemodels,sample,pgrid,pdata),
 HM("Data/breakup_hm_0.txt",acclvls[1],heatmodels,sample,pgrid,pdata),
 FM("Data/breakup_fm_0.txt",acclvls[2],forcemodels,sample,pgrid,pdata){
-    D_Debug("\n\nIn DTOKSU::DTOKSU( ... )\n\n");
+    D_Debug("\n\nIn DTOKSU::DTOKSU( std::array<float,MN> acclvls, "
+        << "Matter *& sample, PlasmaGrid_Data &pgrid, PlasmaData &pdata,"
+        << "Boundary_Data &wbound, Boundary_Data &cbound,"
+        << "std::array<bool,HMN> &heatmodels, "
+        << "std::array<bool,FMN> &forcemodels, "
+        << "std::array<bool,CMN> &chargemodels): "
+        << "Sample(sample), WallBound(BoundaryDefaults), "
+        << "CoreBound(BoundaryDefaults),"
+        << "CM(\"Data/breakup_cm_0.txt\",acclvls[0],chargemodels,sample,pdata),"
+        << "HM(\"Data/breakup_hm_0.txt\",acclvls[1],heatmodels,sample,pdata),"
+        << "FM(\"Data/breakup_fm_0.txt\",acclvls[2],forcemodels,sample,pdata)"
+        << "\n\n");
     D_Debug("\n\n******************* SETUP FINISHED ******************* \n\n");
 
     TotalTime = 0;
@@ -90,6 +131,8 @@ void DTOKSU::CloseFiles(){
 }
 
 void DTOKSU::ResetModelTime(double HMTime, double FMTime, double CMTime){
+    D_Debug("\n\nIn DTOKSU::ResetModelTime(double HMTime, double FMTime, "
+        << "double CMTime)\n\n");
     HM.AddTime(HMTime);
     FM.AddTime(FMTime);
     CM.AddTime(CMTime);
@@ -168,7 +211,7 @@ void DTOKSU::SpecularReflection(){
 
 //!< http://alienryderflex.com/polygon/
 bool DTOKSU::Boundary_Check(bool InOrOut){
-    D_Debug("\tIn DTOKSU::Boundary_Check()\n\n");
+    D_Debug("\tIn DTOKSU::Boundary_Check(bool InOrOut)\n\n");
     Boundary_Data Edge;
     //!< Determine if it's core or wall boundary
     if( InOrOut )
@@ -230,6 +273,7 @@ int DTOKSU::Run(){
         //!< Charge instantaneously as soon as we start, have to add a time 
         //!< though...
         CM.Charge(1e-100);
+        D_Debug("\n\n***** DTOKSU::Run() :: get Model timescales *****\n\n");
         ChargeTime  = CM.UpdateTimeStep(); //!< Check Time step length is good
         ForceTime   = FM.UpdateTimeStep(); //!< Check Time step length is good
         HeatTime    = HM.UpdateTimeStep(); //!< Check Time step length is good
@@ -262,6 +306,7 @@ int DTOKSU::Run(){
         //!< Even in No Plasma Region, cooling processes can still occur, but 
         //!< this is specifically for zero power
         
+        D_Debug("\n\n***** DTOKSU::Run() :: Begin Global Step *****\n\n");
         if( HeatTime == 10 ){
             D1_Debug("\nNo Net Power Region...");
             FM.Force(); 
@@ -371,8 +416,9 @@ int DTOKSU::Run(){
             CM.Charge(1e-100);
         }
         // ***** END OF : NUMERICAL METHOD BASED ON TIME SCALES ***** //    
-        D_Debug("\nTemperature = " << Sample->get_temperature() << "\n\n"); 
-        D_Debug("\n\tMinTimeStep = " << MinTimeStep << "\n\tChargeTime = " 
+        D_Debug("\n\n***** DTOKSU::Run() :: End Global Step *****\n\n");
+        D_Debug("\n\tTemperature = " << Sample->get_temperature()
+            << "\n\tMinTimeStep = " << MinTimeStep << "\n\tChargeTime = " 
             << ChargeTime << "\n\tForceTime = " << ForceTime
             << "\n\tHeatTime = " << HeatTime << "\n");
 

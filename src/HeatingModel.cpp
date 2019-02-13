@@ -501,7 +501,8 @@ double HeatingModel::RungeKutta4(double timestep){
 
 //!< Using Stefan-Boltzmann Law, returns Energy lost per second in Kila Joules
 const double HeatingModel::EmissivityModel(double DustTemperature)const{
-    H_Debug("\n\tIn HeatingModel::EmissivityModel(double DustTemperature):");
+    H_Debug("\n\tIn HeatingModel::EmissivityModel(double DustTemperature):"
+        << "\n\n");
     //!< Energy emitted from a sample converted to kJ
     return Sample->get_emissivity()*Sample->get_surfacearea()*Sigma
             *(pow(DustTemperature,4)-pow(Pdata->AmbientTemp,4));

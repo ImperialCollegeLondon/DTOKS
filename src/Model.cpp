@@ -20,7 +20,11 @@ Sample(new Tungsten),
 PG_data(std::make_shared<PlasmaGrid_Data>(PlasmaGrid_DataDefaults)),
 Pdata(&PlasmaDataDefaults),Accuracy(1.0),ContinuousPlasma(true),
 TimeStep(0.0),TotalTime(0.0){
-    Mo_Debug("\n\nIn Model::Model():Sample(new Tungsten),...)\n\n");
+    Mo_Debug("\n\nIn Model::Model():Sample(new Tungsten),"
+        << "PG_data(std::make_shared<PlasmaGrid_Data>"
+        << "PlasmaGrid_DataDefaults)),"
+        << "Pdata(&PlasmaDataDefaults),Accuracy(1.0),ContinuousPlasma(true),"
+        << "TimeStep(0.0),TotalTime(0.0))\n\n");
     i = 0; k = 0;
     PlasmaDataFile.open("Data/pd.txt");
     PlasmaDataFile << "#t\ti\tk\tNn\tNe\tNi\tTi\tTe\t"
@@ -35,7 +39,12 @@ Sample(sample),
 PG_data(std::make_shared<PlasmaGrid_Data>(PlasmaGrid_DataDefaults)),
 Pdata(std::make_shared<PlasmaData>(pdata)),Accuracy(accuracy),
 ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
-    Mo_Debug("\n\nIn Model::Model( Matter *&sample, ...)\n\n");
+    Mo_Debug("\n\nIn Model::Model( Matter *&sample, PlasmaData &pdata, "
+        << "float accuracy ):Sample(sample),"
+        << "PG_data(std::make_shared<PlasmaGrid_Data>"
+        << "(PlasmaGrid_DataDefaults)),"
+        << "Pdata(std::make_shared<PlasmaData>(pdata)),Accuracy(accuracy),"
+        << "ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0))\n\n");
     assert(Accuracy > 0);
     i = 0; k = 0;
     PlasmaDataFile.open("Data/pd.txt");
@@ -50,7 +59,11 @@ Model::Model( Matter *&sample, PlasmaGrid_Data &pgrid, float accuracy ):
 Sample(sample),PG_data(std::make_shared<PlasmaGrid_Data>(pgrid)),
 Pdata(&PlasmaDataDefaults),Accuracy(accuracy),ContinuousPlasma(false),
 TimeStep(0.0),TotalTime(0.0){
-    Mo_Debug("\n\nIn Model::Model( Matter *&sample, ...)\n\n");
+    Mo_Debug("\n\nIn Model::Model( Matter *&sample, PlasmaGrid_Data &pgrid, "
+        << "float accuracy ):Sample(sample),"
+        << "PG_data(std::make_shared<PlasmaGrid_Data>(pgrid)),"
+        << "Pdata(&PlasmaDataDefaults),Accuracy(accuracy),"
+        << "ContinuousPlasma(false), TimeStep(0.0),TotalTime(0.0))\n\n");
     assert(Accuracy > 0);
     i = 0; k = 0;
     PlasmaDataFile.open("Data/pd.txt");
@@ -70,8 +83,11 @@ float accuracy ):
 Sample(sample), PG_data(std::make_shared<PlasmaGrid_Data>(pgrid)),
 Pdata(std::make_shared<PlasmaData>(pdata)),Accuracy(accuracy),
 ContinuousPlasma(false),TimeStep(0.0),TotalTime(0.0){
-
-    Mo_Debug("\n\nIn Model::Model( Matter *&sample, ...)\n\n");
+    Mo_Debug("\n\nIn Model::Model( Matter *&sample, PlasmaGrid_Data &pgrid, "
+        << "PlasmaData &pdata, float accuracy ):"
+        << "Sample(sample), PG_data(std::make_shared<PlasmaGrid_Data>(pgrid)),"
+        << "Pdata(std::make_shared<PlasmaData>(pdata)),Accuracy(accuracy),"
+        << "ContinuousPlasma(false),TimeStep(0.0),TotalTime(0.0))\n\n");
     assert(Accuracy > 0);
     i = 0; k = 0;
     PlasmaDataFile.open("Data/pd.txt");
@@ -214,6 +230,7 @@ void Model::update_fields(int i, int k){
 }
 
 void Model::RecordPlasmadata(std::string filename){
+    Mo_Debug( "\tModel::RecordPlasmadata(std::string filename)\n\n");
     PlasmaDataFile.open("Data/" + filename,std::ofstream::app);
     PlasmaDataFile << "\n" << TotalTime 
             << "\t" << i << "\t" << k << "\t" << Pdata->NeutralDensity << "\t" 
@@ -227,6 +244,7 @@ void Model::RecordPlasmadata(std::string filename){
 }
 
 const double Model::SOMLIonFlux(double Potential)const{
+    Mo_Debug( "\tModel::SOMLIonFlux(double Potential)const\n\n");
     double IonThermalVelocity = sqrt((Kb*Pdata->IonTemp)/Pdata->mi);
     double uz = (Pdata->PlasmaVel-Sample->get_velocity()).mag3()
         /IonThermalVelocity;
@@ -249,6 +267,7 @@ const double Model::SOMLIonFlux(double Potential)const{
 }
 
 const double Model::SMOMLIonFlux(double Potential)const{
+    Mo_Debug( "\tModel::SMOMLIonFlux(double Potential)const\n\n");
     double HeatCapacityRatio = 5.0/3.0;
     double MassRatio = Pdata->mi/Me;
     double Tau = Pdata->IonTemp/Pdata->ElectronTemp;
@@ -276,6 +295,7 @@ const double Model::SMOMLIonFlux(double Potential)const{
 }
 
 const double Model::PHLElectronFlux(double Potential)const{
+    Mo_Debug( "\tModel::PHLElectronFlux(double Potential)const\n\n");
     double Tau = Pdata->ElectronTemp/Pdata->IonTemp;
     double Beta = Sample->get_radius()
             /(sqrt(PI*Pdata->ElectronTemp*Me)/(2.0*echarge*echarge*
@@ -324,7 +344,7 @@ const double Model::PHLElectronFlux(double Potential)const{
 }
 
 const double Model::DTOKSIonFlux(double Potential)const{
-    H_Debug("\n\tIn Model::IonFlux():");
+    H_Debug("\tIn Model::DTOKSIonFlux(double Potential)const\n\n");
 
     double IonFlux=0;
 
@@ -336,7 +356,7 @@ const double Model::DTOKSIonFlux(double Potential)const{
 }
 
 const double Model::DTOKSElectronFlux(double Potential)const{
-    H_Debug("\n\tIn Model::ElectronFlux():\n\n");
+    H_Debug("\tIn Model::DTOKSElectronFlux(double Potential)const\n\n");
     return Pdata->ElectronDensity*exp(-Potential)*
         sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
 }
@@ -358,7 +378,7 @@ const double Model::OMLIonFlux(double Potential)const{
 }
 
 const double Model::OMLElectronFlux(double Potential)const{
-    H_Debug("\n\tIn Model::ElectronFlux():\n\n");
+    H_Debug("\tIn Model::OMLElectronFlux(double Potential)const\n\n");
     if( Potential < 0.0 ){
         return Pdata->ElectronDensity*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me))*
             (1-Potential);
@@ -368,7 +388,7 @@ const double Model::OMLElectronFlux(double Potential)const{
 }   }
 
 const double Model::NeutralFlux()const{
-    H_Debug("\n\tIn Model::NeutralFlux():\n\n");
+    H_Debug("\tIn Model::NeutralFlux()const\n\n");
 
     return Pdata->NeutralDensity*sqrt(Kb*Pdata->NeutralTemp/(2*PI*Pdata->mi));
 }

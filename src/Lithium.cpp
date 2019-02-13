@@ -157,7 +157,7 @@ void Lithium::update_radius(){
     double DensityTemp = 562.0-0.1*St.Temperature;
     St.LinearExpansion = 1.0+pow(534/DensityTemp,1.0/3.0);
     St.Radius=St.UnheatedRadius*St.LinearExpansion;
-    Eq_Debug("\n\tTemperature = " << St.Temperature 
+    E_Debug("\n\tTemperature = " << St.Temperature 
         << "\n\tSt.LinearExpansion = " << St.LinearExpansion 
         << "\n\tSt.Radius = " << St.Radius);
     assert(St.Radius>0); // Assert radius is positive   
