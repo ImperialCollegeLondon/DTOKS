@@ -544,7 +544,8 @@ void Matter::update_charge(double charge, double potential, double deltat,
     
     //!< Determine whether electrostatic breakup has occured
     if( fabs(charge) > 8*PI*sqrt(epsilon0*Ec.SurfaceTension*pow(St.Radius,3)) 
-        && St.Liquid && (ConstModels[4] == 'e' || ConstModels[4] == 'b') ){
+        && St.Liquid && (ConstModels[4] == 'e' || ConstModels[4] == 'b') 
+        && !St.Gas ){
         std::cout << "\nElectrostatic Breakup! Instantaneous vaporisation"
             << " assumed.";
         St.Gas = true;

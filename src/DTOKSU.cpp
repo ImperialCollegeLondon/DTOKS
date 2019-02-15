@@ -279,7 +279,7 @@ int DTOKSU::Run(){
         HeatTime    = HM.UpdateTimeStep(); //!< Check Time step length is good
         if( HeatTime == 1) break; //!< Thermal Equilibrium Reached
 
-        HM.UpdateRERN();
+        //HM.UpdateRERN();
         //!< We will assume Charging Time scale is much faster than either 
         //!< heating or moving, but check for the other case.
         double MaxTimeStep = std::max(ForceTime,HeatTime);

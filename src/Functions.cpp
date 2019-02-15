@@ -54,6 +54,7 @@ double sec(double Te, char material)
         else 
         {
             std::cout << "Error: Incorrect material information in sec" << std::endl;
+            return 0.0;
         }
         if((material=='c')||(material=='C')||(material=='W')||(material=='w')){return pow(10.0,result);}
         else{return 0.0;}

@@ -1,6 +1,6 @@
 #include "ForceModel.h"
 
-int ForceTest(char Element, std::string ForceType){
+int ForceTest(char Element, std::string ForceType, double accuracy){
 	clock_t begin = clock();
 	// ********************************************************** //
 	// FIRST, define program default behaviour
@@ -15,7 +15,7 @@ int ForceTest(char Element, std::string ForceType){
 	char BreakupModel = 'n';	// Possible values 'r', 'e', 'b'  and 'n': Corresponding to (r)otational, (e)lectrostatic, (b)oth and (n)o
 
  	// Parameters describing the heating model
-	double Size=5e-8; 		// m
+	double Radius=5e-8; 		// m
 	double Temp=280;		// K
 	double Potential = 2.5;		// Normalised Potential
 	Matter *Sample;			// Define the sample matter type
@@ -24,9 +24,13 @@ int ForceTest(char Element, std::string ForceType){
 	bool Gravity = false;		// IS OFF!
 	bool Centrifugal = false;	// IS OFF!
 	bool Lorentz = false;		// IS OFF!
+	bool SOMLIonDrag = false;	// IS OFF!
+	bool SMOMLIonDrag = false;	// IS OFF!
 	bool DTOKSIonDrag = false;	// IS OFF!
+	bool DUSTTIonDrag = false;	// IS OFF!
 	bool HybridIonDrag = false;	// IS OFF!
-        bool NeutralDrag = false;	// Is OFF!
+    bool NeutralDrag = false;	// Is OFF!
+    bool RocketForce = false;	// Is OFF!
 
 	PlasmaData Pdata;
 
@@ -63,22 +67,28 @@ int ForceTest(char Element, std::string ForceType){
 		return -1;
 	}
 
-
-	std::array<bool,FMN> ForceModels  = {Gravity,Centrifugal,Lorentz,DTOKSIonDrag,HybridIonDrag,NeutralDrag};
+    std::array<bool,FMN> ForceModels  = {Gravity,Centrifugal,Lorentz,SOMLIonDrag,SMOMLIonDrag,
+        DTOKSIonDrag,DUSTTIonDrag,HybridIonDrag,NeutralDrag,RocketForce};
 
 	// Models and ConstModels are placed in an array in this order:
 	std::array<char, CM> ConstModels =
 		{ EmissivityModel,ExpansionModel,HeatCapacityModel,BoilingModel,BreakupModel};
 
 	if	(Element == 'W'){ 
-		Sample = new Tungsten(Size,Temp,ConstModels);
+		Sample = new Tungsten(Radius,Temp,ConstModels);
 	}else if (Element == 'B'){ 
-		Sample = new Beryllium(Size,Temp,ConstModels);
+		Sample = new Beryllium(Radius,Temp,ConstModels);
 	}else if (Element == 'F'){
-		Sample = new Iron(Size,Temp,ConstModels);
+		Sample = new Iron(Radius,Temp,ConstModels);
 	}else if (Element == 'G'){
-		Sample = new Graphite(Size,Temp,ConstModels);
-	}else{ 
+		Sample = new Graphite(Radius,Temp,ConstModels);
+	}else if (Element == 'D'){
+        Sample = new Deuterium(Radius,Temp,ConstModels);
+    }else if (Element == 'M'){
+        Sample = new Molybdenum(Radius,Temp,ConstModels);
+    }else if (Element == 'L'){
+        Sample = new Lithium(Radius,Temp,ConstModels);
+    }else{ 
 		std::cerr << "\nInvalid Option entered";
 		return -1;
 	}
@@ -97,12 +107,12 @@ int ForceTest(char Element, std::string ForceType){
 
 	// START NUMERICAL TESTING
 	std::string filepath = "Tests/IntegrationTests/Data/out_" + ForceType + "_Test.txt";
-	ForceModel MyModel(filepath,0.01,ForceModels,Sample,Pdata);
+	ForceModel MyModel(filepath,accuracy,ForceModels,Sample,Pdata);
 
 	double Mass = Sample->get_mass();
 	MyModel.UpdateTimeStep();
 	MyModel.UpdateTimeStep();
-	double imax(1000);
+	double imax(10000);
 	for( size_t i(0); i < imax; i ++)
 		MyModel.Force();
 	threevector ModelVelocity = Sample->get_velocity();

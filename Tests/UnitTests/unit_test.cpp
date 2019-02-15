@@ -315,7 +315,7 @@ int main(int argc, char* argv[]){
     else if( Test_Mode == "NeutralDrag" )
         IonNeutralDragTest();
     else
-        std::cout << "\n\nInput not recognised! Exiting program\n.";
+        std::cout << "\n\nInput not recognised! Exiting program.\n";
 
     return 0;
 }

@@ -73,7 +73,10 @@ template<typename T> int InputFunction(int &argc, char* argv[], int &i,
 
 
 int main(int argc, char* argv[]){
-
+    if( argc == 1 ){
+        std::cout << "\nNo Mode Selected! Program Exiting\n\n";
+        return 0;
+    }
     char Element[5]={'W','B','F','G','D'};// Element, (W) : Tungsten, (G) : Graphite, (B) : Beryllium, (F) : Iron or (D) : Deuterium.
     int out(0);
 
@@ -184,7 +187,8 @@ int main(int argc, char* argv[]){
         else if( Test_Mode == "BeforeAfterHeatingTest" ){
             out = BeforeAfterHeatingTest(Element[i],false);
             out = BeforeAfterHeatingTest(Element[i],true);
-        }
+        }else
+            std::cout << "\n\nInput not recognised! Exiting program.\n";
         std::cout << "\n\n*****\n"; 
     }
     return 0;

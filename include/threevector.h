@@ -138,7 +138,10 @@ class threevector{
          */
         inline threevector getunit()const{
             threevector unitvec(xcoord,ycoord,zcoord);
-            return unitvec*(1.0/mag3());
+            if( mag3() != 0.0 )
+                return unitvec*(1.0/mag3());
+            else
+                return unitvec*0.0;
         };
 
         /** @name Overload Operators

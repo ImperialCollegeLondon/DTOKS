@@ -25,7 +25,7 @@ int ChargeTest(char Element){
 	// FIRST, define program default behaviour
 
 	// Define the behaviour of the models for the temperature dependant constants, the time step and the 'Name' variable.
-	char EmissivityModel = 'c'; 	// Possible values 'c', 'v' and 'f': Corresponding to (c)onstant, (v)ariable and from (f)ile
+	char EmissivityModel = 'c'; // Possible values 'c', 'v' and 'f': Corresponding to (c)onstant, (v)ariable and from (f)ile
 	char ExpansionModel = 'c'; 	// Possible values 'c', 'v' and 's': Corresponding to (c)onstant, (v)ariable, (s)et 
 													// and (z)ero expansion
 	char HeatCapacityModel = 'c'; 	// Possible values 'c', 'v' and 's': Corresponding to (c)onstant, (v)ariable and (s)et
@@ -33,7 +33,7 @@ int ChargeTest(char Element){
 	char BreakupModel = 'n';	// Possible values 'r', 'e', 'b'  and 'n': Corresponding to (r)otational, (e)lectrostatic, (b)oth and (n)o
 
  	// Parameters describing the heating model
-	double Size=5e-8; 		// m
+	double Radius=5e-8; 		// m
 	double Temp=280;		// K
 	double Potential = 2.5;		// Normalised Potential
 	Matter *Sample;			// Define the sample matter type
@@ -51,21 +51,28 @@ int ChargeTest(char Element){
 	threevector Bfield(0.0, 0.0, 0.0);
 	Pdata->MagneticField = Bfield;
 
-	std::array<bool,CMN> ChargeModels  = {true,false,false};
+	std::array<bool,CMN> ChargeModels  = {false,false,false,false,false,false,false,
+		false,true,false,false};
 
 	// Models and ConstModels are placed in an array in this order:
 	std::array<char, CM> ConstModels =
 		{ EmissivityModel,ExpansionModel,HeatCapacityModel,BoilingModel,BreakupModel};
 
 	if	(Element == 'W'){ 
-		Sample = new Tungsten(Size,Temp,ConstModels);
+		Sample = new Tungsten(Radius,Temp,ConstModels);
 	}else if (Element == 'B'){ 
-		Sample = new Beryllium(Size,Temp,ConstModels);
+		Sample = new Beryllium(Radius,Temp,ConstModels);
 	}else if (Element == 'F'){
-		Sample = new Iron(Size,Temp,ConstModels);
+		Sample = new Iron(Radius,Temp,ConstModels);
 	}else if (Element == 'G'){
-		Sample = new Graphite(Size,Temp,ConstModels);
-	}else{ 
+		Sample = new Graphite(Radius,Temp,ConstModels);
+	}else if (Element == 'D'){
+        Sample = new Deuterium(Radius,Temp,ConstModels);
+    }else if (Element == 'M'){
+        Sample = new Molybdenum(Radius,Temp,ConstModels);
+    }else if (Element == 'L'){
+        Sample = new Lithium(Radius,Temp,ConstModels);
+    }else{ 
 		std::cerr << "\nInvalid Option entered";
 		return -1;
 	}

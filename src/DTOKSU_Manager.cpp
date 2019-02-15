@@ -778,11 +778,15 @@ int DTOKSU_Manager::configure_plasmagrid(std::string plasma_dirname){
     int readstatus(-1);
     try{ //!< Read data
         readstatus = read_data(plasma_dirname);
-        if(readstatus != 0)
+        if( readstatus == 1)
+            std::cerr << "\n* Warning! Some PlasmaGrid values exceed Overflows "
+                << "or Underflows! *\n\n";
+        else if(readstatus == 2)
             throw PlasmaFileReadFailure();
+
     }catch( PlasmaFileReadFailure &e ){
         std::cout << e.what();
-        std::cerr << "\nError status: " << readstatus;
+        std::cerr << "\nRead error status: " << readstatus;
         return readstatus;
     }
     return 0;
@@ -838,14 +842,15 @@ int DTOKSU_Manager::read_data(std::string plasma_dirname){
     Pgrid.z   = Pgrid.Te;
     Pgrid.gridflag  = std::vector<std::vector<int>>
         (Pgrid.gridx,std::vector<int>(Pgrid.gridz));
-
+    int ReStat = 0;
     if(Pgrid.device=='p'){ //!< Note, grid flags will be empty 
         #ifdef NETCDF_SWITCH
         return read_MPSIdata(plasma_dirname);
         #else
         std::cerr << "\nNETCDF SUPPORT REQUIRED FOR MPSI DATA!";
         std::cerr << "\nRECOMPILE WITH NETCDF AND DEFINE NETCDF_SWITCH!\n\n";
-        return 3;
+        ReStat = 2;
+        return 2;
         #endif
     }else{
         std::ifstream scalars,threevectors,gridflagfile;
@@ -884,25 +889,26 @@ int DTOKSU_Manager::read_data(std::string plasma_dirname){
                 //!< This should correct for this...
 
                 if( Pgrid.device != 'j' ){ Pgrid.bz[i][k]  = -Pgrid.bz[i][k]; }
-                if( Pgrid.bx[i][k] > Overflows::Field 
-                    && Pgrid.bx[i][k] < Underflows::Field )      {   return 1; } 
-                if( Pgrid.by[i][k] > Overflows::Field 
-                    && Pgrid.by[i][k] < Underflows::Field )      {   return 2; } 
-                if( Pgrid.bz[i][k] > Overflows::Field 
-                    && Pgrid.bz[i][k] < Underflows::Field )      {   return 3; }
+                if( fabs(Pgrid.bx[i][k]) > Overflows::Field 
+                    || fabs(Pgrid.bx[i][k]) < Underflows::Field ){ ReStat = 1; } 
+                if( fabs(Pgrid.by[i][k]) > Overflows::Field 
+                    || fabs(Pgrid.by[i][k]) < Underflows::Field ){ ReStat = 1; } 
+                if( fabs(Pgrid.bz[i][k]) > Overflows::Field 
+                    || fabs(Pgrid.bz[i][k]) < Underflows::Field ){ ReStat = 1; }
                 if( Pgrid.Te[i][k] > Overflows::Temperature 
-                    && Pgrid.Te[i][k] < Underflows::Temperature ){   return 4; } 
+                    || Pgrid.Te[i][k] < Underflows::Temperature ){ ReStat = 1; } 
                 if( Pgrid.Ti[i][k] > Overflows::Temperature 
-                    && Pgrid.Ti[i][k] < Underflows::Temperature ){   return 5; } 
+                    || Pgrid.Ti[i][k] < Underflows::Temperature ){ ReStat = 1; } 
                 if( Pgrid.na0[i][k] > Overflows::Density 
-                    && Pgrid.na0[i][k] < Underflows::Density )   {   return 6; }
+                    || Pgrid.na0[i][k] < Underflows::Density )   { ReStat = 1; }
                 if( Pgrid.na1[i][k] > Overflows::Density 
-                    && Pgrid.na1[i][k] < Underflows::Density )   {   return 7; }
-                if( Pgrid.ua0[i][k] > Overflows::PlasmaVel 
-                    && Pgrid.ua0[i][k] < Underflows::PlasmaVel ) {   return 8; }
-                if( Pgrid.ua1[i][k] > Overflows::PlasmaVel 
-                    && Pgrid.ua1[i][k] < Underflows::PlasmaVel ) {   return 9; }
-                
+                    || Pgrid.na1[i][k] < Underflows::Density )   { ReStat = 1; }
+                if( fabs(Pgrid.ua0[i][k]) > Overflows::PlasmaVel 
+                    || fabs(Pgrid.ua0[i][k]) < Underflows::PlasmaVel ) 
+                    { ReStat = 1; }
+                if( fabs(Pgrid.ua1[i][k]) > Overflows::PlasmaVel 
+                    || fabs(Pgrid.ua1[i][k]) < Underflows::PlasmaVel ) 
+                    { ReStat = 1; }
                 Pgrid.Ta[i][k] = Pdata.AmbientTemp;
                 Pgrid.Tn[i][k] = Pdata.NeutralTemp;
                 Pgrid.na2[i][k] = Pdata.NeutralDensity;
@@ -912,7 +918,7 @@ int DTOKSU_Manager::read_data(std::string plasma_dirname){
         threevectors.close();
         gridflagfile.close();
     }
-    return 0; //!< return success!
+    return ReStat; //!< return success!
 }
 // *************************** READING FUNCTIONS *************************** //
 
@@ -1086,14 +1092,14 @@ int DTOKSU_Manager::Run(){
         return 1;
     }
 
-    std::cout << "\n * RUNNING DTOKS * \n";
     clock_t begin = clock();    // Measure start time
 
     // Actually running DTOKS
     int RunStatus(-1);
-    if( Config_Status == -3 )
+    if( Config_Status == -3 ){
+        std::cout << "\n * RUNNING DTOKS * \n";
         RunStatus = Sim->Run();
-    else if( Config_Status == -2 )
+    }else if( Config_Status == -2 )
         Breakup();
     else{
         std::cerr << "\nBreakup Is not configured! Please configure correctly.";

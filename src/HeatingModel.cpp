@@ -229,12 +229,11 @@ void HeatingModel::Print(){
     ModelDataFile   << TotalTime << "\t" << Sample->get_temperature() << "\t" 
         << Sample->get_mass() << "\t" << Sample->get_density();
 
+    //!< Print variable constants if they are varying
     if( Sample->get_c(1) == 'v' || Sample->get_c(1) == 'V' )    
         ModelDataFile << "\t" << Sample->get_linearexpansion();
-
     if( Sample->get_c(2) == 'v' || Sample->get_c(2) == 'V' )    
         ModelDataFile << "\t" << Sample->get_heatcapacity();
-
     if( Sample->get_c(3) == 'v' || Sample->get_c(3) == 'V' )    
         ModelDataFile << "\t" << Sample->get_vapourpressure();
 
@@ -242,37 +241,66 @@ void HeatingModel::Print(){
         ModelDataFile   << "\t" << EmissivityModel(Sample->get_temperature());
     if( UseModel[0] && (Sample->get_c(0) == 'f' || Sample->get_c(0) == 'F') )
         ModelDataFile   << "\t" << Sample->get_emissivity();
-    if( UseModel[1] && Sample->is_liquid() )    
+    if( UseModel[1] && Sample->is_liquid() ) //!< Check is liquid!
         ModelDataFile   << "\t" << EvaporationFlux(Sample->get_temperature()) 
             << "\t" << EvaporationModel(Sample->get_temperature())*1000
             << "\t" << EvaporationFlux(Sample->get_temperature())*
             Sample->get_atomicmass()/AvNo;
-    else if( UseModel[1] )  
+    else if( UseModel[1] ) //!< If evaporation is turned off
         ModelDataFile   << "\t" << 0 << "\t" << 0 << "\t" << 0;
     if( UseModel[2] )   
         ModelDataFile   << "\t" << NewtonCooling(Sample->get_temperature());
-    if( UseModel[3] )   
-        ModelDataFile << "\t" << NeutralFlux() 
-            << "\t" << NeutralHeatFlux(Sample->get_temperature());
-    if( UseModel[4] )   
-        ModelDataFile << "\t" << SOMLIonFlux(Sample->get_potential()) 
-            << "\t" << SOMLIonHeatFlux(Sample->get_temperature());
-    if( UseModel[5] )   
-        ModelDataFile << "\t" 
-            << SOMLNeutralRecombination(Sample->get_temperature());
-    if( UseModel[6] )   
-        ModelDataFile << "\t" << SMOMLIonFlux(Sample->get_potential()) 
-            << "\t" << SMOMLIonHeatFlux(Sample->get_temperature());
-    if( UseModel[7] )   
-        ModelDataFile << "\t" 
-            << SMOMLNeutralRecombination(Sample->get_temperature());
-    if( UseModel[8] )   
-        ModelDataFile << "\t" << SEE(Sample->get_temperature());
+
+    if( Pdata->IonTemp > 0 && Pdata->mi > 0 ){ //!< Check if models are valid
+        if( UseModel[3] )
+            ModelDataFile << "\t" << NeutralFlux() 
+                << "\t" << NeutralHeatFlux(Sample->get_temperature());
+        if( UseModel[4] )   
+            ModelDataFile << "\t" << SOMLIonFlux(Sample->get_potential()) 
+                << "\t" << SOMLIonHeatFlux(Sample->get_temperature());
+        if( UseModel[5] )   
+            ModelDataFile << "\t" 
+                << SOMLNeutralRecombination(Sample->get_temperature());
+        if( UseModel[6] )   
+            ModelDataFile << "\t" << SMOMLIonFlux(Sample->get_potential()) 
+                << "\t" << SMOMLIonHeatFlux(Sample->get_temperature());
+        if( UseModel[7] )   
+            ModelDataFile << "\t" 
+                << SMOMLNeutralRecombination(Sample->get_temperature());
+        
+    }else{ //!< Else, if models are still on print zeros for now
+        if( UseModel[3] )
+            ModelDataFile << "\t" << 0.0 << "\t" << 0.0;
+        if( UseModel[4] )   
+            ModelDataFile << "\t" << 0.0 << "\t" << 0.0;
+        if( UseModel[5] )   
+            ModelDataFile << "\t" << 0.0;
+        if( UseModel[6] )   
+            ModelDataFile << "\t" << 0.0 << "\t" << 0.0;
+        if( UseModel[7] )   
+            ModelDataFile << "\t" << 0.0;
+    }
+
+    //!< Check if model are valid
+    if( Pdata->ElectronTemp > 0 && Pdata->ElectronDensity > 0
+        && Pdata->MagneticField.mag3() > 0 && Pdata->IonTemp > 0 )
+        if( UseModel[8] )   
+                ModelDataFile << "\t" << SEE(Sample->get_temperature());
+    else //!< Else, if models are still on print zeros for now
+        if( UseModel[8] )   ModelDataFile << "\t" << 0.0;
+
     if( UseModel[9] )   
         ModelDataFile << "\t" << TEE(Sample->get_temperature());
-    if( UseModel[10] )  
-        ModelDataFile << "\t" << PHLElectronFlux(Sample->get_potential()) 
-            << "\t" << PHLElectronHeatFlux(Sample->get_temperature());
+
+    //!< Check if model are valid
+    if( Pdata->ElectronTemp > 0 && Pdata->ElectronDensity > 0
+        && Pdata->MagneticField.mag3() > 0 && Pdata->IonTemp > 0 )
+        if( UseModel[10] )  
+            ModelDataFile << "\t" << PHLElectronFlux(Sample->get_potential()) 
+                << "\t" << PHLElectronHeatFlux(Sample->get_temperature());
+    else
+        if( UseModel[10] ) ModelDataFile << "\t" << 0.0 << "\t" << 0.0;
+
     if( UseModel[11] )  
         ModelDataFile << "\t" << OMLElectronFlux(Sample->get_potential()) 
             << "\t" << OMLElectronHeatFlux(Sample->get_temperature());
@@ -280,18 +308,29 @@ void HeatingModel::Print(){
         ModelDataFile << "\t" << DTOKSSEE(Sample->get_temperature());
     if( UseModel[13] )  
         ModelDataFile << "\t" << DTOKSTEE(Sample->get_temperature());
-    if( UseModel[14] )  
-        ModelDataFile << "\t" << DTOKSIonFlux(Sample->get_potential()) 
-            << "\t" << DTOKSIonHeatFlux(Sample->get_temperature());
+
+
+    if( Pdata->IonTemp > 0 && Pdata->mi > 0 ) //!< Check if models are valid
+        if( UseModel[14] )  
+            ModelDataFile << "\t" << DTOKSIonFlux(Sample->get_potential()) 
+                << "\t" << DTOKSIonHeatFlux(Sample->get_temperature());
+    else
+        if( UseModel[14] ) ModelDataFile << "\t" << 0.0 << "\t" << 0.0;
+
     if( UseModel[15] )  
         ModelDataFile << "\t" 
             << DTOKSNeutralRecombination(Sample->get_temperature());
     if( UseModel[16] )  
         ModelDataFile << "\t" << DTOKSElectronFlux(Sample->get_potential()) 
             << "\t" << DTOKSElectronHeatFlux(Sample->get_temperature());
-    if( UseModel[17] )  
-        ModelDataFile << "\t" << SOMLIonFlux(Sample->get_potential()) << "\t" 
-            << DUSTTIonHeatFlux(Sample->get_temperature());
+
+    if( Pdata->IonTemp > 0 && Pdata->mi > 0 
+        && Pdata->ElectronTemp > 0 ) //!< Check if models are valid
+        if( UseModel[17] )  
+            ModelDataFile << "\t" << SOMLIonFlux(Sample->get_potential()) 
+                << "\t" << DUSTTIonHeatFlux(Sample->get_temperature());
+    else
+        if( UseModel[17] ) ModelDataFile << "\t" << 0.0 << "\t" << 0.0;
 
     ModelDataFile << "\n";
     ModelDataFile.close();
@@ -403,25 +442,46 @@ double HeatingModel::CalculatePower(double DustTemperature)const{
     //!< Rreduces the number of divisions
     double TotalPower = PowerIncident*1000; 
     
-    if( UseModel[0] )  TotalPower -= EmissivityModel       (DustTemperature);
+    if( UseModel[0] )  TotalPower -= EmissivityModel(DustTemperature);
     if( UseModel[1] && Sample->is_liquid() )    
-        TotalPower -= EvaporationModel      (DustTemperature)*1000;
-    if( UseModel[2] )  TotalPower -= NewtonCooling         (DustTemperature);
-    if( UseModel[3] )  TotalPower += NeutralHeatFlux       (DustTemperature);
-    if( UseModel[4] )  TotalPower += SOMLIonHeatFlux       (DustTemperature);
-    if( UseModel[5] )  TotalPower += SOMLNeutralRecombination (DustTemperature);
-    if( UseModel[6] )  TotalPower += SMOMLIonHeatFlux      (DustTemperature);
-    if( UseModel[7] )  TotalPower += SMOMLNeutralRecombination(DustTemperature);
-    if( UseModel[8] )  TotalPower -= SEE                   (DustTemperature);  
-    if( UseModel[9] )  TotalPower -= TEE                   (DustTemperature);
-    if( UseModel[10] ) TotalPower += PHLElectronFlux       (DustTemperature);
-    if( UseModel[11] ) TotalPower += OMLElectronFlux       (DustTemperature);
-    if( UseModel[12] ) TotalPower -= DTOKSSEE              (DustTemperature);  
-    if( UseModel[13] ) TotalPower -= DTOKSTEE              (DustTemperature);
-    if( UseModel[14] ) TotalPower += DTOKSIonHeatFlux      (DustTemperature);
+        TotalPower -= EvaporationModel              (DustTemperature)*1000;
+    if( UseModel[2] )  TotalPower -= NewtonCooling  (DustTemperature);
+    if( Pdata->IonTemp > 0 && Pdata->mi > 0 ){ //!< Check if models are valid
+        if( UseModel[3] )  
+            TotalPower += NeutralHeatFlux           (DustTemperature);
+        if( UseModel[4] )  
+            TotalPower += SOMLIonHeatFlux           (DustTemperature);
+        if( UseModel[5] )  
+            TotalPower += SOMLNeutralRecombination  (DustTemperature);
+        if( UseModel[6] )  
+            TotalPower += SMOMLIonHeatFlux          (DustTemperature);
+        if( UseModel[7] )  
+            TotalPower += SMOMLNeutralRecombination (DustTemperature);
+    }
+    if( Pdata->ElectronTemp > 0 && Pdata->ElectronDensity > 0
+        && Pdata->MagneticField.mag3() > 0 && Pdata->IonTemp > 0 ){
+        if( UseModel[8] )  
+            TotalPower -= SEE                       (DustTemperature);  
+    }
+    if( UseModel[9] )  TotalPower -= TEE            (DustTemperature);
+    if( Pdata->ElectronTemp > 0 && Pdata->ElectronDensity > 0
+        && Pdata->MagneticField.mag3() > 0 && Pdata->IonTemp > 0 ){
+        if( UseModel[10] ) 
+            TotalPower += PHLElectronFlux           (DustTemperature);
+    }
+    if( UseModel[11] ) TotalPower += OMLElectronFlux(DustTemperature);
+    if( UseModel[12] ) TotalPower -= DTOKSSEE       (DustTemperature);  
+    if( UseModel[13] ) TotalPower -= DTOKSTEE       (DustTemperature);
+    if( Pdata->IonTemp > 0 && Pdata->mi > 0 ){ //!< Check if models are valid
+        if( UseModel[14] ) 
+            TotalPower += DTOKSIonHeatFlux          (DustTemperature);
+    }
     if( UseModel[15] ) TotalPower += DTOKSNeutralRecombination(DustTemperature);
-    if( UseModel[16] ) TotalPower += DTOKSElectronFlux     (DustTemperature);
-    if( UseModel[17] ) TotalPower += DUSTTIonHeatFlux      (DustTemperature);
+    if( UseModel[16] ) TotalPower += DTOKSElectronFlux        (DustTemperature);
+    if( Pdata->IonTemp > 0 && Pdata->mi > 0 
+        && Pdata->ElectronTemp > 0 ){ //!< Check if models are valid
+        if( UseModel[17] ) TotalPower += DUSTTIonHeatFlux     (DustTemperature);
+    }
 
     TotalPower = TotalPower/1000;
 

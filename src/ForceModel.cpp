@@ -7,7 +7,6 @@
  *  @bug bugs, they definitely exist
  */
 
-//#include <math.h>
 #include "ForceModel.h"
 
 ForceModel::ForceModel():
@@ -71,15 +70,15 @@ void ForceModel::CreateFile(std::string filename){
     ModelDataFile << "Time\tPotential\tPosition\tVelocity\tRotationFreq";
     bool PrintGravity = true; // Lol
     if( UseModel[0] && PrintGravity )   ModelDataFile << "\tGravity";
-    if( UseModel[1] )           ModelDataFile << "\tCentrifugal";
-    if( UseModel[2] )           ModelDataFile << "\tLorentz";
-    if( UseModel[3] )           ModelDataFile << "\tSOMLIonDrag";
-    if( UseModel[4] )           ModelDataFile << "\tSMOMLIonDrag";
-    if( UseModel[5] )           ModelDataFile << "\tDTOKSIonDrag";
-    if( UseModel[6] )           ModelDataFile << "\tDUSTTIonDrag";
-    if( UseModel[7] )           ModelDataFile << "\tHybridIonDrag";
-    if( UseModel[8] )           ModelDataFile << "\tNeutralDrag";
-    if( UseModel[9] )           ModelDataFile << "\tRocketForce";
+    if( UseModel[1] )                   ModelDataFile << "\tCentrifugal";
+    if( UseModel[2] )                   ModelDataFile << "\tLorentz";
+    if( UseModel[3] )                   ModelDataFile << "\tSOMLIonDrag";
+    if( UseModel[4] )                   ModelDataFile << "\tSMOMLIonDrag";
+    if( UseModel[5] )                   ModelDataFile << "\tDTOKSIonDrag";
+    if( UseModel[6] )                   ModelDataFile << "\tDUSTTIonDrag";
+    if( UseModel[7] )                   ModelDataFile << "\tHybridIonDrag";
+    if( UseModel[8] )                   ModelDataFile << "\tNeutralDrag";
+    if( UseModel[9] )                   ModelDataFile << "\tRocketForce";
     
     ModelDataFile << "\n";
     ModelDataFile.close();
@@ -94,16 +93,35 @@ void ForceModel::Print(){
         << Sample->get_position() << "\t" << Sample->get_velocity() << "\t"
         << Sample->get_rotationalfreq();
     bool PrintGravity = true; // Lol
+
     if( UseModel[0] && PrintGravity ) ModelDataFile << "\t" << Gravity(); 
     if( UseModel[1] )                 ModelDataFile << "\t" << Centrifugal();
     if( UseModel[2] )                 ModelDataFile << "\t" << LorentzForce();
-    if( UseModel[3] )                 ModelDataFile << "\t" << SOMLIonDrag();
-    if( UseModel[4] )                 ModelDataFile << "\t" << SMOMLIonDrag();
-    if( UseModel[5] )                 ModelDataFile << "\t" << DTOKSIonDrag();
-    if( UseModel[6] )                 ModelDataFile << "\t" << DUSTTIonDrag();
-    if( UseModel[7] )                 ModelDataFile << "\t" << HybridIonDrag();
-    if( UseModel[8] )                 ModelDataFile << "\t" << NeutralDrag();
+    if( Pdata->IonTemp > 0.0 && Pdata->ElectronTemp > 0.0 
+        && Pdata->mi > 0.0 && Pdata->IonDensity > 0.0  ){
+        if( UseModel[3] )             ModelDataFile << "\t" << SOMLIonDrag();
+        if( UseModel[4] )             ModelDataFile << "\t" << SMOMLIonDrag();
+        if( UseModel[5] )             ModelDataFile << "\t" << DTOKSIonDrag();
+        if( UseModel[6] )             ModelDataFile << "\t" << DUSTTIonDrag();
+        if( UseModel[7] )             ModelDataFile << "\t" << HybridIonDrag();
+    }else{
+        threevector Zeros(0.0,0.0,0.0);
+        if( UseModel[3] )             ModelDataFile << "\t" << Zeros;
+        if( UseModel[4] )             ModelDataFile << "\t" << Zeros;
+        if( UseModel[5] )             ModelDataFile << "\t" << Zeros;
+        if( UseModel[6] )             ModelDataFile << "\t" << Zeros;
+        if( UseModel[7] )             ModelDataFile << "\t" << Zeros;
+    }
+    if( Pdata->NeutralTemp > 0.0 && Pdata->NeutralDensity > 0.0 
+        && Pdata->mi > 0.0 ){
+        if( UseModel[8] )             ModelDataFile << "\t" << NeutralDrag();
+        F1_Debug( "\n\t\tNeutralDrag = " << NeutralDrag() );
+    }else if( UseModel[8] ){
+        threevector Zeros(0.0,0.0,0.0);
+        ModelDataFile << "\t" << Zeros;
+    }
     if( UseModel[9] )                 ModelDataFile << "\t" << RocketForce();
+
     ModelDataFile << "\n";
     ModelDataFile.close();
     ModelDataFile.clear();
@@ -226,28 +244,39 @@ void ForceModel::Force(){
 threevector ForceModel::CalculateAcceleration()const{
     F_Debug("\tIn ForceModel::CalculateAcceleration()const\n\n");
     threevector Accel(0.0,0.0,0.0);
-    if( UseModel[0] ) Accel += Gravity();
-    if( UseModel[1] ) Accel += Centrifugal();
-    if( UseModel[2] ) Accel += LorentzForce();
-    if( UseModel[3] ) Accel += SOMLIonDrag();
-    if( UseModel[4] ) Accel += SMOMLIonDrag();
-    if( UseModel[5] ) Accel += DTOKSIonDrag();
-    if( UseModel[6] ) Accel += DUSTTIonDrag();
-    if( UseModel[7] ) Accel += HybridIonDrag();
-    if( UseModel[8] ) Accel += NeutralDrag();
-    if( UseModel[9] ) Accel += RocketForce();
 
     F1_Debug( "\n\t\tg = " << Gravity() );
     F1_Debug( "\n\t\tcentrifugal = " << Centrifugal() );
     F1_Debug( "\n\t\tlorentzforce = " << LorentzForce() );
-    F1_Debug( "\n\t\tSOMLIonDrag = " << SOMLIonDrag() );
-    F1_Debug( "\n\t\tSMOMLIonDrag = " << SMOMLIonDrag() );
-    F1_Debug( "\n\t\tDTOKSIonDrag = " << DTOKSIonDrag() );
-    F1_Debug( "\n\t\tDUSTTIonDrag = " << DUSTTIonDrag() );
-    F1_Debug( "\n\t\tHybridIonDrag = " << HybridIonDrag() );
-    F1_Debug( "\n\t\tNeutralDrag = " << NeutralDrag() );
+    
+    if( UseModel[0] ) Accel += Gravity();
+    if( UseModel[1] ) Accel += Centrifugal();
+    if( UseModel[2] ) Accel += LorentzForce();
+    if( Pdata->IonTemp > 0.0 && Pdata->ElectronTemp > 0.0 && Pdata->mi > 0.0
+        && Pdata->IonDensity > 0.0  ){
+        if( UseModel[3] ) Accel += SOMLIonDrag();
+        if( UseModel[4] ) Accel += SMOMLIonDrag();
+        if( UseModel[5] ) Accel += DTOKSIonDrag();
+        if( UseModel[6] ) Accel += DUSTTIonDrag();
+        if( UseModel[7] ) Accel += HybridIonDrag();
+        
+        F1_Debug( "\n\t\tSOMLIonDrag = " << SOMLIonDrag() );
+        F1_Debug( "\n\t\tSMOMLIonDrag = " << SMOMLIonDrag() );
+        F1_Debug( "\n\t\tDTOKSIonDrag = " << DTOKSIonDrag() );
+        F1_Debug( "\n\t\tDUSTTIonDrag = " << DUSTTIonDrag() );
+        F1_Debug( "\n\t\tHybridIonDrag = " << HybridIonDrag() );
+        
+    }
+    if( Pdata->NeutralTemp > 0.0 && Pdata->NeutralDensity > 0.0 
+        && Pdata->mi > 0.0 ){
+        if( UseModel[8] ) Accel += NeutralDrag();
+        F1_Debug( "\n\t\tNeutralDrag = " << NeutralDrag() );
+    }
+
+    if( UseModel[9] ) Accel += RocketForce();
     F1_Debug( "\n\t\tRocketForce = " << RocketForce() );
     F1_Debug( "\n\t\tAccel = " << Accel << "\n\n" );
+    
 
     return Accel;
 }
@@ -255,6 +284,44 @@ threevector ForceModel::CalculateAcceleration()const{
 threevector ForceModel::Gravity()const{
     F_Debug("\tIn ForceModel::Gravity()\n\n");
     return Pdata->Gravity;
+}
+
+threevector ForceModel::Centrifugal()const{
+    F_Debug("\tIn ForceModel::Centrifugal()const\n\n");
+    threevector returnval(
+        Sample->get_velocity().gety()*Sample->get_velocity().gety()/
+        Sample->get_position().getx(),
+        -Sample->get_velocity().getx()*Sample->get_velocity().gety()/
+        Sample->get_position().getx(),
+        0.0);
+    return returnval;
+}
+
+threevector ForceModel::LorentzForce()const{
+    F_Debug("\tIn ForceModel::LorentzForce()const\n\n");
+    //!< Dust grain charge to mass ratio
+    double Charge = 4.0*PI*epsilon0*Sample->get_radius()*Kb*Pdata->ElectronTemp*
+        Sample->get_potential()/echarge;
+    double qtom = Charge/Sample->get_mass();
+
+    // double ConvertKelvsToeV(8.621738e-5);
+    // Estimate charge from potential difference
+    // if( Sample->is_positive() ) 
+    //      (qtom = 3.0*epsilon0*Kb*Sample->get_temperature())
+    //          /(echarge*pow(Sample->get_radius(),2)*Sample->get_density());
+    // else 
+    //      qtom = -3.0*epsilon0*Pdata->ElectronTemp*ConvertKelvsToeV*
+    //          Sample->get_potential()/
+    //          (pow(Sample->get_radius(),2)*Sample->get_density());   
+    //else qtom = -1000.0*3.0*epsilon0*V/(a*a*rho);//why it had Te???????
+    //edo to eixa allaksei se ola ta runs sto After 28_Feb ara prepei na ksana 
+    //ginoun
+    // Google Translate: Here I had changed it to all the brides in After 28_Feb
+    // so they have to be done again
+    
+    threevector returnvec = (Pdata->ElectricField+(Sample->get_velocity()^
+        Pdata->MagneticField))*qtom;
+    return returnvec;
 }
 
 threevector ForceModel::SOMLIonDrag()const{
@@ -315,16 +382,14 @@ threevector ForceModel::DTOKSIonDrag()const{
     if( Pdata->IonTemp != 0 ) 
         Mt = (Pdata->PlasmaVel-Sample->get_velocity())*
             sqrt(Pdata->mi/(Kb*Pdata->IonTemp)); 
-        F1_Debug("\nMt = " << Mt);
+        F1_Debug("\nMt = " << Mt << "\tmi = " << Pdata->mi
+            << "\nVp = " << Pdata->PlasmaVel
+            << "\nVd = " << Sample->get_velocity());
 
         if( Pdata->IonDensity == 0 || Pdata->IonTemp == 0 
             || Pdata->ElectronTemp == 0  || Mt.mag3() == 0 ){ 
-        
-            F_Debug("\nWarning! IonDensity = " << Pdata->IonDensity 
-                << "\nIonTemp = " << Pdata->IonTemp << "\nElectronTemp = " 
-                << Pdata->ElectronTemp 
-                << "!\nThis blows up calculations! Setting Fid=0.");
-                Fid = threevector(0.0,0.0,0.0);
+
+            Fid = threevector(0.0,0.0,0.0);
         }else{
             //!< Relative speed less than twice mach number, use Fortov et al 
             //!< theory with screening length 'Lambda'.
@@ -456,33 +521,6 @@ threevector ForceModel::NeutralDrag()const{
     }
 }
 
-threevector ForceModel::LorentzForce()const{
-    F_Debug("\tIn ForceModel::LorentzForce()const\n\n");
-    //!< Dust grain charge to mass ratio
-    double Charge = 4.0*PI*epsilon0*Sample->get_radius()*Kb*Pdata->ElectronTemp*
-        Sample->get_potential()/echarge;
-    double qtom = Charge/Sample->get_mass();
-
-    // double ConvertKelvsToeV(8.621738e-5);
-    // Estimate charge from potential difference
-    // if( Sample->is_positive() ) 
-    //      (qtom = 3.0*epsilon0*Kb*Sample->get_temperature())
-    //          /(echarge*pow(Sample->get_radius(),2)*Sample->get_density());
-    // else 
-    //      qtom = -3.0*epsilon0*Pdata->ElectronTemp*ConvertKelvsToeV*
-    //          Sample->get_potential()/
-    //          (pow(Sample->get_radius(),2)*Sample->get_density());   
-    //else qtom = -1000.0*3.0*epsilon0*V/(a*a*rho);//why it had Te???????
-    //edo to eixa allaksei se ola ta runs sto After 28_Feb ara prepei na ksana 
-    //ginoun
-    // Google Translate: Here I had changed it to all the brides in After 28_Feb
-    // so they have to be done again
-    
-    threevector returnvec = (Pdata->ElectricField+(Sample->get_velocity()^
-        Pdata->MagneticField))*qtom;
-    return returnvec;
-}
-
 threevector ForceModel::RocketForce()const{
     F_Debug("\tIn ForceModel::RocketForce()const\n\n");
     threevector returnvec(0.0,0.0,0.0);
@@ -495,16 +533,4 @@ threevector ForceModel::RocketForce()const{
             Sample->get_radius())*Pdata->MagneticField.getunit();
     }
     return returnvec*(1.0/Sample->get_mass());;
-}
-
-threevector ForceModel::Centrifugal()const{
-    F_Debug("\tIn ForceModel::Centrifugal()const\n\n");
-    threevector returnval(
-        Sample->get_velocity().gety()*Sample->get_velocity().gety()/
-        Sample->get_position().getx(),
-        -Sample->get_velocity().getx()*Sample->get_velocity().gety()/
-        Sample->get_position().getx(),
-        0.0);
-    //assert( returnval == returnval );
-    return returnval;
 }
