@@ -145,6 +145,12 @@ void Model::set_plasmadata(PlasmaData &pdata){
     Mo_Debug( "\tIn Model::update_plasmadata(PlasmaData &pdata)\n\n");
     Pdata = std::make_shared<PlasmaData>(pdata);
 }
+
+void Model::set_plasmagrid(PlasmaGrid_Data &pgrid){
+    Mo_Debug( "\tIn Model::set_plasmagrid(PlasmaGrid_Data &pgrid)\n\n");
+    PG_data = std::make_shared<PlasmaGrid_Data>(pgrid);
+}
+
 const bool Model::update_plasmadata(){
     Mo_Debug( "\tIn Model::update_plasmadata()\n\n");
     

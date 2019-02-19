@@ -99,6 +99,7 @@ class Model{
          *  rectangular grid within which the dust grain exists
          */
         std::shared_ptr<PlasmaGrid_Data> PG_data;
+        
         /** @name Grid coordinates of dust
          *  @brief information regarding dust coordinates
          *
@@ -329,6 +330,11 @@ class Model{
          *  @param pdata set the \p PlasmaData to \p pdata
          */
         void set_plasmadata(PlasmaData &pdata);
+
+        /** @brief set the plasma grid to the data structure passed
+         *  @param pgrid set the \p PG_data to \p pgrid
+         */
+        void set_plasmagrid(PlasmaGrid_Data &pgrid);
         
         /** @brief if not a continuous plasma, update the plasma from PlasmaGrid
          *  @see locate()

@@ -177,18 +177,15 @@ void ChargingModel::Charge(double timestep){
         double DebyeRatio = Sample->get_radius()/
         sqrt((epsilon0*Kb*Pdata->ElectronTemp)/
             (Pdata->ElectronDensity*pow(echarge,2)));
-        double Betae = Sample->get_radius()
-            /(sqrt(PI*Kb*Pdata->ElectronTemp*Me/
-            (2.0*echarge*echarge*Pdata->MagneticField.mag3()*
-            Pdata->MagneticField.mag3())));
+
         DSec = DeltaSec();
         DTherm = ThermFluxSchottky(Potential)/
             OMLElectronFlux(Sample->get_potential());
-        if( (DSec+DTherm) <= Accuracy ){//!< Emission IS NOT important
+        if( (DSec+DTherm) <= 0.1 ){//!< Emission IS NOT important
             Potential = solveTHS();
         }else{ //!< Emission IS important
             //!< Small dust grains wrt the debye length
-            if( DebyeRatio <= 0.1*Accuracy ){ 
+            if( DebyeRatio <= 1.0 ){ 
                 //!< OMLWEM like Nikoleta's theory MOML-EM, DOESN'T EXIST YET
                 //!< So instead, we do SOMLWEM
                 Potential = solveSOML( Sample->get_potential());
