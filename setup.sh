@@ -1,17 +1,5 @@
-# Install dependenceis: ZLIB, HDF5, NETCDF
-mkdir Data
-cd Dependencies
+export HDF5_LIBRARIES="/usr/local/hdf5-1.8.13/lib"
+export HDF5_INCLUDE_DIRS="/usr/local/hdf5-1.8.13/include"
 
-. install_netcdf.sh
-
-# Get config4cpp for configuration
-git clone https://github.com/config4star/config4cpp.git
-
-#build config 4 cpp
-cd config4cpp
-make
-cd ../..
-
-# Install Boost libraries
-#echo "Installing boost libraries"
-#sudo apt-get install libboost-all-dev
+export PATH="$PATH:/usr/local/hdf5-1.8.13/bin"
+export PATH="$PATH:/usr/local/netcdf-4.1.3/bin"

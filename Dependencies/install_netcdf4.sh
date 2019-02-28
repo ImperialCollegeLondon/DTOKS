@@ -16,17 +16,14 @@
 BASHRC="~/.bashrc"
 
 # Install zlib
-
 v=1.2.8  
 wget ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4/zlib-${v}.tar.gz
 tar -xf zlib-${v}.tar.gz && cd zlib-${v}
-ZDIR=/usr/local
+ZDIR="/usr/local/zlib-${v}"
 ./configure --prefix=${ZDIR}
 #sudo make check install
 sudo make install
 cd ..
-
-
 
 # Install HDF5
 
@@ -34,14 +31,9 @@ v=1.8.13
 wget ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4/hdf5-${v}.tar.gz
 tar -xf hdf5-${v}.tar.gz && cd hdf5-${v}
 prefix="/usr/local/hdf5-$v"
-if [ $HDF5_DIR != $prefix ]; then
-    echo "Add HDF5_DIR=$prefix to .bashrc"
-    echo "" >> $BASHRC
-    echo "# HDF5 libraries for python" >> $BASHRC
-    echo export HDF5_DIR=$prefix  >> $BASHRC
-fi
 ./configure --enable-shared --with-zlib=${ZDIR} --enable-hl --prefix=$HDF5_DIR
 make # 2 for number of procs to be used
+#sudo make check
 sudo make install
 cd ..
 
