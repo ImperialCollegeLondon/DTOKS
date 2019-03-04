@@ -2,7 +2,7 @@
 mkdir Data
 cd Dependencies
 
-. install_netcdf.sh
+. install_netcdf4.sh
 
 # Get config4cpp for configuration
 git clone https://github.com/config4star/config4cpp.git
