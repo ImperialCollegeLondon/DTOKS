@@ -414,7 +414,7 @@ void Matter::update(){
     //!< breakup condition
     double CriticalRotation = 0.56*sqrt(8*Ec.SurfaceTension
         /(St.Density*pow(St.Radius,3)));
-    double FudgeFactor = 0.6;
+    double FudgeFactor = 1.0;
     M2_Debug("\nCriticalRotation = " << CriticalRotation << "\n");
     
     //!< Determine if rotational breakup has occured, if it's a liquid and the
@@ -513,7 +513,9 @@ void Matter::update_motion(const threevector &ChangeInPosition,
     
     //!< Calculate new position
     St.DustPosition = St.DustPosition + ChangeInPosition;
-
+    //!< For cylindrical coordinates, x position should be positive.
+    St.DustPosition.setx(fabs(St.DustPosition.getx()));
+    
     //!< Check that position is sensible
     if( St.DustPosition.getx() == 0.0 ){
         static bool runOnce = true;

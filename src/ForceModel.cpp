@@ -227,8 +227,6 @@ void ForceModel::Force(double timestep){
 
     Sample->update_motion(ChangeInPosition,ChangeInVelocity,RotationalSpeedUp);
 
-    if( !ContinuousPlasma )
-        assert( Sample->get_position().getx() > 0.0 );
     F1_Debug( "\nChangeInPosition : " << ChangeInPosition 
         << "\nChangeInVelocity : " << ChangeInVelocity << "\nAcceleration : " 
         << Acceleration << "\nTimeStep : " << TimeStep << "\n");

@@ -219,7 +219,7 @@ double Iron::probe_vapourpressure(double Temperature)const{
     if( !St.Liquid && !St.Gas ) VapourPressure = 0;
     if( St.Liquid ){
         static bool runOnce = true;
-        std::string WarningMessage = "In Lithium::probe_vapourpressure():\n";
+        std::string WarningMessage = "In Iron::probe_vapourpressure():\n";
         WarningMessage += "Temperature range of model extended from";
         WarningMessage += " 2100K to 3134K";
         WarnOnce(runOnce,WarningMessage);

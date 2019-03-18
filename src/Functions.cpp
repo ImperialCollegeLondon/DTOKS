@@ -97,7 +97,7 @@ double ionback(double E, char isotope, char material, int flag)
         std::cout << "Error: Incorrect isotope information in ionback" << std::endl;
         exit(1);
     }
-    if(material=='c' || material == 'C')
+    if(material=='g' || material == 'G')
     {
         M2 = 12.0;
         Z2 = 6.0;
