@@ -840,6 +840,7 @@ int DTOKSU_Manager::read_data(std::string plasma_dirname){
     Pgrid.bz  = Pgrid.Te;
     Pgrid.x   = Pgrid.Te;
     Pgrid.z   = Pgrid.Te;
+    Pgrid.dm  = Pgrid.Te;
     Pgrid.gridflag  = std::vector<std::vector<int>>
         (Pgrid.gridx,std::vector<int>(Pgrid.gridz));
     int ReStat = 0;
@@ -912,6 +913,7 @@ int DTOKSU_Manager::read_data(std::string plasma_dirname){
                 Pgrid.Ta[i][k] = Pdata.AmbientTemp;
                 Pgrid.Tn[i][k] = Pdata.NeutralTemp;
                 Pgrid.na2[i][k] = Pdata.NeutralDensity;
+                Pgrid.dm[i][k] = 0.0;
             }
         }
         scalars.close();
@@ -1020,6 +1022,7 @@ int DTOKSU_Manager::read_MPSIdata(std::string plasma_dirname){
             Pgrid.z[i][k] = Pgrid.gridzmin+k*Pgrid.dlz;
             Pgrid.gridflag  = std::vector<std::vector<int>>
                 (Pgrid.gridx,std::vector<int>(Pgrid.gridz));
+            Pgrid.dm[i][k] = 0.0;
         }
     }
     return 0;
@@ -1106,6 +1109,7 @@ int DTOKSU_Manager::Run(){
         config_message();
         return 1;
     }
+    Sim->ImpurityPrint();
 
     clock_t end = clock();      // Measure end time
     double elapsd_secs = double(end-begin)/CLOCKS_PER_SEC;  

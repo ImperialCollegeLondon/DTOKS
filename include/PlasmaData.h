@@ -62,6 +62,7 @@ struct PlasmaGrid_Data{
     std::vector<std::vector<double>> bz;    //!< T, Mang field, z direction
     std::vector<std::vector<double>> x;     //!< m, Position of x cells
     std::vector<std::vector<double>> z;     //!< m, Position of z cells
+    std::vector<std::vector<double>> dm;    //!< kg, Lost mass in every cell
     std::vector<std::vector<int>> gridflag; //!< Determine if cell is empty
 
     /* Plasma Simulation Domain */

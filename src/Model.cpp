@@ -25,7 +25,7 @@ TimeStep(0.0),TotalTime(0.0){
         << "PlasmaGrid_DataDefaults)),"
         << "Pdata(&PlasmaDataDefaults),Accuracy(1.0),ContinuousPlasma(true),"
         << "TimeStep(0.0),TotalTime(0.0))\n\n");
-    i = 0; k = 0;
+    i = 0; k = 0; OldMass = 0;
     PlasmaDataFile.open("Data/pd.txt");
     PlasmaDataFile << "#t\ti\tk\tNn\tNe\tNi\tTi\tTe\t"
         << "Tn\tT0\tPvel\tgravity\tE\tB";
@@ -46,7 +46,7 @@ ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
         << "Pdata(std::make_shared<PlasmaData>(pdata)),Accuracy(accuracy),"
         << "ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0))\n\n");
     assert(Accuracy > 0);
-    i = 0; k = 0;
+    i = 0; k = 0; OldMass = 0;
     PlasmaDataFile.open("Data/pd.txt");
     PlasmaDataFile << "#t\ti\tk\tNn\tNe\tNi\tTi\tTe\t"
         << "Tn\tT0\tPvel\tgravity\tE\tB";
@@ -65,7 +65,7 @@ TimeStep(0.0),TotalTime(0.0){
         << "Pdata(&PlasmaDataDefaults),Accuracy(accuracy),"
         << "ContinuousPlasma(false), TimeStep(0.0),TotalTime(0.0))\n\n");
     assert(Accuracy > 0);
-    i = 0; k = 0;
+    i = 0; k = 0; OldMass = 0;
     PlasmaDataFile.open("Data/pd.txt");
     PlasmaDataFile << "#t\ti\tk\tNn\tNe\tNi\tTi\tTe\t"
         << "Tn\tT0\tPvel\tgravity\tE\tB";
@@ -89,7 +89,7 @@ ContinuousPlasma(false),TimeStep(0.0),TotalTime(0.0){
         << "Pdata(std::make_shared<PlasmaData>(pdata)),Accuracy(accuracy),"
         << "ContinuousPlasma(false),TimeStep(0.0),TotalTime(0.0))\n\n");
     assert(Accuracy > 0);
-    i = 0; k = 0;
+    i = 0; k = 0; OldMass = 0;
     PlasmaDataFile.open("Data/pd.txt");
     PlasmaDataFile << "#t\ti\tk\tNn\tNe\tNi\tTi\tTe\t"
         << "Tn\tT0\tPvel\tgravity\tE\tB";
@@ -397,6 +397,27 @@ const double Model::NeutralFlux()const{
     H_Debug("\tIn Model::NeutralFlux()const\n\n");
 
     return Pdata->NeutralDensity*sqrt(Kb*Pdata->NeutralTemp/(2*PI*Pdata->mi));
+}
+
+void Model::Record_MassLoss(){
+    H_Debug("\tIn Model::Record_MassLoss()\n\n");
+    PG_data->dm[i][k]=Sample->get_mass()-OldMass;
+    OldMass=Sample->get_mass();
+}
+
+void Model::ImpurityPrint(){
+    H_Debug("\tIn Model::ImpurityPrint()\n\n");
+    std::ofstream impurity;
+    impurity.open("Data/ImpurityProfile.txt");
+    impurity << std::scientific << std::setprecision(16) << std::endl;
+    for(int s=0;s<=PG_data->gridz-1;s++){
+        for(int p=0;p<=PG_data->gridx-1;p++){
+            impurity << PG_data->dm[p][s] << "\t";
+        }
+        impurity << std::endl;
+    }
+
+    impurity.close();
 }
 
 // *************************************** Unused Code *************************************** //

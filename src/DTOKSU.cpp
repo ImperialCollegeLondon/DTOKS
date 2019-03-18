@@ -247,6 +247,10 @@ bool DTOKSU::Boundary_Check(bool InOrOut){
         return !oddNodes;
 }
 
+void DTOKSU::ImpurityPrint(){
+    HM.ImpurityPrint();
+}
+
 int DTOKSU::Run(){
     D_Debug("- In DTOKSU::Run()\n\n");
 
@@ -279,7 +283,7 @@ int DTOKSU::Run(){
         HeatTime    = HM.UpdateTimeStep(); //!< Check Time step length is good
         if( HeatTime == 1) break; //!< Thermal Equilibrium Reached
 
-        //HM.UpdateRERN();
+        HM.UpdateRERN();
         //!< We will assume Charging Time scale is much faster than either 
         //!< heating or moving, but check for the other case.
         double MaxTimeStep = std::max(ForceTime,HeatTime);
@@ -334,6 +338,7 @@ int DTOKSU::Run(){
                 //!< Take the time step in the faster time process
                 if( MinTimeStep == HeatTime ){
                     HM.Heat(MinTimeStep);
+                    HM.Record_MassLoss();
                     if( Sample->is_gas() ){
                         D1_Debug("\nSample is gaseous!");
                         Loop=false;
@@ -432,6 +437,7 @@ int DTOKSU::Run(){
             && hm_InGrid == cm_InGrid );
 
         CM.RecordPlasmadata("pd.txt");
+        HM.Record_MassLoss();
         //HM.RecordPlasmadata("hm_pd.txt");
         //FM.RecordPlasmadata("fm_pd.txt");
         print();
@@ -455,19 +461,19 @@ int DTOKSU::Run(){
         }else if( HeatTime == 1 ){
             std::cout << "\n\nThermal Equilibrium reached!";
             break;
-        }else if( CoreBound.Grid_Pos.size() > 2 
-            && WallBound.Grid_Pos.size() > 2 ){
+        }else if( CoreBound.Grid_Pos.size() > 2 ){
+            if( Boundary_Check(true) ){
+                std::cout << "\n\nCollision with Core!";
+                break;
+            }
+        }else if( WallBound.Grid_Pos.size() > 2 ){
             if( Boundary_Check(false) ){
                 std::cout << "\n\nCollision with Wall!";
-                break;
-            }else if( Boundary_Check(true) ){
-                std::cout << "\n\nCollision with Core!";
                 break;
             }
         }
         // ***** END OF : DETERMINE IF END CONDITION HAS BEEN REACHED ***** //
     }
-
     if( fabs(1 - (HM.get_totaltime()/FM.get_totaltime())) > 0.001  
         || fabs(1 - (FM.get_totaltime()/CM.get_totaltime())) > 0.001 ){
         std::cout << "\nWarning! Total Times recorded by processes don't "

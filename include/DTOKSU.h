@@ -162,6 +162,11 @@ class DTOKSU{
          */
         void ResetModelTime(double HMTime, double FMTime, double CMTime);
     
+        /** @brief Prints to a file the data accumulated about impurity
+         *  deposition in plasma grid
+         */
+        void ImpurityPrint();
+        
         /** @name Public getter methods
          *  @brief functions required to get member data
          */

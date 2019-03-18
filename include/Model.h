@@ -71,6 +71,7 @@ static struct PlasmaGrid_Data PlasmaGrid_DataDefaults = {
     std::vector< std::vector<double> >(),
     std::vector< std::vector<double> >(),
     std::vector< std::vector<double> >(),
+    std::vector< std::vector<double> >(),
     std::vector< std::vector<int> > (),
 
     251,
@@ -108,6 +109,7 @@ class Model{
         ///@{
         int i; // r Position of dust
         int k; // z Position of dust
+        double OldMass; // Place Holder for old mass
         ///@}
 
         /** @name Private Member Functions
@@ -253,6 +255,7 @@ class Model{
         const double NeutralFlux()const;
         ///@}
 
+
     public:
          /** @name Constructors
          *  @brief functions to construct Model class
@@ -355,11 +358,20 @@ class Model{
          */
         void AddTime(double T){ TotalTime = TotalTime + T;  }
 
+        /** @brief Record in the PlasmaGrid the amount of mass lost
+         *  @param MassLost the amount of mass lost
+         */
+        void Record_MassLoss();
+
+        /** @brief Function to print to file the total impurity deposition rate
+         */
+        void ImpurityPrint();
+
         // Functions for printing, these haven't been validated yet
         // Print the inside and the outside of the tokamak 
         //void vtkcircle(double r, std::ofstream &fout); 
         //void vtktoroid();
-        //impurityprint(double totalmass);
+        
         //void datadump();
 
 };
