@@ -10,22 +10,22 @@
 #include "DTOKSU.h"
 
 DTOKSU::DTOKSU( std::array<float,MN> acclvls, Matter *& sample, PlasmaData 
-&pdata, std::array<bool,HMN> &heatmodels, std::array<bool,FMN> &forcemodels, 
-std::array<bool,CMN> &chargemodels): 
+&pdata, std::vector<HeatTerm*> HeatTerms, std::vector<ForceTerm*> ForceTerms, 
+ChargingTerm* ChargeModel): 
 Sample(sample), WallBound(BoundaryDefaults), CoreBound(BoundaryDefaults),
-CM("Data/breakup_cm_0.txt",acclvls[0],chargemodels,sample,pdata),
-HM("Data/breakup_hm_0.txt",acclvls[1],heatmodels,sample,pdata),
-FM("Data/breakup_fm_0.txt",acclvls[2],forcemodels,sample,pdata){
+HM("Data/default_hm_0.txt",acclvls[1],HeatTerms,sample,pdata),
+FM("Data/default_fm_0.txt",acclvls[2],ForceTerms,sample,pdata),
+CM("Data/default_cm_0.txt",acclvls[0],ChargeModel,sample,pdata){
     D_Debug("\n\nIn DTOKSU::DTOKSU( std::array<float,MN> acclvls, "
         << "Matter *& sample, PlasmaData &pdata, "
-        << "std::array<bool,HMN> &heatmodels, "
-        << "std::array<bool,FMN> &forcemodels, "
-        << "std::array<bool,CMN> &chargemodels): "
+        << "std::vector<HeatTerm*> HeatTerms, "
+        << "std::vector<ForceTerm*> ForceTerms, "
+        << "ChargingTerm* ChargeModel): "
         << "Sample(sample), WallBound(BoundaryDefaults), "
         << "CoreBound(BoundaryDefaults),"
-        << "CM(\"Data/breakup_cm_0.txt\",acclvls[0],chargemodels,sample,pdata),"
-        << "HM(\"Data/breakup_hm_0.txt\",acclvls[1],heatmodels,sample,pdata),"
-        << "FM(\"Data/breakup_fm_0.txt\",acclvls[2],forcemodels,sample,pdata)"
+        << "HM(\"Data/default_hm_0.txt\",acclvls[1],heatmodels,sample,pdata),"
+        << "FM(\"Data/default_fm_0.txt\",acclvls[2],forcemodels,sample,pdata),"
+        << "CM(\"Data/default_cm_0.txt\",acclvls[0],chargemodels,sample,pdata)"
         << "\n\n");
     D_Debug("\n\n******************* SETUP FINISHED ******************* \n\n");
 
@@ -34,22 +34,22 @@ FM("Data/breakup_fm_0.txt",acclvls[2],forcemodels,sample,pdata){
 }
 
 DTOKSU::DTOKSU( std::array<float,MN> acclvls, Matter *& sample,
-PlasmaGrid_Data &pgrid,std::array<bool,HMN> &heatmodels, 
-std::array<bool,FMN> &forcemodels, std::array<bool,CMN> &chargemodels):
+PlasmaGrid_Data &pgrid,std::vector<HeatTerm*> HeatTerms, 
+std::vector<ForceTerm*> ForceTerms, ChargingTerm* ChargeModel):
 Sample(sample), WallBound(BoundaryDefaults), CoreBound(BoundaryDefaults),
-CM("Data/breakup_cm_0.txt",acclvls[0],chargemodels,sample,pgrid),
-HM("Data/breakup_hm_0.txt",acclvls[1],heatmodels,sample,pgrid),
-FM("Data/breakup_fm_0.txt",acclvls[2],forcemodels,sample,pgrid){
+HM("Data/default_hm_0.txt",acclvls[1],HeatTerms,sample,pgrid),
+FM("Data/default_fm_0.txt",acclvls[2],ForceTerms,sample,pgrid),
+CM("Data/default_cm_0.txt",acclvls[0],ChargeModel,sample,pgrid){
     D_Debug("\n\nIn DTOKSU::DTOKSU( std::array<float,MN> acclvls, "
         << "Matter *& sample, PlasmaGrid_Data &pgrid, "
-        << "std::array<bool,HMN> &heatmodels, "
-        << "std::array<bool,FMN> &forcemodels, "
-        << "std::array<bool,CMN> &chargemodels): "
+        << "std::vector<HeatTerm*> HeatTerms, "
+        << "std::vector<ForceTerm*> ForceTerms, "
+        << "ChargingTerm* ChargeModel): "
         << "Sample(sample), WallBound(BoundaryDefaults), "
         << "CoreBound(BoundaryDefaults),"
-        << "CM(\"Data/breakup_cm_0.txt\",acclvls[0],chargemodels,sample,pdata),"
-        << "HM(\"Data/breakup_hm_0.txt\",acclvls[1],heatmodels,sample,pdata),"
-        << "FM(\"Data/breakup_fm_0.txt\",acclvls[2],forcemodels,sample,pdata)"
+        << "HM(\"Data/default_hm_0.txt\",acclvls[1],heatmodels,sample,pdata),"
+        << "FM(\"Data/default_fm_0.txt\",acclvls[2],forcemodels,sample,pdata),"
+        << "CM(\"Data/default_cm_0.txt\",acclvls[0],chargemodels,sample,pdata)"
         << "\n\n");
     D_Debug("\n\n******************* SETUP FINISHED ******************* \n\n");
 
@@ -58,22 +58,22 @@ FM("Data/breakup_fm_0.txt",acclvls[2],forcemodels,sample,pgrid){
 }
 
 DTOKSU::DTOKSU( std::array<float,MN> acclvls, Matter *& sample, 
-PlasmaGrid_Data &pgrid, PlasmaData &pdata,  std::array<bool,HMN> &heatmodels, 
-std::array<bool,FMN> &forcemodels, std::array<bool,CMN> &chargemodels): 
+PlasmaGrid_Data &pgrid, PlasmaData &pdata, std::vector<HeatTerm*> HeatTerms, 
+std::vector<ForceTerm*> ForceTerms, ChargingTerm* ChargeModel): 
 Sample(sample), WallBound(BoundaryDefaults), CoreBound(BoundaryDefaults),
-CM("Data/breakup_cm_0.txt",acclvls[0],chargemodels,sample,pgrid,pdata),
-HM("Data/breakup_hm_0.txt",acclvls[1],heatmodels,sample,pgrid,pdata),
-FM("Data/breakup_fm_0.txt",acclvls[2],forcemodels,sample,pgrid,pdata){
+HM("Data/default_hm_0.txt",acclvls[1],HeatTerms,sample,pgrid,pdata),
+FM("Data/default_fm_0.txt",acclvls[2],ForceTerms,sample,pgrid,pdata),
+CM("Data/default_cm_0.txt",acclvls[0],ChargeModel,sample,pgrid,pdata){
     D_Debug("\n\nIn DTOKSU::DTOKSU( std::array<float,MN> acclvls, "
         << "Matter *& sample, PlasmaGrid_Data &pgrid, PlasmaData &pdata,"
-        << "std::array<bool,HMN> &heatmodels, "
-        << "std::array<bool,FMN> &forcemodels, "
-        << "std::array<bool,CMN> &chargemodels): "
+        << "std::vector<HeatTerm*> HeatTerms, "
+        << "std::vector<ForceTerm*> ForceTerms, "
+        << "ChargingTerm* ChargeModel): "
         << "Sample(sample), WallBound(BoundaryDefaults), "
         << "CoreBound(BoundaryDefaults),"
-        << "CM(\"Data/breakup_cm_0.txt\",acclvls[0],chargemodels,sample,pdata),"
-        << "HM(\"Data/breakup_hm_0.txt\",acclvls[1],heatmodels,sample,pdata),"
-        << "FM(\"Data/breakup_fm_0.txt\",acclvls[2],forcemodels,sample,pdata)"
+        << "HM(\"Data/default_hm_0.txt\",acclvls[1],heatmodels,sample,pdata),"
+        << "FM(\"Data/default_fm_0.txt\",acclvls[2],forcemodels,sample,pdata),"
+        << "CM(\"Data/default_cm_0.txt\",acclvls[0],chargemodels,sample,pdata)"
         << "\n\n");
     D_Debug("\n\n******************* SETUP FINISHED ******************* \n\n");
 
@@ -83,23 +83,23 @@ FM("Data/breakup_fm_0.txt",acclvls[2],forcemodels,sample,pgrid,pdata){
 
 DTOKSU::DTOKSU( std::array<float,MN> acclvls, Matter *& sample, 
 PlasmaGrid_Data &pgrid, PlasmaData &pdata, Boundary_Data &wbound, 
-Boundary_Data &cbound, std::array<bool,HMN> &heatmodels, 
-std::array<bool,FMN> &forcemodels, std::array<bool,CMN> &chargemodels): 
+Boundary_Data &cbound, std::vector<HeatTerm*> HeatTerms, 
+std::vector<ForceTerm*> ForceTerms, ChargingTerm* ChargeModel): 
 Sample(sample), WallBound(wbound), CoreBound(cbound),
-CM("Data/breakup_cm_0.txt",acclvls[0],chargemodels,sample,pgrid,pdata),
-HM("Data/breakup_hm_0.txt",acclvls[1],heatmodels,sample,pgrid,pdata),
-FM("Data/breakup_fm_0.txt",acclvls[2],forcemodels,sample,pgrid,pdata){
+HM("Data/default_hm_0.txt",acclvls[1],HeatTerms,sample,pgrid,pdata),
+FM("Data/default_fm_0.txt",acclvls[2],ForceTerms,sample,pgrid,pdata),
+CM("Data/default_cm_0.txt",acclvls[0],ChargeModel,sample,pgrid,pdata){
     D_Debug("\n\nIn DTOKSU::DTOKSU( std::array<float,MN> acclvls, "
         << "Matter *& sample, PlasmaGrid_Data &pgrid, PlasmaData &pdata,"
         << "Boundary_Data &wbound, Boundary_Data &cbound,"
-        << "std::array<bool,HMN> &heatmodels, "
-        << "std::array<bool,FMN> &forcemodels, "
-        << "std::array<bool,CMN> &chargemodels): "
+        << "std::vector<HeatTerm*> HeatTerms, "
+        << "std::vector<ForceTerm*> ForceTerms, "
+        << "ChargingTerm* ChargeModel): "
         << "Sample(sample), WallBound(BoundaryDefaults), "
         << "CoreBound(BoundaryDefaults),"
-        << "CM(\"Data/breakup_cm_0.txt\",acclvls[0],chargemodels,sample,pdata),"
-        << "HM(\"Data/breakup_hm_0.txt\",acclvls[1],heatmodels,sample,pdata),"
-        << "FM(\"Data/breakup_fm_0.txt\",acclvls[2],forcemodels,sample,pdata)"
+        << "HM(\"Data/default_hm_0.txt\",acclvls[1],heatmodels,sample,pdata),"
+        << "FM(\"Data/default_fm_0.txt\",acclvls[2],forcemodels,sample,pdata),"
+        << "CM(\"Data/default_cm_0.txt\",acclvls[0],chargemodels,sample,pdata)"
         << "\n\n");
     D_Debug("\n\n******************* SETUP FINISHED ******************* \n\n");
 

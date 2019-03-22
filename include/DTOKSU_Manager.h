@@ -55,6 +55,13 @@ class DTOKSU_Manager{
         Matter *Sample;
         PlasmaGrid_Data Pgrid;
         PlasmaData Pdata;
+        //!< FORCE MODEL NUMBER, the number of charge models
+        const static unsigned int FMN = 10;
+        // HEATING MODEL NUMBER, the number of charge models
+        const static unsigned int HMN = 18;
+        // CHARGE MODEL NUMBER, the number of charge models
+        const static unsigned int CMN = 11;
+
         /** @brief Defines the status of configuration
          *
          *  The value of the configuration status is used for error handling and 
@@ -159,9 +166,9 @@ class DTOKSU_Manager{
          *  4) Perform a single timestep of same size as timescale.
          */
         ///@{
-        int ChargeTest(double accuracy,std::array<bool,CMN> ChargeModels);
-        int ForceTest(double accuracy,std::array<bool,FMN> ForceModels);
-        int HeatTest(double accuracy,std::array<bool,HMN> HeatModels);
+        int ChargeTest(double accuracy,ChargingTerm* ChargeModel);
+        int ForceTest(double accuracy,std::vector<ForceTerm*> ForceTerms);
+        int HeatTest(double accuracy,std::vector<HeatTerm*> HeatTerms);
         ///@}
 
         /** @brief If correctly configured, run DTOKSU 

@@ -334,6 +334,13 @@ class Matter{
             assert(mass > MinMass*10); 
             St.Mass = mass;   
         };
+        /** @brief Set the restitution coefficients
+         * 
+         *  Set the values of \p RE and \p RN in \p St
+         *  @param RE the fraction of backscattered energy
+         *  @param RN the fraction of backscattered particles
+         */
+        void set_rern(double re, double rn){ St.RE = re; St.RN = rn; };
         /** @brief Set Breakup to false
          *  
          *  Implemented by DTOKSU_Manager to set breakup flag to false
@@ -372,6 +379,8 @@ class Matter{
         double get_linearexpansion  ()const{ return St.LinearExpansion;     };
         double get_deltasec         ()const{ return St.DeltaSec;            };
         double get_deltatherm       ()const{ return St.DeltaTherm;          };
+        double get_re               ()const{ return St.RE;                  };
+        double get_rn               ()const{ return St.RN;                  };
         double get_deltatot         ()const
         { 
             return (St.DeltaTherm + St.DeltaSec);  

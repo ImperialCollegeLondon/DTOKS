@@ -270,6 +270,9 @@ std::string Config_Filename){
     std::array<bool,HMN> HeatModels;
     std::array<bool,FMN> ForceModels;
     std::array<bool,CMN> ChargeModels;
+    ChargingTerm* ChargeModel;
+    std::vector<ForceTerm*> ForceTerms;
+    std::vector<HeatTerm*> HeatTerms;
     std::array<char,CM> ConstModels;
     std::array<float,DTOKSU::MN> AccuracyLevels;
 
@@ -441,11 +444,55 @@ std::string Config_Filename){
     }else if( HeatModels[12] && HeatModels[13] && HeatModels[14] 
         && HeatModels[15] && HeatModels[16] && ForceModels[5] 
         && (ChargeModels[7] || ChargeModels[8]) ){
-        std::cout << "\n* DTOKS Simulation! Non-self Consistent fluxes!*";
+        std::cout << "\n* DTOKS Simulation! Non-self Consistent fluxes! *";
     }else{
-        std::cout << "\n* Non-self Consistent fluxes!";
+        std::cout << "\n* Non-self Consistent fluxes! *";
     }
 
+    if( ChargeModels[0] )      ChargeModel = new Term::solveOML();
+    else if( ChargeModels[1] ) ChargeModel = new Term::solveOML();
+    else if( ChargeModels[2] ) ChargeModel = new Term::solvePosOML();
+    else if( ChargeModels[3] ) ChargeModel = new Term::solvePHL();
+    else if( ChargeModels[4] ) ChargeModel = new Term::solveCW();
+    else if( ChargeModels[5] ) ChargeModel = new Term::solveTHS();
+    else if( ChargeModels[6] ) ChargeModel = new Term::solveMOML();
+    else if( ChargeModels[7] ) ChargeModel = new Term::solveSOML();
+    else if( ChargeModels[8] ) ChargeModel = new Term::solveMOMLWEM();
+    else if( ChargeModels[9] ) ChargeModel = new Term::solveMOMLEM();
+    else{
+        std::cout << "\n* No valid charging Model Chosen! *";
+    }
+    
+    if( ForceModels[0] ) ForceTerms.push_back(new Term::Gravity());
+    if( ForceModels[1] ) ForceTerms.push_back(new Term::Centrifugal());
+    if( ForceModels[2] ) ForceTerms.push_back(new Term::LorentzForce());
+    if( ForceModels[3] ) ForceTerms.push_back(new Term::SOMLIonDrag());
+    else if( ForceModels[4] ) ForceTerms.push_back(new Term::SMOMLIonDrag());
+    else if( ForceModels[5] ) ForceTerms.push_back(new Term::HybridIonDrag());
+    else if( ForceModels[6] ) ForceTerms.push_back(new Term::DTOKSIonDrag());
+    else if( ForceModels[7] ) ForceTerms.push_back(new Term::DUSTTIonDrag());
+    if( ForceModels[8] ) ForceTerms.push_back(new Term::NeutralDrag());
+    if( ForceModels[9] ) ForceTerms.push_back(new Term::RocketForce());
+    
+    if( HeatModels[0] )  HeatTerms.push_back(new Term::EmissivityModel());
+    if( HeatModels[1] )  HeatTerms.push_back(new Term::EvaporationModel());
+    if( HeatModels[2] )  HeatTerms.push_back(new Term::NewtonCooling());
+    if( HeatModels[3] )  HeatTerms.push_back(new Term::NeutralHeatFlux());
+    if( HeatModels[11] ) HeatTerms.push_back(new Term::OMLElectronHeatFlux());
+    else if( HeatModels[10] ) HeatTerms.push_back(new Term::PHLElectronHeatFlux());
+    else if( HeatModels[16] ) HeatTerms.push_back(new Term::DTOKSElectronHeatFlux());
+    if( HeatModels[4] )  HeatTerms.push_back(new Term::SOMLIonHeatFlux());
+    else if( HeatModels[6] )  HeatTerms.push_back(new Term::SMOMLIonHeatFlux());
+    else if( HeatModels[14] ) HeatTerms.push_back(new Term::DTOKSIonHeatFlux());
+    else if( HeatModels[17] ) HeatTerms.push_back(new Term::DUSTTIonHeatFlux());
+    if( HeatModels[5] )  HeatTerms.push_back(new Term::SOMLNeutralRecombination());
+    else if( HeatModels[7] )  HeatTerms.push_back(new Term::SMOMLNeutralRecombination());
+    else if( HeatModels[15] ) HeatTerms.push_back(new Term::DTOKSNeutralRecombination());
+    if( HeatModels[8] )  HeatTerms.push_back(new Term::SEE());
+    else if( HeatModels[12] ) HeatTerms.push_back(new Term::DTOKSSEE());
+    if( HeatModels[9] )  HeatTerms.push_back(new Term::TEE());
+    else if( HeatModels[13] ) HeatTerms.push_back(new Term::DTOKSTEE());
+    
     cfg->destroy();
     if( !check_pdata_range() ){
         Config_Status = 3;
@@ -617,7 +664,7 @@ std::string Config_Filename){
             <<Pgrid.gridxmin<<"\t\t"<<Pgrid.gridxmax<<"\t\t"<<Pgrid.gridzmin
             <<"\t\t"<<Pgrid.gridzmax << "\n";
         Sim = new DTOKSU(AccuracyLevels, Sample, Pgrid, Pdata, WallBound, 
-            CoreBound, HeatModels, ForceModels, ChargeModels);
+            CoreBound, HeatTerms, ForceTerms, ChargeModel);
     }else{
         MetaDataFile <<"\n\n#PLASMA DATA PARAMETERS"
             <<"\n\nNn (m^-3)\tNi (m^-3)\tNe (m^-3)\n"
@@ -629,8 +676,8 @@ std::string Config_Filename){
             <<"\n\nPvel (m s^-1)\t\tE (V m^-1)\t\tB (T)\n"
             <<Pdata.PlasmaVel<<"\t"<<Pdata.ElectricField<<"\t"
             <<Pdata.MagneticField<<"\n";
-        Sim = new DTOKSU(AccuracyLevels, Sample, Pdata, HeatModels, ForceModels,
-            ChargeModels);
+        Sim = new DTOKSU(AccuracyLevels, Sample, Pdata, HeatTerms, ForceTerms,
+            ChargeModel);
     }
     MetaDataFile <<"\n\n##MODEL SWITHES\n#HEATING MODELS\n"
         <<"RadiativeCooling:\t" << HeatModels[0] 
@@ -1030,16 +1077,16 @@ int DTOKSU_Manager::read_MPSIdata(std::string plasma_dirname){
 #endif
 
 int DTOKSU_Manager::ChargeTest(double accuracy
-,std::array<bool,CMN> ChargeModels){
+,ChargingTerm* ChargeModel){
     DM_Debug("  In DTOKSU_Manager::ChargeTest(double accuracy"
-        << ",std::array<bool,CMN> ChargeModels)\n\n");
+        << ",ChargingTerm* ChargeModel)\n\n");
     if( Config_Status != -2 && Config_Status != -3 ){
         std::cerr << "\nDTOKSU Is not configured! Please configure first.";
         config_message();
         return 1;
     }
     ChargingModel MyChargeModel("Data/DTOKS_ChargeTest.txt",accuracy,
-        ChargeModels,Sample,Pdata);
+        ChargeModel,Sample,Pdata);
     bool cm_InGrid = MyChargeModel.update_plasmadata();
 
     //!< Need to manually update the first time as first step is not necessarily
@@ -1050,15 +1097,15 @@ int DTOKSU_Manager::ChargeTest(double accuracy
 
 }
 
-int DTOKSU_Manager::ForceTest(double accuracy,std::array<bool,FMN> ForceModels){
+int DTOKSU_Manager::ForceTest(double accuracy,std::vector<ForceTerm*> ForceTerms){
     DM_Debug("  In DTOKSU_Manager::ForceTest(double accuracy,"
-        << " std::array<bool,FMN> ForceModels)\n\n");
+        << " std::vector<ForceTerm*> ForceTerms)\n\n");
     if( Config_Status != -2 && Config_Status != -3 ){
         std::cerr << "\nDTOKSU Is not configured! Please configure first.";
         config_message();
         return 1;
     }
-    ForceModel MyForceModel("Data/DTOKS_ForceTest.txt",accuracy,ForceModels,
+    ForceModel MyForceModel("Data/DTOKS_ForceTest.txt",accuracy,ForceTerms,
         Sample,Pdata);
     bool fm_InGrid = MyForceModel.update_plasmadata();
 
@@ -1068,15 +1115,15 @@ int DTOKSU_Manager::ForceTest(double accuracy,std::array<bool,FMN> ForceModels){
     MyForceModel.Force(ForceTime);
 }
 
-int DTOKSU_Manager::HeatTest(double accuracy,std::array<bool,HMN> HeatModels){
+int DTOKSU_Manager::HeatTest(double accuracy,std::vector<HeatTerm*> HeatTerms){
     DM_Debug("  In DTOKSU_Manager::HeatTest(double accuracy,"
-        << " std::array<bool,HMN> HeatModels)\n\n");
+        << " std::vector<HeatTerm*> HeatTerms)\n\n");
     if( Config_Status != -2 && Config_Status != -3 ){
         std::cerr << "\nDTOKSU Is not configured! Please configure first.";
         config_message();
         return 1;
     }
-    HeatingModel MyHeatModel("Data/DTOKS_HeatTest.txt",accuracy,HeatModels,
+    HeatingModel MyHeatModel("Data/DTOKS_HeatTest.txt",accuracy,HeatTerms,
         Sample,Pdata);
     bool hm_InGrid = MyHeatModel.update_plasmadata();
 

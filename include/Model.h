@@ -177,6 +177,9 @@ class Model{
         /** @brief The total physics time for which simulation has been running
          */
         double TotalTime;
+        /** @brief The filename to which the results are written to
+         */
+        std::string FileName;
         /** @brief Data file where data relevant to physics model is printed
          */
         std::ofstream ModelDataFile;
@@ -277,7 +280,8 @@ class Model{
          *  @param pdata the spatially continuous plasma paramater data
          *  @param accuracy the accuracy to which the model is calculated
          */
-        Model(Matter *& sample, PlasmaData &pdata, float accuracy);
+        Model(std::string filename, Matter *& sample, PlasmaData &pdata, 
+            float accuracy);
 
         /** @brief PlasmaGrid constructor.
          *
@@ -288,7 +292,8 @@ class Model{
          *  @param pgrid the spatial grid over which plasma parameters are given
          *  @param accuracy the accuracy to which the model is calculated
          */
-        Model(Matter *& sample, PlasmaGrid_Data &pgrid, float accuracy);
+        Model(std::string filename, Matter *& sample, PlasmaGrid_Data &pgrid, 
+            float accuracy);
 
         /** @brief PlasmaData and PlasmaGrid constructor.
          *
@@ -300,8 +305,8 @@ class Model{
          *  @param pdata the spatially continuous plasma paramater data
          *  @param accuracy the accuracy to which the model is calculated
          */
-        Model(Matter *& sample, PlasmaGrid_Data &pgrid, PlasmaData &pdata, 
-            float accuracy );
+        Model(std::string filename, Matter *& sample, PlasmaGrid_Data &pgrid, 
+            PlasmaData &pdata, float accuracy );
         ///@}
 
         virtual ~Model(){};

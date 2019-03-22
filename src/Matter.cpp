@@ -28,6 +28,8 @@ struct GrainData MatterDefaults = {
     0.5,            //!< Heat Capacity      should be updated
     0,              //!< DeltaSec           should be updated
     0,              //!< DeltaTherm         should be updated
+    0,              //!< RE                 should be updated
+    0,              //!< RN                 should be updated
     0,              //!< Potential          should be updated
     false,          //!< Is Positive        should be updated
     {0.0,0.0,0.0},  //!< Dust position      should be updated

@@ -98,17 +98,16 @@ class DTOKSU{
          *  @param pdata the plasma data used in the simulation
          */
         DTOKSU( std::array<float,MN> alvls, Matter *& sample, PlasmaData &pdata,
-            std::array<bool,HMN> &heatmodels, std::array<bool,FMN> &forcemodels,
-            std::array<bool,CMN> &chargemodels);
+            std::vector<HeatTerm*> HeatTerms, 
+            std::vector<ForceTerm*> ForceTerms, ChargingTerm* ChargeModel);
 
         /** @brief pgrid constructor.
          *
          *  @param pgrid the plasma grid used in the simulation
          */
         DTOKSU( std::array<float,MN> alvls, Matter *& sample, 
-            PlasmaGrid_Data &pgrid, std::array<bool,HMN> &heatmodels, 
-            std::array<bool,FMN> &forcemodels, 
-            std::array<bool,CMN> &chargemodels);
+            PlasmaGrid_Data &pgrid, std::vector<HeatTerm*> HeatTerms, 
+            std::vector<ForceTerm*> ForceTerms, ChargingTerm* ChargeModel);
 
         /** @brief pdata and pgrid constructor.
          *
@@ -117,8 +116,8 @@ class DTOKSU{
          */
         DTOKSU( std::array<float,MN> alvls, Matter *& sample, 
             PlasmaGrid_Data &pgrid, PlasmaData &pdata, 
-            std::array<bool,HMN> &heatmodels, std::array<bool,FMN> &forcemodels,
-            std::array<bool,CMN> &chargemodels);
+            std::vector<HeatTerm*> HeatTerms, 
+            std::vector<ForceTerm*> ForceTerms, ChargingTerm* ChargeModel);
 
         /** @brief boundary constructor.
          *
@@ -128,9 +127,8 @@ class DTOKSU{
          */
         DTOKSU( std::array<float,MN> alvls, Matter *& sample, 
             PlasmaGrid_Data &pgrid, PlasmaData &pdata, Boundary_Data &wbound, 
-            Boundary_Data &cbound, std::array<bool,HMN> &heatmodels, 
-            std::array<bool,FMN> &forcemodels, 
-            std::array<bool,CMN> &chargemodels);
+            Boundary_Data &cbound, std::vector<HeatTerm*> HeatTerms, 
+            std::vector<ForceTerm*> ForceTerms, ChargingTerm* ChargeModel);
         ///@}
 
         ~DTOKSU(){

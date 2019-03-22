@@ -19,58 +19,59 @@ Model(){
 }
 
 HeatingModel::HeatingModel(std::string filename, float accuracy, 
-std::array<bool,HMN> &models, Matter *& sample, PlasmaData &pdata):
-Model(sample,pdata,accuracy){
+std::vector<HeatTerm*> heatterms, Matter *& sample, PlasmaData &pdata):
+Model(filename,sample,pdata,accuracy){
     H_Debug("\n\nIn HeatingModel::HeatingModel(std::string filename, "
-        << "float accuracy, std::array<bool,HMN> &models, Matter *& sample,"
-        << " PlasmaData const *&pdata) : Model(sample,pdata,accuracy)\n\n");
+        << "float accuracy, std::vector<HeatTerm*> heatterms, "
+        << "Matter *& sample, PlasmaData const *&pdata) : "
+        << "Model(sample,pdata,accuracy)\n\n");
     Defaults();
-    UseModel = models;
+    HeatTerms = heatterms;
     CreateFile(filename,false);
 }
 
 HeatingModel::HeatingModel(std::string filename, float accuracy, 
-std::array<bool,HMN> &models, Matter *& sample, PlasmaData *pdata):
-Model(sample,*pdata,accuracy){
+std::vector<HeatTerm*> heatterms, Matter *& sample, PlasmaData *pdata):
+Model(filename,sample,*pdata,accuracy){
     H_Debug("\n\nIn HeatingModel::HeatingModel(std::string filename, "
-        << "float accuracy, std::array<bool,HMN> &models, Matter *& sample, "
-        << "PlasmaData const *&pdata) : Model(sample,pdata,accuracy)\n\n");
+        << "float accuracy, std::vector<HeatTerm*> heatterms, "
+        << "Matter *& sample, PlasmaData const *&pdata) : "
+        << "Model(sample,pdata,accuracy)\n\n");
     Defaults();
-    UseModel = models;
+    HeatTerms = heatterms;
     CreateFile(filename,false);
 }
 
 HeatingModel::HeatingModel(std::string filename, float accuracy, 
-std::array<bool,HMN> &models,Matter *& sample, PlasmaGrid_Data &pgrid):
-Model(sample,pgrid,accuracy){
+std::vector<HeatTerm*> heatterms,Matter *& sample, PlasmaGrid_Data &pgrid):
+Model(filename,sample,pgrid,accuracy){
     H_Debug("\n\nIn HeatingModel::HeatingModel(std::string filename, "
-        << "float accuracy, std::array<bool,HMN> &models, Matter *& sample, "
-        << "PlasmaGrid const &pgrid) : Model(sample,pgrid,accuracy)\n\n");
+        << "float accuracy, std::vector<HeatTerm*> heatterms, "
+        << "Matter *& sample, PlasmaGrid const &pgrid) : "
+        << "Model(sample,pgrid,accuracy)\n\n");
     Defaults();
-    UseModel = models;
+    HeatTerms = heatterms;
     CreateFile(filename,false);
 }
 
 HeatingModel::HeatingModel(std::string filename, float accuracy, 
-std::array<bool,HMN> &models, Matter *& sample, PlasmaGrid_Data &pgrid,
+std::vector<HeatTerm*> heatterms, Matter *& sample, PlasmaGrid_Data &pgrid,
 PlasmaData &pdata):
-Model(sample,pgrid,pdata,accuracy){
+Model(filename,sample,pgrid,pdata,accuracy){
     H_Debug("\n\nIn HeatingModel::HeatingModel(std::string filename, "
-        << "float accuracy, std::array<bool,HMN> &models, Matter *& sample, "
-        << "PlasmaGrid const &pgrid) : Model(sample,pgrid,accuracy)\n\n");
+        << "float accuracy, std::vector<HeatTerm*> heatterms, "
+        << "Matter *& sample, PlasmaGrid const &pgrid) : "
+        << "Model(sample,pgrid,accuracy)\n\n");
     Defaults();
-    UseModel = models;
+    HeatTerms = heatterms;
     CreateFile(filename,false);
 }
 
 void HeatingModel::Defaults(){
     H_Debug("\tIn HeatingModel::Defaults()\n\n");
-    UseModel = {false,false,false,false,false,false,false};
     PowerIncident = 0;                      //!< kW, Power Incident
     OldTemp = Sample->get_temperature();    //!< Set default OldTemp
     ThermalEquilibrium = false;
-    RE = 0.0;
-    RN = 0.0;
 }
 
 void HeatingModel::CreateFile(std::string filename){
@@ -94,44 +95,14 @@ void HeatingModel::CreateFile(std::string filename, bool PrintPhaseData){
         ModelDataFile << "\tCv";
     if( Sample->get_c(3) == 'v' || Sample->get_c(3) == 'V' )    
         ModelDataFile << "\tVapourP";
-    if( UseModel[0] )                   
-        ModelDataFile << "\tEmissLoss";
-    if( UseModel[0] && (Sample->get_c(0) == 'f' || Sample->get_c(0) == 'F') )   
-        ModelDataFile << "\tEmissiv";
-    if( UseModel[1] )  
-        ModelDataFile << "\tEvapRate\tEvapLoss\tEvapMassLoss";
-    if( UseModel[2] )  
-        ModelDataFile << "\tNewton";
-    if( UseModel[3] )  
-        ModelDataFile << "\tNeutralFlux\tNeutralHeatFlux";
-    if( UseModel[4] )  
-        ModelDataFile << "\tSOMLIonFlux\tSOMLIonHeatFlux";
-    if( UseModel[5] )  
-        ModelDataFile << "\tSOMLNeutralRecomb";
-    if( UseModel[6] )  
-        ModelDataFile << "\tSMOMLIonFlux\tSMOMLIonHeatFlux";
-    if( UseModel[7] )  
-        ModelDataFile << "\tSMOMLNeutralRecomb";
-    if( UseModel[8] )  
-        ModelDataFile << "\tSEE";
-    if( UseModel[9] )  
-        ModelDataFile << "\tTEE";
-    if( UseModel[10] ) 
-        ModelDataFile << "\tPHLElectronFlux\tPHLElectronHeatFlux";
-    if( UseModel[11] ) 
-        ModelDataFile << "\tOMLElectronFlux\tOMLElectronHeatFlux";
-    if( UseModel[12] ) 
-        ModelDataFile << "\tDTOKSSEE";
-    if( UseModel[13] ) 
-        ModelDataFile << "\tDTOKSTEE";
-    if( UseModel[14] ) 
-        ModelDataFile << "\tDTOKSIonFlux\tDTOKSIonHeatFlux";
-    if( UseModel[15] ) 
-        ModelDataFile << "\tDTOKSNeutralRecomb";
-    if( UseModel[16] ) 
-        ModelDataFile << "\tDTOKSElectronFlux\tDTOKSElectronHeatFlux";
-    if( UseModel[17] ) 
-        ModelDataFile << "\tDUSTTIonFlux\tDUSTTIonHeatFlux";
+    
+    //!< Loop over heat terms and print their names
+    for(auto iter = HeatTerms.begin(); iter != HeatTerms.end(); ++iter) {
+        ModelDataFile << "\t" << (*iter)->PrintName();
+        if( (*iter)->PrintName() == "EmissivityModel" &&
+            (Sample->get_c(0) == 'f' || Sample->get_c(0) == 'F') )   
+            ModelDataFile << "\tEmissiv";
+    }
 
     ModelDataFile << "\n";
     Print();
@@ -152,14 +123,18 @@ double HeatingModel::ProbeTimeStep()const{
     //!< of current mass.
     //!< If this timestep is quicker than current step, change timestep
     if( TotalPower != 0 ){
-        if( UseModel[1] && Sample->is_liquid() ){
-            double MassTimeStep = fabs((0.01*Sample->get_mass()*AvNo)
-                /(EvaporationFlux(Sample->get_temperature())*
-                Sample->get_atomicmass()));
-            if( MassTimeStep < timestep ){
-                H_Debug("\nMass is limiting time step\nMassTimeStep = " 
-                    << MassTimeStep << "\ntimestep = " << timestep);
-                timestep = MassTimeStep;
+        for(auto iter = HeatTerms.begin(); iter != HeatTerms.end(); ++iter) {
+            if( (*iter)->PrintName() == "EvaporationModel" ){
+                if( Sample->is_liquid() ){
+                    double MassTimeStep = fabs((0.01*Sample->get_mass()*AvNo)
+                        /(Flux::EvaporationFlux(Sample,Pdata,Sample->get_temperature())*
+                        Sample->get_atomicmass()));
+                    if( MassTimeStep < timestep ){
+                        H_Debug("\nMass is limiting time step\nMassTimeStep = " 
+                            << MassTimeStep << "\ntimestep = " << timestep);
+                        timestep = MassTimeStep;
+                    }
+                }
             }
         }
     }else{
@@ -182,13 +157,6 @@ double HeatingModel::ProbeTimeStep()const{
     if( Sample->get_temperature() != Sample->get_superboilingtemp() && 
         Sample->get_temperature() != Sample->get_meltingtemp() 
         && ContinuousPlasma ){
-        // && (!UseModel[1] && Sample->is_liquid()) ){
-
-        static bool runOnce = true;
-        std::string Warning = "THERMAL EQUILIBRIUM IN CONTINUOUS PLASMA MAY";
-        Warning += " NOT WORK!\nOldTemp is only redefined inside";
-        Warning += " UpdateTimeStep, not ProbeTimeStep! CAUTION!";
-        WarnOnce(runOnce,Warning);
 
         //!< If temperature changed sign this step
         if( ((Sample->get_temperature()-OldTemp > 0 && DeltaTempTest < 0) 
@@ -197,7 +165,8 @@ double HeatingModel::ProbeTimeStep()const{
                 << " Sign change of Temperature change!";
             timestep = 1;
         //!< If Temperature gradient is less than 1%
-        }if( (fabs(DeltaTempTest/timestep) < 0.01) ){ 
+        }
+        if( (fabs(DeltaTempTest/timestep) < 0.01) ){ 
             std::cout << "\n\nThermal Equilibrium reached on condition (3): "
                 << " Temperature Gradient < 0.01!";
             timestep = 1;
@@ -217,8 +186,8 @@ double HeatingModel::UpdateTimeStep(){
     H_Debug( "\tIn HeatingModel::UpdateTimeStep()\n\n" );
 
     TimeStep = ProbeTimeStep();
-    if( TimeStep == 1 )     ThermalEquilibrium = true;
     OldTemp = Sample->get_temperature();
+    if( TimeStep == 1 ) ThermalEquilibrium = true;
 
     return TimeStep;
 }
@@ -237,100 +206,28 @@ void HeatingModel::Print(){
     if( Sample->get_c(3) == 'v' || Sample->get_c(3) == 'V' )    
         ModelDataFile << "\t" << Sample->get_vapourpressure();
 
-    if( UseModel[0] )   
-        ModelDataFile   << "\t" << EmissivityModel(Sample->get_temperature());
-    if( UseModel[0] && (Sample->get_c(0) == 'f' || Sample->get_c(0) == 'F') )
-        ModelDataFile   << "\t" << Sample->get_emissivity();
-    if( UseModel[1] && Sample->is_liquid() ) //!< Check is liquid!
-        ModelDataFile   << "\t" << EvaporationFlux(Sample->get_temperature()) 
-            << "\t" << EvaporationModel(Sample->get_temperature())*1000
-            << "\t" << EvaporationFlux(Sample->get_temperature())*
-            Sample->get_atomicmass()/AvNo;
-    else if( UseModel[1] ) //!< If evaporation is turned off
-        ModelDataFile   << "\t" << 0 << "\t" << 0 << "\t" << 0;
-    if( UseModel[2] )   
-        ModelDataFile   << "\t" << NewtonCooling(Sample->get_temperature());
-
-    if( Pdata->IonTemp > 0 && Pdata->mi > 0 ){ //!< Check if models are valid
-        if( UseModel[3] )
-            ModelDataFile << "\t" << NeutralFlux() 
-                << "\t" << NeutralHeatFlux(Sample->get_temperature());
-        if( UseModel[4] )   
-            ModelDataFile << "\t" << SOMLIonFlux(Sample->get_potential()) 
-                << "\t" << SOMLIonHeatFlux(Sample->get_temperature());
-        if( UseModel[5] )   
-            ModelDataFile << "\t" 
-                << SOMLNeutralRecombination(Sample->get_temperature());
-        if( UseModel[6] )   
-            ModelDataFile << "\t" << SMOMLIonFlux(Sample->get_potential()) 
-                << "\t" << SMOMLIonHeatFlux(Sample->get_temperature());
-        if( UseModel[7] )   
-            ModelDataFile << "\t" 
-                << SMOMLNeutralRecombination(Sample->get_temperature());
-        
-    }else{ //!< Else, if models are still on print zeros for now
-        if( UseModel[3] )
-            ModelDataFile << "\t" << 0.0 << "\t" << 0.0;
-        if( UseModel[4] )   
-            ModelDataFile << "\t" << 0.0 << "\t" << 0.0;
-        if( UseModel[5] )   
-            ModelDataFile << "\t" << 0.0;
-        if( UseModel[6] )   
-            ModelDataFile << "\t" << 0.0 << "\t" << 0.0;
-        if( UseModel[7] )   
-            ModelDataFile << "\t" << 0.0;
+    //!< Loop over heat terms and print their values
+    for(auto iter = HeatTerms.begin(); iter != HeatTerms.end(); ++iter) {
+        ModelDataFile << "\t" << (*iter)->
+            Evaluate(Sample, Pdata, Sample->get_temperature());
+        if( (*iter)->PrintName() == "EmissivityModel" ){
+            ModelDataFile << "\t" << (*iter)->
+                Evaluate(Sample, Pdata, Sample->get_temperature());
+            if (Sample->get_c(0) == 'f' || Sample->get_c(0) == 'F'){
+                ModelDataFile   << "\t" << Sample->get_emissivity();
+            }
+        }else if( (*iter)->PrintName() == "EvaporationModel" ){
+            if( Sample->is_liquid() ){
+                ModelDataFile << "\t" << (*iter)->
+                    Evaluate(Sample, Pdata, Sample->get_temperature())*1000;
+            }else{ //!< If evaporation is turned off
+                ModelDataFile   << "\t" << 0 << "\t" << 0 << "\t" << 0;
+            }
+        }else{
+            ModelDataFile << "\t" << (*iter)->
+                Evaluate(Sample, Pdata, Sample->get_temperature());;
+        }
     }
-
-    //!< Check if model are valid
-    if( Pdata->ElectronTemp > 0 && Pdata->ElectronDensity > 0
-        && Pdata->MagneticField.mag3() > 0 && Pdata->IonTemp > 0 )
-        if( UseModel[8] )   
-                ModelDataFile << "\t" << SEE(Sample->get_temperature());
-    else //!< Else, if models are still on print zeros for now
-        if( UseModel[8] )   ModelDataFile << "\t" << 0.0;
-
-    if( UseModel[9] )   
-        ModelDataFile << "\t" << TEE(Sample->get_temperature());
-
-    //!< Check if model are valid
-    if( Pdata->ElectronTemp > 0 && Pdata->ElectronDensity > 0
-        && Pdata->MagneticField.mag3() > 0 && Pdata->IonTemp > 0 )
-        if( UseModel[10] )  
-            ModelDataFile << "\t" << PHLElectronFlux(Sample->get_potential()) 
-                << "\t" << PHLElectronHeatFlux(Sample->get_temperature());
-    else
-        if( UseModel[10] ) ModelDataFile << "\t" << 0.0 << "\t" << 0.0;
-
-    if( UseModel[11] )  
-        ModelDataFile << "\t" << OMLElectronFlux(Sample->get_potential()) 
-            << "\t" << OMLElectronHeatFlux(Sample->get_temperature());
-    if( UseModel[12] )  
-        ModelDataFile << "\t" << DTOKSSEE(Sample->get_temperature());
-    if( UseModel[13] )  
-        ModelDataFile << "\t" << DTOKSTEE(Sample->get_temperature());
-
-
-    if( Pdata->IonTemp > 0 && Pdata->mi > 0 ) //!< Check if models are valid
-        if( UseModel[14] )  
-            ModelDataFile << "\t" << DTOKSIonFlux(Sample->get_potential()) 
-                << "\t" << DTOKSIonHeatFlux(Sample->get_temperature());
-    else
-        if( UseModel[14] ) ModelDataFile << "\t" << 0.0 << "\t" << 0.0;
-
-    if( UseModel[15] )  
-        ModelDataFile << "\t" 
-            << DTOKSNeutralRecombination(Sample->get_temperature());
-    if( UseModel[16] )  
-        ModelDataFile << "\t" << DTOKSElectronFlux(Sample->get_potential()) 
-            << "\t" << DTOKSElectronHeatFlux(Sample->get_temperature());
-
-    if( Pdata->IonTemp > 0 && Pdata->mi > 0 
-        && Pdata->ElectronTemp > 0 ) //!< Check if models are valid
-        if( UseModel[17] )  
-            ModelDataFile << "\t" << SOMLIonFlux(Sample->get_potential()) 
-                << "\t" << DUSTTIonHeatFlux(Sample->get_temperature());
-    else
-        if( UseModel[17] ) ModelDataFile << "\t" << 0.0 << "\t" << 0.0;
 
     ModelDataFile << "\n";
     ModelDataFile.close();
@@ -374,10 +271,8 @@ const int HeatingModel::Vapourise(){
 
 void HeatingModel::UpdateRERN(){
     //!< If it's positive, Ions aren't backscattered
-    if( Sample->is_positive() ){ 
-        RN = 0.0;
-        RE = 0.0;
-    }else{
+    double RE(0.0), RN(0.0);
+    if( !Sample->is_positive() ){
         backscatter(Pdata->ElectronTemp,Pdata->IonTemp,Pdata->mi,
             Sample->get_potential(),Sample->get_elem(),RE,RN);
     }
@@ -395,6 +290,7 @@ void HeatingModel::UpdateRERN(){
         Warning += "Ion Heat Flux affected by backscattering by more than 10%!";
         WarnOnce(runOnce,Warning);
     }
+    Sample->set_rern(RE,RN);
 }
 
 void HeatingModel::Heat(double timestep){
@@ -412,14 +308,17 @@ void HeatingModel::Heat(double timestep){
 
     //!< Account for evaporative mass loss, if model is turned on, if it's a 
     //!< liquid and not boiling!
-    if( UseModel[1] && Sample->is_liquid() 
-        && (Sample->get_temperature() != Sample->get_boilingtemp()) )
-        Sample->update_mass( 
-            (timestep*EvaporationFlux(Sample->get_temperature())*
-            Sample->get_atomicmass())/AvNo );
+    for(auto iter = HeatTerms.begin(); iter != HeatTerms.end(); ++iter) {
+        if( (*iter)->PrintName() == "EvaporationModel" )
+            if( Sample->is_liquid()
+                && (Sample->get_temperature() != Sample->get_boilingtemp()) )
+                Sample->update_mass( 
+                    (timestep*Flux::EvaporationFlux(Sample,Pdata,Sample->get_temperature())*
+                    Sample->get_atomicmass())/AvNo );
+    }
 
     H1_Debug("\t\tMass Loss = " 
-        << (timestep*EvaporationFlux(Sample->get_temperature())*
+        << (timestep*Flux::EvaporationFlux(Sample,Pdata,Sample->get_temperature())*
         Sample->get_atomicmass())/AvNo << "\n");
 
     if( !Sample->is_gas() )
@@ -440,83 +339,25 @@ double HeatingModel::CalculatePower(double DustTemperature)const{
     H_Debug( "\tIn HeatingModel::CalculatePower(double DustTemperature = " 
         << DustTemperature << ")\n\n");
     //!< Rreduces the number of divisions
-    double TotalPower = PowerIncident*1000; 
+    double TotalPower = PowerIncident*1000;
+    H1_Debug("\n\n\tPowerIncident = \t"    << PowerIncident*1000 << "W");
     
-    if( UseModel[0] )  TotalPower -= EmissivityModel(DustTemperature);
-    if( UseModel[1] && Sample->is_liquid() )    
-        TotalPower -= EvaporationModel              (DustTemperature)*1000;
-    if( UseModel[2] )  TotalPower -= NewtonCooling  (DustTemperature);
-    if( Pdata->IonTemp > 0 && Pdata->mi > 0 ){ //!< Check if models are valid
-        if( UseModel[3] )  
-            TotalPower += NeutralHeatFlux           (DustTemperature);
-        if( UseModel[4] )  
-            TotalPower += SOMLIonHeatFlux           (DustTemperature);
-        if( UseModel[5] )  
-            TotalPower += SOMLNeutralRecombination  (DustTemperature);
-        if( UseModel[6] )  
-            TotalPower += SMOMLIonHeatFlux          (DustTemperature);
-        if( UseModel[7] )  
-            TotalPower += SMOMLNeutralRecombination (DustTemperature);
+    //!< Loop over heat terms and print their names
+    for(auto iter = HeatTerms.begin(); iter != HeatTerms.end(); ++iter) {
+        if( (*iter)->PrintName() == "EvaporationModel" ){
+            if( Sample->is_liquid() ){
+                TotalPower += (*iter)
+                    ->Evaluate(Sample, Pdata, DustTemperature)*1000;
+            }
+        }else{
+            TotalPower 
+                += (*iter)->Evaluate(Sample, Pdata, DustTemperature);
+        }
+        H1_Debug("\n\t" << (*iter)->PrintName() << "= \t"  
+            << (*iter)->Evaluate(Sample, Pdata, DustTemperature)  << "W");
     }
-    if( Pdata->ElectronTemp > 0 && Pdata->ElectronDensity > 0
-        && Pdata->MagneticField.mag3() > 0 && Pdata->IonTemp > 0 ){
-        if( UseModel[8] )  
-            TotalPower -= SEE                       (DustTemperature);  
-    }
-    if( UseModel[9] )  TotalPower -= TEE            (DustTemperature);
-    if( Pdata->ElectronTemp > 0 && Pdata->ElectronDensity > 0
-        && Pdata->MagneticField.mag3() > 0 && Pdata->IonTemp > 0 ){
-        if( UseModel[10] ) 
-            TotalPower += PHLElectronFlux           (DustTemperature);
-    }
-    if( UseModel[11] ) TotalPower += OMLElectronFlux(DustTemperature);
-    if( UseModel[12] ) TotalPower -= DTOKSSEE       (DustTemperature);  
-    if( UseModel[13] ) TotalPower -= DTOKSTEE       (DustTemperature);
-    if( Pdata->IonTemp > 0 && Pdata->mi > 0 ){ //!< Check if models are valid
-        if( UseModel[14] ) 
-            TotalPower += DTOKSIonHeatFlux          (DustTemperature);
-    }
-    if( UseModel[15] ) TotalPower += DTOKSNeutralRecombination(DustTemperature);
-    if( UseModel[16] ) TotalPower += DTOKSElectronFlux        (DustTemperature);
-    if( Pdata->IonTemp > 0 && Pdata->mi > 0 
-        && Pdata->ElectronTemp > 0 ){ //!< Check if models are valid
-        if( UseModel[17] ) TotalPower += DUSTTIonHeatFlux     (DustTemperature);
-    }
-
     TotalPower = TotalPower/1000;
 
-    H1_Debug("\n\n\tPowerIncident = \t"    << PowerIncident*1000 << "W");
-    H1_Debug("\n\tEmissivityModel() = \t"  << -EmissivityModel(DustTemperature) 
-        << "W");
-    H1_Debug("\n\tEvaporationModel() = \t" 
-        << -EvaporationModel(DustTemperature)*1000  << "W");
-    H1_Debug("\n\tNewtonCooling() = \t"    << -NewtonCooling(DustTemperature) 
-        << "W");
-    H1_Debug("\n\tNeutralHeatFlux() = \t"  << NeutralHeatFlux(DustTemperature) 
-        << "W");
-    H1_Debug("\n\tSOMLIonHeatFlux() = \t"  << SOMLIonHeatFlux(DustTemperature) 
-        << "W");
-    H1_Debug("\n\tSOMLNeutralRecombination() = \t"  
-        << SOMLNeutralRecombination(DustTemperature) << "W");
-    H1_Debug("\n\tSEE() = \t"              << SEE(DustTemperature) 
-        << "W");
-    H1_Debug("\n\tTEE() = \t"              << TEE(DustTemperature) 
-        << "W");
-    H1_Debug("\n\tPHLElectronFlux() = \t"  << PHLElectronFlux(DustTemperature) 
-        << "W");
-    H1_Debug("\n\tOMLElectronFlux() = \t"  << OMLElectronFlux(DustTemperature) 
-        << "W");
-    H1_Debug("\n\tDTOKSSEE() = \t"         << DTOKSSEE(DustTemperature) << "W");
-    H1_Debug("\n\tDTOKSTEE() = \t"         << DTOKSTEE(DustTemperature) << "W");
-    H1_Debug("\n\tDTOKSIonHeatFlux() = \t" << DTOKSIonHeatFlux(DustTemperature) 
-        << "W");
-    H1_Debug("\n\tDTOKSNeutralRecombination() = \t"
-        << DTOKSNeutralRecombination(DustTemperature)    << "W");
-    H1_Debug("\n\tDTOKSElectronFlux() = \t"<< DTOKSElectronFlux(DustTemperature)
-        << "W");
-    H1_Debug("\n\tDUSTTIonHeatFlux() = \t" << DUSTTIonHeatFlux(DustTemperature)
-        << "W");
-    //std::cin.get();
     H1_Debug("\nTotalPower = \t"           << TotalPower*1000 << "W\n");
     return TotalPower;
 }
@@ -555,284 +396,3 @@ double HeatingModel::RungeKutta4(double timestep){
         << "\nk3 = " << k3 << "\nk4 = " << k4);
     return (timestep/6)*(k1+2*k2+2*k3+k4);
 };
-
-
-// ***************************** HEATING MODELS ***************************** //
-
-//!< Using Stefan-Boltzmann Law, returns Energy lost per second in Kila Joules
-const double HeatingModel::EmissivityModel(double DustTemperature)const{
-    H_Debug("\n\tIn HeatingModel::EmissivityModel(double DustTemperature):"
-        << "\n\n");
-    //!< Energy emitted from a sample converted to kJ
-    return Sample->get_emissivity()*Sample->get_surfacearea()*Sigma
-            *(pow(DustTemperature,4)-pow(Pdata->AmbientTemp,4));
-}
-
-//!< http://users.wfu.edu/ucerkb/Nan242/L06-Vacuum_Evaporation.pdf, 
-//!< https://en.wikipedia.org/wiki/Hertz%E2%80%93Knudsen_equation
-//!< Using Hertz–Knudsen equation, returns Energy lost per second in Kila Joules
-//!< MASS LOSS EQUATION 
-//!< http://www.leb.eei.uni-erlangen.de/
-//!< winterakademie/2006/result/content/course01/pdf/0102.pdf
-const double HeatingModel::EvaporationModel(double DustTemperature)const{
-    H_Debug("\n\tIn HeatingModel::EvaporationModel():\n\n");
-
-    //!< Approximate emitted energy as mean maxwell
-    //!< This used to be multiplied by 1000 which is why it was significant.
-    //!< Converted to kJ.
-    double MaxwellEnergy = (3.0*Kb*DustTemperature/(2.0*1000.0)); 
-    //double MaxwellMeanVelocity = sqrt((8*Kb*DustTemperature)/
-    //(AtomicMass*1000*AMU));
-
-    double EvapFlux = EvaporationFlux(DustTemperature);
-
-    if( EvapFlux != EvapFlux ){ 
-        std::cout << "\n\nError! EvapFlux = " << EvapFlux << "\n";
-        throw std::exception(); 
-    }
-
-    //!< See GrainStructs.h for more info on 'bondenergy'. 
-    //!< Added to account for energy lost by breaking bonds.
-    return EvapFlux*(MaxwellEnergy+Sample->get_bondenergy()/AvNo); 
-}
-
-const double HeatingModel::EvaporationFlux(double DustTemperature)const{
-    H_Debug("\n\tIn HeatingModel::EvaporationFlux():\n\n");
-    double AmbientPressure = Pdata->NeutralDensity*Kb*Pdata->NeutralTemp;
-
-    double StickCoeff = 1.0;
-    return (StickCoeff*Sample->get_surfacearea()*AvNo*
-        (Sample->get_vapourpressure()-AmbientPressure))/
-        sqrt(2*PI*Sample->get_atomicmass()*R*DustTemperature);
-}
-
-//!< VERY APPROXIMATE MODEL: Atmosphere assumed to be 300 degrees always,
-//!< rough heat transfer coefficient is use
-//!< https://en.wikipedia.org/wiki/Newton%27s_law_of_cooling
-const double HeatingModel::NewtonCooling(double DustTemperature)const{
-    H_Debug("\n\tIn HeatingModel::NewtonCooling():\n\n");
-    static bool runOnce = true;
-    std::string Warning = "In HeatingModel::NewtonCooling():\nHeatTransair ";
-    Warning += "Coefficient wrong for Tungsten, Beryllium, Graphite, Helium,";
-    Warning += " Lithium & Molybdenum.";
-    WarnOnce(runOnce,Warning);
-
-    return (Sample->get_heattransair()*Sample->get_surfacearea()*
-        (DustTemperature-Pdata->AmbientTemp)); 
-}   
-
-const double HeatingModel::NeutralHeatFlux(double DustTemperature)const{
-    H_Debug("\n\tIn HeatingModel::NeutralHeatFlux(double DustTemperature)"
-        << ":\n\n");
-    return Sample->get_surfacearea()*NeutralFlux()*
-        (Pdata->NeutralTemp-DustTemperature)*Kb;
-}
-
-// ************************** SOML/OML/PHL MODELS ************************** //
-
-const double HeatingModel::SEE(double DustTemperature)const{
-    H_Debug("\n\tIn HeatingModel::SEE():\n\n");
-    double ConvertKtoev(8.6173303e-5);
-    return Sample->get_surfacearea()*PHLElectronFlux(Sample->get_potential())*
-        sec(Pdata->ElectronTemp*ConvertKtoev,Sample->get_elem())*echarge*
-        (3.0+Sample->get_workfunction()); 
-}
-
-const double HeatingModel::TEE(double DustTemperature)const{
-    H_Debug("\n\tIn HeatingModel::TEE():\n\n");
-    if( Sample->get_potential() >= 0.0){
-        return Sample->get_surfacearea()*Richardson*pow(DustTemperature,2)*
-            exp(-Sample->get_workfunction()*echarge/(Kb*DustTemperature))*
-            (2.0*Kb*DustTemperature+echarge*Sample->get_workfunction())/echarge;
-    }else{
-        //<! See [1] V. E. Fortov, A. V. Ivlev, S. A. Khrapak, A. G. Khrapak, 
-        //<! and G. E. Morfill, Phys. Rep. 421, 1 (2005).
-        //<! Page 23, section 3.3
-        return Sample->get_surfacearea()*Richardson*pow(DustTemperature,2)*
-            (1.0-Sample->get_potential()*
-            (Pdata->ElectronTemp/Sample->get_temperature()))*
-            exp((Sample->get_potential()*Kb*Pdata->ElectronTemp-
-            Sample->get_workfunction()*echarge)/(Kb*DustTemperature))*
-            (2.0*Kb*DustTemperature+echarge*Sample->get_workfunction())/echarge;
-    }
-}
-
-const double HeatingModel::PHLElectronHeatFlux(double DustTemperature)const{ 
-
-    H_Debug("\n\tIn HeatingModel::PHLElectronHeatFlux():\n\n");
-    //!< Only for a negative grain
-    return Sample->get_surfacearea()*PHLElectronFlux(Sample->get_potential())*
-        Kb*(Pdata->ElectronTemp-DustTemperature);
-}
-
-const double HeatingModel::SOMLIonHeatFlux(double DustTemperature)const{ 
-    H_Debug("\n\tIn HeatingModel::SOMLIonHeatFlux(double DustTemperature):"
-        <<"\n\n");
-    // Assuming Re = 0
-    return Sample->get_surfacearea()*(1.0-RE)*
-        SOMLIonFlux(Sample->get_potential())*Pdata->IonTemp*Kb; 
-}
-
-const double HeatingModel::SOMLNeutralRecombination(double DustTemperature)const
-{
-    H_Debug("\n\tIn HeatingModel::SOMLNeutralRecombination():\n\n");
-    //!< Neutral Recombination assuming Rn=0; fraction of backscattered 
-    //!< ions/neutrals is zero.
-    return Sample->get_surfacearea()*(1.0-RN)*
-        (14.7*echarge - 2.0*Kb*DustTemperature)*
-        SOMLIonFlux(Sample->get_potential()); 
-}
-
-const double HeatingModel::SMOMLIonHeatFlux(double DustTemperature)const{ 
-    H_Debug("\n\tIn HeatingModel::SMOMLIonHeatFlux(double DustTemperature):"
-        << "\n\n");
-    // Assuming Re = 0
-    return Sample->get_surfacearea()*(1.0-RE)*
-    SMOMLIonFlux(Sample->get_potential())*Pdata->IonTemp*Kb;
-}
-
-const double HeatingModel::SMOMLNeutralRecombination(double DustTemperature)
-const{
-    H_Debug("\n\tIn HeatingModel::SMOMLNeutralRecombination():\n\n");
-    // Neutral Recombination assuming Rn=0; fraction of backscattered 
-    // ions/neutrals is zero.
-    return Sample->get_surfacearea()*(1.0-RN)*
-        (14.7*echarge - 2.0*Kb*DustTemperature)*
-        SMOMLIonFlux(Sample->get_potential()); 
-}
-
-
-const double HeatingModel::OMLElectronHeatFlux(double DustTemperature)const{ 
-    H_Debug("\n\tIn HeatingModel::OMLElectronHeatFlux():\n\n");
-    // Only for a negative grain
-    return Sample->get_surfacearea()*OMLElectronFlux(Sample->get_potential())*
-        Kb*(Pdata->ElectronTemp-DustTemperature);
-}
-
-// ****************************** DTOKS MODELS ****************************** //
-
-const double HeatingModel::DTOKSSEE(double DustTemperature)const{
-    H_Debug("\n\tIn HeatingModel::DTOKSSEE():\n\n");
-    //!< Electrons released all re-captured by positive dust grain
-    double SEE=0; 
-    if( !Sample->is_positive() ) // Dust grain is negative
-        SEE = Sample->get_surfacearea()*
-            OMLElectronFlux(Sample->get_potential())*Sample->get_deltasec()*
-            echarge*(3.0+Sample->get_workfunction()); 
-    //!< else, electrons captured by positive grain, return zero
-    return SEE; 
-}
-
-const double HeatingModel::DTOKSTEE(double DustTemperature)const{
-    H_Debug("\n\tIn HeatingModel::DTOKSTEE():\n\n");
-    //!< Electrons released all re-captured by positive dust grain
-    double TEE=0;
-    if( !Sample->is_positive() ) // Dust grain is negative
-        TEE = Sample->get_surfacearea()*Sample->get_deltatherm()*
-            OMLElectronFlux(Sample->get_potential())*
-            (2.0*Kb*DustTemperature+echarge*Sample->get_workfunction()); 
-    //!< else, electrons captured by positive grain, return zero
-
-    return TEE;
-}
-
-const double HeatingModel::DTOKSIonHeatFlux(double DustTemperature)const{ 
-    H_Debug("\n\tIn HeatingModel::DTOKSIonHeatFlux(double DustTemperature):"
-        << "\n\n");
-    // Assuming Re = 0
-    return (Sample->get_surfacearea()*(1.0-RE)*
-        DTOKSIonFlux(Sample->get_potential())*Pdata->IonTemp*Kb)*
-        (2.0+2.0*Sample->get_potential()*(Pdata->ElectronTemp/Pdata->IonTemp)+
-        pow(Sample->get_potential()*(Pdata->ElectronTemp/Pdata->IonTemp),2.0))/
-        (1.0+Sample->get_potential()*(Pdata->ElectronTemp/Pdata->IonTemp)); 
-    // Convert from Joules to KJ
-}
-
-
-const double HeatingModel::DTOKSNeutralRecombination(double DustTemperature)
-const{
-    H_Debug("\n\tIn HeatingModel::NeutralRecombination():\n\n");
-    // Neutral Recombination assuming Rn=0; fraction of backscattered 
-    // ions/neutrals is zero.
-    return Sample->get_surfacearea()*(1.0-RN)*
-        (14.7*echarge - 2.0*Kb*DustTemperature)*
-        DTOKSIonFlux(Sample->get_potential()); 
-}
-
-const double HeatingModel::DTOKSElectronHeatFlux(double DustTemperature)const{ 
-    H_Debug("\n\tIn HeatingModel::ElectronHeatFlux():\n\n");
-    // Only for a negative grain
-    return 2.0*sqrt(2.0*PI)*Sample->get_radius()*Sample->get_radius()
-        *DTOKSElectronFlux(Sample->get_potential())*Kb*
-        (Pdata->ElectronTemp-DustTemperature);
-}
-
-// ****************************** DUSTT MODELS ****************************** //
-
-
-//!< This is the heat flux of ions incident on the dust grain surface ONLY
-//!< Calculated from equation (31) & (32), page 29, from the following reference
-//!< S.I. Krasheninnikov, R.D. Smirnov, and D.L. Rudakov,
-//!< Plasma Phys. Control. Fusion 53, 083001 (2011).
-const double HeatingModel::DUSTTIonHeatFlux(double DustTemperature)const{ 
-    H_Debug("\n\tIn HeatingModel::DUSTTIonHeatFlux(double DustTemperature):"
-        << "\n\n");
-    // Assuming Re = 0
-//  H1_Debug( "\nRE = " << RE );
-    if( RE > 0.1 ){ // Uncomment when RE is calculated
-        static bool runOnce = true;
-        std::string Warning = "In HeatingModel::DUSTTIonHeatFlux(double ";
-        Warning += "DustTemperature)\nRE > 0.1. Ion Heat Flux affected by ";
-        Warning += "backscattering by more than 10%!";
-        WarnOnce(runOnce,Warning);
-    }
-    double TemperatureRatio = Pdata->IonTemp/Pdata->ElectronTemp;
-    double IonThermalVelocity = sqrt((Kb*Pdata->IonTemp)/Pdata->mi);
-    double RelativeVelocity = (Pdata->PlasmaVel-Sample->get_velocity()).mag3()/
-        IonThermalVelocity;
-    double RenormalisedPotential = (Pdata->Z*Sample->get_potential())/
-        TemperatureRatio;
-    double Term1(0.0);
-    double Term2(0.0), Term2Coeff(0.0);
-    if( RelativeVelocity != 0.0 ){
-        Term2Coeff = (1.0/(4.0*RelativeVelocity))*(3.0+12.0*RelativeVelocity*
-            RelativeVelocity+4.0*pow(RelativeVelocity,4.0)+
-            2.0*RenormalisedPotential*
-            (1+2.0*RelativeVelocity*RelativeVelocity));
-    }else if(RelativeVelocity == 0.0){
-        return  Sample->get_surfacearea()*(1.0-RE)*Pdata->IonDensity*
-            Pdata->IonTemp*Kb*IonThermalVelocity;
-    }
-    if( RenormalisedPotential >= 0.0 ){ // Negative dust grain
-        Term1 =(1.0/(2.0*sqrt(PI)))*(5.0+2.0*RelativeVelocity*RelativeVelocity
-            -2.0*RenormalisedPotential)*exp(-RelativeVelocity*RelativeVelocity); 
-        Term2 = erf(RelativeVelocity)*Term2Coeff; 
-    }else{ // Positive dust grain
-        assert( Sample->get_potential() <= 0.0 );
-        double Coeff1 = 5.0; 
-        double Coeff2 = 5.0; 
-        if( RelativeVelocity != 0.0 ){
-            Coeff1 = 5.0+2.0*RelativeVelocity*RelativeVelocity
-                -((3.0+2.0*RelativeVelocity*RelativeVelocity)/RelativeVelocity)*
-                sqrt(-RenormalisedPotential);
-            Coeff2 = 5.0+2.0*RelativeVelocity*RelativeVelocity
-                +((3.0+2.0*RelativeVelocity*RelativeVelocity)/RelativeVelocity)*
-                sqrt(-RenormalisedPotential);
-        }
-
-        double uip = RelativeVelocity+sqrt(-RenormalisedPotential);
-        double uim = RelativeVelocity-sqrt(-RenormalisedPotential);
-        Term1 = (1.0/(4.0*sqrt(PI)))*(Coeff1*exp(-uip*uip) +
-            Coeff2*exp(-uim*uim)); 
-        Term2 = (Term2Coeff/2.0)*(erf(uip)+erf(uim));
-    }
-    
-    assert((Term1 + Term2) > 0 && (Term1 + Term2) != INFINITY 
-        && (Term1 + Term2) == (Term1 + Term2));
-
-    return Sample->get_surfacearea()*(1.0-RE)*Pdata->IonDensity
-        *Pdata->IonTemp*Kb*IonThermalVelocity*(Term1 + Term2);
-    // Convert from Joules to KJ
-}
-
-// ************************************* //
