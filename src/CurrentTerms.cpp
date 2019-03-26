@@ -7,28 +7,28 @@
 #include "CurrentTerms.h"
 
 namespace Term{
-    double OMLe::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double Potential){
-        return Flux::OMLElectronFlux(Pdata,Potential);
+    double OMLe::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential){
+        return -Flux::OMLElectronFlux(Pdata,Potential);
     }
-    double PHLe::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double Potential){
-        return Flux::PHLElectronFlux(Sample,Pdata,Potential);
+    double PHLe::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential){
+        return -Flux::PHLElectronFlux(Sample,Pdata,Potential);
     }
-    double OMLi::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double Potential){
+    double OMLi::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential){
         return Flux::OMLIonFlux(Sample,Pdata,Potential);
     }
-    double SOMLi::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double Potential){
+    double SOMLi::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential){
         return Flux::SOMLIonFlux(Sample,Pdata,Potential);
     }
-    double SMOMLi::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double Potential){
+    double SMOMLi::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential){
         return Flux::SMOMLIonFlux(Sample,Pdata,Potential);
     }
-    double TEE::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double Potential){
+    double TEEcharge::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential){
         return Flux::ThermFlux(Sample);
     }
-    double TEESchottky::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double Potential){
+    double TEESchottky::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential){
         return Flux::ThermFluxSchottky(Sample,Pdata,Potential);
     }
-    double THSe::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double Potential){
+    double THSe::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential){
 
         double TiTe = Pdata->IonTemp/Pdata->ElectronTemp;
         double MassRatio = Pdata->mi/Me;
@@ -53,20 +53,9 @@ namespace Term{
         
         double Repelled_Species_Current=(exp(-g*Betae)+e*exp(-DebyeLength_Tilde)*
             pow((Betai/(Betai+1)),h));
-        return Repelled_Species_Current;
-        
-        double Coeff = Pdata->Z*sqrt(TiTe/MassRatio);
-        double Attacted_Species_Current_T1=Coeff*(exp(-f*Betai)*(TDR+(1-TDR)*d*
-            (1.0/sqrt(TiTe)+1.0/sqrt(DebyeLength_Tilde)))+
-            e*pow((Betai/(Betai+1)),h));
-        double Attacted_Species_Current_T2=(Coeff/TiTe)*exp(-f*Betai)*TDR;
-
-        double a1= Attacted_Species_Current_T1/Repelled_Species_Current;
-        double b1= Attacted_Species_Current_T2/Repelled_Species_Current;
-
-        return fabs(LambertW(exp(a1/b1)/b1)-a1/b1);
+        return -Repelled_Species_Current;
     }
-    double THSi::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double Potential){
+    double THSi::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential){
 
         double TiTe = Pdata->IonTemp/Pdata->ElectronTemp;
         double MassRatio = Pdata->mi/Me;
@@ -97,10 +86,10 @@ namespace Term{
 
         return Attacted_Species_Current_T1+Attacted_Species_Current_T2*Potential;
     }
-    double DTOKSi::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double Potential){
+    double DTOKSi::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential){
         return Flux::DTOKSIonFlux(Sample,Pdata,Potential);
     }
-    double DTOKSe::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double Potential){
-        return Flux::DTOKSElectronFlux(Pdata,Potential);
+    double DTOKSe::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential){
+        return -Flux::DTOKSElectronFlux(Pdata,Potential);
     }
 }

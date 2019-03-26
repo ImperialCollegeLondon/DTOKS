@@ -60,7 +60,7 @@ class DTOKSU_Manager{
         // HEATING MODEL NUMBER, the number of charge models
         const static unsigned int HMN = 18;
         // CHARGE MODEL NUMBER, the number of charge models
-        const static unsigned int CMN = 11;
+        const static unsigned int CMN = 12;
 
         /** @brief Defines the status of configuration
          *
@@ -166,7 +166,7 @@ class DTOKSU_Manager{
          *  4) Perform a single timestep of same size as timescale.
          */
         ///@{
-        int ChargeTest(double accuracy,ChargingTerm* ChargeModel);
+        int ChargeTest(double accuracy,std::vector<CurrentTerm*> CurrentTerms);
         int ForceTest(double accuracy,std::vector<ForceTerm*> ForceTerms);
         int HeatTest(double accuracy,std::vector<HeatTerm*> HeatTerms);
         ///@}

@@ -99,7 +99,7 @@ class DTOKSU{
          */
         DTOKSU( std::array<float,MN> alvls, Matter *& sample, PlasmaData &pdata,
             std::vector<HeatTerm*> HeatTerms, 
-            std::vector<ForceTerm*> ForceTerms, ChargingTerm* ChargeModel);
+            std::vector<ForceTerm*> ForceTerms, std::vector<CurrentTerm*> CurrentTerms);
 
         /** @brief pgrid constructor.
          *
@@ -107,7 +107,7 @@ class DTOKSU{
          */
         DTOKSU( std::array<float,MN> alvls, Matter *& sample, 
             PlasmaGrid_Data &pgrid, std::vector<HeatTerm*> HeatTerms, 
-            std::vector<ForceTerm*> ForceTerms, ChargingTerm* ChargeModel);
+            std::vector<ForceTerm*> ForceTerms, std::vector<CurrentTerm*> CurrentTerms);
 
         /** @brief pdata and pgrid constructor.
          *
@@ -117,7 +117,7 @@ class DTOKSU{
         DTOKSU( std::array<float,MN> alvls, Matter *& sample, 
             PlasmaGrid_Data &pgrid, PlasmaData &pdata, 
             std::vector<HeatTerm*> HeatTerms, 
-            std::vector<ForceTerm*> ForceTerms, ChargingTerm* ChargeModel);
+            std::vector<ForceTerm*> ForceTerms, std::vector<CurrentTerm*> CurrentTerms);
 
         /** @brief boundary constructor.
          *
@@ -128,7 +128,7 @@ class DTOKSU{
         DTOKSU( std::array<float,MN> alvls, Matter *& sample, 
             PlasmaGrid_Data &pgrid, PlasmaData &pdata, Boundary_Data &wbound, 
             Boundary_Data &cbound, std::vector<HeatTerm*> HeatTerms, 
-            std::vector<ForceTerm*> ForceTerms, ChargingTerm* ChargeModel);
+            std::vector<ForceTerm*> ForceTerms, std::vector<CurrentTerm*> CurrentTerms);
         ///@}
 
         ~DTOKSU(){

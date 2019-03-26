@@ -8,6 +8,7 @@
 #define __PLASMAFLUXES_H_INCLUDED__
 
 #include "Matter.h"
+#include <memory>
 #include "PlasmaData.h"
 
 namespace Flux{
@@ -26,80 +27,82 @@ namespace Flux{
  *  @param Potential the normalised potential on the dust grain
  *  @return the ion flux as originally given by DTOKS
  */
-double OMLIonFlux(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double Potential);
+double OMLIonFlux(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential);
 /** @brief Calculate the Ion Flux as specified by SOML
  *  @param Sample Pointer to class containing all data about matter
  *  @param Pdata Pointer to data structure with information about plasma
  *  @param Potential the normalised potential on the dust grain
  *  @return the ion flux as originally given by SOML
  */
-double SOMLIonFlux(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double Potential);
+double SOMLIonFlux(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential);
 /** @brief Calculate the Ion Flux as specified by SMOML
  *  @param Sample Pointer to class containing all data about matter
  *  @param Pdata Pointer to data structure with information about plasma
  *  @param Potential the normalised potential on the dust grain
  *  @return the ion flux as originally given by SMOML
  */
-double SMOMLIonFlux(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double Potential);
+double SMOMLIonFlux(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential);
 /** @brief Calculate the Ion Flux as specified by PHL
  *  @param Sample Pointer to class containing all data about matter
  *  @param Pdata Pointer to data structure with information about plasma
  *  @param Potential the normalised potential on the dust grain
  *  @return the ion flux as originally given by PHL
  */
-double PHLElectronFlux(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double Potential);
+double PHLElectronFlux(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential);
 /** @brief Calculate the Ion Flux as specified originally in DTOKS
  *  @param Sample Pointer to class containing all data about matter
  *  @param Pdata Pointer to data structure with information about plasma
  *  @param Potential the normalised potential on the dust grain
  *  @return the ion flux as originally given by DTOKS
  */
-double DTOKSIonFlux(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double Potential);
+double DTOKSIonFlux(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential);
 /** @brief Calculate the electron flux as specified originally in DTOKS
  *  @param Pdata Pointer to data structure with information about plasma
  *  @param Potential the normalised potential on the dust grain
  *  @return the electron flux as originally given by DTOKS
  */
-double DTOKSElectronFlux(std::shared_ptr<PlasmaData> Pdata, double Potential);
+double DTOKSElectronFlux(const std::shared_ptr<PlasmaData> Pdata, const double Potential);
 /** @brief Calculate the electron flux as specified by OML
  *  @param Pdata Pointer to data structure with information about plasma
  *  @param Potential the normalised potential on the dust grain
  *  @return the ion flux as originally given by OML
  */
-double OMLElectronFlux(std::shared_ptr<PlasmaData> Pdata, double Potential);
+double OMLElectronFlux(const std::shared_ptr<PlasmaData> Pdata, const double Potential);
 /** @brief Calculate the thermal neutral flux 
  *  @param Pdata Pointer to data structure with information about plasma
  *  @return the  thermal neutral flux
  */
-double NeutralFlux(std::shared_ptr<PlasmaData> Pdata);
+double NeutralFlux(const std::shared_ptr<PlasmaData> Pdata);
 
 /** @brief flux of particles away from liquid surface due to evaporation
  *  @param Sample Pointer to class containing all data about matter
  *  @param Pdata Pointer to data structure with information about plasma
  */
-double EvaporationFlux(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double DustTemperature);
+double EvaporationFlux(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double DustTemperature);
 /** @brief Thermionic electron emission yield
+ *  @param Sample Pointer to class containing all data about matter
+ *  @param Pdata Pointer to data structure with information about plasma
  *  @return the thermionic electron emission yield coefficient
  */
-double DeltaTherm();
+double DeltaTherm(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata);
 /** @brief Thermionic electron emission flux
  *  @param Sample Pointer to class containing all data about matter
  *  @return the thermionic electron emission flux
  */
-double ThermFlux(Matter* Sample);
+double ThermFlux(const Matter* Sample);
 /** @brief Thermionic electron emission flux with schottky correction
  *  @param Sample Pointer to class containing all data about matter
  *  @param Pdata Pointer to data structure with information about plasma
  *  @param Potential the potential of the dust grain surface
  *  @return the thermionic electron emission flux
  */
-double ThermFluxSchottky(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double Potential);
+double ThermFluxSchottky(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential);
 /** @brief Secondary electron emission yield
  *  @param Sample Pointer to class containing all data about matter
  *  @param Pdata Pointer to data structure with information about plasma
  *  @return the secondary electron emission yield coefficient
  */
-double DeltaSec(Matter* Sample, std::shared_ptr<PlasmaData> Pdata);
+double DeltaSec(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata);
 ///@}
 
 }

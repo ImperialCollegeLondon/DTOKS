@@ -8,13 +8,13 @@
 
 namespace Term{
 
-threevector Gravity::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata){
+threevector Gravity::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata){
     F_Debug("\tIn struct Centrifugal::Evaluate()\n\n");
     threevector return_Vec(0.0,0.0,-9.81);
     return return_Vec;
 };
 
-threevector Centrifugal::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata){
+threevector Centrifugal::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata){
     F_Debug("\tIn struct Centrifugal::Evaluate()\n\n");
     threevector returnval(
         Sample->get_velocity().gety()*Sample->get_velocity().gety()/
@@ -25,7 +25,7 @@ threevector Centrifugal::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pd
     return returnval;
 }
 
-threevector LorentzForce::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata){
+threevector LorentzForce::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata){
     F_Debug("\tIn struct LorentzForce::Evaluate()\n\n");
         //!< Dust grain charge to mass ratio
         double Charge = 4.0*PI*epsilon0*Sample->get_radius()*Kb*Pdata->ElectronTemp*
@@ -52,22 +52,22 @@ threevector LorentzForce::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> P
     return returnvec;
 }
 
-threevector SOMLIonDrag::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata){
-    F_Debug("\tIn struct SOMLIonDrag::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata)\n\n");
+threevector SOMLIonDrag::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata){
+    F_Debug("\tIn struct SOMLIonDrag::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata)\n\n");
     return (Pdata->PlasmaVel-Sample->get_velocity())*
             Pdata->mi*(1.0/sqrt(Kb*Pdata->IonTemp/Pdata->mi))*
             Flux::SOMLIonFlux(Sample,Pdata,Sample->get_potential())*(1.0/Sample->get_mass());
 }
 
-threevector SMOMLIonDrag::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata){
-    F_Debug("\tIn SMOMLIonDrag::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata)\n\n");
+threevector SMOMLIonDrag::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata){
+    F_Debug("\tIn SMOMLIonDrag::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata)\n\n");
     return (Pdata->PlasmaVel-Sample->get_velocity())*
             Pdata->mi*(1.0/sqrt(Kb*Pdata->IonTemp/Pdata->mi))*
             Flux::SMOMLIonFlux(Sample,Pdata,Sample->get_potential())*(1.0/Sample->get_mass());
 }
 
-threevector DTOKSIonDrag::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata){
-    F_Debug("\tIn struct DTOKSIonDrag::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata)\n\n");
+threevector DTOKSIonDrag::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata){
+    F_Debug("\tIn struct DTOKSIonDrag::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata)\n\n");
     threevector Fid(0.0,0.0,0.0);
     //!< Calculations for ion drag: Mach number, shielding length with fitting 
     //!< function and thermal scattering parameter
@@ -139,8 +139,8 @@ threevector DTOKSIonDrag::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> P
     return Fid*(3/(4*PI*pow(Sample->get_radius(),3)*Sample->get_density()));
 }
 
-threevector DUSTTIonDrag::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata){
-    F_Debug("\tIn struct DUSTTIonDrag::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata)\n\n");
+threevector DUSTTIonDrag::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata){
+    F_Debug("\tIn struct DUSTTIonDrag::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata)\n\n");
     //!< Pre-define commonly used quantities
     double Chi = Sample->get_potential(); 
     double Tau = Pdata->IonTemp/Pdata->ElectronTemp;
@@ -180,8 +180,8 @@ threevector DUSTTIonDrag::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> P
         (1.0/Sample->get_mass());
 }
 
-threevector HybridIonDrag::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata){
-    F_Debug("\tIn struct HybridIonDrag::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata)\n\n");
+threevector HybridIonDrag::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata){
+    F_Debug("\tIn struct HybridIonDrag::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata)\n\n");
 
     //!< Taken from :
     //!< S. A. Khrapak, A. V. Ivlev, S. K. Zhdanov, and G. E. Morfill, 
@@ -212,8 +212,8 @@ threevector HybridIonDrag::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> 
     return HybridDrag*(1.0/Sample->get_mass());
 }
 
-threevector NeutralDrag::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata){
-    F_Debug("\tIn struct NeutralDrag::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata)\n\n");
+threevector NeutralDrag::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata){
+    F_Debug("\tIn struct NeutralDrag::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata)\n\n");
     // Assuming OML flux of neutrals, with neutrals flowing with the
     // background plasma
     // return (Pdata->PlasmaVel-Sample->get_velocity())*Pdata->mi*sqrt(4*PI)*
@@ -248,8 +248,8 @@ threevector NeutralDrag::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pd
     }
 }
 
-threevector RocketForce::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata){
-    F_Debug("\tIn struct RocketForce::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata)\n\n");
+threevector RocketForce::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata){
+    F_Debug("\tIn struct RocketForce::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata)\n\n");
         threevector returnvec(0.0,0.0,0.0);
 
     if( Sample->is_liquid() ){

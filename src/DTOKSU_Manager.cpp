@@ -78,6 +78,9 @@ void DTOKSU_Manager::config_message()const{
     }else if( Config_Status == 6 ){  //!< Failed to configure boundary data
         std::cout << "\n\n * ERROR CODE 6! FAILURE CONFIGURING BOUNDARY DATA *"
             << " \n\n";
+    }else if( Config_Status == 7 ){  //!< Failed to configure current terms data
+        std::cout << "\n\n * ERROR CODE 7! FAILURE CONFIGURING CURRENT TERMS *"
+            << " \n\n";
     }else{
         std::cout << "\n\n * UNKNOWN CONFIGURATION STATUS * \n\n";
     }
@@ -270,7 +273,7 @@ std::string Config_Filename){
     std::array<bool,HMN> HeatModels;
     std::array<bool,FMN> ForceModels;
     std::array<bool,CMN> ChargeModels;
-    ChargingTerm* ChargeModel;
+    std::vector<CurrentTerm*> CurrentTerms;
     std::vector<ForceTerm*> ForceTerms;
     std::vector<HeatTerm*> HeatTerms;
     std::array<char,CM> ConstModels;
@@ -401,18 +404,19 @@ std::string Config_Filename){
             };
         ChargeModels =
             {
-                cfg->lookupBoolean("chargemodels","DYNAMIC"), 
-                cfg->lookupBoolean("chargemodels","OML"), 
-                cfg->lookupBoolean("chargemodels","MOML"), 
-                cfg->lookupBoolean("chargemodels","SOML"), 
-                cfg->lookupBoolean("chargemodels","SMOML"), 
-                cfg->lookupBoolean("chargemodels","CW"),
-                cfg->lookupBoolean("chargemodels","PHL"), 
-                cfg->lookupBoolean("chargemodels","THS"),
-                cfg->lookupBoolean("chargemodels","DTOKSOML"), 
-                cfg->lookupBoolean("chargemodels","DTOKSWell"), 
-                cfg->lookupBoolean("chargemodels","MOMLWEM")
-            };//cfg->lookupBoolean("chargemodels","MOMLEM")
+                cfg->lookupBoolean("chargemodels","OMLe"), 
+                cfg->lookupBoolean("chargemodels","PHLe"), 
+                cfg->lookupBoolean("chargemodels","DTOKSe"),
+                cfg->lookupBoolean("chargemodels","THSe"), 
+                cfg->lookupBoolean("chargemodels","OMLi"), 
+                cfg->lookupBoolean("chargemodels","SOMLi"), 
+                cfg->lookupBoolean("chargemodels","SMOMLi"),
+                cfg->lookupBoolean("chargemodels","THSi"), 
+                cfg->lookupBoolean("chargemodels","DTOKSi"), 
+                cfg->lookupBoolean("chargemodels","TEE"),
+                cfg->lookupBoolean("chargemodels","TEESchottky"), 
+                cfg->lookupBoolean("chargemodels","SEE")
+            };
         
         AccuracyLevels = 
             {
@@ -427,13 +431,9 @@ std::string Config_Filename){
         Config_Status = 2;
         return Config_Status;
     }
-    if( std::count(ChargeModels.begin(),ChargeModels.end(),true) > 1){
-        std::cout <<"\n* More than one Charging model selected! *";
-        Config_Status = 2;
-        return Config_Status;
-    }
+
     //!< Tell user if the simulation is self-consistent.
-    if( HeatModels[4] && HeatModels[5] && ForceModels[3] && ChargeModels[3] ){
+    /*if( HeatModels[4] && HeatModels[5] && ForceModels[3] && ChargeModels[3] ){
         std::cout << "\n* SOML Self-Consistent Simulation! *";
     }else if( HeatModels[6] && HeatModels[7] && ForceModels[4] 
         && ChargeModels[4] ){
@@ -447,22 +447,31 @@ std::string Config_Filename){
         std::cout << "\n* DTOKS Simulation! Non-self Consistent fluxes! *";
     }else{
         std::cout << "\n* Non-self Consistent fluxes! *";
-    }
+    }*/
 
-    if( ChargeModels[0] )      ChargeModel = new Term::solveOML();
-    else if( ChargeModels[1] ) ChargeModel = new Term::solveOML();
-    else if( ChargeModels[2] ) ChargeModel = new Term::solvePosOML();
-    else if( ChargeModels[3] ) ChargeModel = new Term::solvePHL();
-    else if( ChargeModels[4] ) ChargeModel = new Term::solveCW();
-    else if( ChargeModels[5] ) ChargeModel = new Term::solveTHS();
-    else if( ChargeModels[6] ) ChargeModel = new Term::solveMOML();
-    else if( ChargeModels[7] ) ChargeModel = new Term::solveSOML();
-    else if( ChargeModels[8] ) ChargeModel = new Term::solveMOMLWEM();
-    else if( ChargeModels[9] ) ChargeModel = new Term::solveMOMLEM();
+    if( ChargeModels[0] )      CurrentTerms.push_back(new Term::OMLe());
+    else if( ChargeModels[1] ) CurrentTerms.push_back(new Term::PHLe());
+    else if( ChargeModels[2] ) CurrentTerms.push_back(new Term::THSe());
+    else if( ChargeModels[3] ) CurrentTerms.push_back(new Term::DTOKSe());
     else{
-        std::cout << "\n* No valid charging Model Chosen! *";
+        std::cout << "\n* No electron Current Model Chosen! *";
+        Config_Status = 7;
+        return Config_Status;
     }
-    
+    if( ChargeModels[4] ) CurrentTerms.push_back(new Term::OMLi());
+    else if( ChargeModels[5] ) CurrentTerms.push_back(new Term::SOMLi());
+    else if( ChargeModels[6] ) CurrentTerms.push_back(new Term::SMOMLi());
+    else if( ChargeModels[7] ) CurrentTerms.push_back(new Term::THSi());
+    else if( ChargeModels[8] ) CurrentTerms.push_back(new Term::DTOKSi());
+    else{
+        std::cout << "\n* No ion Current Model Chosen! *";
+        Config_Status = 7;
+        return Config_Status;
+    }
+    if( ChargeModels[9] ) CurrentTerms.push_back(new Term::TEEcharge());
+    else if( ChargeModels[10] ) CurrentTerms.push_back(new Term::TEESchottky());
+    if( ChargeModels[11] ) CurrentTerms.push_back(CurrentTerms[0]);
+
     if( ForceModels[0] ) ForceTerms.push_back(new Term::Gravity());
     if( ForceModels[1] ) ForceTerms.push_back(new Term::Centrifugal());
     if( ForceModels[2] ) ForceTerms.push_back(new Term::LorentzForce());
@@ -664,7 +673,7 @@ std::string Config_Filename){
             <<Pgrid.gridxmin<<"\t\t"<<Pgrid.gridxmax<<"\t\t"<<Pgrid.gridzmin
             <<"\t\t"<<Pgrid.gridzmax << "\n";
         Sim = new DTOKSU(AccuracyLevels, Sample, Pgrid, Pdata, WallBound, 
-            CoreBound, HeatTerms, ForceTerms, ChargeModel);
+            CoreBound, HeatTerms, ForceTerms, CurrentTerms);
     }else{
         MetaDataFile <<"\n\n#PLASMA DATA PARAMETERS"
             <<"\n\nNn (m^-3)\tNi (m^-3)\tNe (m^-3)\n"
@@ -677,7 +686,7 @@ std::string Config_Filename){
             <<Pdata.PlasmaVel<<"\t"<<Pdata.ElectricField<<"\t"
             <<Pdata.MagneticField<<"\n";
         Sim = new DTOKSU(AccuracyLevels, Sample, Pdata, HeatTerms, ForceTerms,
-            ChargeModel);
+            CurrentTerms);
     }
     MetaDataFile <<"\n\n##MODEL SWITHES\n#HEATING MODELS\n"
         <<"RadiativeCooling:\t" << HeatModels[0] 
@@ -710,17 +719,18 @@ std::string Config_Filename){
         <<"NeutralDrag:\t\t" << ForceModels[8] << "\n"
         <<"RocketForce:\t\t" << ForceModels[9] << "\n"
         <<"\n#CHARGING MODELS\n"
-        <<"DYNAMIC:\t\t" << ChargeModels[0] << "\n" 
-        <<"OML:\t\t\t" << ChargeModels[1] << "\n"
-        <<"MOML:\t\t\t" << ChargeModels[2] << "\n"
-        <<"SOML:\t\t\t" << ChargeModels[3] << "\n"
-        <<"SMOML:\t\t\t" << ChargeModels[4] << "\n" 
-        <<"CW:\t\t\t" << ChargeModels[5] << "\n" 
-        <<"PHL:\t\t\t" << ChargeModels[6] << "\n"
-        <<"THS:\t\t\t" << ChargeModels[7] << "\n" 
-        <<"DTOKSOML:\t\t" << ChargeModels[8] << "\n"
-        <<"DTOKSWell:\t\t" << ChargeModels[9] << "\n"
-        << "MOMLWEM:\t\t" << ChargeModels[10];
+        <<"OMLe:\t\t" << ChargeModels[0] << "\n" 
+        <<"PHLe:\t\t\t" << ChargeModels[1] << "\n"
+        <<"THSe:\t\t\t" << ChargeModels[2] << "\n"
+        <<"DTOKSe:\t\t\t" << ChargeModels[3] << "\n"
+        <<"OMLi:\t\t\t" << ChargeModels[4] << "\n" 
+        <<"SOMLi:\t\t\t" << ChargeModels[5] << "\n" 
+        <<"SMOMLi:\t\t\t" << ChargeModels[6] << "\n"
+        <<"THSi:\t\t\t" << ChargeModels[7] << "\n" 
+        <<"DTOKSi:\t\t" << ChargeModels[8] << "\n"
+        <<"TEE:\t\t" << ChargeModels[9] << "\n"
+        <<"TEESchottky:\t\t" << ChargeModels[10] << "\n"
+        <<"SEE:\t\t" << ChargeModels[10] << "\n";
     MetaDataFile.close();
 
     Sim->OpenFiles(DataFilePrefix,0);
@@ -1077,16 +1087,16 @@ int DTOKSU_Manager::read_MPSIdata(std::string plasma_dirname){
 #endif
 
 int DTOKSU_Manager::ChargeTest(double accuracy
-,ChargingTerm* ChargeModel){
+,std::vector<CurrentTerm*> CurrentTerms){
     DM_Debug("  In DTOKSU_Manager::ChargeTest(double accuracy"
-        << ",ChargingTerm* ChargeModel)\n\n");
+        << ",std::vector<CurrentTerm*> CurrentTerms)\n\n");
     if( Config_Status != -2 && Config_Status != -3 ){
         std::cerr << "\nDTOKSU Is not configured! Please configure first.";
         config_message();
         return 1;
     }
     ChargingModel MyChargeModel("Data/DTOKS_ChargeTest.txt",accuracy,
-        ChargeModel,Sample,Pdata);
+        CurrentTerms,Sample,Pdata);
     bool cm_InGrid = MyChargeModel.update_plasmadata();
 
     //!< Need to manually update the first time as first step is not necessarily

@@ -12,7 +12,7 @@
 
 #include "Model.h"
 #include "solveMOMLEM.h"
-#include "ChargingTerms.h"
+#include "CurrentTerms.h"
 
 /** @class Model
  *  @brief Defines the charging models which affect the potential of dust

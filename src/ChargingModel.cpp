@@ -6,59 +6,60 @@
  *  @author Luke Simons (ls5115@ic.ac.uk)
  *  @bug bugs, they definitely exist
  */
-
+//#define CHARGING_DEBUG
 #include "ChargingModel.h"
 
-ChargingModel::ChargingModel():
-ChargeModel(new Term::solveOML()),Model(){
+ChargingModel::ChargingModel():Model(){
     C_Debug("\n\nIn ChargingModel::ChargingModel():Model()\n\n");
     // Charging Models turned on of possible 3
 
+    CurrentTerms.push_back(new Term::OMLe());
+    CurrentTerms.push_back(new Term::OMLi());
     CreateFile("Data/default_cm_0.txt");
 }
 
 ChargingModel::ChargingModel(std::string filename, float accuracy, 
-std::vector<CurrentTerm*> CurrentTerms, Matter *& sample, PlasmaData &pdata):
+std::vector<CurrentTerm*> currentterms, Matter *& sample, PlasmaData &pdata):
 Model(filename,sample,pdata,accuracy){
     C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename, "
-        << " float accuracy, std::vector<CurrentTerm*> CurrentTerms, "
+        << " float accuracy, std::vector<CurrentTerm*> currentterms, "
         << "Matter *& sample, PlasmaData *&pdata) : "
         << "Model(sample,pdata,accuracy)\n\n");
-    ChargeModel = chargemodel;
+    CurrentTerms = currentterms;
     CreateFile(filename);
 }
 
 ChargingModel::ChargingModel(std::string filename, float accuracy, 
-std::vector<CurrentTerm*> CurrentTerms, Matter *& sample, PlasmaData *pdata):
+std::vector<CurrentTerm*> currentterms, Matter *& sample, PlasmaData *pdata):
 Model(filename,sample,*pdata,accuracy){
     C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename, "
-        << "float accuracy, std::vector<CurrentTerm*> CurrentTerms, "
+        << "float accuracy, std::vector<CurrentTerm*> currentterms, "
         << "Matter *& sample, PlasmaData *&pdata) : "
         << "Model(sample,pdata,accuracy)\n\n");
-    ChargeModel = chargemodel;
+    CurrentTerms = currentterms;
     CreateFile(filename);
 }
 
 ChargingModel::ChargingModel(std::string filename, float accuracy, 
-std::vector<CurrentTerm*> CurrentTerms, Matter *& sample, PlasmaGrid_Data &pgrid):
+std::vector<CurrentTerm*> currentterms, Matter *& sample, PlasmaGrid_Data &pgrid):
 Model(filename,sample,pgrid,accuracy){
     C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename, "
-        << "float accuracy, std::vector<CurrentTerm*> CurrentTerms, "
+        << "float accuracy, std::vector<CurrentTerm*> currentterms, "
         << "Matter *& sample, PlasmaGrid_Data &pgrid) : "
         << "Model(sample,pgrid,accuracy)\n\n");
-    ChargeModel = chargemodel;
+    CurrentTerms = currentterms;
     CreateFile(filename);
 }
 
 ChargingModel::ChargingModel(std::string filename, float accuracy, 
-std::vector<CurrentTerm*> CurrentTerms, Matter *& sample, PlasmaGrid_Data &pgrid, 
+std::vector<CurrentTerm*> currentterms, Matter *& sample, PlasmaGrid_Data &pgrid, 
 PlasmaData &pdata):
 Model(filename,sample,pgrid,pdata,accuracy){
     C_Debug("\n\nIn ChargingModel::ChargingModel(std::string filename, "
-        << "float accuracy, std::vector<CurrentTerm*> CurrentTerms, "
+        << "float accuracy, std::vector<CurrentTerm*> currentterms, "
         << "Matter *& sample, PlasmaGrid_Data &pgrid) : "
         << "Model(sample,pgrid,accuracy)\n\n");
-    ChargeModel = chargemodel;
+    CurrentTerms = currentterms;
     CreateFile(filename);
 }
 
@@ -120,34 +121,52 @@ void ChargingModel::Charge(double timestep){
     
     double Potential = Sample->get_potential();
 
-    // Evaluate the charging model
-    double guess(0.0);
-    do{
-        double Current(0.0);
-        for(auto iter = CurrentTerms.begin(); iter != CurrentTerms.end(); ++iter) {
-            Current += (*iter)->Evaluate(Sample,Pdata,Potential);
-            C_Debug( "\n\t\t" << (*iter)->PrintName << "=" 
-                << (*iter)->Evaluate(Sample,Pdata) );
+    // Implement Bisection method to find root of current balance
+    double a(-5.0), b(10.0);
+    double Current1(0.0),Current2(0.0);
+    double DTherm(0.0), DSec(0.0);
+    for(auto iter = CurrentTerms.begin(); iter != CurrentTerms.end(); ++iter) {
+        if( (*iter)->PrintName() == "TEE" ){
+            DTherm = Flux::DeltaSec(Sample,Pdata);
         }
-
-        // IMPLEMENT ROOT FINDING METHOD, BISECTION?
-        guess = Potential - (Current/CurrentDiff);
-        Potential = guess;
-        i ++;
-    }while( fabs(Potential-guess) > Accuracy );
-
-
-    double DSec = Flux::DeltaSec(Sample,Pdata);
-    double DTherm = Flux::ThermFluxSchottky(Sample,Pdata,Potential)/
-            Flux::OMLElectronFlux(Pdata,Potential);
-    if( ChargeModel->PrintName() == "PHL" ){ 
-        DTherm = Flux::ThermFluxSchottky(Sample,Pdata,Potential)/
-            Flux::PHLElectronFlux(Sample,Pdata,Potential);
-    }else if( ChargeModel->PrintName() == "DTOKSOML" ||
-        ChargeModel->PrintName() == "DTOKSWell" ||
-        ChargeModel->PrintName() == "MOMLWEM" ){
-        DTherm = Flux::DeltaTherm();
+        if( (*iter)->PrintName() == "SEE" ){
+            DSec = Flux::DeltaSec(Sample,Pdata);
+        }
     }
+    do{
+        Potential = (a+b)/2.0;
+
+        for(auto iter = CurrentTerms.begin(); iter != CurrentTerms.end(); ++iter) {
+            if( (*iter)->PrintName() == "SEE" ){
+                Current1 += DSec*CurrentTerms[0]->Evaluate(Sample,Pdata,Potential);
+                Current2 += DSec*CurrentTerms[0]->Evaluate(Sample,Pdata,a);
+                C_Debug( "\n\t\t" << (*iter)->PrintName() << "=" 
+                    << DSec*CurrentTerms[0]->Evaluate(Sample,Pdata,Potential)  << "\n" );
+            }else{
+                Current1 += (*iter)->Evaluate(Sample,Pdata,Potential);
+                Current2 += (*iter)->Evaluate(Sample,Pdata,a);
+                C_Debug( "\n\t\t" << (*iter)->PrintName() << "=" 
+                    << (*iter)->Evaluate(Sample,Pdata,Potential) << "\n");
+            }
+        }
+        if( Current1*Current2 > 0.0 )
+            a = Potential;
+        else
+            b = Potential;
+        //std::cout << "\n\na = " << a;
+        //std::cout << "\nb = " << b;
+        //std::cout << "\n(b-a)/2.0 = " << (b-a)/2.0;
+        //std::cout << "\nPotential = " << Potential;
+        //std::cout << "\nPdata->ElectronDensity = " << Pdata->ElectronDensity;
+        //std::cout << "\nPdata->ElectronTemp = " << Pdata->ElectronTemp;
+        //std::cout << "\nVte = " << sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
+        //std::cout << "\nPdata->IonDensity = " << Pdata->IonDensity;
+        //std::cout << "\nPdata->IonTemp = " << Pdata->IonTemp;
+        //std::cout << "\nVti = " << sqrt(Kb*Pdata->IonTemp/(2*PI*Mp));
+        //std::cin.get();
+    }while( fabs((b-a)/2.0) > Accuracy && Current1 != 0.0 );
+
+
 
     //!< Have to calculate charge of grain here since it doesn't know about the 
     //!< Electron Temp and since potential is normalised.

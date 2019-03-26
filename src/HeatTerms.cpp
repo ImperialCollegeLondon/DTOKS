@@ -10,8 +10,8 @@
 namespace Term{
     
 //!< Using Stefan-Boltzmann Law, returns Energy lost per second in Kila Joules
-double EmissivityModel::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double DustTemperature){
-    H_Debug("\n\tIn HeatingModel::EmissivityModel(double DustTemperature):"
+double EmissivityModel::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double DustTemperature){
+    H_Debug("\n\tIn HeatingModel::EmissivityModel(const double DustTemperature):"
         << "\n\n");
     //!< Energy emitted from a sample converted to kJ
     return -Sample->get_emissivity()*Sample->get_surfacearea()*Sigma
@@ -24,7 +24,7 @@ double EmissivityModel::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pda
 //!< MASS LOSS EQUATION 
 //!< http://www.leb.eei.uni-erlangen.de/
 //!< winterakademie/2006/result/content/course01/pdf/0102.pdf
-double EvaporationModel::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double DustTemperature){
+double EvaporationModel::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double DustTemperature){
     H_Debug("\n\tIn HeatingModel::EvaporationModel():\n\n");
 
     //!< Approximate emitted energy as mean maxwell
@@ -49,7 +49,7 @@ double EvaporationModel::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pd
 //!< VERY APPROXIMATE MODEL: Atmosphere assumed to be 300 degrees always,
 //!< rough heat transfer coefficient is use
 //!< https://en.wikipedia.org/wiki/Newton%27s_law_of_cooling
- double NewtonCooling::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double DustTemperature){
+ double NewtonCooling::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double DustTemperature){
     H_Debug("\n\tIn HeatingModel::NewtonCooling():\n\n");
     static bool runOnce = true;
     std::string Warning = "In HeatingModel::NewtonCooling():\nHeatTransair ";
@@ -61,8 +61,8 @@ double EvaporationModel::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pd
         (DustTemperature-Pdata->AmbientTemp)); 
 }   
 
-double NeutralHeatFlux::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double DustTemperature){
-    H_Debug("\n\tIn HeatingModel::NeutralHeatFlux(double DustTemperature)"
+double NeutralHeatFlux::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double DustTemperature){
+    H_Debug("\n\tIn HeatingModel::NeutralHeatFlux(const double DustTemperature)"
         << ":\n\n");
     return Sample->get_surfacearea()*Flux::NeutralFlux(Pdata)*
         (Pdata->NeutralTemp-DustTemperature)*Kb;
@@ -70,7 +70,7 @@ double NeutralHeatFlux::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pda
 
 // ************************** SOML/OML/PHL MODELS ************************** //
 
-double SEE::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double DustTemperature){
+double SEE::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double DustTemperature){
     H_Debug("\n\tIn HeatingModel::SEE():\n\n");
     double ConvertKtoev(8.6173303e-5);
     return -Sample->get_surfacearea()*Flux::PHLElectronFlux(Sample,Pdata,Sample->get_potential())*
@@ -78,7 +78,7 @@ double SEE::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double D
         (3.0+Sample->get_workfunction()); 
 }
 
-double TEE::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double DustTemperature){
+double TEE::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double DustTemperature){
     H_Debug("\n\tIn HeatingModel::TEE():\n\n");
     if( Sample->get_potential() >= 0.0){
         return -Sample->get_surfacearea()*Richardson*pow(DustTemperature,2)*
@@ -97,7 +97,7 @@ double TEE::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double D
     }
 }
 
-double PHLElectronHeatFlux::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double DustTemperature){ 
+double PHLElectronHeatFlux::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double DustTemperature){ 
 
     H_Debug("\n\tIn HeatingModel::PHLElectronHeatFlux():\n\n");
     //!< Only for a negative grain
@@ -105,15 +105,15 @@ double PHLElectronHeatFlux::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData>
         Kb*(Pdata->ElectronTemp-DustTemperature);
 }
 
-double SOMLIonHeatFlux::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double DustTemperature){ 
-    H_Debug("\n\tIn HeatingModel::SOMLIonHeatFlux(double DustTemperature):"
+double SOMLIonHeatFlux::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double DustTemperature){ 
+    H_Debug("\n\tIn HeatingModel::SOMLIonHeatFlux(const double DustTemperature):"
         <<"\n\n");
     // Assuming Re = 0
     return Sample->get_surfacearea()*(1.0-Sample->get_re())*
         Flux::SOMLIonFlux(Sample,Pdata,Sample->get_potential())*Pdata->IonTemp*Kb; 
 }
 
-double SOMLNeutralRecombination::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double DustTemperature)
+double SOMLNeutralRecombination::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double DustTemperature)
 {
     H_Debug("\n\tIn HeatingModel::SOMLNeutralRecombination():\n\n");
     //!< Neutral Recombination assuming Rn=0; fraction of backscattered 
@@ -123,15 +123,15 @@ double SOMLNeutralRecombination::Evaluate(Matter* Sample, std::shared_ptr<Plasma
         Flux::SOMLIonFlux(Sample,Pdata,Sample->get_potential()); 
 }
 
-double SMOMLIonHeatFlux::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double DustTemperature){ 
-    H_Debug("\n\tIn HeatingModel::SMOMLIonHeatFlux(double DustTemperature):"
+double SMOMLIonHeatFlux::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double DustTemperature){ 
+    H_Debug("\n\tIn HeatingModel::SMOMLIonHeatFlux(const double DustTemperature):"
         << "\n\n");
     // Assuming Re = 0
     return Sample->get_surfacearea()*(1.0-Sample->get_re())*
         Flux::SMOMLIonFlux(Sample,Pdata,Sample->get_potential())*Pdata->IonTemp*Kb;
 }
 
-double SMOMLNeutralRecombination::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double DustTemperature)
+double SMOMLNeutralRecombination::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double DustTemperature)
 {
     H_Debug("\n\tIn HeatingModel::SMOMLNeutralRecombination():\n\n");
     // Neutral Recombination assuming Rn=0; fraction of backscattered 
@@ -142,7 +142,7 @@ double SMOMLNeutralRecombination::Evaluate(Matter* Sample, std::shared_ptr<Plasm
 }
 
 
-double OMLElectronHeatFlux::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double DustTemperature){ 
+double OMLElectronHeatFlux::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double DustTemperature){ 
     H_Debug("\n\tIn HeatingModel::OMLElectronHeatFlux():\n\n");
     // Only for a negative grain
     return Sample->get_surfacearea()*Flux::OMLElectronFlux(Pdata,Sample->get_potential())*
@@ -151,7 +151,7 @@ double OMLElectronHeatFlux::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData>
 
 // ****************************** DTOKS MODELS ****************************** //
 
- double DTOKSSEE::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double DustTemperature){
+ double DTOKSSEE::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double DustTemperature){
     H_Debug("\n\tIn HeatingModel::DTOKSSEE():\n\n");
     //!< Electrons released all re-captured by positive dust grain
     double SEE=0; 
@@ -163,7 +163,7 @@ double OMLElectronHeatFlux::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData>
     return -SEE; 
 }
 
-double DTOKSTEE::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double DustTemperature){
+double DTOKSTEE::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double DustTemperature){
     H_Debug("\n\tIn HeatingModel::DTOKSTEE():\n\n");
     //!< Electrons released all re-captured by positive dust grain
     double TEE=0;
@@ -176,8 +176,8 @@ double DTOKSTEE::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, dou
     return -TEE;
 }
 
-double DTOKSIonHeatFlux::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double DustTemperature){ 
-    H_Debug("\n\tIn HeatingModel::DTOKSIonHeatFlux(double DustTemperature):"
+double DTOKSIonHeatFlux::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double DustTemperature){ 
+    H_Debug("\n\tIn HeatingModel::DTOKSIonHeatFlux(const double DustTemperature):"
         << "\n\n");
     // Assuming Re = 0
     return (Sample->get_surfacearea()*(1.0-Sample->get_re())*
@@ -189,7 +189,7 @@ double DTOKSIonHeatFlux::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pd
 }
 
 
-double DTOKSNeutralRecombination::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double DustTemperature){
+double DTOKSNeutralRecombination::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double DustTemperature){
     H_Debug("\n\tIn HeatingModel::NeutralRecombination():\n\n");
     // Neutral Recombination assuming Rn=0; fraction of backscattered 
     // ions/neutrals is zero.
@@ -198,7 +198,7 @@ double DTOKSNeutralRecombination::Evaluate(Matter* Sample, std::shared_ptr<Plasm
         Flux::DTOKSIonFlux(Sample,Pdata,Sample->get_potential()); 
 }
 
-double DTOKSElectronHeatFlux::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double DustTemperature){ 
+double DTOKSElectronHeatFlux::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double DustTemperature){ 
     H_Debug("\n\tIn HeatingModel::ElectronHeatFlux():\n\n");
     // Only for a negative grain
     return 2.0*sqrt(2.0*PI)*Sample->get_radius()*Sample->get_radius()
@@ -213,8 +213,8 @@ double DTOKSElectronHeatFlux::Evaluate(Matter* Sample, std::shared_ptr<PlasmaDat
 //!< Calculated from equation (31) & (32), page 29, from the following reference
 //!< S.I. Krasheninnikov, R.D. Smirnov, and D.L. Rudakov,
 //!< Plasma Phys. Control. Fusion 53, 083001 (2011).
-double DUSTTIonHeatFlux::Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double DustTemperature){
-    H_Debug("\n\tIn HeatingModel::DUSTTIonHeatFlux(double DustTemperature):"
+double DUSTTIonHeatFlux::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double DustTemperature){
+    H_Debug("\n\tIn HeatingModel::DUSTTIonHeatFlux(const double DustTemperature):"
         << "\n\n");
     // Assuming Re = 0
 //  H1_Debug( "\nSample->get_re() = " << Sample->get_re() );

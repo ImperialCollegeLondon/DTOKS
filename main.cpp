@@ -1,10 +1,10 @@
 //#include "DTOKSU.h"
 
+
 #include "DTOKSU_Manager.h"
-//#include "Gravity.h"
-#include "ChargingTerms.h"
-#include "ForceTerms.h"
-#include "HeatTerms.h"
+//#include "CurrentTerms.h"
+//#include "ForceTerms.h"
+//#include "HeatTerms.h"
 
 int main(int argc, char* argv[]){
 

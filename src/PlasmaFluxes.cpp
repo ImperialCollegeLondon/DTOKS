@@ -8,8 +8,8 @@
 
 namespace Flux{
 
-double OMLIonFlux(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double Potential){
-    H_Debug("\n\tIn Model::IonFlux():");
+double OMLIonFlux(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential){
+    H_Debug("\n\tIn IonFlux():");
 
     double IonFlux=0;
 
@@ -24,8 +24,8 @@ double OMLIonFlux(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double Pote
     return IonFlux;
 }
 
-double SOMLIonFlux(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double Potential){
-    Mo_Debug( "\tModel::SOMLIonFlux:Term\n\n");
+double SOMLIonFlux(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential){
+    Mo_Debug( "\tSOMLIonFlux:Term\n\n");
     double IonThermalVelocity = sqrt((Kb*Pdata->IonTemp)/Pdata->mi);
     double uz = (Pdata->PlasmaVel-Sample->get_velocity()).mag3()
         /IonThermalVelocity;
@@ -47,8 +47,8 @@ double SOMLIonFlux(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double Pot
     }
 }
 
-double SMOMLIonFlux(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double Potential){
-    Mo_Debug( "\tModel::SMOMLIonFlux:Term\n\n");
+double SMOMLIonFlux(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential){
+    Mo_Debug( "\tSMOMLIonFlux:Term\n\n");
     double HeatCapacityRatio = 5.0/3.0;
     double MassRatio = Pdata->mi/Me;
     double Tau = Pdata->IonTemp/Pdata->ElectronTemp;
@@ -75,8 +75,8 @@ double SMOMLIonFlux(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double Po
     }
 }
 
-double PHLElectronFlux(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double Potential){
-    Mo_Debug( "\tModel::PHLElectronFlux:Term\n\n");
+double PHLElectronFlux(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential){
+    Mo_Debug( "\tPHLElectronFlux:Term\n\n");
     double Tau = Pdata->ElectronTemp/Pdata->IonTemp;
     double Beta = Sample->get_radius()
             /(sqrt(PI*Pdata->ElectronTemp*Me)/(2.0*echarge*echarge*
@@ -124,8 +124,8 @@ double PHLElectronFlux(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double
     }
 }
 
-double DTOKSIonFlux(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double Potential){
-H_Debug("\tIn Model::DTOKSIonFlux:Term\n\n");
+double DTOKSIonFlux(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential){
+H_Debug("\tIn DTOKSIonFlux:Term\n\n");
     double IonFlux=0;
 
     //!< Positive grain, DeltaTot() > 1
@@ -135,14 +135,14 @@ H_Debug("\tIn Model::DTOKSIonFlux:Term\n\n");
     return IonFlux;
 }
 
-double DTOKSElectronFlux(std::shared_ptr<PlasmaData> Pdata, double Potential){
-    H_Debug("\tIn Model::DTOKSElectronFlux:Term\n\n");
+double DTOKSElectronFlux(const std::shared_ptr<PlasmaData> Pdata, const double Potential){
+    H_Debug("\tIn DTOKSElectronFlux:Term\n\n");
     return Pdata->ElectronDensity*exp(-Potential)*
         sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
 }
 
-double OMLElectronFlux(std::shared_ptr<PlasmaData> Pdata, double Potential){
-    H_Debug("\tIn Model::OMLElectronFlux:Term\n\n");
+double OMLElectronFlux(const std::shared_ptr<PlasmaData> Pdata, const double Potential){
+    H_Debug("\tIn OMLElectronFlux:Term(const std::shared_ptr<PlasmaData> Pdata, const double Potential)\n\n");
     if( Potential < 0.0 ){
         return Pdata->ElectronDensity*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me))*
             (1-Potential);
@@ -152,14 +152,14 @@ double OMLElectronFlux(std::shared_ptr<PlasmaData> Pdata, double Potential){
     }
 }
 
-double NeutralFlux(std::shared_ptr<PlasmaData> Pdata){
-    H_Debug("\tIn NeutralFlux(std::shared_ptr<PlasmaData> Pdata)\n\n");
+double NeutralFlux(const std::shared_ptr<PlasmaData> Pdata){
+    H_Debug("\tIn NeutralFlux(const std::shared_ptr<PlasmaData> Pdata)\n\n");
 
     return Pdata->NeutralDensity*sqrt(Kb*Pdata->NeutralTemp/(2*PI*Pdata->mi));
 }
 
-double EvaporationFlux(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double DustTemperature){
-    H_Debug("\n\tIn HeatingModel::EvaporationFlux():\n\n");
+double EvaporationFlux(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double DustTemperature){
+    H_Debug("\n\tIn EvaporationFlux():\n\n");
     double AmbientPressure = Pdata->NeutralDensity*Kb*Pdata->NeutralTemp;
 
     double StickCoeff = 1.0;
@@ -168,19 +168,19 @@ double EvaporationFlux(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double
         sqrt(2*PI*Sample->get_atomicmass()*R*DustTemperature);
 }
 
-double DeltaTherm(){
-    C_Debug("\tIn DeltaTherm()\n\n");
+double DeltaTherm(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata){
+    C_Debug("\tIn DeltaTherm(const Matter* Sample)\n\n");
 
     double dtherm = (Richardson*Sample->get_temperature()*
         Sample->get_temperature()*
         exp(-(Sample->get_workfunction()*echarge)/
             (Kb*Sample->get_temperature())))/
-            (echarge*OMLElectronFlux(Sample->get_potential()));
+            (echarge*OMLElectronFlux(Pdata, Sample->get_potential()));
     assert(dtherm >= 0.0 && dtherm == dtherm && dtherm != INFINITY );
     return dtherm;
 }
 
-double ThermFlux(Matter* Sample){
+double ThermFlux(const Matter* Sample){
     C_Debug("\tIn DeltaTherm()\n\n");
 
     double ThermFlux = (Richardson*Sample->get_temperature()*
@@ -192,8 +192,8 @@ double ThermFlux(Matter* Sample){
     return ThermFlux;
 }
 
-double ThermFluxSchottky(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, double Potential ){
-    C_Debug("\tIn DeltaTherm( double Potential )\n\n");
+double ThermFluxSchottky(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential ){
+    C_Debug("\tIn DeltaTherm( const double Potential )\n\n");
     //!< Returns the flux of electrons due to Thermionic emission
     //!< Following the Richard-Dushmann formula with Schottky Correction.
     //!< Negative Dust grains have the normal Richard-Dushmann form, dependant 
@@ -202,8 +202,8 @@ double ThermFluxSchottky(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, doub
     //!< e^(-e phi/(kb Td))
     if( Potential >= 0.0 ){
         return Richardson*Sample->get_temperature()*
-        Sample->get_temperature()*
-            *exp(-echarge*Sample->get_workfunction()/
+            Sample->get_temperature()*
+            exp(-echarge*Sample->get_workfunction()/
             (Kb*Sample->get_temperature()))/echarge;
     }else{
 
@@ -216,7 +216,7 @@ double ThermFluxSchottky(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, doub
     }
 }
 
-double DeltaSec(Matter* Sample, std::shared_ptr<PlasmaData> Pdata){
+double DeltaSec(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata){
     C_Debug("\tIn DeltaSec()\n\n");
     double ConvertKtoev(8.6173303e-5);
     return sec(Pdata->ElectronTemp*ConvertKtoev,Sample->get_elem());

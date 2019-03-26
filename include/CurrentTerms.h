@@ -34,8 +34,8 @@ struct OMLe:CurrentTerm{
      *  @param Potential the normalised potential on the dust grain
      *  @return the electron flux following OML theory
      */
-    double Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, 
-        double Potential);
+    double Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, 
+        const double Potential);
     std::string PrintName(){ return "OMLe"; };
 };
 
@@ -46,8 +46,8 @@ struct PHLe:CurrentTerm{
      *  @param Potential the normalised potential on the dust grain
      *  @return the electron Flux following PHL's theory
      */
-    double Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, 
-        double Potential);
+    double Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, 
+        const double Potential);
     std::string PrintName(){ return "PHLe"; };
 };
 
@@ -58,8 +58,8 @@ struct OMLi:CurrentTerm{
      *  @param Potential the normalised potential on the dust grain
      *  @return the ion flux following OML theory
      */
-    double Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, 
-        double Potential);
+    double Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, 
+        const double Potential);
     std::string PrintName(){ return "OMLi"; };
 };
 
@@ -70,8 +70,8 @@ struct SOMLi:CurrentTerm{
      *  @param Potential the normalised potential on the dust grain
      *  @return the ion flux following SOML theory
      */
-    double Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, 
-        double Potential);
+    double Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, 
+        const double Potential);
     std::string PrintName(){ return "SOMLi"; };
 };
 
@@ -82,20 +82,20 @@ struct SMOMLi:CurrentTerm{
      *  @param Potential the normalised potential on the dust grain
      *  @return the ion flux following SMOML theory
      */
-    double Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, 
-        double Potential);
+    double Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, 
+        const double Potential);
     std::string PrintName(){ return "SMOMLi"; };
 };
 
-struct TEE:CurrentTerm{
+struct TEEcharge:CurrentTerm{
     /** @brief Calculate the thermionic electron emission Flux
      *  @param Sample Pointer to class containing all data about matter
      *  @param Pdata Pointer to data structure with information about plasma
      *  @param Potential the normalised potential on the dust grain
      *  @return the thermionic electron emission Flux
      */
-    double Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, 
-        double Potential);
+    double Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, 
+        const double Potential);
     std::string PrintName(){ return "TEE"; };
 };
 
@@ -106,8 +106,8 @@ struct TEESchottky:CurrentTerm{
      *  @param Potential the normalised potential on the dust grain
      *  @return the thermionic electron emission Flux with Schottky correction
      */
-    double Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, 
-        double Potential);
+    double Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, 
+        const double Potential);
     std::string PrintName(){ return "TEESchottky"; };
 };
 
@@ -118,8 +118,8 @@ struct THSe:CurrentTerm{
      *  @param Potential the normalised potential on the dust grain
      *  @return the electron current in magnetic field with THS
      */
-    double Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, 
-        double Potential);
+    double Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, 
+        const double Potential);
     std::string PrintName(){ return "THSe"; };
 };
 
@@ -130,8 +130,8 @@ struct THSi:CurrentTerm{
      *  @param Potential the normalised potential on the dust grain
      *  @return the ion current in magnetic field with THS
      */
-    double Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, 
-        double Potential);
+    double Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, 
+        const double Potential);
     std::string PrintName(){ return "THSi"; };
 };
 
@@ -142,8 +142,8 @@ struct DTOKSi:CurrentTerm{
      *  @param Potential the normalised potential on the dust grain
      *  @return the ion current following original DTOKS method
      */
-    double Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, 
-        double Potential);
+    double Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, 
+        const double Potential);
     std::string PrintName(){ return "DTOKSi"; };
 };
 
@@ -154,8 +154,8 @@ struct DTOKSe:CurrentTerm{
      *  @param Potential the normalised potential on the dust grain
      *  @return the electron current following original DTOKS method
      */
-    double Evaluate(Matter* Sample, std::shared_ptr<PlasmaData> Pdata, 
-        double Potential);
+    double Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, 
+        const double Potential);
     std::string PrintName(){ return "DTOKSe"; };
 };
 ///@}

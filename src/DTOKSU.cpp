@@ -1,7 +1,7 @@
 /** @file DTOKSU.cpp
  *  @brief Implementation of class for physics models relevant to dust charging
  *  
- *  Implement the member functions of the ChargeModel class
+ *  Implement the member functions of the DTOKSU class
  *  
  *  @author Luke Simons (ls5115@ic.ac.uk)
  *  @bug bugs, they definitely exist
@@ -11,16 +11,16 @@
 
 DTOKSU::DTOKSU( std::array<float,MN> acclvls, Matter *& sample, PlasmaData 
 &pdata, std::vector<HeatTerm*> HeatTerms, std::vector<ForceTerm*> ForceTerms, 
-ChargingTerm* ChargeModel): 
+std::vector<CurrentTerm*> CurrentTerms): 
 Sample(sample), WallBound(BoundaryDefaults), CoreBound(BoundaryDefaults),
 HM("Data/default_hm_0.txt",acclvls[1],HeatTerms,sample,pdata),
 FM("Data/default_fm_0.txt",acclvls[2],ForceTerms,sample,pdata),
-CM("Data/default_cm_0.txt",acclvls[0],ChargeModel,sample,pdata){
+CM("Data/default_cm_0.txt",acclvls[0],CurrentTerms,sample,pdata){
     D_Debug("\n\nIn DTOKSU::DTOKSU( std::array<float,MN> acclvls, "
         << "Matter *& sample, PlasmaData &pdata, "
         << "std::vector<HeatTerm*> HeatTerms, "
         << "std::vector<ForceTerm*> ForceTerms, "
-        << "ChargingTerm* ChargeModel): "
+        << "std::vector<CurrentTerm*> CurrentTerms): "
         << "Sample(sample), WallBound(BoundaryDefaults), "
         << "CoreBound(BoundaryDefaults),"
         << "HM(\"Data/default_hm_0.txt\",acclvls[1],heatmodels,sample,pdata),"
@@ -35,16 +35,16 @@ CM("Data/default_cm_0.txt",acclvls[0],ChargeModel,sample,pdata){
 
 DTOKSU::DTOKSU( std::array<float,MN> acclvls, Matter *& sample,
 PlasmaGrid_Data &pgrid,std::vector<HeatTerm*> HeatTerms, 
-std::vector<ForceTerm*> ForceTerms, ChargingTerm* ChargeModel):
+std::vector<ForceTerm*> ForceTerms, std::vector<CurrentTerm*> CurrentTerms):
 Sample(sample), WallBound(BoundaryDefaults), CoreBound(BoundaryDefaults),
 HM("Data/default_hm_0.txt",acclvls[1],HeatTerms,sample,pgrid),
 FM("Data/default_fm_0.txt",acclvls[2],ForceTerms,sample,pgrid),
-CM("Data/default_cm_0.txt",acclvls[0],ChargeModel,sample,pgrid){
+CM("Data/default_cm_0.txt",acclvls[0],CurrentTerms,sample,pgrid){
     D_Debug("\n\nIn DTOKSU::DTOKSU( std::array<float,MN> acclvls, "
         << "Matter *& sample, PlasmaGrid_Data &pgrid, "
         << "std::vector<HeatTerm*> HeatTerms, "
         << "std::vector<ForceTerm*> ForceTerms, "
-        << "ChargingTerm* ChargeModel): "
+        << "std::vector<CurrentTerm*> CurrentTerms): "
         << "Sample(sample), WallBound(BoundaryDefaults), "
         << "CoreBound(BoundaryDefaults),"
         << "HM(\"Data/default_hm_0.txt\",acclvls[1],heatmodels,sample,pdata),"
@@ -59,16 +59,16 @@ CM("Data/default_cm_0.txt",acclvls[0],ChargeModel,sample,pgrid){
 
 DTOKSU::DTOKSU( std::array<float,MN> acclvls, Matter *& sample, 
 PlasmaGrid_Data &pgrid, PlasmaData &pdata, std::vector<HeatTerm*> HeatTerms, 
-std::vector<ForceTerm*> ForceTerms, ChargingTerm* ChargeModel): 
+std::vector<ForceTerm*> ForceTerms, std::vector<CurrentTerm*> CurrentTerms): 
 Sample(sample), WallBound(BoundaryDefaults), CoreBound(BoundaryDefaults),
 HM("Data/default_hm_0.txt",acclvls[1],HeatTerms,sample,pgrid,pdata),
 FM("Data/default_fm_0.txt",acclvls[2],ForceTerms,sample,pgrid,pdata),
-CM("Data/default_cm_0.txt",acclvls[0],ChargeModel,sample,pgrid,pdata){
+CM("Data/default_cm_0.txt",acclvls[0],CurrentTerms,sample,pgrid,pdata){
     D_Debug("\n\nIn DTOKSU::DTOKSU( std::array<float,MN> acclvls, "
         << "Matter *& sample, PlasmaGrid_Data &pgrid, PlasmaData &pdata,"
         << "std::vector<HeatTerm*> HeatTerms, "
         << "std::vector<ForceTerm*> ForceTerms, "
-        << "ChargingTerm* ChargeModel): "
+        << "std::vector<CurrentTerm*> CurrentTerms): "
         << "Sample(sample), WallBound(BoundaryDefaults), "
         << "CoreBound(BoundaryDefaults),"
         << "HM(\"Data/default_hm_0.txt\",acclvls[1],heatmodels,sample,pdata),"
@@ -84,17 +84,17 @@ CM("Data/default_cm_0.txt",acclvls[0],ChargeModel,sample,pgrid,pdata){
 DTOKSU::DTOKSU( std::array<float,MN> acclvls, Matter *& sample, 
 PlasmaGrid_Data &pgrid, PlasmaData &pdata, Boundary_Data &wbound, 
 Boundary_Data &cbound, std::vector<HeatTerm*> HeatTerms, 
-std::vector<ForceTerm*> ForceTerms, ChargingTerm* ChargeModel): 
+std::vector<ForceTerm*> ForceTerms, std::vector<CurrentTerm*> CurrentTerms): 
 Sample(sample), WallBound(wbound), CoreBound(cbound),
 HM("Data/default_hm_0.txt",acclvls[1],HeatTerms,sample,pgrid,pdata),
 FM("Data/default_fm_0.txt",acclvls[2],ForceTerms,sample,pgrid,pdata),
-CM("Data/default_cm_0.txt",acclvls[0],ChargeModel,sample,pgrid,pdata){
+CM("Data/default_cm_0.txt",acclvls[0],CurrentTerms,sample,pgrid,pdata){
     D_Debug("\n\nIn DTOKSU::DTOKSU( std::array<float,MN> acclvls, "
         << "Matter *& sample, PlasmaGrid_Data &pgrid, PlasmaData &pdata,"
         << "Boundary_Data &wbound, Boundary_Data &cbound,"
         << "std::vector<HeatTerm*> HeatTerms, "
         << "std::vector<ForceTerm*> ForceTerms, "
-        << "ChargingTerm* ChargeModel): "
+        << "std::vector<CurrentTerm*> CurrentTerms): "
         << "Sample(sample), WallBound(BoundaryDefaults), "
         << "CoreBound(BoundaryDefaults),"
         << "HM(\"Data/default_hm_0.txt\",acclvls[1],heatmodels,sample,pdata),"
