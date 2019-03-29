@@ -6,13 +6,11 @@
  *  @author Luke Simons (ls5115@ic.ac.uk)
  *  @bug bugs, they definitely exist
  */
-
 #include "ForceModel.h"
 
 ForceModel::ForceModel():
 Model(){
     F_Debug("\n\nIn ForceModel::ForceModel():Model()\n\n");
-    OldTemp = Sample->get_temperature();
     CreateFile("Default_Force_filename.txt");
 }
 
@@ -24,7 +22,6 @@ Model(filename,sample,pdata,accuracy){
         << "Matter *& sample, PlasmaData const *& pdata) : "
         << "Model(sample,pdata,accuracy)\n\n");
     ForceTerms = forceterms;
-    OldTemp = Sample->get_temperature();
     CreateFile(filename);
 }
 
@@ -36,7 +33,6 @@ Model(filename,sample,*pdata,accuracy){
         << "Matter *& sample, PlasmaData const *& pdata) : "
         << "Model(sample,pdata,accuracy)\n\n");
     ForceTerms = forceterms;
-    OldTemp = Sample->get_temperature();
     CreateFile(filename);
 }
 
@@ -48,7 +44,6 @@ Model(filename,sample,pgrid,accuracy){
         << "Matter *& sample, PlasmaGrid const& pgrid) : "
         << "Model(sample,pgrid,accuracy)\n\n");
     ForceTerms = forceterms;
-    OldTemp = Sample->get_temperature();
     CreateFile(filename);
 }
 
@@ -61,7 +56,6 @@ Model(filename,sample,pgrid,pdata,accuracy){
         << "Matter *& sample, PlasmaGrid const& pgrid) : "
         << "Model(sample,pgrid,accuracy)\n\n");
     ForceTerms = forceterms;
-    OldTemp = Sample->get_temperature();
     CreateFile(filename);
 }
 
@@ -92,7 +86,8 @@ void ForceModel::Print(){
 
     //!< Loop over force terms and print their evaluations
     for(auto iter = ForceTerms.begin(); iter != ForceTerms.end(); ++iter) {
-        ModelDataFile << "\t" << (*iter)->Evaluate(Sample,Pdata);
+        ModelDataFile << "\t" 
+            << (*iter)->Evaluate(Sample,Pdata,Sample->get_velocity());
     }
 
     ModelDataFile << "\n";
@@ -104,7 +99,9 @@ double ForceModel::ProbeTimeStep()const{
     F_Debug( "\tIn ForceModel::ProbeTimeStep()const\n\n" );
 
     double timestep(0);
-    threevector Acceleration = CalculateAcceleration();
+    threevector Acceleration 
+        = CalculateAcceleration(Sample->get_position(),Sample->get_velocity());
+
     //!< For Accuracy = 1.0, requires change in velocity less than 10cm/s
     if( Acceleration.mag3() == 0 ){
         static bool runOnce = true;
@@ -158,16 +155,24 @@ void ForceModel::Force(double timestep){
     //!< of the process.
     assert(timestep > 0 && timestep <= TimeStep );
 
-    threevector Acceleration = CalculateAcceleration();
-    OldTemp = Sample->get_temperature();    //!< Update OldTemp
-
+    //!< Code for Euler time step, this was the original DTOKSU method
+    threevector Acceleration 
+        = CalculateAcceleration(Sample->get_position(),Sample->get_velocity());
     threevector ChangeInPosition(
         Sample->get_velocity().getx()*timestep,
         (Sample->get_velocity().gety()*timestep)/Sample->get_position().getx(),
         Sample->get_velocity().getz()*timestep);
-
     threevector ChangeInVelocity = Acceleration*timestep;
 
+    //!< Code for 4th order Runge Kutta time step, higher accuracy and stability
+    threevector xi = Sample->get_position();
+    threevector vi = Sample->get_velocity();
+    RungeKutta4(xi,vi,timestep);
+    //std::cout << "\n\nEuler dx = " << ChangeInPosition;
+    //std::cout << "\nEuler dv = " << ChangeInVelocity;
+    //std::cout << "\nRK4 dx = " << xi-Sample->get_position();
+    //std::cout << "\nRK4 dv = " << vi-Sample->get_velocity(); std::cin.get();
+    
     //!< Assert change in absolute vel less than ten times accuracy
     assert( ChangeInVelocity.mag3() < 0.1*Accuracy );
 
@@ -212,18 +217,62 @@ void ForceModel::Force(){
     Force(TimeStep);
 }
 
-threevector ForceModel::CalculateAcceleration()const{
-    F_Debug("\tIn ForceModel::CalculateAcceleration()const\n\n");
-    threevector Accel(0.0,0.0,0.0);
+threevector ForceModel::CalculateAcceleration(threevector position,
+        threevector velocity)const{
+    F_Debug("\tIn ForceModel::CalculateAcceleration(threevector position, "
+        << "threevector velocity)const\n\n");
 
+    //!< First term which is always present is the centrifugal acceleration due
+    //!< to the cylindrical coordinate system.
+    threevector Accel(
+        velocity.gety()*velocity.gety()/position.getx(),
+        -velocity.getx()*velocity.gety()/position.getx(),
+        0.0);
+
+    //!< Sum all other force terms for the velocity given.
     for(auto iter = ForceTerms.begin(); iter != ForceTerms.end(); ++iter) {
-        Accel += (*iter)->Evaluate(Sample,Pdata);
-        F1_Debug( "\n\t\t" << (*iter)->PrintName << "=" 
-            << (*iter)->Evaluate(Sample,Pdata) );
+        Accel += (*iter)->Evaluate(Sample,Pdata,velocity);
+        F1_Debug( "\n\t\t" << (*iter)->PrintName() << " = " 
+            << (*iter)->Evaluate(Sample,Pdata,velocity) );
     }
 
     F1_Debug( "\n\t\tAccel = " << Accel << "\n\n" );
-    
 
     return Accel;
+}
+
+void ForceModel::RungeKutta4(threevector &xf, threevector &vf, 
+        double timestep)const{
+
+    threevector xi = Sample->get_position();
+    threevector vi = Sample->get_velocity();
+
+    threevector k1x(
+        vi.getx()*timestep,
+        (vi.gety()*timestep)/xi.getx(), 
+        vi.getz()*timestep);
+    threevector k1v = timestep*CalculateAcceleration(xi,vi);
+
+    threevector k2x(
+        (vi.getx()+k1v.getx()/2.0)*timestep,
+        ((vi.gety()+k1v.gety())*timestep)/(xi.getx()+k1x.getx()/2.0), 
+        (vi.getz()+k1v.getz()/2.0)*timestep);
+    threevector k2v 
+        = timestep*CalculateAcceleration(xi+k1x*(1.0/2.0),vi+k1v*(1.0/2.0));
+
+    threevector k3x(
+        (vi.getx()+k2v.getx()/2.0)*timestep,
+        ((vi.gety()+k2v.gety())*timestep)/(xi.getx()+k2x.getx()/2.0), 
+        (vi.getz()+k2v.getz()/2.0)*timestep);
+    threevector k3v 
+        = timestep*CalculateAcceleration(xi+k2x*(1.0/2.0),vi+k2v*(1.0/2.0));
+
+    threevector k4x(
+        (vi.getx()+k3v.getx()/2.0)*timestep,
+        ((vi.gety()+k3v.gety())*timestep)/(xi.getx()+k3x.getx()/2.0), 
+        (vi.getz()+k3v.getz()/2.0)*timestep);
+    threevector k4v = timestep*CalculateAcceleration(xi+k3x,vi+k3v);
+
+    xf = xi + (k1x + 2.0*(k2x+k3x) + k4x)*(1.0/6.0);
+    vf = vi + (k1v + 2.0*(k2v+k3v) + k4v)*(1.0/6.0);
 }

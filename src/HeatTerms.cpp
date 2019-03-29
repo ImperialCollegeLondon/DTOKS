@@ -36,10 +36,6 @@ double EvaporationModel::Evaluate(const Matter* Sample, const std::shared_ptr<Pl
 
     double EvapFlux = Flux::EvaporationFlux(Sample, Pdata, DustTemperature);
 
-    if( EvapFlux != EvapFlux ){ 
-        std::cout << "\n\nError! EvapFlux = " << EvapFlux << "\n";
-        throw std::exception(); 
-    }
 
     //!< See GrainStructs.h for more info on 'bondenergy'. 
     //!< Added to account for energy lost by breaking bonds.

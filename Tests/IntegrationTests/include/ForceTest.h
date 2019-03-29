@@ -22,13 +22,12 @@ int ForceTest(char Element, std::string ForceType, double accuracy){
 
 	// Set to true all Force models that are wanted
 	bool Gravity = false;		// IS OFF!
-	bool Centrifugal = false;	// IS OFF!
 	bool Lorentz = false;		// IS OFF!
 	bool SOMLIonDrag = false;	// IS OFF!
 	bool SMOMLIonDrag = false;	// IS OFF!
+	bool HybridIonDrag = false;	// IS OFF!
 	bool DTOKSIonDrag = false;	// IS OFF!
 	bool DUSTTIonDrag = false;	// IS OFF!
-	bool HybridIonDrag = false;	// IS OFF!
     bool NeutralDrag = false;	// Is OFF!
     bool RocketForce = false;	// Is OFF!
 
@@ -40,6 +39,8 @@ int ForceTest(char Element, std::string ForceType, double accuracy){
 	threevector GravityForce(0, 0, -9.81);
 	Pdata.Gravity = GravityForce;
 //	threevector Efield(1.0, -2.0, 3.0);
+    Pdata.mi           = Mp;        // kg, Ion Mass
+    Pdata.A            = 1.0;       // arb, Atomic Number
 	threevector Efield(1.0, 0.0, 0.0);
 	Pdata.ElectricField = Efield;
 	threevector Bfield(0.0, 0.0, 10.0);
@@ -66,9 +67,18 @@ int ForceTest(char Element, std::string ForceType, double accuracy){
 		std::cout << "\n\nInput not recognised! Exiting program\n.";
 		return -1;
 	}
-
-    std::array<bool,FMN> ForceModels  = {Gravity,Centrifugal,Lorentz,SOMLIonDrag,SMOMLIonDrag,
-        DTOKSIonDrag,DUSTTIonDrag,HybridIonDrag,NeutralDrag,RocketForce};
+	std::array<bool,9> ForceModels  = {Gravity,Lorentz,SOMLIonDrag,SMOMLIonDrag,
+        HybridIonDrag,DTOKSIonDrag,DUSTTIonDrag,NeutralDrag,RocketForce};
+    std::vector<ForceTerm*> ForceTerms;
+	if( ForceModels[0] ) ForceTerms.push_back(new Term::Gravity());
+    if( ForceModels[1] ) ForceTerms.push_back(new Term::LorentzForce());
+    if( ForceModels[2] ) ForceTerms.push_back(new Term::SOMLIonDrag());
+    else if( ForceModels[3] ) ForceTerms.push_back(new Term::SMOMLIonDrag());
+    else if( ForceModels[4] ) ForceTerms.push_back(new Term::HybridIonDrag());
+    else if( ForceModels[5] ) ForceTerms.push_back(new Term::DTOKSIonDrag());
+    else if( ForceModels[6] ) ForceTerms.push_back(new Term::DUSTTIonDrag());
+    if( ForceModels[7] ) ForceTerms.push_back(new Term::NeutralDrag());
+    if( ForceModels[8] ) ForceTerms.push_back(new Term::RocketForce());
 
 	// Models and ConstModels are placed in an array in this order:
 	std::array<char, CM> ConstModels =
@@ -107,10 +117,9 @@ int ForceTest(char Element, std::string ForceType, double accuracy){
 
 	// START NUMERICAL TESTING
 	std::string filepath = "Tests/IntegrationTests/Data/out_" + ForceType + "_Test.txt";
-	ForceModel MyModel(filepath,accuracy,ForceModels,Sample,Pdata);
+	ForceModel MyModel(filepath,accuracy,ForceTerms,Sample,Pdata);
 
 	double Mass = Sample->get_mass();
-	MyModel.UpdateTimeStep();
 	MyModel.UpdateTimeStep();
 	double imax(10000);
 	for( size_t i(0); i < imax; i ++)
@@ -121,7 +130,8 @@ int ForceTest(char Element, std::string ForceType, double accuracy){
 	// START ANALYTICAL MODEL
 	threevector AnalyticVelocity;
 	double ModelTimeStep = MyModel.get_timestep();
-	double qtom = 4*PI*epsilon0*Sample->get_radius()*Kb*Pdata.ElectronTemp*Sample->get_potential()/(echarge*Mass);
+	double qtom = -4*PI*epsilon0*Sample->get_radius()*Kb*Pdata.ElectronTemp*Sample->get_potential()/(echarge*Mass);
+
 	if( ForceType == "Gravity" ){
 		AnalyticVelocity = (Pdata.Gravity)*(imax*MyModel.get_timestep());
 	}else if( ForceType == "EFieldGravity" ){

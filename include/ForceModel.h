@@ -23,11 +23,7 @@ class ForceModel : public Model {
     private:
         /** @brief vector of force terms defining the force terms used
          */
-        std::vector<ForceTerm*> ForceTerms; 
-
-        /** @brief The temperature of the dust grain in the previous step
-         */
-        double OldTemp;
+        std::vector<ForceTerm*> ForceTerms;
 
         /** @brief Print model data to ModelDataFile
          */
@@ -35,7 +31,16 @@ class ForceModel : public Model {
 
         /** @brief The sum of all the FMN+1 force terms
          */
-        threevector CalculateAcceleration()const;
+        threevector CalculateAcceleration(threevector position,
+            threevector velocity)const;
+        /** @brief Calculate change in position and velocity using RK4 method
+         * 
+         *  @param xf Reference to the final position returned by the function
+         *  @param xf Reference to the final velocity returned by the function
+         *  @param timestep the time step over which functions are evaluated
+         */
+        void RungeKutta4(threevector &xf, threevector &vf, 
+            double timestep)const;
 
     public:
         ForceModel();

@@ -5,15 +5,9 @@
  *  
  *  @author Luke Simons (ls5115@ic.ac.uk)
  *  @bug bugs, they definitely exist
- *  @bug sgn() function should be within a namespace
  */
 
 #include "Model.h"
-
-//!< Function to return the sgn of val, true for positive, false for negative
-template <typename T> int sgn(T val) {
-    return (T(0) < val) - (val < T(0));
-}
 
 Model::Model():
 FileName("Data/default_0.txt"),Sample(new Tungsten),
@@ -430,7 +424,10 @@ void Model::ImpurityPrint(){
 // Print the inside and the outside of the tokamak
 /*
 
-
+//!< Function to return the sgn of val, true for positive, false for negative
+template <typename T> int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
+}
 
 // Interpolate between grid points to determine plasma data
 const void Model::interpolatepdata(const int i,const int k)const{

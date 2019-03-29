@@ -56,7 +56,7 @@ class DTOKSU_Manager{
         PlasmaGrid_Data Pgrid;
         PlasmaData Pdata;
         //!< FORCE MODEL NUMBER, the number of charge models
-        const static unsigned int FMN = 10;
+        const static unsigned int FMN = 9;
         // HEATING MODEL NUMBER, the number of charge models
         const static unsigned int HMN = 18;
         // CHARGE MODEL NUMBER, the number of charge models

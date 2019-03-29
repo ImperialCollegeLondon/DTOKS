@@ -127,8 +127,8 @@ double HeatingModel::ProbeTimeStep()const{
             if( (*iter)->PrintName() == "EvaporationModel" ){
                 if( Sample->is_liquid() ){
                     double MassTimeStep = fabs((0.01*Sample->get_mass()*AvNo)
-                        /(Flux::EvaporationFlux(Sample,Pdata,Sample->get_temperature())*
-                        Sample->get_atomicmass()));
+                        /fabs(Flux::EvaporationFlux(Sample,Pdata,
+                        Sample->get_temperature())*Sample->get_atomicmass()));
                     if( MassTimeStep < timestep ){
                         H_Debug("\nMass is limiting time step\nMassTimeStep = " 
                             << MassTimeStep << "\ntimestep = " << timestep);
@@ -173,10 +173,10 @@ double HeatingModel::ProbeTimeStep()const{
         }
     }
 
-    H1_Debug("\ntimestep = " << timestep << "Sample->get_mass() = " 
-        << Sample->get_mass() << "\nSample->get_heatcapacity() = " << 
-        Sample->get_heatcapacity() << "\nTotalPower = " << TotalPower 
-        << "\nAccuracy = " << Accuracy);
+    H1_Debug("\n\n\ttimestep = " << timestep << "\n\tSample->get_mass() = " 
+        << Sample->get_mass() << "\n\tSample->get_heatcapacity() = " << 
+        Sample->get_heatcapacity() << "\n\tTotalPower = " << TotalPower 
+        << "\n\tAccuracy = " << Accuracy);
     assert(timestep > 0 && timestep != INFINITY && timestep == timestep);
 
     return timestep;
@@ -303,7 +303,7 @@ void HeatingModel::Heat(double timestep){
     
     //!< Calculate total energy through RungeKutta4 method
     double TotalEnergy = RungeKutta4(timestep);
-    H1_Debug( "\tTotalEnergy = " << TotalEnergy << "\n");
+    H1_Debug( "\tTotalEnergy = " << TotalEnergy << "kJ\n");
     Sample->update_temperature(TotalEnergy);  //!< Update Temperature
 
     //!< Account for evaporative mass loss, if model is turned on, if it's a 
@@ -317,9 +317,9 @@ void HeatingModel::Heat(double timestep){
                     Sample->get_atomicmass())/AvNo );
     }
 
-    H1_Debug("\t\tMass Loss = " 
-        << (timestep*Flux::EvaporationFlux(Sample,Pdata,Sample->get_temperature())*
-        Sample->get_atomicmass())/AvNo << "\n");
+    H1_Debug("\n\t\tMass Loss = " 
+        << (timestep*Flux::EvaporationFlux(Sample,Pdata,
+        Sample->get_temperature())*Sample->get_atomicmass())/AvNo << "\n");
 
     if( !Sample->is_gas() )
         Sample->update();
@@ -340,7 +340,7 @@ double HeatingModel::CalculatePower(double DustTemperature)const{
         << DustTemperature << ")\n\n");
     //!< Rreduces the number of divisions
     double TotalPower = PowerIncident*1000;
-    H1_Debug("\n\n\tPowerIncident = \t"    << PowerIncident*1000 << "W");
+    H1_Debug("\n\n\t\tPowerIncident = \t"    << PowerIncident*1000 << "W");
     
     //!< Loop over heat terms and print their names
     for(auto iter = HeatTerms.begin(); iter != HeatTerms.end(); ++iter) {
@@ -353,17 +353,17 @@ double HeatingModel::CalculatePower(double DustTemperature)const{
             TotalPower 
                 += (*iter)->Evaluate(Sample, Pdata, DustTemperature);
         }
-        H1_Debug("\n\t" << (*iter)->PrintName() << "= \t"  
+        H1_Debug("\n\t\t" << (*iter)->PrintName() << " = "  
             << (*iter)->Evaluate(Sample, Pdata, DustTemperature)  << "W");
     }
     TotalPower = TotalPower/1000;
 
-    H1_Debug("\nTotalPower = \t"           << TotalPower*1000 << "W\n");
+    H1_Debug("\n\t\tTotalPower = \t" << TotalPower*1000 << "W\n\n");
     return TotalPower;
 }
 
 double HeatingModel::RungeKutta4(double timestep){
-    H_Debug( "\tIn HeatingModel::RungeKutta4()\n\n");
+    H_Debug( "\tIn HeatingModel::RungeKutta4(double timestep)\n\n");
     double k1 = CalculatePower(Sample->get_temperature()); 
     if(k1<0 && fabs(k1/2) > Sample->get_temperature()){
         std::cout << "\n\nThermal Equilibrium reached on condition (4):"
@@ -392,7 +392,8 @@ double HeatingModel::RungeKutta4(double timestep){
         ThermalEquilibrium = true;
         return (timestep/6)*(k1+2*k2+2*k3);
     }
-    H1_Debug( "\ntimestep = " << timestep << "\nk1 = " << k1 << "\nk2 =" << k2 
-        << "\nk3 = " << k3 << "\nk4 = " << k4);
+    H1_Debug( "\n\t\ttimestep = " << timestep << "\n\t\tk1 = " << k1 
+        << "\n\t\tk2 =" << k2 << "\n\t\tk3 = " << k3 << "\n\t\tk4 = " << k4
+        << "\n\n");
     return (timestep/6)*(k1+2*k2+2*k3+k4);
 };

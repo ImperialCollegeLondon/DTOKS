@@ -45,12 +45,15 @@ int HeatTest(char Element, std::string HeatType, double accuracy){
     bool DUSTTIonHeatFlux = false;
 
     PlasmaData *Pdata = new PlasmaData;
-    Pdata->NeutralDensity = 3e19;       // m^-3, Neutral density
-    Pdata->ElectronDensity = 8e17;      // m^-3, Electron density
-    double Potential = 1;           // arb, assumed negative, potential normalised to dust temperature, (-e*phi)/(Kb*Td)
-    Pdata->IonTemp = 10*1.16e4;     // K, Ion Temperature
-    Pdata->ElectronTemp = 10*1.16e4;    // K, Electron Temperature, convert from eV
-    Pdata->NeutralTemp = 10*1.16e4;     // K, Neutral Temperature, convert from eV
+    Pdata->NeutralDensity = 3e19;    // m^-3, Neutral density
+    Pdata->ElectronDensity = 8e17;   // m^-3, Electron density
+    Pdata->IonDensity = 8e17;        // m^-3, Electron density
+    double Potential = 1;            // arb, assumed negative, potential normalised to dust temperature, (-e*phi)/(Kb*Td)
+    Pdata->IonTemp = 10*1.16e4;      // K, Ion Temperature
+    Pdata->ElectronTemp = 10*1.16e4; // K, Electron Temperature, convert from eV
+    Pdata->NeutralTemp = 10*1.16e4;  // K, Neutral Temperature, convert from eV
+    Pdata->mi           = Mp;        // kg, Ion Mass
+    Pdata->A            = 1.0;       // arb, Atomic Number
     Pdata->AmbientTemp = 0;
 
     if( HeatType == "ConstantHeating" ){
@@ -75,14 +78,34 @@ int HeatTest(char Element, std::string HeatType, double accuracy){
         return -1;
     }
 
-
+    std::vector<HeatTerm*> HeatTerms;
     // Models and ConstModels are placed in an array in this order:
-    std::array<bool, HMN> Models = 
+    std::array<bool, 18> HeatModels = 
         {RadiativeCooling, EvaporativeCooling, NewtonCooling, NeutralHeatFlux,
             SOMLIonHeatFlux, SOMLNeutralRecombination, SMOMLIonHeatFlux, 
             SMOMLNeutralRecombination, TEE, SEE, PHLElectronHeatFlux,
             OMLElectronHeatFlux, DTOKSTEE, DTOKSSEE, DTOKSIonHeatFlux,
             DTOKSNeutralRecomb, DTOKSElectronHeatFlux, DUSTTIonHeatFlux };
+
+    if( HeatModels[0] )  HeatTerms.push_back(new Term::EmissivityModel());
+    if( HeatModels[1] )  HeatTerms.push_back(new Term::EvaporationModel());
+    if( HeatModels[2] )  HeatTerms.push_back(new Term::NewtonCooling());
+    if( HeatModels[3] )  HeatTerms.push_back(new Term::NeutralHeatFlux());
+    if( HeatModels[11] ) HeatTerms.push_back(new Term::OMLElectronHeatFlux());
+    else if( HeatModels[10] ) HeatTerms.push_back(new Term::PHLElectronHeatFlux());
+    else if( HeatModels[16] ) HeatTerms.push_back(new Term::DTOKSElectronHeatFlux());
+    if( HeatModels[4] )  HeatTerms.push_back(new Term::SOMLIonHeatFlux());
+    else if( HeatModels[6] )  HeatTerms.push_back(new Term::SMOMLIonHeatFlux());
+    else if( HeatModels[14] ) HeatTerms.push_back(new Term::DTOKSIonHeatFlux());
+    else if( HeatModels[17] ) HeatTerms.push_back(new Term::DUSTTIonHeatFlux());
+    if( HeatModels[5] )  HeatTerms.push_back(new Term::SOMLNeutralRecombination());
+    else if( HeatModels[7] )  HeatTerms.push_back(new Term::SMOMLNeutralRecombination());
+    else if( HeatModels[15] ) HeatTerms.push_back(new Term::DTOKSNeutralRecombination());
+    if( HeatModels[8] )  HeatTerms.push_back(new Term::SEE());
+    else if( HeatModels[12] ) HeatTerms.push_back(new Term::DTOKSSEE());
+    if( HeatModels[9] )  HeatTerms.push_back(new Term::TEE());
+    else if( HeatModels[13] ) HeatTerms.push_back(new Term::DTOKSTEE());
+
     std::array<char, CM> ConstModels =
         { EmissivityModel,ExpansionModel,HeatCapacityModel,BoilingModel,BreakupModel};
 
@@ -109,7 +132,7 @@ int HeatTest(char Element, std::string HeatType, double accuracy){
     Sample->set_potential(Potential);
     std::string filename = "Tests/IntegrationTests/Data/out_" + HeatType + "_Test.txt";
     double SA = Sample->get_surfacearea();
-    HeatingModel MyModel(filename,accuracy,Models,Sample,Pdata);
+    HeatingModel MyModel(filename,accuracy,HeatTerms,Sample,Pdata);
 
     MyModel.set_PowerIncident(Power);
     MyModel.UpdateTimeStep();
@@ -182,14 +205,9 @@ int HeatTest(char Element, std::string HeatType, double accuracy){
         double ElectronFluxPower = Sample->get_surfacearea()*2*ElectronFlux*Pdata->ElectronTemp*Kb/1000; // Convert from Joules to KJ
         double NeutralFluxPower = Sample->get_surfacearea()*2*NeutralFlux*Pdata->NeutralTemp*Kb/1000; // Convert from Joules to KJ
     
-    
-    
         double a = Power+ElectronFluxPower+NeutralFluxPower;
     
-    
-    
         double b = Sample->get_emissivity()*Sample->get_surfacearea()*Sigma/1000;
-        std::cout << "\nSample->get_surfacearea() : " << Sample->get_surfacearea() << "\nb : " << b;
         double ti(0), tf(0), t1(0), t2(0), t3(0), t4(0);
         double FinalTemp = pow(a/b,0.25)-0.000000001;
     //  std::cout << "\nFinalTemp = " << FinalTemp; std::cin.get();

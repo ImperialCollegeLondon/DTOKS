@@ -30,6 +30,28 @@ class ChargingModel : public Model{
          */
         void Print();
 
+        /** @name Root Finding Algorithms
+         *  @brief Functions which identify the root of a function
+         *
+         *  All methods should return the dust grain normalised potential with
+         *  a precision corresponding to \p Accuracy. 
+         */
+        ///@{
+        /** @brief Find Root of equation via the bisection method
+         *
+         *  See wikipedia for description 
+         *  https://en.wikipedia.org/wiki/Bisection_method
+         *  @return the value of x which produces a root of the equation
+         */
+        double Bisection(double DSec)const;
+        /** @brief Find Root of equation via the regula falsi method
+         *
+         *  See wikipedia for description 
+         *  https://en.wikipedia.org/wiki/False_position_method
+         *  @return the value of x which produces a root of the equation
+         */
+        double RegulaFalsi(double DSec)const;
+
 
     public:
         ChargingModel();

@@ -17,6 +17,23 @@
 
 #include "threevector.h"
 
+//!< Maximum values for plasma parameters
+namespace Overflows{
+    const double Density = 1e22;                      //!< High density
+    const double Temperature = 1.5e7;                 //!< Greater than tokamak
+    const double PlasmaVel = 100*sqrt((Kb*1.5e7)/Mp); //!< Mach 100
+    const double Flux = PlasmaVel*Density;            //!< Max Flux
+    const double Field = 100.0;                       //!< Very high field
+}
+
+namespace Underflows{
+    const double Density = 1e12;                      //!< Lower than discharge
+    const double Temperature = 100;                   //!< Very low plasma temp
+    const double PlasmaVel = 0.0;
+    const double Flux = 0.0;
+    const double Field = 0.0;
+}
+
 /** @brief Structure containing all the information defining the plasma 
  * conditions in the immediate surroundings of the dust grain 
  */

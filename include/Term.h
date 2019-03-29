@@ -26,7 +26,8 @@
  */
 struct ForceTerm{
     virtual threevector Evaluate(const Matter* Sample, 
-        const std::shared_ptr<PlasmaData> Pdata)=0;
+        const std::shared_ptr<PlasmaData> Pdata, 
+        const threevector velocity)=0;
     virtual std::string PrintName()=0;
 };
 
@@ -38,8 +39,8 @@ struct ForceTerm{
  *  power fluxes.
  */
 struct HeatTerm{
-    virtual double Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata,
-     const double Temp)=0;
+    virtual double Evaluate(const Matter* Sample, 
+        std::shared_ptr<PlasmaData> Pdata, const double Temp)=0;
     virtual std::string PrintName()=0;
 };
 
@@ -50,8 +51,8 @@ struct HeatTerm{
  *  within the charging model.
  */
 struct CurrentTerm{
-    virtual double Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, 
-        const double Potential)=0;
+    virtual double Evaluate(const Matter* Sample, 
+        const std::shared_ptr<PlasmaData> Pdata, const double Potential)=0;
     virtual std::string PrintName()=0;
 };
 

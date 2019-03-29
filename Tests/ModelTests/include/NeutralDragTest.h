@@ -22,13 +22,12 @@ int NeutralDragTest(char Element, bool DragSwitch){
 
     // Set to true all Force models that are wanted
     bool Gravity = true;        // IS ON!
-    bool Centrifugal = true;    // IS ON!
     bool Lorentz = true;        // IS ON!
     bool SOMLIonDrag = true;    // IS ON!
     bool SMOMLIonDrag = true;   // IS ON!
+    bool HybridDrag = true;   // IS ON!
     bool DTOKSIonDrag = true;   // IS ON!
     bool DUSTTIonDrag = true;   // IS ON!
-    bool HybridDrag = true;   // IS ON!
     bool NeutralDrag = DragSwitch;  // IS ON!
     bool RocketForce = true;   // IS OFF!
 
@@ -45,9 +44,19 @@ int NeutralDragTest(char Element, bool DragSwitch){
     Pdata->Gravity      = gravity;      // ms^-2, acceleration due to gravity
     Pdata->mi           = Mp;           // kg, Ion mass is proton mass 
 
-    std::array<bool,FMN> ForceModels  = {Gravity,Centrifugal,Lorentz,SOMLIonDrag,SMOMLIonDrag,
-        DTOKSIonDrag,DUSTTIonDrag,HybridDrag,NeutralDrag,RocketForce};
-
+    std::array<bool,9> ForceModels  = {Gravity,Lorentz,SOMLIonDrag,SMOMLIonDrag,
+        HybridDrag,DTOKSIonDrag,DUSTTIonDrag,NeutralDrag,RocketForce};
+    std::vector<ForceTerm*> ForceTerms;
+    if( ForceModels[0] ) ForceTerms.push_back(new Term::Gravity());
+    if( ForceModels[1] ) ForceTerms.push_back(new Term::LorentzForce());
+    if( ForceModels[2] ) ForceTerms.push_back(new Term::SOMLIonDrag());
+    else if( ForceModels[3] ) ForceTerms.push_back(new Term::SMOMLIonDrag());
+    else if( ForceModels[4] ) ForceTerms.push_back(new Term::HybridIonDrag());
+    else if( ForceModels[5] ) ForceTerms.push_back(new Term::DTOKSIonDrag());
+    else if( ForceModels[6] ) ForceTerms.push_back(new Term::DUSTTIonDrag());
+    if( ForceModels[7] ) ForceTerms.push_back(new Term::NeutralDrag());
+    if( ForceModels[8] ) ForceTerms.push_back(new Term::RocketForce());
+    
     // Models and ConstModels are placed in an array in this order:
     std::array<char, CM> ConstModels =
         { EmissivityModel,ExpansionModel,HeatCapacityModel,BoilingModel,'n'};
@@ -79,7 +88,7 @@ int NeutralDragTest(char Element, bool DragSwitch){
     std::string filename;
     if( DragSwitch )    filename = "Data/NeutralDragOn.txt";
     else                filename = "Data/NeutralDragOff.txt";
-    ForceModel MyModel(filename,0.1,ForceModels,Sample,Pdata);
+    ForceModel MyModel(filename,0.1,ForceTerms,Sample,Pdata);
     double Mass = Sample->get_mass();
     MyModel.UpdateTimeStep();
     size_t imax(100000);

@@ -32,7 +32,7 @@ struct GrainData MatterDefaults = {
     0,              //!< RN                 should be updated
     0,              //!< Potential          should be updated
     false,          //!< Is Positive        should be updated
-    {0.0,0.0,0.0},  //!< Dust position      should be updated
+    {1.0,0.0,0.0},  //!< Dust position      should be updated
     {0,0,0},        //!< Dust Velocity      case dependant
     0,              //!< Rotational Freq    fine
     0,              //!< FusionEnergy       fine
@@ -261,7 +261,8 @@ void Matter::update_boilingtemp(){
     //    (1000*R)*(1/St.Temperature() - 1/(St.MeltingTemp)));
 
     double CapillaryPressure = Ec.SurfaceTension*2/(St.Radius*101325);
-    M2_Debug("\n\nCapillaryPressure = " << CapillaryPressure << "atmospheres.");
+    M2_Debug("\n\n\t\tCapillaryPressure = " << CapillaryPressure 
+        << "atmospheres.");
     if( ConstModels[3] == 's' || ConstModels[3] == 'S' ){ //!< For super boiling
         //!< We can't do Graphite, it has no vapour pressure
         assert(Ec.Elem != 'g' && Ec.Elem != 'G'); 
@@ -292,9 +293,10 @@ void Matter::update_boilingtemp(){
             << "Invalid input '" << ConstModels[3] << "' for Emissivity Model.";
         assert( strchr("yYnNsStT",ConstModels[3]) );
     }
-    M2_Debug("\nR*log(CapillaryPressure)/(1000*Ec.LatentVapour*Ec.AtomicMass) "
-        << "= " << R*log(CapillaryPressure)/(1000*Ec.LatentVapour*Ec.AtomicMass) 
-        << "\nSt.SuperBoilingTemp = " << St.SuperBoilingTemp << "\n");
+    M2_Debug("\n\t\tR*log(CapillaryPressure)/"
+        << "(1000*Ec.LatentVapour*Ec.AtomicMass) = " 
+        << R*log(CapillaryPressure)/(1000*Ec.LatentVapour*Ec.AtomicMass) 
+        << "\n\t\tSt.SuperBoilingTemp = " << St.SuperBoilingTemp << "\n");
 }
 
 void Matter::update_state(double EnergyIn){
@@ -329,10 +331,10 @@ void Matter::update_state(double EnergyIn){
             //!< Temperature
             St.FusionEnergy += EnergyIn;
             St.Temperature = Ec.MeltingTemp;
-            M2_Debug("\n*Liquid is melting*, T = " << St.Temperature
-                << "\nFusionEnergy is < LatentFusion*Mass : " << St.FusionEnergy 
-                << " < " << Ec.LatentFusion*St.Mass << "\nSt.Mass = " 
-                << St.Mass);
+            M2_Debug("\n\t*Liquid is melting*, T = " << St.Temperature
+                << "\n\tFusionEnergy is < LatentFusion*Mass : " 
+                << St.FusionEnergy << " < " << Ec.LatentFusion*St.Mass 
+                << "\n\tSt.Mass = " << St.Mass);
             //!< if it melts fully
             if( St.FusionEnergy >= Ec.LatentFusion*St.Mass ){ 
                 St.Liquid = true; St.Gas = false;
@@ -340,10 +342,10 @@ void Matter::update_state(double EnergyIn){
                         (St.FusionEnergy-Ec.LatentFusion*St.Mass)
                         /St.HeatCapacity;
             }
-            M2_Debug( "\nEnergyIn = " << EnergyIn << "\nSt.FusionEnergy = " 
-                << St.FusionEnergy << "\nEc.LatentFusion = " << Ec.LatentFusion 
-                << "\nEc.LatentFusion*Mass = " << Ec.LatentFusion*St.Mass 
-                << "\nMass = " << St.Mass);
+            M2_Debug( "\n\tEnergyIn = " << EnergyIn << "\n\tSt.FusionEnergy = " 
+                << St.FusionEnergy << "\n\tEc.LatentFusion = " 
+                << Ec.LatentFusion << "\n\tEc.LatentFusion*Mass = " 
+                << Ec.LatentFusion*St.Mass << "\n\tMass = " << St.Mass);
         //!< Else it is in the liquid phase!
         }else{ St.Liquid = true; St.Gas = false; }  
     }else if( St.Temperature >= St.SuperBoilingTemp ){ //!< Boiling or Gas
@@ -352,18 +354,18 @@ void Matter::update_state(double EnergyIn){
         if( St.VapourEnergy < Ec.LatentVapour*PreBoilMass ){ 
             //!< Add energy to Latent heat and set Temperature to Melting 
             //!< Temperature
-            M2_Debug( "\nEnergyIn = " << EnergyIn << "\nSt.VapourEnergy = " 
-                << St.VapourEnergy << "\nEc.LatentVapour = " << Ec.LatentVapour 
-                << "\nEc.LatentVapour*PreBoilMass = " 
-                << Ec.LatentVapour*PreBoilMass << "\nMass = " << St.Mass 
-                << "\nPreBoilMass = "  << PreBoilMass);
+            M2_Debug( "\n\tEnergyIn = " << EnergyIn << "\n\tSt.VapourEnergy = " 
+                << St.VapourEnergy << "\n\tEc.LatentVapour = " 
+                << Ec.LatentVapour << "\n\tEc.LatentVapour*PreBoilMass = " 
+                << Ec.LatentVapour*PreBoilMass << "\n\tMass = " << St.Mass 
+                << "\n\tPreBoilMass = "  << PreBoilMass);
 
             update_mass(EnergyIn/Ec.LatentVapour);
             St.VapourEnergy += EnergyIn; 
             St.Temperature = St.SuperBoilingTemp;
 
-            M2_Debug("\n*Liquid is boiling*, T = " << St.Temperature 
-                << " K\nVapourEnergy is < St.LatentVapour*Mass : " 
+            M2_Debug("\n\t*Liquid is boiling*, T = " << St.Temperature 
+                << " K\n\tVapourEnergy is < St.LatentVapour*Mass : " 
                 << St.VapourEnergy << " < " << Ec.LatentVapour*St.Mass);
             //!< Check if it has boiled
             if( St.VapourEnergy > (Ec.LatentVapour*Ec.RTDensity*PI*
@@ -385,11 +387,11 @@ void Matter::update_state(double EnergyIn){
         St.Gas = true;
     }
 
-    M2_Debug( "\n**** Temp change = " << EnergyIn/(St.Mass*St.HeatCapacity) 
-        << "\n**** Ein = " << EnergyIn << "\n**** Mass = " << St.Mass 
-        << "\n**** Cv = " << St.HeatCapacity << "\nSt.Temperature = " 
+    M2_Debug( "\n\t**** Temp change = " << EnergyIn/(St.Mass*St.HeatCapacity) 
+        << "\n\t**** Ein = " << EnergyIn << "\n\t**** Mass = " << St.Mass 
+        << "\n\t**** Cv = " << St.HeatCapacity << "\n\tSt.Temperature = " 
         << St.Temperature);
-    M2_Debug( "\n**** St.Liquid = " << St.Liquid << "\n**** St.Gas = " 
+    M2_Debug( "\n\t**** St.Liquid = " << St.Liquid << "\n\t**** St.Gas = " 
         << St.Gas);
 
     assert(St.Temperature > 0);
@@ -417,7 +419,7 @@ void Matter::update(){
     double CriticalRotation = 0.56*sqrt(8*Ec.SurfaceTension
         /(St.Density*pow(St.Radius,3)));
     double FudgeFactor = 1.0;
-    M2_Debug("\nCriticalRotation = " << CriticalRotation << "\n");
+    M2_Debug("\n\tCriticalRotation = " << CriticalRotation << "\n");
     
     //!< Determine if rotational breakup has occured, if it's a liquid and the
     //!< model is turned on
@@ -459,14 +461,14 @@ void Matter::update_models(std::array<char,CM> &constmodels){
 
 void Matter::update_mass(double LostMass){ 
     M_Debug("\tIn Matter::update_mass(double LostMass)\n\n");
-    M2_Debug("\nMassLoss = " << LostMass  << "\nSt.Mass = " << St.Mass 
-        << "\nRadius = " << St.Radius << "\nDensity = " << St.Density);
+    M2_Debug("\n\tMassLoss = " << LostMass  << "\n\tSt.Mass = " << St.Mass 
+        << "\n\tRadius = " << St.Radius << "\n\tDensity = " << St.Density);
 
     //!< Subtract lost mass
     St.Mass -= LostMass;
 
     //!< If it's a liquid, account for the lost latent energy
-    if( St.Liquid ){
+    if( St.Liquid && St.Temperature != Ec.MeltingTemp ){
         St.FusionEnergy = Ec.LatentFusion*St.Mass;
     }
 
@@ -485,9 +487,9 @@ void Matter::update_temperature(double EnergyIn){
 
     //!< Assert temperature changes smaller than 10% of current temperature
     if(abs(EnergyIn/(St.Mass*St.HeatCapacity)) > St.Temperature*0.1){
-        M2_Debug("\n\nSt.Temperature = " << St.Temperature << "\nSt.Mass = " 
-            << St.Mass << "\nSt.HeatCapacity = " << St.HeatCapacity 
-            << "\nEnergyIn = " << EnergyIn);
+        M2_Debug("\n\n\tSt.Temperature = " << St.Temperature << "\n\tSt.Mass = " 
+            << St.Mass << "\n\tSt.HeatCapacity = " << St.HeatCapacity 
+            << "\n\tEnergyIn = " << EnergyIn);
         std::cerr << "\nEnergyIn = " << EnergyIn << "\nSt.Mass = " << St.Mass 
             << "\nSt.HeatCapacity = " << St.HeatCapacity 
             << "\nError, EnergyIn/(St.Mass*St.HeatCapacity) = " 
@@ -500,7 +502,7 @@ void Matter::update_temperature(double EnergyIn){
 
     //!< Update state
     M_Debug("\t"); update_state(EnergyIn);
-    M2_Debug("\nSt.Temperature = " << St.Temperature);
+    M2_Debug("\n\tSt.Temperature = " << St.Temperature << "\n");
 
     //!< If it's not a gas, check temperature is within acceptable range
     if(!St.Gas) 

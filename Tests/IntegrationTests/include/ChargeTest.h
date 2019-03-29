@@ -40,10 +40,13 @@ int ChargeTest(char Element){
 
 	PlasmaData *Pdata = new PlasmaData;
 	Pdata->NeutralDensity = 3e19;		// m^-3, Neutral density
+	Pdata->IonDensity = 8e17;	 	// m^-3, Electron density
 	Pdata->ElectronDensity = 8e17;	 	// m^-3, Electron density
 	Pdata->IonTemp = 10*1.16e4;	 	// K, Ion Temperature
 	Pdata->NeutralTemp = 10*1.16e4; 	// K, Neutral Temperature, convert from eV
 	Pdata->ElectronTemp = 10*1.16e4;	// K, Electron Temperature, convert from eV
+    Pdata->mi           = Mp;        // kg, Ion Mass
+    Pdata->A            = 1.0;       // arb, Atomic Number
 	threevector GravityForce(0, 0, -9.81);
 	Pdata->Gravity = GravityForce;
 	threevector Efield(1, -2, 3);
@@ -51,8 +54,10 @@ int ChargeTest(char Element){
 	threevector Bfield(0.0, 0.0, 0.0);
 	Pdata->MagneticField = Bfield;
 
-	std::array<bool,CMN> ChargeModels  = {false,false,false,false,false,false,false,
-		false,true,false,false};
+    std::vector<CurrentTerm*> CurrentTerms;
+    CurrentTerms.push_back(new Term::OMLe());
+    CurrentTerms.push_back(new Term::OMLi());
+
 
 	// Models and ConstModels are placed in an array in this order:
 	std::array<char, CM> ConstModels =
@@ -77,7 +82,7 @@ int ChargeTest(char Element){
 		return -1;
 	}
 	Sample->set_potential(Potential);
-	ChargingModel MyModel("Tests/IntegrationTests/Data/out_ConstantChargingTest.txt",1.0,ChargeModels,Sample,Pdata);
+	ChargingModel MyModel("Tests/IntegrationTests/Data/out_ConstantChargingTest.txt",0.01,CurrentTerms,Sample,Pdata);
 
 	MyModel.UpdateTimeStep();
 	MyModel.Charge();

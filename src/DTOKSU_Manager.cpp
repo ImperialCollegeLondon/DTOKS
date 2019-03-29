@@ -9,21 +9,6 @@
 
 #include "DTOKSU_Manager.h"
 
-//!< Maximum values for plasma parameters
-namespace Overflows{
-    const double Density = 1e22;                      //!< High density
-    const double Temperature = 1.5e7;                 //!< Greater than tokamak
-    const double PlasmaVel = 100*sqrt((Kb*1.5e7)/Mp); //!< Mach 100
-    const double Field = 100.0;                       //!< Very high field
-}
-
-namespace Underflows{
-    const double Density = 1e12;                      //!< Lower than discharge
-    const double Temperature = 100;                   //!< Very low plasma temp
-    const double PlasmaVel = 0.0;
-    const double Field = 0.0;
-}
-
 DTOKSU_Manager::DTOKSU_Manager(){
     DM_Debug("In DTOKSU_Manager::DTOKSU_Manager()\n\n");
     Config_Status = -1;
@@ -370,29 +355,28 @@ std::string Config_Filename){
             };
         HeatModels = 
             {
-                cfg->lookupBoolean("heatingmodels","RadiativeCooling"), 
-                cfg->lookupBoolean("heatingmodels","EvaporativeCooling"), 
-                cfg->lookupBoolean("heatingmodels","NewtonCooling"), 
-                cfg->lookupBoolean("heatingmodels","NeutralHeatFlux"), 
-                cfg->lookupBoolean("heatingmodels","SOMLIonHeatFlux"), 
-                cfg->lookupBoolean("heatingmodels","SOMLNeutralRecombination"), 
-                cfg->lookupBoolean("heatingmodels","SMOMLIonHeatFlux"), 
-                cfg->lookupBoolean("heatingmodels","SMOMLNeutralRecombination"), 
-                cfg->lookupBoolean("heatingmodels","SEE"), 
-                cfg->lookupBoolean("heatingmodels","TEE"), 
-                cfg->lookupBoolean("heatingmodels","PHLElectronHeatFlux"), 
+                cfg->lookupBoolean("heatingmodels","RadiativeCooling"),
+                cfg->lookupBoolean("heatingmodels","EvaporativeCooling"),
+                cfg->lookupBoolean("heatingmodels","NewtonCooling"),
+                cfg->lookupBoolean("heatingmodels","NeutralHeatFlux"),
+                cfg->lookupBoolean("heatingmodels","SOMLIonHeatFlux"),
+                cfg->lookupBoolean("heatingmodels","SMOMLIonHeatFlux"),
+                cfg->lookupBoolean("heatingmodels","DTOKSIonHeatFlux"),
+                cfg->lookupBoolean("heatingmodels","DUSTTIonHeatFlux"),
                 cfg->lookupBoolean("heatingmodels","OMLElectronHeatFlux"),
-                cfg->lookupBoolean("heatingmodels","DTOKSSEE"), 
-                cfg->lookupBoolean("heatingmodels","DTOKSTEE"), 
-                cfg->lookupBoolean("heatingmodels","DTOKSIonHeatFlux"), 
-                cfg->lookupBoolean("heatingmodels","DTOKSNeutralRecombination"), 
-                cfg->lookupBoolean("heatingmodels","DTOKSElectronHeatFlux"), 
-                cfg->lookupBoolean("heatingmodels","DUSTTIonHeatFlux") 
+                cfg->lookupBoolean("heatingmodels","PHLElectronHeatFlux"),
+                cfg->lookupBoolean("heatingmodels","DTOKSElectronHeatFlux"),
+                cfg->lookupBoolean("heatingmodels","SOMLNeutralRecombination"),
+                cfg->lookupBoolean("heatingmodels","SMOMLNeutralRecombination"),
+                cfg->lookupBoolean("heatingmodels","DTOKSNeutralRecombination"),
+                cfg->lookupBoolean("heatingmodels","SEE"),
+                cfg->lookupBoolean("heatingmodels","DTOKSSEE"),
+                cfg->lookupBoolean("heatingmodels","TEE"),
+                cfg->lookupBoolean("heatingmodels","DTOKSTEE")
             };
         ForceModels =
             {
-                cfg->lookupBoolean("forcemodels","Gravity"), 
-                cfg->lookupBoolean("forcemodels","Centrifugal"),
+                cfg->lookupBoolean("forcemodels","Gravity"),
                 cfg->lookupBoolean("forcemodels","Lorentz"), 
                 cfg->lookupBoolean("forcemodels","SOMLIonDrag"), 
                 cfg->lookupBoolean("forcemodels","SMOMLIonDrag"), 
@@ -473,34 +457,33 @@ std::string Config_Filename){
     if( ChargeModels[11] ) CurrentTerms.push_back(CurrentTerms[0]);
 
     if( ForceModels[0] ) ForceTerms.push_back(new Term::Gravity());
-    if( ForceModels[1] ) ForceTerms.push_back(new Term::Centrifugal());
-    if( ForceModels[2] ) ForceTerms.push_back(new Term::LorentzForce());
-    if( ForceModels[3] ) ForceTerms.push_back(new Term::SOMLIonDrag());
-    else if( ForceModels[4] ) ForceTerms.push_back(new Term::SMOMLIonDrag());
-    else if( ForceModels[5] ) ForceTerms.push_back(new Term::HybridIonDrag());
-    else if( ForceModels[6] ) ForceTerms.push_back(new Term::DTOKSIonDrag());
-    else if( ForceModels[7] ) ForceTerms.push_back(new Term::DUSTTIonDrag());
-    if( ForceModels[8] ) ForceTerms.push_back(new Term::NeutralDrag());
-    if( ForceModels[9] ) ForceTerms.push_back(new Term::RocketForce());
+    if( ForceModels[1] ) ForceTerms.push_back(new Term::LorentzForce());
+    if( ForceModels[2] ) ForceTerms.push_back(new Term::SOMLIonDrag());
+    else if( ForceModels[3] ) ForceTerms.push_back(new Term::SMOMLIonDrag());
+    else if( ForceModels[4] ) ForceTerms.push_back(new Term::HybridIonDrag());
+    else if( ForceModels[5] ) ForceTerms.push_back(new Term::DTOKSIonDrag());
+    else if( ForceModels[6] ) ForceTerms.push_back(new Term::DUSTTIonDrag());
+    if( ForceModels[7] ) ForceTerms.push_back(new Term::NeutralDrag());
+    if( ForceModels[8] ) ForceTerms.push_back(new Term::RocketForce());
     
     if( HeatModels[0] )  HeatTerms.push_back(new Term::EmissivityModel());
     if( HeatModels[1] )  HeatTerms.push_back(new Term::EvaporationModel());
     if( HeatModels[2] )  HeatTerms.push_back(new Term::NewtonCooling());
     if( HeatModels[3] )  HeatTerms.push_back(new Term::NeutralHeatFlux());
-    if( HeatModels[11] ) HeatTerms.push_back(new Term::OMLElectronHeatFlux());
-    else if( HeatModels[10] ) HeatTerms.push_back(new Term::PHLElectronHeatFlux());
-    else if( HeatModels[16] ) HeatTerms.push_back(new Term::DTOKSElectronHeatFlux());
-    if( HeatModels[4] )  HeatTerms.push_back(new Term::SOMLIonHeatFlux());
-    else if( HeatModels[6] )  HeatTerms.push_back(new Term::SMOMLIonHeatFlux());
-    else if( HeatModels[14] ) HeatTerms.push_back(new Term::DTOKSIonHeatFlux());
-    else if( HeatModels[17] ) HeatTerms.push_back(new Term::DUSTTIonHeatFlux());
-    if( HeatModels[5] )  HeatTerms.push_back(new Term::SOMLNeutralRecombination());
-    else if( HeatModels[7] )  HeatTerms.push_back(new Term::SMOMLNeutralRecombination());
-    else if( HeatModels[15] ) HeatTerms.push_back(new Term::DTOKSNeutralRecombination());
-    if( HeatModels[8] )  HeatTerms.push_back(new Term::SEE());
-    else if( HeatModels[12] ) HeatTerms.push_back(new Term::DTOKSSEE());
-    if( HeatModels[9] )  HeatTerms.push_back(new Term::TEE());
-    else if( HeatModels[13] ) HeatTerms.push_back(new Term::DTOKSTEE());
+    if( HeatModels[4] ) HeatTerms.push_back(new Term::OMLElectronHeatFlux());
+    else if( HeatModels[5] ) HeatTerms.push_back(new Term::PHLElectronHeatFlux());
+    else if( HeatModels[6] ) HeatTerms.push_back(new Term::DTOKSElectronHeatFlux());
+    if( HeatModels[7] )  HeatTerms.push_back(new Term::SOMLIonHeatFlux());
+    else if( HeatModels[8] )  HeatTerms.push_back(new Term::SMOMLIonHeatFlux());
+    else if( HeatModels[9] ) HeatTerms.push_back(new Term::DTOKSIonHeatFlux());
+    else if( HeatModels[10] ) HeatTerms.push_back(new Term::DUSTTIonHeatFlux());
+    if( HeatModels[11] )  HeatTerms.push_back(new Term::SOMLNeutralRecombination());
+    else if( HeatModels[12] )  HeatTerms.push_back(new Term::SMOMLNeutralRecombination());
+    else if( HeatModels[13] ) HeatTerms.push_back(new Term::DTOKSNeutralRecombination());
+    if( HeatModels[14] )  HeatTerms.push_back(new Term::SEE());
+    else if( HeatModels[15] ) HeatTerms.push_back(new Term::DTOKSSEE());
+    if( HeatModels[16] )  HeatTerms.push_back(new Term::TEE());
+    else if( HeatModels[17] ) HeatTerms.push_back(new Term::DTOKSTEE());
     
     cfg->destroy();
     if( !check_pdata_range() ){
@@ -708,16 +691,15 @@ std::string Config_Filename){
         <<"DTOKSElectronHeatFlux:\t" << HeatModels[16] 
         <<"\nDUSTTIonHeatFlux:\t" << HeatModels[17] << "\n"
         <<"\n#FORCING MODELS\n"
-        <<"Gravity:\t\t" << ForceModels[0] 
-        << "\n"<<"Centrifugal:\t\t" << ForceModels[1] << "\n"
-        <<"Lorentz:\t\t" << ForceModels[2] 
-        << "\n"<<"SOMLIonDrag:\t\t" << ForceModels[3] << "\n"
-        <<"SMOMLIonDrag:\t\t" << ForceModels[4] 
-        << "\n"<<"DTOKSIonDrag:\t\t" << ForceModels[5] << "\n"
-        <<"DUSTTIonDrag:\t\t" << ForceModels[6] 
-        << "\n"<<"HybridDrag:\t\t" << ForceModels[7] << "\n"
-        <<"NeutralDrag:\t\t" << ForceModels[8] << "\n"
-        <<"RocketForce:\t\t" << ForceModels[9] << "\n"
+        <<"Gravity:\t\t" << ForceModels[0] << "\n"
+        <<"Lorentz:\t\t" << ForceModels[1] 
+        << "\n"<<"SOMLIonDrag:\t\t" << ForceModels[2] << "\n"
+        <<"SMOMLIonDrag:\t\t" << ForceModels[3] 
+        << "\n"<<"DTOKSIonDrag:\t\t" << ForceModels[4] << "\n"
+        <<"DUSTTIonDrag:\t\t" << ForceModels[5] 
+        << "\n"<<"HybridDrag:\t\t" << ForceModels[6] << "\n"
+        <<"NeutralDrag:\t\t" << ForceModels[7] << "\n"
+        <<"RocketForce:\t\t" << ForceModels[8] << "\n"
         <<"\n#CHARGING MODELS\n"
         <<"OMLe:\t\t" << ChargeModels[0] << "\n" 
         <<"PHLe:\t\t\t" << ChargeModels[1] << "\n"

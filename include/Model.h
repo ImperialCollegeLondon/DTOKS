@@ -383,12 +383,12 @@ class Model{
 
 #endif /* __MODEL_H_INCLUDED__ */
 
-        /** @brief Calculate interpolated plasma parameters at dust position
-         *
-         *  Attempt to mutate the mean value plasma parameters at the dust 
-         *  position
-         *  @bug This doesn't work for a non-square grid, or generally
-         *  @param i grid coordinate of dust in x direction
-         *  @param k grid coordinate of dust in z direction
-         */
-        //const void interpolatepdata(const int i,const int k)const;
+/** @brief Calculate interpolated plasma parameters at dust position
+ *
+ *  Attempt to mutate the mean value plasma parameters at the dust 
+ *  position
+ *  @bug This doesn't work for a non-square grid, or generally
+ *  @param i grid coordinate of dust in x direction
+ *  @param k grid coordinate of dust in z direction
+ */
+//const void interpolatepdata(const int i,const int k)const;

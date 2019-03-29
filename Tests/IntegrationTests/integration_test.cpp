@@ -10,6 +10,7 @@ static void show_usage(std::string name){
     std::cerr << "Usage: int main(int argc, char* argv[]) <option(s)> SOURCES"
     << "\n\nOptions:\n"
     << "\t-h,--help\t\tShow this help message\n\n"
+    << "\t-a,--accuracy\t\tvariable defining accuracy of model when testing\n\n"
     << "\t-m,--mode MODE\tstring variable defining the Test to be run. Available Options:\n"
     << "\t\tDTOKSOML                   : Test the charging model is producing the expected result\n"
     << "\t\tGravity                    : Test constant gravitational force is reproduced by analytical model\n"
@@ -44,7 +45,7 @@ int main(int argc, char* argv[]){
     }
     // Determine user input for testing mode
     std::string Test_Mode("");
-    double accuracy(0.5);
+    double accuracy(0.1);
     std::vector <std::string> sources;
     std::stringstream ss0;
     for (int i = 1; i < argc; ++i){ // Read command line input

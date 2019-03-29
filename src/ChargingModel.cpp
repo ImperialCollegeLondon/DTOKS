@@ -6,7 +6,7 @@
  *  @author Luke Simons (ls5115@ic.ac.uk)
  *  @bug bugs, they definitely exist
  */
-//#define CHARGING_DEBUG
+
 #include "ChargingModel.h"
 
 ChargingModel::ChargingModel():Model(){
@@ -116,64 +116,34 @@ void ChargingModel::Charge(double timestep){
 
     //!< Make sure timestep input time is valid. Shouldn't exceed the timescale
     //!< of the process.
-    assert(timestep > 0);// && timestep <= TimeStep );
+    assert(timestep > 0);
     
-    
-    double Potential = Sample->get_potential();
-
-    // Implement Bisection method to find root of current balance
-    double a(-5.0), b(10.0);
-    double Current1(0.0),Current2(0.0);
+    //!< Calculate Thermionic and secondary electron emission yields for use in
+    //!< the heating models
     double DTherm(0.0), DSec(0.0);
     for(auto iter = CurrentTerms.begin(); iter != CurrentTerms.end(); ++iter) {
         if( (*iter)->PrintName() == "TEE" ){
+            DTherm = Flux::DeltaSec(Sample,Pdata);
+        }else if( (*iter)->PrintName() == "TEESchottky" ){
             DTherm = Flux::DeltaSec(Sample,Pdata);
         }
         if( (*iter)->PrintName() == "SEE" ){
             DSec = Flux::DeltaSec(Sample,Pdata);
         }
     }
-    do{
-        Potential = (a+b)/2.0;
 
-        for(auto iter = CurrentTerms.begin(); iter != CurrentTerms.end(); ++iter) {
-            if( (*iter)->PrintName() == "SEE" ){
-                Current1 += DSec*CurrentTerms[0]->Evaluate(Sample,Pdata,Potential);
-                Current2 += DSec*CurrentTerms[0]->Evaluate(Sample,Pdata,a);
-                C_Debug( "\n\t\t" << (*iter)->PrintName() << "=" 
-                    << DSec*CurrentTerms[0]->Evaluate(Sample,Pdata,Potential)  << "\n" );
-            }else{
-                Current1 += (*iter)->Evaluate(Sample,Pdata,Potential);
-                Current2 += (*iter)->Evaluate(Sample,Pdata,a);
-                C_Debug( "\n\t\t" << (*iter)->PrintName() << "=" 
-                    << (*iter)->Evaluate(Sample,Pdata,Potential) << "\n");
-            }
-        }
-        if( Current1*Current2 > 0.0 )
-            a = Potential;
-        else
-            b = Potential;
-        //std::cout << "\n\na = " << a;
-        //std::cout << "\nb = " << b;
-        //std::cout << "\n(b-a)/2.0 = " << (b-a)/2.0;
-        //std::cout << "\nPotential = " << Potential;
-        //std::cout << "\nPdata->ElectronDensity = " << Pdata->ElectronDensity;
-        //std::cout << "\nPdata->ElectronTemp = " << Pdata->ElectronTemp;
-        //std::cout << "\nVte = " << sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
-        //std::cout << "\nPdata->IonDensity = " << Pdata->IonDensity;
-        //std::cout << "\nPdata->IonTemp = " << Pdata->IonTemp;
-        //std::cout << "\nVti = " << sqrt(Kb*Pdata->IonTemp/(2*PI*Mp));
-        //std::cin.get();
-    }while( fabs((b-a)/2.0) > Accuracy && Current1 != 0.0 );
+    //!< Implement Bisection method to find root of current balance
+    double Potential = Bisection(DSec);
 
-
+    //!< Implement regular falsi method to find root of current balance
+    //double Potential = RegulaFalsi(DSec);
 
     //!< Have to calculate charge of grain here since it doesn't know about the 
     //!< Electron Temp and since potential is normalised.
-    //!< This information has to be passed to the grain.
     double charge = -(4.0*PI*epsilon0*Sample->get_radius()*Potential*Kb*
         Pdata->ElectronTemp)/echarge;
     Sample->update_charge(charge,Potential,DTherm,DSec);
+    //!< Increment total time recorded by the model
     TotalTime += timestep;
 
     C_Debug("\t"); Print();
@@ -183,6 +153,133 @@ void ChargingModel::Charge(){
     C_Debug("\tIn ChargingModel::Charge()\n\n");
     Charge(TimeStep);
 }
+
+double ChargingModel::Bisection(double DSec)const{
+    C_Debug("\tIn ChargingModel::Bisection(double DSec)\n\n");
+    //!< Implement Bisection method to find root of current balance
+    //!< Initial range of normalised potential based on mostly negative dust
+    //!< typically with low magntiudes of potential. This may fail in unusual
+    //!< cases.
+    double a(-5.0), b(10.0);
+    double Current1(0.0), Current2(0.0), Potential(0.0);
+    int i(0), imax(1000);
+    do{ //!< Do while difference in bounds is greater than accuracy
+        //!< Take new x position as halfway between upper and lower bound
+        Potential = (a+b)/2.0;
+
+        //!< Sum all the terms in the current balance
+        for(auto iter = CurrentTerms.begin(); iter != CurrentTerms.end(); 
+            ++iter) {
+            if( (*iter)->PrintName() == "SEE" ){
+                Current1 += DSec*CurrentTerms[0]->
+                    Evaluate(Sample,Pdata,Potential);
+                Current2 += DSec*CurrentTerms[0]->Evaluate(Sample,Pdata,a);
+                C_Debug( "\n\t\t" << (*iter)->PrintName() << " = " 
+                    << DSec*CurrentTerms[0]->Evaluate(Sample,Pdata,Potential)  
+                    << "\n" );
+            }else{
+                Current1 += (*iter)->Evaluate(Sample,Pdata,Potential);
+                Current2 += (*iter)->Evaluate(Sample,Pdata,a);
+                C_Debug( "\n\t\t" << (*iter)->PrintName() << " = " 
+                    << (*iter)->Evaluate(Sample,Pdata,Potential) << "\n");
+            }
+        }
+        //!< If the root is on the RHS of our midpoint
+        if( Current1*Current2 > 0.0 )
+            a = Potential;
+        else //!< Else, it must be on LHS of our midpoint
+            b = Potential;
+
+        //!< Ensure we don't loop forever
+        if( i > imax ){
+            std::cerr << "CharingModel::Bisection Root Finding failed to "
+                << "converge in " << imax << " steps! Setting Potential = 0.0";
+            Potential = 0.0;
+            return Potential;
+        }
+        i ++; //!< Increment loop counter
+    }while( fabs((b-a)/2.0) > Accuracy && Current1 != 0.0 );
+    return Potential;
+}
+
+double ChargingModel::RegulaFalsi(double DSec)const{
+    C_Debug("\tIn ChargingModel::RegulaFalsi(double DSec)\n\n");
+    //!< Implement regula falsi method to find root of current balance
+    //!< Initial range of normalised potential based on mostly negative dust
+    //!< typically with low magntiudes of potential. This may fail in unusual
+    //!< cases.
+
+    double Current1(0.0), Current2(0.0);
+    double a(-5.0), b(10.0);
+    //!< Sum all the terms in the current balance
+    for(auto iter = CurrentTerms.begin(); iter != CurrentTerms.end(); 
+        ++iter) {
+        if( (*iter)->PrintName() == "SEE" ){
+            Current1 += DSec*CurrentTerms[0]->Evaluate(Sample,Pdata,a);
+            Current2 += DSec*CurrentTerms[0]->Evaluate(Sample,Pdata,b);
+            C_Debug( "\n\t\t" << (*iter)->PrintName() << " = " 
+                << DSec*CurrentTerms[0]->Evaluate(Sample,Pdata,a)  
+                << "\n" );
+        }else{
+            Current1 += (*iter)->Evaluate(Sample,Pdata,a);
+            Current2 += (*iter)->Evaluate(Sample,Pdata,b);
+            C_Debug( "\n\t\t" << (*iter)->PrintName() << " = " 
+                << (*iter)->Evaluate(Sample,Pdata,a) << "\n");
+        }
+    }
+
+    int side(0), imax(1000);
+    double Potential(0.0);
+    //!< Loop until we reach imax iterations
+    for (int i = 0; i < imax; i++){
+        //!< following line is regula falsi method
+        Potential = (b*Current1-a*Current2)/(Current1-Current2);
+        //!< If we're withing accuracy, return result
+        if (fabs(b-a) < Accuracy*fabs(b+a))
+            return Potential;
+        double Current3(0.0);
+
+        //!< Sum all the terms in the current balance
+        for(auto iter = CurrentTerms.begin(); iter != CurrentTerms.end(); 
+            ++iter){
+            if( (*iter)->PrintName() == "SEE" ){
+                Current3 += (*iter)->Evaluate(Sample,Pdata,Potential);
+                C_Debug( "\n\t\t" << (*iter)->PrintName() << " = " 
+                    << DSec*CurrentTerms[0]->Evaluate(Sample,Pdata,Potential)  
+                    << "\n" );
+            }else{
+                Current3 += (*iter)->Evaluate(Sample,Pdata,Potential);
+                C_Debug( "\n\t\t" << (*iter)->PrintName() << " = " 
+                    << (*iter)->Evaluate(Sample,Pdata,Potential) << "\n");
+            }
+        }
+
+        if(Current3 * Current2 > 0){
+            //!< Current3 and Current2 have same sign, copy Potential to b
+            b = Potential; Current2 = Current3;
+            if(side==-1){ 
+                Current1 /= 2;
+            }
+            side = -1;
+        }else if(Current3 * Current1 > 0){
+            //!< Current3 and Current1 have same sign, copy Potential to a
+            a = Potential;  Current1 = Current3;
+            if(side==+1){
+                Current2 /= 2;
+            }
+            side = +1;
+        }else{
+            //!< Current3 * Current is very small (looks like zero)
+            return Potential;
+        }
+    }
+    //!< If we reach this point we've looped more than imax times.
+    std::cerr << "CharingModel::RegulaFalsi Root Finding failed to "
+                << "converge in " << imax << " steps! Setting Potential = 0.0";
+    Potential = 0.0;
+    return Potential;
+}
+
 /*
 void ChargingModel::Charge(double timestep){
      //!< Make sure timestep input time is valid. Shouldn't exceed the timescale
@@ -299,6 +396,7 @@ void ChargingModel::Charge(double timestep){
                 Potential = solvePosOML(0.0, Sample->get_potential());
             }
         }
+    }
 //!< Following Semi-empirical fit to Sceptic results as detailed in Chris Willis
 //!< Thesis,
 //!< https://spiral.imperial.ac.uk/handle/10044/1/9329, pages 68-70
