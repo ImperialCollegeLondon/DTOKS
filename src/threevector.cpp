@@ -61,9 +61,9 @@ void threevector::print(std::ofstream &fout)
     fout << "(" << xcoord << ", " << ycoord << ", " << zcoord << ")" << '\t';
 }
 
-std::ostream& operator<<(std::ostream& os, const threevector &v)
+std::ostream& operator<<(std::ostream& os, const threevector &vec)
 {
-    os << v.getx() << " " << v.gety() << " " << v.getz();
+    os << vec.getx() << " " << vec.gety() << " " << vec.getz();
     return os;
 }
 
