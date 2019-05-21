@@ -14,6 +14,7 @@ CMakeFiles/
 Plotting/
 docs/latex
 docs/html
+Config_Files/*.cfg
 
 bin/dtoksu
 bin/model_test
