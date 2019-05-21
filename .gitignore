@@ -4,9 +4,11 @@ PlasmaData/MAST
 PlasmaData/Magnum-PSI
 PlasmaData/DIII-D
 PlasmaData/EAST
+PlasmaData/NETCDFReader
 Dependencies/
 Tests/TemperatureVariationOfConstants
 PlasmaData/PlasmaGenerator/main
+EmissivityData/
 Backups/
 Data/
 build/
