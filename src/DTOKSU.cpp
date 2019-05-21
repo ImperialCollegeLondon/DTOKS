@@ -161,8 +161,8 @@ void DTOKSU::SpecularReflection(){
             MinIndex = i; // save index of nearest point
             MinDist = DistanceToPoint;
         }
-        //std::cout << "\n" << i << "\t" << WallBound.Grid_Pos[i].first << "\t" 
-        //<< WallBound.Grid_Pos[i].first;
+//        std::cout << "\n" << i << "\t" << WallBound.Grid_Pos[i].first << "\t" 
+//          << WallBound.Grid_Pos[i].first;
     }
 
     //!< If MinIndex is last element of array
@@ -197,14 +197,14 @@ void DTOKSU::SpecularReflection(){
     threevector ReflectedVel(SpecularReflDir.getx(),
         Sample->get_velocity().gety(),SpecularReflDir.getz());
 
-    //std::cout << "\n" << WallBound.Grid_Pos[MinIndex].first << "\t" 
-    //    <<  WallBound.Grid_Pos[MinIndex].second;
-    //std::cout << "\t" << x << "\t" <<  y << "\t" << normal << "\t" 
-    // << Sample->get_velocity() << "\t" 
-    // << normal.getunit()*Sample->get_velocity() << "\t" << SpecularReflDir 
-    // << "\t" << ReflectedVel;
-    //std::cout << "\n" << WallBound.Grid_Pos[SecondMinIndex].first << "\t" 
-    // <<  WallBound.Grid_Pos[SecondMinIndex].second;
+//    std::cout << "\n" << WallBound.Grid_Pos[MinIndex].first << "\t" 
+//        <<  WallBound.Grid_Pos[MinIndex].second;
+//    std::cout << "\t" << x << "\t" <<  y << "\t" << normal << "\t" 
+//     << Sample->get_velocity() << "\t" 
+//     << normal.getunit()*Sample->get_velocity() << "\t" << SpecularReflDir 
+//     << "\t" << ReflectedVel;
+//    std::cout << "\n" << WallBound.Grid_Pos[SecondMinIndex].first << "\t" 
+//     <<  WallBound.Grid_Pos[SecondMinIndex].second;
 
     Sample->update_motion(Zeroes,ReflectedVel-Sample->get_velocity(),0.0);
 }
@@ -461,15 +461,18 @@ int DTOKSU::Run(){
         }else if( HeatTime == 1 ){
             std::cout << "\n\nThermal Equilibrium reached!";
             break;
-        }else if( CoreBound.Grid_Pos.size() > 2 ){
-            if( Boundary_Check(true) ){
-                std::cout << "\n\nCollision with Core!";
-                break;
+        }else{
+            if( CoreBound.Grid_Pos.size() > 2 ){
+                if( Boundary_Check(true) ){
+                    std::cout << "\n\nCollision with Core!";
+                    break;
+                }
             }
-        }else if( WallBound.Grid_Pos.size() > 2 ){
-            if( Boundary_Check(false) ){
-                std::cout << "\n\nCollision with Wall!";
-                break;
+            if( WallBound.Grid_Pos.size() > 2 ){
+                if( Boundary_Check(false) ){
+                    std::cout << "\n\nCollision with Wall!";
+                    break;
+                }
             }
         }
         // ***** END OF : DETERMINE IF END CONDITION HAS BEEN REACHED ***** //
