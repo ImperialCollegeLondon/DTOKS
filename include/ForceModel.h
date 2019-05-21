@@ -36,7 +36,7 @@ class ForceModel : public Model {
         /** @brief Calculate change in position and velocity using RK4 method
          * 
          *  @param xf Reference to the final position returned by the function
-         *  @param xf Reference to the final velocity returned by the function
+         *  @param vf Reference to the final velocity returned by the function
          *  @param timestep the time step over which functions are evaluated
          */
         void RungeKutta4(threevector &xf, threevector &vf, 

@@ -407,7 +407,7 @@ void Model::Record_MassLoss(){
 void Model::ImpurityPrint(){
     H_Debug("\tIn Model::ImpurityPrint()\n\n");
     std::ofstream impurity;
-    impurity.open("Data/ImpurityProfile.txt");
+    impurity.open(FileName+"_ImpurityProfile.txt");
     impurity << std::scientific << std::setprecision(16) << std::endl;
     for(int s=0;s<=PG_data->gridz-1;s++){
         for(int p=0;p<=PG_data->gridx-1;p++){

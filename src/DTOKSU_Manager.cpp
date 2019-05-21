@@ -230,6 +230,7 @@ std::string Config_Filename){
     std::stringstream ss0;
     for (int i = 1; i < argc; ++i){ // Read command line input
         std::string arg = argv[i];
+	std::cout << "\narg[" << i << "] = " << arg;
         if     ( arg == "--help"        || arg == "-h" ){   
             Config_Status = 1; show_usage( argv[0] ); return Config_Status;         
         }else if( arg == "--config"      || arg == "-c" ){
@@ -383,6 +384,7 @@ std::string Config_Filename){
                 cfg->lookupBoolean("forcemodels","DTOKSIonDrag"),
                 cfg->lookupBoolean("forcemodels","DUSTTIonDrag"), 
                 cfg->lookupBoolean("forcemodels","HybridDrag"), 
+                cfg->lookupBoolean("forcemodels","LloydDrag"), 
                 cfg->lookupBoolean("forcemodels","NeutralDrag"), 
                 cfg->lookupBoolean("forcemodels","RocketForce")
             };
@@ -392,14 +394,17 @@ std::string Config_Filename){
                 cfg->lookupBoolean("chargemodels","PHLe"), 
                 cfg->lookupBoolean("chargemodels","DTOKSe"),
                 cfg->lookupBoolean("chargemodels","THSe"), 
-                cfg->lookupBoolean("chargemodels","OMLi"), 
+                cfg->lookupBoolean("chargemodels","OMLi"),  
+                cfg->lookupBoolean("chargemodels","MOMLi"), 
                 cfg->lookupBoolean("chargemodels","SOMLi"), 
                 cfg->lookupBoolean("chargemodels","SMOMLi"),
                 cfg->lookupBoolean("chargemodels","THSi"), 
                 cfg->lookupBoolean("chargemodels","DTOKSi"), 
                 cfg->lookupBoolean("chargemodels","TEE"),
                 cfg->lookupBoolean("chargemodels","TEESchottky"), 
-                cfg->lookupBoolean("chargemodels","SEE")
+                cfg->lookupBoolean("chargemodels","SEE"), 
+                cfg->lookupBoolean("chargemodels","CW"),
+                cfg->lookupBoolean("chargemodels","MOMLWEM")
             };
         
         AccuracyLevels = 
@@ -442,29 +447,42 @@ std::string Config_Filename){
         Config_Status = 7;
         return Config_Status;
     }
-    if( ChargeModels[4] ) CurrentTerms.push_back(new Term::OMLi());
-    else if( ChargeModels[5] ) CurrentTerms.push_back(new Term::SOMLi());
-    else if( ChargeModels[6] ) CurrentTerms.push_back(new Term::SMOMLi());
-    else if( ChargeModels[7] ) CurrentTerms.push_back(new Term::THSi());
-    else if( ChargeModels[8] ) CurrentTerms.push_back(new Term::DTOKSi());
+    if( ChargeModels[4] )      CurrentTerms.push_back(new Term::OMLi());
+    else if( ChargeModels[5] ) CurrentTerms.push_back(new Term::MOMLi());
+    else if( ChargeModels[6] ) CurrentTerms.push_back(new Term::SOMLi());
+    else if( ChargeModels[7] ) CurrentTerms.push_back(new Term::SMOMLi());
+    else if( ChargeModels[8] ) CurrentTerms.push_back(new Term::THSi());
+    else if( ChargeModels[9] ) CurrentTerms.push_back(new Term::DTOKSi());
     else{
         std::cout << "\n* No ion Current Model Chosen! *";
         Config_Status = 7;
         return Config_Status;
     }
-    if( ChargeModels[9] ) CurrentTerms.push_back(new Term::TEEcharge());
-    else if( ChargeModels[10] ) CurrentTerms.push_back(new Term::TEESchottky());
-    if( ChargeModels[11] ) CurrentTerms.push_back(CurrentTerms[0]);
+    if( ChargeModels[10] )      CurrentTerms.push_back(new Term::TEEcharge());
+    else if( ChargeModels[11] ) CurrentTerms.push_back(new Term::TEESchottky());
+    if( ChargeModels[12] )      CurrentTerms.push_back(new Term::SEEcharge());
+    if( ChargeModels[13] && !ChargeModels[14] ){
+        CurrentTerms.clear();
+        CurrentTerms.push_back(new Term::CW());
+    }else if( !ChargeModels[13] && ChargeModels[14] ){
+        CurrentTerms.clear();
+        CurrentTerms.push_back(new Term::MOMLWEM());
+    }else if( ChargeModels[13] && ChargeModels[14] ){
+        std::cout << "\n* CW and MOMLWEM Not compatible models! *";
+        Config_Status = 7;
+        return Config_Status;
+    }
 
     if( ForceModels[0] ) ForceTerms.push_back(new Term::Gravity());
     if( ForceModels[1] ) ForceTerms.push_back(new Term::LorentzForce());
     if( ForceModels[2] ) ForceTerms.push_back(new Term::SOMLIonDrag());
     else if( ForceModels[3] ) ForceTerms.push_back(new Term::SMOMLIonDrag());
-    else if( ForceModels[4] ) ForceTerms.push_back(new Term::HybridIonDrag());
-    else if( ForceModels[5] ) ForceTerms.push_back(new Term::DTOKSIonDrag());
-    else if( ForceModels[6] ) ForceTerms.push_back(new Term::DUSTTIonDrag());
-    if( ForceModels[7] ) ForceTerms.push_back(new Term::NeutralDrag());
-    if( ForceModels[8] ) ForceTerms.push_back(new Term::RocketForce());
+    else if( ForceModels[4] ) ForceTerms.push_back(new Term::DTOKSIonDrag());
+    else if( ForceModels[5] ) ForceTerms.push_back(new Term::DUSTTIonDrag());
+    else if( ForceModels[6] ) ForceTerms.push_back(new Term::HybridIonDrag());
+    if( ForceModels[7] ) ForceTerms.push_back(new Term::LloydIonDrag());
+    if( ForceModels[8] ) ForceTerms.push_back(new Term::NeutralDrag());
+    if( ForceModels[9] ) ForceTerms.push_back(new Term::RocketForce());
     
     if( HeatModels[0] )  HeatTerms.push_back(new Term::EmissivityModel());
     if( HeatModels[1] )  HeatTerms.push_back(new Term::EvaporationModel());
@@ -672,47 +690,51 @@ std::string Config_Filename){
             CurrentTerms);
     }
     MetaDataFile <<"\n\n##MODEL SWITHES\n#HEATING MODELS\n"
-        <<"RadiativeCooling:\t" << HeatModels[0] 
-        << "\nEvaporativeCooling:\t" << HeatModels[1] << "\n"
-        <<"NewtonCooling:\t\t" << HeatModels[2] 
-        << "\nNeutralHeatFlux:\t" << HeatModels[3] << "\n"
-        <<"SOMLIonHeatFlux:\t" << HeatModels[4] 
-        <<"\nSOMLNeutralRecomb:\t" << HeatModels[5] << "\n"
-        <<"SMOMLIonHeatFlux:\t" << HeatModels[6] 
-        <<"\nSMOMLNeutralRecomb:\t" << HeatModels[7] << "\n"
-        <<"PHLSEE:\t\t\t" << HeatModels[8] 
-        <<"\nPHLTEE:\t\t\t" << HeatModels[9] << "\n"
-        <<"PHLElectronHeatFlux:\t" << HeatModels[10] 
-        <<"\nOMLElectronHeatFlux:\t" << HeatModels[11] << "\n"
-        <<"DTOKSSEE:\t\t" << HeatModels[12] 
-        <<"\nDTOKSTEE:\t\t" << HeatModels[13] << "\n"
-        <<"DTOKSIonHeatFlux:\t" << HeatModels[14] 
-        <<"\nDTOKSNeutralRecomb:\t" << HeatModels[15] << "\n"
-        <<"DTOKSElectronHeatFlux:\t" << HeatModels[16] 
-        <<"\nDUSTTIonHeatFlux:\t" << HeatModels[17] << "\n"
-        <<"\n#FORCING MODELS\n"
-        <<"Gravity:\t\t" << ForceModels[0] << "\n"
-        <<"Lorentz:\t\t" << ForceModels[1] 
-        << "\n"<<"SOMLIonDrag:\t\t" << ForceModels[2] << "\n"
-        <<"SMOMLIonDrag:\t\t" << ForceModels[3] 
-        << "\n"<<"DTOKSIonDrag:\t\t" << ForceModels[4] << "\n"
-        <<"DUSTTIonDrag:\t\t" << ForceModels[5] 
-        << "\n"<<"HybridDrag:\t\t" << ForceModels[6] << "\n"
-        <<"NeutralDrag:\t\t" << ForceModels[7] << "\n"
-        <<"RocketForce:\t\t" << ForceModels[8] << "\n"
-        <<"\n#CHARGING MODELS\n"
-        <<"OMLe:\t\t" << ChargeModels[0] << "\n" 
-        <<"PHLe:\t\t\t" << ChargeModels[1] << "\n"
-        <<"THSe:\t\t\t" << ChargeModels[2] << "\n"
-        <<"DTOKSe:\t\t\t" << ChargeModels[3] << "\n"
-        <<"OMLi:\t\t\t" << ChargeModels[4] << "\n" 
-        <<"SOMLi:\t\t\t" << ChargeModels[5] << "\n" 
-        <<"SMOMLi:\t\t\t" << ChargeModels[6] << "\n"
-        <<"THSi:\t\t\t" << ChargeModels[7] << "\n" 
-        <<"DTOKSi:\t\t" << ChargeModels[8] << "\n"
-        <<"TEE:\t\t" << ChargeModels[9] << "\n"
-        <<"TEESchottky:\t\t" << ChargeModels[10] << "\n"
-        <<"SEE:\t\t" << ChargeModels[10] << "\n";
+        << "RadiativeCooling:\t" << HeatModels[0] 
+        << "\nEvaporativeCooling:\t" << HeatModels[1]
+        << "\nNewtonCooling:\t\t" << HeatModels[2] 
+        << "\nNeutralHeatFlux:\t" << HeatModels[3]
+        << "\nSOMLIonHeatFlux:\t" << HeatModels[4] 
+        << "\nSMOMLIonHeatFlux:\t" << HeatModels[5] 
+        << "\nDTOKSIonHeatFlux:\t" << HeatModels[6] 
+        << "\nDUSTTIonHeatFlux:\t" << HeatModels[7]
+        << "\nOMLElectronHeatFlux:\t" << HeatModels[8]
+        << "\nPHLElectronHeatFlux:\t" << HeatModels[9]
+        << "\nDTOKSElectronHeatFlux:\t" << HeatModels[10] 
+        << "\nSOMLNeutralRecomb:\t" << HeatModels[11]
+        << "\nSMOMLNeutralRecomb:\t" << HeatModels[12]
+        << "\nDTOKSNeutralRecomb:\t" << HeatModels[13]
+        << "\nPHLSEE:\t\t\t" << HeatModels[14] 
+        << "\nDTOKSSEE:\t\t" << HeatModels[15] 
+        << "\nPHLTEE:\t\t\t" << HeatModels[16]
+        << "\nDTOKSTEE:\t\t" << HeatModels[17]
+        << "\n\n#FORCING MODELS\n"
+        << "Gravity:\t\t" << ForceModels[0]
+        << "\nLorentz:\t\t" << ForceModels[1] 
+        << "\nSOMLIonDrag:\t\t" << ForceModels[2]
+        << "\nSMOMLIonDrag:\t\t" << ForceModels[3] 
+        << "\nDTOKSIonDrag:\t\t" << ForceModels[4]
+        << "\nDUSTTIonDrag:\t\t" << ForceModels[5] 
+        << "\nHybridDrag:\t\t" << ForceModels[6]
+        << "\nLloydDrag:\t\t" << ForceModels[7]
+        << "\nNeutralDrag:\t\t" << ForceModels[8]
+        << "\nRocketForce:\t\t" << ForceModels[9]
+        << "\n\n#CHARGING MODELS\n"
+        << "OMLe:\t\t" << ChargeModels[0]
+        << "\nPHLe:\t\t\t" << ChargeModels[1]
+        << "\nDTOKSe:\t\t\t" << ChargeModels[2]
+        << "\nTHSe:\t\t\t" << ChargeModels[3]
+        << "\nOMLi:\t\t\t" << ChargeModels[4]
+        << "\nMOMLi:\t\t\t" << ChargeModels[5]
+        << "\nSOMLi:\t\t\t" << ChargeModels[6]
+        << "\nSMOMLi:\t\t\t" << ChargeModels[7]
+        << "\nTHSi:\t\t\t" << ChargeModels[8]
+        << "\nDTOKSi:\t\t" << ChargeModels[9]
+        << "\nTEE:\t\t" << ChargeModels[10] 
+        << "\nTEESchottky:\t\t" << ChargeModels[11]
+        << "\nSEE:\t\t" << ChargeModels[12]
+        << "\nCW:\t\t" << ChargeModels[13]
+        << "\nMOMLWEM:\t\t" << ChargeModels[14] << "\n";
     MetaDataFile.close();
 
     Sim->OpenFiles(DataFilePrefix,0);
@@ -847,7 +869,7 @@ std::string filename, Boundary_Data& BD){
 
     while( BoundaryGrid_File >> R_temp >> Dummy >>  Z_temp ){
         BD.Grid_Pos.push_back( std::make_pair(R_temp,Z_temp) );
-        //std::cout << "\n" << R_temp << "\t" << Z_temp;
+//      std::cout << "\n" << R_temp << "\t" << Z_temp;
         if( R_temp <= 0.0 ){
             std::cerr << "\nError reading boundary data in DTOKSU_Manager::"
                 << "configure_boundary! R_temp < 0";
@@ -913,22 +935,35 @@ int DTOKSU_Manager::read_data(std::string plasma_dirname){
         }
         //!< Now loop over the grid and feed in the data into the vectors
         double convertJtoK = 7.242971666667e22;
+        double converteVtoK = 11604.5250061657;
         for(unsigned int k=0; k<=Pgrid.gridz-1; k++){
             for(unsigned int i=0; i<=Pgrid.gridx-1; i++){
+                //!< This is the read-in format without neutrals
                 scalars >> Pgrid.x[i][k] >> Pgrid.z[i][k] >> Pgrid.Te[i][k]
-                    >> Pgrid.Ti[i][k]   >> Pgrid.na0[i][k] >> Pgrid.na1[i][k] 
+                    >> Pgrid.Ti[i][k] >> Pgrid.na0[i][k] >> Pgrid.na1[i][k] 
                     >> Pgrid.po[i][k] >> Pgrid.ua0[i][k] >> Pgrid.ua1[i][k];
+/*              //!< This is the read-in format with neutrals
+                scalars >> Pgrid.x[i][k] >> Pgrid.z[i][k] >> Pgrid.Te[i][k]
+                    >> Pgrid.Ti[i][k] >> Pgrid.Tn[i][k] >> Pgrid.na0[i][k] 
+                    >> Pgrid.na1[i][k] >> Pgrid.na2[i][k] >> Pgrid.po[i][k] 
+                    >> Pgrid.ua0[i][k] >> Pgrid.ua1[i][k] >> Pgrid.ua2[i][k];*/
                 threevectors >> dummy_dub >> dummy_dub >> Pgrid.bx[i][k] >>
                     Pgrid.bz[i][k] >> Pgrid.by[i][k];
                 gridflagfile >> dummy_dub >> dummy_dub >> Pgrid.gridflag[i][k];
 
-                Pgrid.Te[i][k]=convertJtoK*Pgrid.Te[i][k];
-                Pgrid.Ti[i][k]=convertJtoK*Pgrid.Ti[i][k];
+                Pgrid.Te[i][k] = convertJtoK*Pgrid.Te[i][k];
+                Pgrid.Ti[i][k] = convertJtoK*Pgrid.Ti[i][k];
+                Pgrid.Tn[i][k] = convertJtoK*Pgrid.Tn[i][k];
+		
                 //!< For some reason, very small non-zero values are being 
                 //!< assigned to the 'zero' values being read in.
                 //!< This should correct for this...
 
-                if( Pgrid.device != 'j' ){ Pgrid.bz[i][k]  = -Pgrid.bz[i][k]; }
+                if( Pgrid.device != 'j' && Pgrid.device != 'i' ){ 
+                        Pgrid.Te[i][k] = converteVtoK*Pgrid.Te[i][k];
+                        Pgrid.Ti[i][k] = converteVtoK*Pgrid.Ti[i][k];
+                        Pgrid.Tn[i][k] = converteVtoK*Pgrid.Tn[i][k];
+                }
                 if( fabs(Pgrid.bx[i][k]) > Overflows::Field 
                     || fabs(Pgrid.bx[i][k]) < Underflows::Field ){ ReStat = 1; } 
                 if( fabs(Pgrid.by[i][k]) > Overflows::Field 
@@ -971,7 +1006,7 @@ int DTOKSU_Manager::read_MPSIdata(std::string plasma_dirname){
     
     const int NC_ERR = 2;
     std::string filename 
-    = "Magnum-PSI_Experiment_Homogeneous-B-Field_B0.2_L1.9.nc";
+    = "Magnum-PSI_Experiment_Homogeneous-B-Field_B0.4_L1.9.nc";
     std::cout << "\t\t* Reading data from: " << plasma_dirname + filename;
     std::cout << " *\n\t\t* gridx: " << Pgrid.gridx << "\t * gridz: " 
         << Pgrid.gridz << "\t * gridtheta: " << Pgrid.gridtheta << " *\n";
@@ -1038,13 +1073,14 @@ int DTOKSU_Manager::read_MPSIdata(std::string plasma_dirname){
         return NC_ERR;
 //  if (!B_xy->get(&Bxy_mat[0][0], Pgrid.gridx, Pgrid.gridz))
 //      return NC_ERR;
-    double ConvertJtoK(7.24297166e22); //!< Conversion factor from ev to K
+    double ConvertJtoK(7.24297166e22); //!< Conversion factor from J to K
     for(unsigned int i=0; i< Pgrid.gridx; i++){
         for(unsigned int k=0; k< Pgrid.gridz; k++){
 
-//          std::cout << "\n[" << i << "]" << "[" << k << "]";  std::cin.get();
-            Pgrid.Ti[i][k] = 1.0*echarge*ConvertJtoK;
-            Pgrid.Te[i][k] = electron_temp_mat[i][k][0]*ConvertJtoK;
+//            std::cout << "\n[" << i << "]" << "[" << k << "]";  std::cin.get();
+
+            Pgrid.Ti[i][k] = fabs(electron_temp_mat[i][k][0])*ConvertJtoK;// Can't set Ti=fixed as this messes up the Dust potential! 2.5*11598.5895;
+            Pgrid.Te[i][k] = fabs(electron_temp_mat[i][k][0])*ConvertJtoK;
             Pgrid.Tn[i][k] = Pdata.NeutralTemp;
             Pgrid.Ta[i][k] = Pdata.AmbientTemp;
             Pgrid.na0[i][k] = ion_dens_mat[i][k][0];
@@ -1056,7 +1092,6 @@ int DTOKSU_Manager::read_MPSIdata(std::string plasma_dirname){
             Pgrid.bx[i][k] = 0.0;
             Pgrid.by[i][k] = 0.0;
             Pgrid.bz[i][k] = 0.4;
-
             Pgrid.x[i][k] = Pgrid.gridxmin+i*Pgrid.dlx;
             Pgrid.z[i][k] = Pgrid.gridzmin+k*Pgrid.dlz;
             Pgrid.gridflag  = std::vector<std::vector<int>>

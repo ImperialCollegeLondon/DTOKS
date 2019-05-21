@@ -10,6 +10,8 @@
 #ifndef __CHARGINGMODEL_H_INCLUDED__
 #define __CHARGINGMODEL_H_INCLUDED__
 
+//#define CHARGING_DEBUG
+
 #include "Model.h"
 #include "solveMOMLEM.h"
 #include "CurrentTerms.h"
@@ -43,14 +45,14 @@ class ChargingModel : public Model{
          *  https://en.wikipedia.org/wiki/Bisection_method
          *  @return the value of x which produces a root of the equation
          */
-        double Bisection(double DSec)const;
+        double Bisection()const;
         /** @brief Find Root of equation via the regula falsi method
          *
          *  See wikipedia for description 
          *  https://en.wikipedia.org/wiki/False_position_method
          *  @return the value of x which produces a root of the equation
          */
-        double RegulaFalsi(double DSec)const;
+        double RegulaFalsi()const;
 
 
     public:

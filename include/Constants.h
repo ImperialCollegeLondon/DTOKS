@@ -28,6 +28,12 @@
 #define P_Debug(x) 
 #endif 
 
+#ifdef PLASMAFLUX_DEBUG
+#define PF_Debug(x) std::cout << x
+#else
+#define PF_Debug(x) 
+#endif 
+
 #ifdef MODEL_DEBUG
 #define Mo_Debug(x) std::cout << x
 #else

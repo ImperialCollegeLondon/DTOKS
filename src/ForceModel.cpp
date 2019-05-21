@@ -6,8 +6,8 @@
  *  @author Luke Simons (ls5115@ic.ac.uk)
  *  @bug bugs, they definitely exist
  */
-#include "ForceModel.h"
 
+#include "ForceModel.h"
 ForceModel::ForceModel():
 Model(){
     F_Debug("\n\nIn ForceModel::ForceModel():Model()\n\n");
@@ -64,7 +64,7 @@ void ForceModel::CreateFile(std::string filename){
     FileName=filename;
     ModelDataFile.open(FileName);
     ModelDataFile << std::scientific << std::setprecision(16) << std::endl;
-    ModelDataFile << "Time\tPotential\tPosition\tVelocity\tRotationFreq";
+    ModelDataFile << "Time\tPosition\tVelocity\tRotationFreq";
 
     //!< Loop over force terms and print their names
     for(auto iter = ForceTerms.begin(); iter != ForceTerms.end(); ++iter) {
@@ -80,9 +80,8 @@ void ForceModel::CreateFile(std::string filename){
 void ForceModel::Print(){
     F_Debug("\tIn ForceModel::Print()\n\n");
     ModelDataFile.open(FileName,std::ofstream::app);
-    ModelDataFile << TotalTime << "\t" << Sample->get_potential() << "\t"
-        << Sample->get_position() << "\t" << Sample->get_velocity() << "\t"
-        << Sample->get_rotationalfreq();
+    ModelDataFile << TotalTime << "\t" << Sample->get_position() << "\t" 
+        << Sample->get_velocity() << "\t" << Sample->get_rotationalfreq();
 
     //!< Loop over force terms and print their evaluations
     for(auto iter = ForceTerms.begin(); iter != ForceTerms.end(); ++iter) {

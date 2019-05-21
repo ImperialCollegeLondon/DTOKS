@@ -63,6 +63,18 @@ struct OMLi:CurrentTerm{
     std::string PrintName(){ return "OMLi"; };
 };
 
+struct MOMLi:CurrentTerm{
+    /** @brief Calculate the MOML ion Flux
+     *  @param Sample Pointer to class containing all data about matter
+     *  @param Pdata Pointer to data structure with information about plasma
+     *  @param Potential the normalised potential on the dust grain
+     *  @return the ion flux following MOML theory
+     */
+    double Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, 
+        const double Potential);
+    std::string PrintName(){ return "MOMLi"; };
+};
+
 struct SOMLi:CurrentTerm{
     /** @brief Calculate the SOML ion Flux
      *  @param Sample Pointer to class containing all data about matter
@@ -96,7 +108,7 @@ struct TEEcharge:CurrentTerm{
      */
     double Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, 
         const double Potential);
-    std::string PrintName(){ return "TEE"; };
+    std::string PrintName(){ return "TEEcharge"; };
 };
 
 struct TEESchottky:CurrentTerm{
@@ -109,6 +121,18 @@ struct TEESchottky:CurrentTerm{
     double Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, 
         const double Potential);
     std::string PrintName(){ return "TEESchottky"; };
+};
+
+struct SEEcharge:CurrentTerm{
+    /** @brief Calculate the secondary electron emission yield
+     *  @param Sample Pointer to class containing all data about matter
+     *  @param Pdata Pointer to data structure with information about plasma
+     *  @param Potential the normalised potential on the dust grain
+     *  @return the secondary electron emission yield
+     */
+    double Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, 
+        const double Potential);
+    std::string PrintName(){ return "SEEcharge"; };
 };
 
 struct THSe:CurrentTerm{
@@ -158,6 +182,31 @@ struct DTOKSe:CurrentTerm{
         const double Potential);
     std::string PrintName(){ return "DTOKSe"; };
 };
+
+struct CW:CurrentTerm{
+    /** @brief Calculate the potential following Chris Willis Model
+     *  @param Sample Pointer to class containing all data about matter
+     *  @param Pdata Pointer to data structure with information about plasma
+     *  @param Potential the normalised potential on the dust grain
+     *  @return the equation for potential
+     */
+    double Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, 
+        const double Potential);
+    std::string PrintName(){ return "CW"; };
+};
+
+struct MOMLWEM:CurrentTerm{
+    /** @brief Calculate the potential following MOMLWEM Model
+     *  @param Sample Pointer to class containing all data about matter
+     *  @param Pdata Pointer to data structure with information about plasma
+     *  @param Potential the normalised potential on the dust grain
+     *  @return the equation for potential
+     */
+    double Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, 
+        const double Potential);
+    std::string PrintName(){ return "MOMLWEM"; };
+};
+
 ///@}
 }
 #endif /* __CHARGINGTERMS_H_INCLUDED__ */
