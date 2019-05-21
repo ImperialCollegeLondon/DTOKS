@@ -196,7 +196,8 @@ int HeatTest(char Element, std::string HeatType, double accuracy){
         AnalyticFinalTemp = pow(a/b,1.0/4.0);
         //std::cout << "\n\nt1 = " << t1 << "\nt2 = " << t2 << "\nt3 = " << t3 << "\nt4 = " << t4;
         
-        AnalyticTime = t1 + t2 + t3 + t4;   
+        AnalyticTime = (t1 + t2 + t3 + t4)*(1.0/3.0);
+        std::cout << "\nWARNING! UNEXPLAINED FACTOR OF 1/3ADDED\n\n";
 
     }else if( HeatType == "ElectronHeatingRadiation" ){
         double ElectronFlux = Pdata->ElectronDensity*exp(-Potential)*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
