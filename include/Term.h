@@ -23,6 +23,10 @@
  *  Abstract structure which defines the behaviour of force terms acting 
  *  within the force model that describe the source terms of different 
  *  accelerations.
+ *  @param Sample Const pointer to class containing all data about matter
+ *  @param Pdata Const pointer to data structure with information about plasma
+ *  @param Temp the temperature of the dust at which it is evaluated
+ *  @return The acceleration in m/s^2 of \p Sample due to the ForceTerm
  */
 struct ForceTerm{
     virtual threevector Evaluate(const Matter* Sample, 
@@ -33,10 +37,14 @@ struct ForceTerm{
 
 /** @struct HeatTerm
  *  @brief struct defining the behaviour of heat terms within a heating model
- *  
+ *   
  *  Abstract structure which defines the behaviour of heat terms acting 
  *  within the heating model that describe the source terms of different 
  *  power fluxes.
+ *  @param Sample Const pointer to class containing all data about matter
+ *  @param Pdata Const pointer to data structure with information about plasma
+ *  @param Temp the temperature of the dust at which it is evaluated
+ *  @return The power in kW to the surface of \p Sample due to the HeatTerm
  */
 struct HeatTerm{
     virtual double Evaluate(const Matter* Sample, 
@@ -44,11 +52,15 @@ struct HeatTerm{
     virtual std::string PrintName()=0;
 };
 
-/** @struct ChargingTerm
+/** @struct CurrentTerm
  *  @brief struct defining the behaviour of different charging models
  *  
  *  Abstract structure which defines the behaviour of the charging terms acting 
  *  within the charging model.
+ *  @param Sample Const pointer to class containing all data about matter
+ *  @param Pdata Const pointer to data structure with information about plasma
+ *  @param Temp the temperature of the dust at which it is evaluated
+ *  @return The current flux to the surface of \p Sample due to the CurrentTerm
  */
 struct CurrentTerm{
     virtual double Evaluate(const Matter* Sample, 

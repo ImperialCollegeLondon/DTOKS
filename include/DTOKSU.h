@@ -10,6 +10,9 @@
 #ifndef __DTOKSU_H_INCLUDED__
 #define __DTOKSU_H_INCLUDED__
 
+//#define DTOKSU_DEBUG
+//#define DTOKSU_DEEP_DEBUG
+
 #include <algorithm>
 
 #include "HeatingModel.h"
@@ -95,40 +98,65 @@ class DTOKSU{
         ///@{
         /** @brief pdata constructor.
          *
+         *  @param alvls the accuracy levels for each of MN models
+         *  @param sample pointer to reference of Matter object data
          *  @param pdata the plasma data used in the simulation
+         *  @param HeatTerms pointers to Heating Terms used by HeatModel
+         *  @param ForceTerms pointers to Force Terms used by ForceModel
+         *  @param CurrentTerms pointers to Current Terms used by ChargingModel
          */
         DTOKSU( std::array<float,MN> alvls, Matter *& sample, PlasmaData &pdata,
             std::vector<HeatTerm*> HeatTerms, 
-            std::vector<ForceTerm*> ForceTerms, std::vector<CurrentTerm*> CurrentTerms);
+            std::vector<ForceTerm*> ForceTerms, 
+            std::vector<CurrentTerm*> CurrentTerms);
 
         /** @brief pgrid constructor.
          *
-         *  @param pgrid the plasma grid used in the simulation
+         *  @param alvls the accuracy levels for each of MN models
+         *  @param sample pointer to reference of Matter object data
+         *  @param pgrid the plasma grid containing all plasma data
+         *  @param HeatTerms pointers to Heating Terms used by HeatModel
+         *  @param ForceTerms pointers to Force Terms used by ForceModel
+         *  @param CurrentTerms pointers to Current Terms used by ChargingModel
          */
         DTOKSU( std::array<float,MN> alvls, Matter *& sample, 
             PlasmaGrid_Data &pgrid, std::vector<HeatTerm*> HeatTerms, 
-            std::vector<ForceTerm*> ForceTerms, std::vector<CurrentTerm*> CurrentTerms);
+            std::vector<ForceTerm*> ForceTerms, 
+            std::vector<CurrentTerm*> CurrentTerms);
 
         /** @brief pdata and pgrid constructor.
          *
-         *  @param pdata the plasma data used in the simulation initially
-         *  @param pgrid the plasma grid used in the simulation
+         *  @param alvls the accuracy levels for each of MN models
+         *  @param sample pointer to reference of Matter object data
+         *  @param pgrid the plasma grid containing all plasma data
+         *  @param pdata the plasma data used in the simulation
+         *  @param HeatTerms pointers to Heating Terms used by HeatModel
+         *  @param ForceTerms pointers to Force Terms used by ForceModel
+         *  @param CurrentTerms pointers to Current Terms used by ChargingModel
          */
         DTOKSU( std::array<float,MN> alvls, Matter *& sample, 
             PlasmaGrid_Data &pgrid, PlasmaData &pdata, 
             std::vector<HeatTerm*> HeatTerms, 
-            std::vector<ForceTerm*> ForceTerms, std::vector<CurrentTerm*> CurrentTerms);
+            std::vector<ForceTerm*> ForceTerms, 
+            std::vector<CurrentTerm*> CurrentTerms);
 
         /** @brief boundary constructor.
          *
-         *  @param pgrid the plasma grid used in the simulation
+         *  @param alvls the accuracy levels for each of MN models
+         *  @param sample pointer to reference of Matter object data
+         *  @param pgrid the plasma grid containing all plasma data
+         *  @param pdata the plasma data used in the simulation
          *  @param cbound the list of points defining the core boundary
          *  @param wbound the list of points defining the wall boundary
+         *  @param HeatTerms pointers to Heating Terms used by HeatModel
+         *  @param ForceTerms pointers to Force Terms used by ForceModel
+         *  @param CurrentTerms pointers to Current Terms used by ChargingModel
          */
         DTOKSU( std::array<float,MN> alvls, Matter *& sample, 
             PlasmaGrid_Data &pgrid, PlasmaData &pdata, Boundary_Data &wbound, 
             Boundary_Data &cbound, std::vector<HeatTerm*> HeatTerms, 
-            std::vector<ForceTerm*> ForceTerms, std::vector<CurrentTerm*> CurrentTerms);
+            std::vector<ForceTerm*> ForceTerms, 
+            std::vector<CurrentTerm*> CurrentTerms);
         ///@}
 
         ~DTOKSU(){

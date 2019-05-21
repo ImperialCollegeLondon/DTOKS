@@ -138,7 +138,6 @@ class Model{
          *  @return true if dust is within grid and false if it's not
          *  @param i grid coordinate of dust in x direction
          *  @param k grid coordinate of dust in z direction
-         *  @param xd Threevector position of the dust 
          */
         const bool checkingrid(int i, int k)const;
 
@@ -276,6 +275,7 @@ class Model{
          *  Set matter pointer to refer to \p sample, with plasma background 
          *  given by fixed spatially continuous values of \p pdata and with
          *  \p accuracy.
+         *  @param filename name of file to write model data to
          *  @param sample the matter class which this model is acting on
          *  @param pdata the spatially continuous plasma paramater data
          *  @param accuracy the accuracy to which the model is calculated
@@ -288,6 +288,7 @@ class Model{
          *  Set matter pointer to refer to \p sample, with plasma background 
          *  given by the plasma grid specified by the \p pgrid structure with
          *  \p accuracy.
+         *  @param filename name of file to write model data to
          *  @param sample the matter class which this model is acting on
          *  @param pgrid the spatial grid over which plasma parameters are given
          *  @param accuracy the accuracy to which the model is calculated
@@ -300,6 +301,7 @@ class Model{
          *  Set matter pointer to refer to \p sample, with plasma background 
          *  given by the plasma grid specified by the \p pgrid structure with
          *  \p accuracy and \p pdata used as the initial conditions
+         *  @param filename name of file to write model data to
          *  @param sample the matter class which this model is acting on
          *  @param pgrid the spatial grid over which plasma parameters are given
          *  @param pdata the spatially continuous plasma paramater data
@@ -364,7 +366,6 @@ class Model{
         void AddTime(double T){ TotalTime = TotalTime + T;  }
 
         /** @brief Record in the PlasmaGrid the amount of mass lost
-         *  @param MassLost the amount of mass lost
          */
         void Record_MassLoss();
 

@@ -298,7 +298,7 @@ class Matter{
          *  @param charge the number of electronic charges on the sphere
          *  @param potential the normalised potential of the sphere
          *  @param deltas Proportion of secondary electron emission current
-         *  @param deltats Proportion of thermionic electron emission current
+         *  @param deltat Proportion of thermionic electron emission current
          */
         void update_charge(double charge, double potential, double deltas, 
             double deltat);
@@ -337,8 +337,8 @@ class Matter{
         /** @brief Set the restitution coefficients
          * 
          *  Set the values of \p RE and \p RN in \p St
-         *  @param RE the fraction of backscattered energy
-         *  @param RN the fraction of backscattered particles
+         *  @param re the fraction of backscattered energy
+         *  @param rn the fraction of backscattered particles
          */
         void set_rern(double re, double rn){ St.RE = re; St.RN = rn; };
         /** @brief Set Breakup to false
