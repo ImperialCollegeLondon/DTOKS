@@ -26,6 +26,7 @@ bin/lib*
 *.sh
 *.eps
 *.txt
+*.plt
 
 cmake_install.cmake
 Makefile
