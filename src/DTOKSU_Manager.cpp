@@ -916,6 +916,7 @@ int DTOKSU_Manager::read_data(std::string plasma_dirname){
         #endif
     }else{
         std::ifstream scalars,threevectors,gridflagfile;
+	std::cout << "\n* Reading plasma data from " << plasma_dirname << "b2processed.dat *\n\n";
         scalars.open(plasma_dirname+"b2processed.dat");
         threevectors.open(plasma_dirname+"b2processed2.dat");
         gridflagfile.open(plasma_dirname+"locate.dat");
@@ -926,44 +927,41 @@ int DTOKSU_Manager::read_data(std::string plasma_dirname){
         assert( gridflagfile.is_open() );
 
         //!< Throw away variables which read in data which is unimportant.
-        char dummy_char;
+        std::string dummy_line;
         double dummy_dub;
         //!< Ignore first line of file
-        for(unsigned int i=0; i<=19; i++){
-            scalars >> dummy_char;
-            threevectors >> dummy_char;
-        }
+        getline(scalars,dummy_line);
+        getline(threevectors,dummy_line);
         //!< Now loop over the grid and feed in the data into the vectors
         double convertJtoK = 7.242971666667e22;
         double converteVtoK = 11604.5250061657;
         for(unsigned int k=0; k<=Pgrid.gridz-1; k++){
             for(unsigned int i=0; i<=Pgrid.gridx-1; i++){
                 //!< This is the read-in format without neutrals
-                scalars >> Pgrid.x[i][k] >> Pgrid.z[i][k] >> Pgrid.Te[i][k]
+              scalars >> Pgrid.x[i][k] >> Pgrid.z[i][k] >> Pgrid.Te[i][k]
                     >> Pgrid.Ti[i][k] >> Pgrid.na0[i][k] >> Pgrid.na1[i][k] 
                     >> Pgrid.po[i][k] >> Pgrid.ua0[i][k] >> Pgrid.ua1[i][k];
-/*              //!< This is the read-in format with neutrals
-                scalars >> Pgrid.x[i][k] >> Pgrid.z[i][k] >> Pgrid.Te[i][k]
-                    >> Pgrid.Ti[i][k] >> Pgrid.Tn[i][k] >> Pgrid.na0[i][k] 
+                //!< This is the read-in format with neutrals
+/*                scalars >> Pgrid.x[i][k] >> Pgrid.z[i][k] >> Pgrid.Ti[i][k]
+                    >> Pgrid.Te[i][k] >> Pgrid.Tn[i][k] >> Pgrid.na0[i][k] 
                     >> Pgrid.na1[i][k] >> Pgrid.na2[i][k] >> Pgrid.po[i][k] 
-                    >> Pgrid.ua0[i][k] >> Pgrid.ua1[i][k] >> Pgrid.ua2[i][k];*/
+                    >> Pgrid.ua0[i][k] >> Pgrid.ua1[i][k] >> dummy_dub;*/
                 threevectors >> dummy_dub >> dummy_dub >> Pgrid.bx[i][k] >>
                     Pgrid.bz[i][k] >> Pgrid.by[i][k];
                 gridflagfile >> dummy_dub >> dummy_dub >> Pgrid.gridflag[i][k];
 
-                Pgrid.Te[i][k] = convertJtoK*Pgrid.Te[i][k];
-                Pgrid.Ti[i][k] = convertJtoK*Pgrid.Ti[i][k];
-                Pgrid.Tn[i][k] = convertJtoK*Pgrid.Tn[i][k];
-		
                 //!< For some reason, very small non-zero values are being 
                 //!< assigned to the 'zero' values being read in.
                 //!< This should correct for this...
-
-                if( Pgrid.device != 'j' && Pgrid.device != 'i' ){ 
+                if( Pgrid.device == 'j' || Pgrid.device == 'i' || Pgrid.device == 'd' ){ 
+	                Pgrid.Te[i][k] = convertJtoK*Pgrid.Te[i][k];
+        	        Pgrid.Ti[i][k] = convertJtoK*Pgrid.Ti[i][k];
+                	Pgrid.Tn[i][k] = convertJtoK*Pgrid.Tn[i][k];
+                }else{
                         Pgrid.Te[i][k] = converteVtoK*Pgrid.Te[i][k];
                         Pgrid.Ti[i][k] = converteVtoK*Pgrid.Ti[i][k];
                         Pgrid.Tn[i][k] = converteVtoK*Pgrid.Tn[i][k];
-                }
+		}
                 if( fabs(Pgrid.bx[i][k]) > Overflows::Field 
                     || fabs(Pgrid.bx[i][k]) < Underflows::Field ){ ReStat = 1; } 
                 if( fabs(Pgrid.by[i][k]) > Overflows::Field 

@@ -166,7 +166,7 @@ const bool Model::update_plasmadata(){
     Pdata->ElectronTemp     = PG_data->Te[i][k];
     Pdata->NeutralTemp      = PG_data->Tn[i][k];
     Pdata->AmbientTemp      = PG_data->Ta[i][k];
-    //interpolatepdata(i,k); //RecordPlasmadata("pd.txt");
+    //interpolatepdata(i,k);
     return true;
 }
 
@@ -420,15 +420,12 @@ void Model::ImpurityPrint(){
 }
 
 // *************************************** Unused Code *************************************** //
-
-// Print the inside and the outside of the tokamak
 /*
-
 //!< Function to return the sgn of val, true for positive, false for negative
 template <typename T> int sgn(T val) {
     return (T(0) < val) - (val < T(0));
 }
-
+*/
 // Interpolate between grid points to determine plasma data
 const void Model::interpolatepdata(const int i,const int k)const{
     Mo_Debug( "\tIn Model::interpolatepdata(const int i,const int k)const\n\n");
@@ -454,7 +451,7 @@ const void Model::interpolatepdata(const int i,const int k)const{
     double dz_2 = PG_data->dlz*k_diff;
 
     // Calculate the normalisation
-    double Coeff = 1.0/sqrt(4.0*PG_data->dlx*PG_data->dlx+4.0*PG_data->dlz*PG_data->dlz);
+    double Coeff = 1.0/(sqrt(dx_1*dx_1+dz_1*dz_1)+sqrt(dx_2*dx_2+dz_1*dz_1)+sqrt(dx_1*dx_1+dz_2*dz_2)+sqrt(dx_2*dx_2+dz_2*dz_2));
     
     // If it is not edge, in which case we aren't in a square
     if( PG_data->gridx >= i_pos && PG_data->gridz >= k_pos 
@@ -597,7 +594,7 @@ const void Model::interpolatepdata(const int i,const int k)const{
     Pdata->MagneticField    = B;
     Pdata->Gravity          = gravity;
 }
-
+/*
 void Model::vtkcircle(double r, std::ofstream &fout){
     P_Debug("\tModel::vtkcircle(double r, std::ofstream &fout)\n\n");
     int i,imax;

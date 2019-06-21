@@ -9,7 +9,6 @@
  *  @bug bugs, they definitely exist
  *  @bug Default structures should exist within a namespace
  *  @bug Consider encapsulating plasma data information in a separate class
- *  @bug InterpolatePlasmadata() is broken and only works for square grid
  */
 
 #ifndef __MODEL_H_INCLUDED__
@@ -145,7 +144,16 @@ class Model{
          *  @param i grid coordinate of dust in x direction
          *  @param k grid coordinate of dust in z direction
          */
-        void update_fields(int i, int k);
+        void update_fields(int i, int k);        
+        /** @brief Calculate interpolated plasma parameters at dust position
+         *
+         *  Attempt to mutate the mean value plasma parameters at the dust 
+         *  position
+         *  @bug This doesn't work for a non-square grid, or generally
+         *  @param i grid coordinate of dust in x direction
+         *  @param k grid coordinate of dust in z direction
+         */
+        const void interpolatepdata(const int i,const int k)const;
         ///@}
 
     protected:
@@ -383,13 +391,3 @@ class Model{
 };
 
 #endif /* __MODEL_H_INCLUDED__ */
-
-/** @brief Calculate interpolated plasma parameters at dust position
- *
- *  Attempt to mutate the mean value plasma parameters at the dust 
- *  position
- *  @bug This doesn't work for a non-square grid, or generally
- *  @param i grid coordinate of dust in x direction
- *  @param k grid coordinate of dust in z direction
- */
-//const void interpolatepdata(const int i,const int k)const;

@@ -6,6 +6,8 @@
 
 #include "ForceTerms.h"
 
+#define FORCE_DEBUG
+
 namespace Term{
 //!< This term is due to gravity, I'm not refencing it!
 threevector Gravity::Evaluate(const Matter* Sample, 
@@ -243,6 +245,9 @@ threevector HybridIonDrag::Evaluate(const Matter* Sample,
     if( Gamma != 0.0 ){
         CoulombLogarithm = log(1.0+1.0/Gamma);     //!< Approximation of coulomb logarithm   
     }
+    if( CoulombLogarithm != CoulombLogarithm ){
+        CoulombLogarithm = 17.0;
+    }
 //    double CoulombLogarithm = 17.0;     //!< Approximation of coulomb logarithm   
 
 
@@ -262,6 +267,9 @@ threevector HybridIonDrag::Evaluate(const Matter* Sample,
 
     //std::cout << "\n\nni = " << Pdata->IonDensity;
     //std::cout << "\nTi = " << Pdata->IonTemp;
+    //std::cout << "\nTau = " << Tau;
+    //std::cout << "\nz = " << z;
+    //std::cout << "\nCoulombLogarithm = " << CoulombLogarithm;
     //std::cout << "\nmi = " << Pdata->mi;
     //std::cout << "\nVti = " << IonThermalVelocity;
     //std::cout << "\nPlasmaVel = " << Pdata->PlasmaVel;
@@ -315,6 +323,9 @@ threevector LloydIonDrag::Evaluate(const Matter* Sample,
     double CoulombLogarithm(0.0);
     if( Gamma != 0.0 ){
         CoulombLogarithm = log(1.0+1.0/Gamma);     //!< Approximation of coulomb logarithm   
+    }
+    if( CoulombLogarithm != CoulombLogarithm ){// Handle case of nan Coulomb Logarithm
+        CoulombLogarithm = 17.0;
     }
     double Beta =  Radius/(IonThermalVelocity*Pdata->mi/(echarge*Pdata->MagneticField.mag3()));
 

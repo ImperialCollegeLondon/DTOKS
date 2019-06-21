@@ -32,7 +32,7 @@ struct GrainData MatterDefaults = {
     0,              //!< RN                 should be updated
     0,              //!< Potential          should be updated
     false,          //!< Is Positive        should be updated
-    {1.0,0.0,0.0},  //!< Dust position      should be updated
+    {0.0,0.0,0.0},  //!< Dust position      should be updated
     {0,0,0},        //!< Dust Velocity      case dependant
     0,              //!< Rotational Freq    fine
     0,              //!< FusionEnergy       fine
