@@ -221,7 +221,7 @@ void HeatingModel::Print(){
                 ModelDataFile << "\t" << (*iter)->
                     Evaluate(Sample, Pdata, Sample->get_temperature())*1000;
             }else{ //!< If evaporation is turned off
-                ModelDataFile   << "\t" << 0 << "\t" << 0 << "\t" << 0;
+                ModelDataFile   << "\t" << 0;
             }
         }else{
             ModelDataFile << "\t" << (*iter)->

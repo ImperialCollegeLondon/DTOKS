@@ -48,10 +48,13 @@ class DTOKSU{
          *  this information. The \p WallBound and \p CoreBound are two vectors
          *  of pairs which are a series of points that define boundaries.
          *  \p TotalTime is used to record the total time taken to perform a 
-         *  simulation and \p MyFile is a output file
+         *  simulation, \p MaxTime the maximum allowed simulation time for 
+         *  simulations and \p MyFile is a output file. \p ReflectedLastStep
+         *  Is used to prevent trapping of particles in material boundaries.
          */
         ///@{
-        double TotalTime;
+        double TotalTime, MaxTime;
+        bool ReflectedLastStep;
         Matter *Sample;
         HeatingModel HM;
         ForceModel FM;

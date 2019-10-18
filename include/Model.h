@@ -374,8 +374,9 @@ class Model{
         void AddTime(double T){ TotalTime = TotalTime + T;  }
 
         /** @brief Record in the PlasmaGrid the amount of mass lost
+         *  @param Termination true if the particle has terminated in this step
          */
-        void Record_MassLoss();
+        void Record_MassLoss(bool Termination);
 
         /** @brief Function to print to file the total impurity deposition rate
          */

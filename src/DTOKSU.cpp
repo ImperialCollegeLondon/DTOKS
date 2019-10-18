@@ -29,7 +29,9 @@ CM("Data/default_cm_0.txt",acclvls[0],CurrentTerms,sample,pdata){
         << "\n\n");
     D_Debug("\n\n******************* SETUP FINISHED ******************* \n\n");
 
+    MaxTime = 0.5;
     TotalTime = 0;
+    ReflectedLastStep = false;
     create_file("Data/df.txt");
 }
 
@@ -53,7 +55,9 @@ CM("Data/default_cm_0.txt",acclvls[0],CurrentTerms,sample,pgrid){
         << "\n\n");
     D_Debug("\n\n******************* SETUP FINISHED ******************* \n\n");
 
+    MaxTime = 0.5;
     TotalTime = 0;
+    ReflectedLastStep = false;
     create_file("Data/df.txt");
 }
 
@@ -77,7 +81,9 @@ CM("Data/default_cm_0.txt",acclvls[0],CurrentTerms,sample,pgrid,pdata){
         << "\n\n");
     D_Debug("\n\n******************* SETUP FINISHED ******************* \n\n");
 
+    MaxTime = 0.5;
     TotalTime = 0;
+    ReflectedLastStep = false;
     create_file("Data/df.txt");
 }
 
@@ -103,7 +109,9 @@ CM("Data/default_cm_0.txt",acclvls[0],CurrentTerms,sample,pgrid,pdata){
         << "\n\n");
     D_Debug("\n\n******************* SETUP FINISHED ******************* \n\n");
 
+    MaxTime = 0.5;
     TotalTime = 0;
+    ReflectedLastStep = false;
     create_file("Data/df.txt");
 }
 
@@ -166,24 +174,31 @@ void DTOKSU::SpecularReflection(){
     }
 
     //!< If MinIndex is last element of array
+    int MinIndexCopy = MinIndex;
     if( MinIndex == (WallBound.Grid_Pos.size()-1) ) 
-        MinIndex = -1; //!< Go back to start of the array
-    double Dist1 = sqrt((WallBound.Grid_Pos[MinIndex+1].first-x)*
-        (WallBound.Grid_Pos[MinIndex+1].first-x)+
-        (WallBound.Grid_Pos[MinIndex+1].second-y)*
-        (WallBound.Grid_Pos[MinIndex+1].second-y));
+        MinIndexCopy = -1; //!< Go back to start of the array
+    double Dist1 = sqrt((WallBound.Grid_Pos[MinIndexCopy+1].first-x)*
+        (WallBound.Grid_Pos[MinIndexCopy+1].first-x)+
+        (WallBound.Grid_Pos[MinIndexCopy+1].second-y)*
+        (WallBound.Grid_Pos[MinIndexCopy+1].second-y));
     if( MinIndex == 0 ) //!< If MinIndex is first element of array,
-        MinIndex = WallBound.Grid_Pos.size(); //!< Go to end of array
-    double Dist2 = sqrt((WallBound.Grid_Pos[MinIndex-1].first-x)*
-        (WallBound.Grid_Pos[MinIndex-1].first-x)+
-        (WallBound.Grid_Pos[MinIndex-1].second-y)*
-        (WallBound.Grid_Pos[MinIndex-1].second-y));
+        MinIndexCopy = WallBound.Grid_Pos.size(); //!< Go to end of array
+    double Dist2 = sqrt((WallBound.Grid_Pos[MinIndexCopy-1].first-x)*
+        (WallBound.Grid_Pos[MinIndexCopy-1].first-x)+
+        (WallBound.Grid_Pos[MinIndexCopy-1].second-y)*
+        (WallBound.Grid_Pos[MinIndexCopy-1].second-y));
 
     //!< Determine which of Dist1 or Dist2 is closer  
     if( Dist1 < Dist2 )
-        SecondMinIndex = MinIndex+1;
+        if( MinIndex == (WallBound.Grid_Pos.size()-1) )
+            SecondMinIndex = 0;
+        else
+            SecondMinIndex = MinIndex+1;
     else
-        SecondMinIndex = MinIndex-1;
+        if( MinIndex == 0 )
+            SecondMinIndex = WallBound.Grid_Pos.size()-1;
+        else
+            SecondMinIndex = MinIndex-1;
 
     double dr = WallBound.Grid_Pos[MinIndex].first-
         WallBound.Grid_Pos[SecondMinIndex].first;
@@ -196,7 +211,8 @@ void DTOKSU::SpecularReflection(){
         Sample->get_velocity())*normal.getunit()+Sample->get_velocity();
     threevector ReflectedVel(SpecularReflDir.getx(),
         Sample->get_velocity().gety(),SpecularReflDir.getz());
-
+    
+//    std::cout << "\n" << MinIndex << "\t" << SecondMinIndex;
 //    std::cout << "\n" << WallBound.Grid_Pos[MinIndex].first << "\t" 
 //        <<  WallBound.Grid_Pos[MinIndex].second;
 //    std::cout << "\t" << x << "\t" <<  y << "\t" << normal << "\t" 
@@ -214,10 +230,11 @@ bool DTOKSU::Boundary_Check(bool InOrOut){
     D_Debug("\tIn DTOKSU::Boundary_Check(bool InOrOut)\n\n");
     Boundary_Data Edge;
     //!< Determine if it's core or wall boundary
-    if( InOrOut )
+    if( InOrOut ){
         Edge = CoreBound;
-    else
+    }else{
         Edge = WallBound;
+    }
     
     assert(Edge.Grid_Pos.size() > 2);
     int j=Edge.Grid_Pos.size()-1 ;
@@ -229,22 +246,30 @@ bool DTOKSU::Boundary_Check(bool InOrOut){
         if ((Edge.Grid_Pos[i].second < y && Edge.Grid_Pos[j].second >= y
             ||   Edge.Grid_Pos[j].second < y && Edge.Grid_Pos[i].second >= y)
             &&  (Edge.Grid_Pos[i].first <= x || Edge.Grid_Pos[j].first <= x)) {
+
             oddNodes^=(Edge.Grid_Pos[i].first+(y-Edge.Grid_Pos[i].second)
                     /(Edge.Grid_Pos[j].second-Edge.Grid_Pos[i].second)
                     *(Edge.Grid_Pos[j].first-Edge.Grid_Pos[i].first)<x);
         }
         j=i; 
     }
+
     //!< In this case, it's a wall and the particle has gone through it,
     //!< Here we implement specular refulection
-    if( !InOrOut && !oddNodes ){
-        SpecularReflection();
-        return oddNodes; //!< Pretend we're still inside
-    }
-    if( InOrOut )
+    if( InOrOut ){
         return oddNodes;
-    else
+    }else{
+        if( !oddNodes && !ReflectedLastStep ){
+            SpecularReflection();
+            ReflectedLastStep = true;
+            return oddNodes; //!< Pretend we're still inside
+        }else if( !oddNodes && ReflectedLastStep ){
+            return oddNodes; //!< Pretend we're still inside
+        }else if( oddNodes ){
+            ReflectedLastStep = false;
+        }
         return !oddNodes;
+    }
 }
 
 void DTOKSU::ImpurityPrint(){
@@ -338,7 +363,7 @@ int DTOKSU::Run(){
                 //!< Take the time step in the faster time process
                 if( MinTimeStep == HeatTime ){
                     HM.Heat(MinTimeStep);
-                    HM.Record_MassLoss();
+                    HM.Record_MassLoss(false);
                     if( Sample->is_gas() ){
                         D1_Debug("\nSample is gaseous!");
                         Loop=false;
@@ -437,7 +462,7 @@ int DTOKSU::Run(){
             && hm_InGrid == cm_InGrid );
 
         CM.RecordPlasmadata("pd.txt");
-        HM.Record_MassLoss();
+        HM.Record_MassLoss(false);
         //HM.RecordPlasmadata("hm_pd.txt");
         //FM.RecordPlasmadata("fm_pd.txt");
         print();
@@ -445,10 +470,12 @@ int DTOKSU::Run(){
         // ***** START OF : DETERMINE IF END CONDITION HAS BEEN REACHED ***** //
         if( Sample->is_gas() 
             && Sample->get_superboilingtemp() <= Sample->get_temperature() ){
+            HM.Record_MassLoss(true);
             std::cout << "\n\nSample has Boiled!";
             break;
         }else if( Sample->is_gas() 
             && Sample->get_superboilingtemp() > Sample->get_temperature() ){
+            HM.Record_MassLoss(true);
             std::cout << "\n\nSample has Evaporated!";
             break;
         }else if( Sample->is_split() ){
@@ -456,6 +483,7 @@ int DTOKSU::Run(){
             //!< Could replace with return 3; and leave off the end check?...
             break; 
         }else if( Sample->is_gas() ){
+            HM.Record_MassLoss(true);
             std::cout << "\n\nSample has vapourised";
             break;
         }else if( HeatTime == 1 ){
@@ -464,6 +492,7 @@ int DTOKSU::Run(){
         }else{
             if( CoreBound.Grid_Pos.size() > 2 ){
                 if( Boundary_Check(true) ){
+                    HM.Record_MassLoss(true);
                     std::cout << "\n\nCollision with Core!";
                     break;
                 }
@@ -497,7 +526,12 @@ int DTOKSU::Run(){
     }else if( Sample->is_gas() ){
         std::cout << "\nSample has boiled, evaporated or vapourised!\n\n";
         return 4;
-    }else if( ErrorFlag ){
+    }else if( TotalTime > MaxTime ){
+        std::cout << "\nMax Simulation Time Exceeded!\n\n";
+        return 5;
+
+    }
+    else if( ErrorFlag ){
         std::cout << "\nGeneric run-time error!\n\n";
         return 10;
     }

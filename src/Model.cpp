@@ -398,9 +398,13 @@ const double Model::NeutralFlux()const{
     return Pdata->NeutralDensity*sqrt(Kb*Pdata->NeutralTemp/(2*PI*Pdata->mi));
 }
 
-void Model::Record_MassLoss(){
-    H_Debug("\tIn Model::Record_MassLoss()\n\n");
-    PG_data->dm[i][k]=Sample->get_mass()-OldMass;
+void Model::Record_MassLoss(bool Termination){
+    H_Debug("\tIn Model::Record_MassLoss(bool Termination)\n\n");
+    if( Termination ){
+        PG_data->dm[i][k]=Sample->get_mass()-OldMass;
+    }else{
+        PG_data->dm[i][k]=Sample->get_mass();
+    }
     OldMass=Sample->get_mass();
 }
 
