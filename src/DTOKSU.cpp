@@ -284,6 +284,7 @@ int DTOKSU::Run(){
     //!< Update the plasma data from the plasma grid for all models...
     //!< This has to be done individually because PlasmaData is shared accross 
     //!< models in current design
+    D_Debug("\n\n***** DTOKSU::Run() :: update_plasmadata() *****\n\n");
     bool cm_InGrid = CM.update_plasmadata(); 
     bool hm_InGrid = HM.update_plasmadata(); 
     bool fm_InGrid = FM.update_plasmadata(); 

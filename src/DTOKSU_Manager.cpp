@@ -165,7 +165,17 @@ void DTOKSU_Manager::show_usage(std::string name)const{
     std::cerr << "Usage: int main(int argc, char* argv[]) <option(s)> SOURCES"
     << "\n\nOptions:\n"
     << "\t-h, --help\t\tShow this help message\n\n"
-    << "\t-c  --config CONFIG\t\tSpecify the configuration file path\n\n"
+    << "\t-c, --config CONFIG\t\tSpecify the configuration file path\n\n"
+    << "\t-i, --imax IMAX\t\t\t(int), Specify the number of grains\n\n"
+    << "\t-se,--seed SEED\t\t\tSpecify the seed for simulations\n\n"
+    << "\t-vd,--veldist VELDIST\t\tSpecify velocity dist:\n"
+    << "\t\t\t\t\tuniform, lognormal, none\n\n"
+    << "\t-sd,--sizedist SIZEDIST\t\tSpecify size dist:\n"
+    << "\t\t\t\t\tuniform, exponential, lognormal, none\n\n"
+    << "\t-vpo,--velparone VELPARONE\tSpecify the 1st par of velocity dist\n\n"
+    << "\t-vpt,--velpartwo VELPARTWO\tSpecify the 2nd par of velocity dist\n\n"
+    << "\t-sdo,--sizeparone SIZEPARONE\tSpecify the 1st par of size dist\n\n"
+    << "\t-sdt,--sizepartwo SIZEPARTWO\tSpecify the 2nd par of size dist\n\n"
     << "\t-t, --temperature TEMPERATURE\tdouble the initial temperature\n\n"
     << "\t-m, --material MATERIAL\t\tchar variable giving the dust grain "
     << "element, possible values 'w', 'g', 'b', 'd', 'l', 'm' and 'f'\n"
@@ -230,7 +240,7 @@ std::string Config_Filename){
     std::stringstream ss0;
     for (int i = 1; i < argc; ++i){ // Read command line input
         std::string arg = argv[i];
-	std::cout << "\narg[" << i << "] = " << arg;
+//	std::cout << "\narg[" << i << "] = " << arg;
         if     ( arg == "--help"        || arg == "-h" ){   
             Config_Status = 1; show_usage( argv[0] ); return Config_Status;         
         }else if( arg == "--config"      || arg == "-c" ){
@@ -239,6 +249,19 @@ std::string Config_Filename){
             sources.push_back(argv[i]);
         }
     }
+
+
+    // ------------------- PARALLELISATION VARIABLES ------------------- //
+    unsigned long long imax = 1;
+    unsigned long long Seed = 0;
+    double SizeParOne = 0;
+    double SizeParTwo = 0;
+    double VelParOne = 0;
+    double VelParTwo = 0;
+
+    std::string SizeDistributionType = "none";
+    std::string VelDistributionType = "none";
+    int ValueTwo(0);
 
 
     // ------------------- DUST VARIABLE DEFAULTS ------------------- //
@@ -255,6 +278,7 @@ std::string Config_Filename){
     float zvel(0.0);
     bool ContinuousPlasma = false;
 
+
     // ------------------- GROUP MODELS ------------------- //
     std::array<bool,HMN> HeatModels;
     std::array<bool,FMN> ForceModels;
@@ -266,6 +290,7 @@ std::string Config_Filename){
     std::array<float,DTOKSU::MN> AccuracyLevels;
 
     config4cpp::StringVector CfgStringVec;
+
 
     // ------------------- PROCESS CONFIGURATION FILE ------------------- //
 //  threevector PlasmaVelocity(501.33, 7268.5, 914.947); 
@@ -526,6 +551,7 @@ std::string Config_Filename){
         return 1;
     }
 
+
     // ------------------- CONFIGURE PLASMAGRID ------------------- //
     Boundary_Data WallBound, CoreBound;
     if( !ContinuousPlasma ){
@@ -566,8 +592,8 @@ std::string Config_Filename){
                     Config_Status = 6;
                     return Config_Status;
                 }
-            std::cout 
-                << "\n* Core_Boundary Structure created successfully! *\n";
+                std::cout 
+                    << "\n* Core_Boundary Structure created successfully! *\n";
             }
         }else if(Pgrid.device != 'p'){ //!< In case of magnum-PSI
             std::cout << "\n* Trajectories pass through Core Boundary with "
@@ -580,6 +606,7 @@ std::string Config_Filename){
     }
     Pause();
 
+
     // ------------------- PARSE COMMAND LINE INPUT ------------------- //
     std::cout << "\n* Processing command line input *";
 
@@ -587,7 +614,23 @@ std::string Config_Filename){
     //!< We want other command line options to over-ride the configuration file.
     for (int i = 1; i < argc; ++i){ //!< Read command line input
         std::string arg = argv[i];
-        if(      arg == "--temperature" 
+        if( arg == "--imax"
+            || arg == "-i"   ) input_function(argc,argv,i,ss0,imax);
+        else if( arg == "--seed" 
+            || arg == "-se" )  input_function(argc,argv,i,ss0,Seed);
+        else if( arg == "--veldist" 
+            || arg == "-vd" )  input_function(argc,argv,i,ss0,VelDistributionType);
+        else if( arg == "--sizedist" 
+            || arg == "-sd" )  input_function(argc,argv,i,ss0,SizeDistributionType);
+        else if( arg == "--velparone" 
+            || arg == "-vpo" )  input_function(argc,argv,i,ss0,VelParOne);
+        else if( arg == "--velpartwo" 
+            || arg == "-vpt" )  input_function(argc,argv,i,ss0,VelParTwo);
+        else if( arg == "--sizeparone" 
+            || arg == "-spo" )  input_function(argc,argv,i,ss0,SizeParOne);
+        else if( arg == "--sizepartwo" 
+            || arg == "-spt" )  input_function(argc,argv,i,ss0,SizeParTwo);
+        else if( arg == "--temperature" 
             || arg == "-t"   ) input_function(argc,argv,i,ss0,Temp);
         else if( arg == "--material"    
             || arg == "-m"   ) input_function(argc,argv,i,ss0,Element);
@@ -617,137 +660,234 @@ std::string Config_Filename){
     Pause();
 
 
-    // ------------------- INITIALISE META_DATA FILE ------------------- //
-    std::cout << "* Creating MetaDataFile: " << MetaDataFilename << " *\n\n";
-    //!< Data file for containing the run information
-    std::ofstream MetaDataFile; 
-    time_t now = time(0); //!< Get the time of simulation
-    char * dt = ctime(&now);
-    MetaDataFile.open(MetaDataFilename);
-    MetaDataFile << "## Run Data File ##\n";
-    MetaDataFile << "#Date:\t" << dt;
+    // ------------------- BEGIN PARALLELISATION ------------------- //
 
 
-    // ------------------- INITIALISE DUST ------------------- //
-    threevector xinit(rpos,thetapos,zpos);
-    threevector vinit(rvel,thetavel,zvel);
-    std::cout << "* Creating Matter object *\n\t* Element:\t" << Element;
-    if  (Element == 'W')     
-        Sample = new Tungsten(size,Temp,ConstModels,xinit,vinit);
-    else if (Element == 'B') 
-        Sample = new Beryllium(size,Temp,ConstModels,xinit,vinit);
-    else if (Element == 'F') 
-        Sample = new Iron(size,Temp,ConstModels,xinit,vinit);
-    else if (Element == 'G') 
-        Sample = new Graphite(size,Temp,ConstModels,xinit,vinit);
-    else if (Element == 'D') 
-        Sample = new Deuterium(size,Temp,ConstModels,xinit,vinit);
-    else if (Element == 'M') 
-        Sample = new Molybdenum(size,Temp,ConstModels,xinit,vinit);
-    else if (Element == 'L') 
-        Sample = new Lithium(size,Temp,ConstModels,xinit,vinit);
-    else{ 
-        std::cerr << "\nInvalid Option entered for Element";
-        Config_Status = 4;
-        return Config_Status;
+    int run_status = 0;
+    std::vector<std::mt19937> randnumbers;
+    for(int p = 0; p < omp_get_max_threads(); p ++){
+        randnumbers.push_back(std::mt19937(Seed+p));
     }
-    std::cout << "\n\t* xinit:\t" << Sample->get_position() << "\n\t* vinit:\t"
-        << Sample->get_velocity();
-    std::cout << "\n\t* InitRotation:\t" << Sample->get_rotationalfreq() 
-        << "\n";
-    std::cout << "\n* Matter Object created successfully! *\n\n";
-    Pause();
+
+    #pragma omp parallel for private(size)
+    for( int i = 0; i < imax; i ++ ){
+        //std::cout << "\n" << omp_get_thread_num() << "/" << omp_get_num_threads();
+
+        int Config_Status_Local(0);
+        if( SizeDistributionType == "lognormal" ){
+            std::lognormal_distribution<double> size_distribution(log(SizeParOne),SizeParTwo);
+            size = size_distribution(randnumbers[omp_get_thread_num()]);
+        }else if( SizeDistributionType == "uniform" ){
+            std::uniform_real_distribution<double> size_distribution(SizeParOne,SizeParTwo);
+            size = size_distribution(randnumbers[omp_get_thread_num()]);
+        }else if( SizeDistributionType == "exponential" ){
+            std::exponential_distribution<double> size_distribution(SizeParTwo);
+            size = SizeParOne*size_distribution(randnumbers[omp_get_thread_num()]);
+        }else if( SizeDistributionType == "none" ){
+            
+        }else{
+            Config_Status_Local = 4;
+        }
 
 
-    // ------------------- PRINT METADATA / CREATE DTOKSU ------------------- //
-    MetaDataFile << "\n\n#DUST PARAMETERS" <<"\nElem (arb)\tRadius (m)\t"
-        <<"Temp (K)\txinit (m s^-1)\t\tvinit (m s^-1)\n"<<Sample->get_elem()
-        <<"\t\t"<<Sample->get_radius()<<"\t\t"<<Sample->get_temperature()
-        <<"\t\t"<<Sample->get_position()<<"\t\t"<<Sample->get_velocity()<<"\n";
+        double VelocityMag(0.0);   
+        if( VelDistributionType == "lognormal" ){
+            std::lognormal_distribution<double> velocity_distribution(log(VelParOne),VelParTwo);
+            VelocityMag = velocity_distribution(randnumbers[omp_get_thread_num()]);
+        }else if( VelDistributionType == "uniform" ){
+            std::uniform_real_distribution<double> velocity_distribution(VelParOne,VelParTwo);
+            VelocityMag = velocity_distribution(randnumbers[omp_get_thread_num()]);
+        }else if( VelDistributionType == "none" ){
 
-    if( !ContinuousPlasma ){
-        MetaDataFile <<"\n\n#PLASMA GRID PARAMETERS"
-            <<"\nMachine\tIonSpecies\tgridx\tgridz\tgridtheta\tdlx\tdlz\n"
-            <<Pgrid.device<<"\t"<<IonSpecies<<"\t"<<Pgrid.gridx<<"\t"
-            <<Pgrid.gridz<<"\t"<<Pgrid.gridtheta<<"\t"<<Pgrid.dlx<<"\t"
-            <<Pgrid.dlz<<"\n"<<"\nxmin (m)\txmax (m)\tzmin (m)\tzmax (m)\n"
-            <<Pgrid.gridxmin<<"\t\t"<<Pgrid.gridxmax<<"\t\t"<<Pgrid.gridzmin
-            <<"\t\t"<<Pgrid.gridzmax << "\n";
-        Sim = new DTOKSU(AccuracyLevels, Sample, Pgrid, Pdata, WallBound, 
-            CoreBound, HeatTerms, ForceTerms, CurrentTerms);
-    }else{
-        MetaDataFile <<"\n\n#PLASMA DATA PARAMETERS"
-            <<"\n\nNn (m^-3)\tNi (m^-3)\tNe (m^-3)\n"
-            <<Pdata.NeutralDensity<<"\t\t"<<Pdata.IonDensity<<"\t\t"
-            <<Pdata.ElectronDensity
-            <<"\n\nTn (K)\t\tTi (K)\t\tTe (K)\n"
-            <<Pdata.NeutralTemp<<"\t\t"<<Pdata.IonTemp<<"\t\t"
-            <<Pdata.ElectronTemp<<"\t"
-            <<"\n\nPvel (m s^-1)\t\tE (V m^-1)\t\tB (T)\n"
-            <<Pdata.PlasmaVel<<"\t"<<Pdata.ElectricField<<"\t"
-            <<Pdata.MagneticField<<"\n";
-        Sim = new DTOKSU(AccuracyLevels, Sample, Pdata, HeatTerms, ForceTerms,
-            CurrentTerms);
+        }else{
+            Config_Status_Local = 4;
+        }
+    //    std::uniform_real_distribution<double> Velocity(0,20);
+    //    std::uniform_real_distribution<double> Positions(0,0.1); // UPPER OUTER DIVERTOR
+    //    std::uniform_real_distribution<double> Positions(0,1.0); // UPPER INNER DIVERTOR
+    //    std::uniform_real_distribution<double> Positions(0,0.25); // LOWER OUTER DIVERTOR
+        std::uniform_real_distribution<double> Positions(0,0.03); // LOWER INNER DIVERTOR
+    
+        double Angle = custom_distribution(randnumbers[omp_get_thread_num()]);
+        double DistanceAlongDivertor = Positions(randnumbers[omp_get_thread_num()]);
+    
+    //    rpos = 1.70705+DistanceAlongDivertor*0.242535625; // UPPER OUTER DIVERTOR
+    //    zpos = 1.15-DistanceAlongDivertor*0.9701425001;   // UPPER OUTER DIVERTOR
+    //    rpos = 1.4440497335701599;                              // UPPER INNER DIVERTOR
+    //    zpos = 0.873889876-DistanceAlongDivertor*0.04618117229; // UPPER INNER DIVERTOR
+    //    rpos = 1.76377+DistanceAlongDivertor*0.2594386678;  // LOWER OUTER DIVERTOR
+    //    zpos = -1.15+DistanceAlongDivertor*0.9657595858; // LOWER OUTER DIVERTOR
+        rpos = 1.423;  // LOWER INNER DIVERTOR
+        zpos = -0.7282415630550609-DistanceAlongDivertor; // LOWER INNER DIVERTOR
+    
+    //    rvel = -VelocityMag*std::cos(Angle-atan(1.0/4.0)); // UPPER OUTER DIVERTOR
+    //    zvel = VelocityMag*std::sin(Angle-atan(1.0/4.0));  // UPPER OUTER DIVERTOR
+    //    rvel = VelocityMag*std::cos(Angle); // UPPER INNER DIVERTOR
+    //    zvel = VelocityMag*std::sin(Angle); // UPPER INNER DIVERTOR
+    //    rvel = -VelocityMag*std::cos(Angle+atan(1.0/4.0)); // LOWER OUTER DIVERTOR
+    //    zvel = VelocityMag*std::sin(Angle+atan(1.0/4.0)); // LOWER OUTER DIVERTOR
+        rvel = VelocityMag*std::cos(Angle); // LOWER INNER DIVERTOR
+        zvel = VelocityMag*std::sin(Angle); // LOWER INNER DIVERTOR
+//        #pragma omp critical
+//        {
+//        std::cout << "\n" << size << "\t" << VelocityMag << "\t" << rpos << "\t" << zpos 
+//            << "\t" << rvel << "\t" << zvel << "\t" << Angle;
+//        }
+        
+        // Change filenames
+        std::string FinalMetaDataFilename = MetaDataFilename + "_" + std::to_string(i) + ".txt";
+//        std::string FinalDataFilePrefix = DataFilePrefix + "_" + std::to_string(VelocityMag) + "ms_" + std::to_string(size) + "um";
+        std::string FinalDataFilePrefix = DataFilePrefix;
+    
+        // ------------------- INITIALISE META_DATA FILE ------------------- //
+    
+        #pragma omp critical
+        {
+//        std::cout << "* Creating MetaDataFile: " << FinalMetaDataFilename 
+//            << "_" << i << ".txt *\n\n";
+        std::cout << "* Creating MetaDataFile: " << FinalMetaDataFilename << " *\n\n";
+        }
+        //!< Data file for containing the run information
+        std::ofstream MetaDataFile; 
+        time_t now = time(0); //!< Get the time of simulation
+        char * dt = ctime(&now);
+        MetaDataFile.open(FinalMetaDataFilename);
+        MetaDataFile << "## Run Data File ##\n";
+        MetaDataFile << "#Date:\t" << dt;
+    
+    
+        // ------------------- INITIALISE DUST ------------------- //
+        threevector xinit(rpos,thetapos,zpos);
+        threevector vinit(rvel,thetavel,zvel);
+        #pragma omp critical
+        {
+        std::cout << "* Creating Matter object *\n\t* Element:\t" << Element;
+        }
+        Matter *SampleLocal;
+        if  (Element == 'W')     
+            SampleLocal = new Tungsten(size,Temp,ConstModels,xinit,vinit);
+        else if (Element == 'B') 
+            SampleLocal = new Beryllium(size,Temp,ConstModels,xinit,vinit);
+        else if (Element == 'F') 
+            SampleLocal = new Iron(size,Temp,ConstModels,xinit,vinit);
+        else if (Element == 'G') 
+            SampleLocal = new Graphite(size,Temp,ConstModels,xinit,vinit);
+        else if (Element == 'D') 
+            SampleLocal = new Deuterium(size,Temp,ConstModels,xinit,vinit);
+        else if (Element == 'M') 
+            SampleLocal = new Molybdenum(size,Temp,ConstModels,xinit,vinit);
+        else if (Element == 'L') 
+            SampleLocal = new Lithium(size,Temp,ConstModels,xinit,vinit);
+        else{ 
+            std::cerr << "\nInvalid Option entered for Element";
+            Config_Status_Local = 4;
+            //return Config_Status;
+        }
+        #pragma omp critical
+        {
+        std::cout << "\n\t* xinit:\t" << SampleLocal->get_position() << "\n\t* vinit:\t"
+            << SampleLocal->get_velocity();
+        std::cout << "\n\t* InitRotation:\t" << SampleLocal->get_rotationalfreq() 
+            << "\n";
+        std::cout << "\n* Matter Object created successfully! *\n\n";
+        }
+        Pause();
+    
+    
+        // ------------------- PRINT METADATA / CREATE DTOKSU ------------------- //
+        MetaDataFile << "\n\n#DUST PARAMETERS" <<"\nElem (arb)\tRadius (m)\t"
+            <<"Temp (K)\txinit (m s^-1)\t\tvinit (m s^-1)\n"<<SampleLocal->get_elem()
+            <<"\t\t"<<SampleLocal->get_radius()<<"\t\t"<<SampleLocal->get_temperature()
+            <<"\t\t"<<SampleLocal->get_position()<<"\t\t"<<SampleLocal->get_velocity()<<"\n";
+        DTOKSU* SimLocal;
+        PlasmaGrid_Data PgridLocal = Pgrid;
+        PlasmaData PdataLocal = Pdata;
+        if( !ContinuousPlasma ){
+            MetaDataFile <<"\n\n#PLASMA GRID PARAMETERS"
+                <<"\nMachine\tIonSpecies\tgridx\tgridz\tgridtheta\tdlx\tdlz\n"
+                <<PgridLocal.device<<"\t"<<IonSpecies<<"\t"<<PgridLocal.gridx<<"\t"
+                <<PgridLocal.gridz<<"\t"<<PgridLocal.gridtheta<<"\t"<<PgridLocal.dlx<<"\t"
+                <<PgridLocal.dlz<<"\n"<<"\nxmin (m)\txmax (m)\tzmin (m)\tzmax (m)\n"
+                <<PgridLocal.gridxmin<<"\t\t"<<PgridLocal.gridxmax<<"\t\t"<<PgridLocal.gridzmin
+                <<"\t\t"<<PgridLocal.gridzmax << "\n";
+            SimLocal = new DTOKSU(AccuracyLevels, SampleLocal, PgridLocal, PdataLocal, WallBound, 
+                CoreBound, HeatTerms, ForceTerms, CurrentTerms);
+        }else{
+            MetaDataFile <<"\n\n#PLASMA DATA PARAMETERS"
+                <<"\n\nNn (m^-3)\tNi (m^-3)\tNe (m^-3)\n"
+                <<PdataLocal.NeutralDensity<<"\t\t"<<PdataLocal.IonDensity<<"\t\t"
+                <<PdataLocal.ElectronDensity
+                <<"\n\nTn (K)\t\tTi (K)\t\tTe (K)\n"
+                <<PdataLocal.NeutralTemp<<"\t\t"<<PdataLocal.IonTemp<<"\t\t"
+                <<PdataLocal.ElectronTemp<<"\t"
+                <<"\n\nPvel (m s^-1)\t\tE (V m^-1)\t\tB (T)\n"
+                <<PdataLocal.PlasmaVel<<"\t"<<PdataLocal.ElectricField<<"\t"
+                <<PdataLocal.MagneticField<<"\n";
+            SimLocal = new DTOKSU(AccuracyLevels, SampleLocal, PdataLocal, HeatTerms, ForceTerms,
+                CurrentTerms);
+        }
+        MetaDataFile <<"\n\n##MODEL SWITHES\n#HEATING MODELS\n"
+            << "RadiativeCooling:\t" << HeatModels[0] 
+            << "\nEvaporativeCooling:\t" << HeatModels[1]
+            << "\nNewtonCooling:\t\t" << HeatModels[2] 
+            << "\nNeutralHeatFlux:\t" << HeatModels[3]
+            << "\nSOMLIonHeatFlux:\t" << HeatModels[4] 
+            << "\nSMOMLIonHeatFlux:\t" << HeatModels[5] 
+            << "\nDTOKSIonHeatFlux:\t" << HeatModels[6] 
+            << "\nDUSTTIonHeatFlux:\t" << HeatModels[7]
+            << "\nOMLElectronHeatFlux:\t" << HeatModels[8]
+            << "\nPHLElectronHeatFlux:\t" << HeatModels[9]
+            << "\nDTOKSElectronHeatFlux:\t" << HeatModels[10] 
+            << "\nSOMLNeutralRecomb:\t" << HeatModels[11]
+            << "\nSMOMLNeutralRecomb:\t" << HeatModels[12]
+            << "\nDTOKSNeutralRecomb:\t" << HeatModels[13]
+            << "\nPHLSEE:\t\t\t" << HeatModels[14] 
+            << "\nDTOKSSEE:\t\t" << HeatModels[15] 
+            << "\nPHLTEE:\t\t\t" << HeatModels[16]
+            << "\nDTOKSTEE:\t\t" << HeatModels[17]
+            << "\n\n#FORCING MODELS\n"
+            << "Gravity:\t\t" << ForceModels[0]
+            << "\nLorentz:\t\t" << ForceModels[1] 
+            << "\nSOMLIonDrag:\t\t" << ForceModels[2]
+            << "\nSMOMLIonDrag:\t\t" << ForceModels[3] 
+            << "\nDTOKSIonDrag:\t\t" << ForceModels[4]
+            << "\nDUSTTIonDrag:\t\t" << ForceModels[5] 
+            << "\nHybridDrag:\t\t" << ForceModels[6]
+            << "\nLloydDrag:\t\t" << ForceModels[7]
+            << "\nNeutralDrag:\t\t" << ForceModels[8]
+            << "\nRocketForce:\t\t" << ForceModels[9]
+            << "\n\n#CHARGING MODELS\n"
+            << "OMLe:\t\t\t" << ChargeModels[0]
+            << "\nPHLe:\t\t\t" << ChargeModels[1]
+            << "\nDTOKSe:\t\t\t" << ChargeModels[2]
+            << "\nTHSe:\t\t\t" << ChargeModels[3]
+            << "\nOMLi:\t\t\t" << ChargeModels[4]
+            << "\nMOMLi:\t\t\t" << ChargeModels[5]
+            << "\nSOMLi:\t\t\t" << ChargeModels[6]
+            << "\nSMOMLi:\t\t\t" << ChargeModels[7]
+            << "\nTHSi:\t\t\t" << ChargeModels[8]
+            << "\nDTOKSi:\t\t\t" << ChargeModels[9]
+            << "\nTEE:\t\t\t" << ChargeModels[10] 
+            << "\nTEESchottky:\t\t" << ChargeModels[11]
+            << "\nSEE:\t\t\t" << ChargeModels[12]
+            << "\nCW:\t\t\t" << ChargeModels[13]
+            << "\nMOMLWEM:\t\t" << ChargeModels[14] << "\n";
+        MetaDataFile.close();
+    
+        SimLocal->OpenFiles(FinalDataFilePrefix,i);
+        if( ConstModels[4] == 'n' || ConstModels[4] == 'e' ){
+            Config_Status_Local = -3;
+        }else if( ConstModels[4] == 'r' || ConstModels[4] == 'b' ){
+            Config_Status_Local = -2;
+        }else{
+            Config_Status_Local = 5;
+        }
+        run_status = Run_Local(SimLocal,Config_Status_Local);
+        Pause();
     }
-    MetaDataFile <<"\n\n##MODEL SWITHES\n#HEATING MODELS\n"
-        << "RadiativeCooling:\t" << HeatModels[0] 
-        << "\nEvaporativeCooling:\t" << HeatModels[1]
-        << "\nNewtonCooling:\t\t" << HeatModels[2] 
-        << "\nNeutralHeatFlux:\t" << HeatModels[3]
-        << "\nSOMLIonHeatFlux:\t" << HeatModels[4] 
-        << "\nSMOMLIonHeatFlux:\t" << HeatModels[5] 
-        << "\nDTOKSIonHeatFlux:\t" << HeatModels[6] 
-        << "\nDUSTTIonHeatFlux:\t" << HeatModels[7]
-        << "\nOMLElectronHeatFlux:\t" << HeatModels[8]
-        << "\nPHLElectronHeatFlux:\t" << HeatModels[9]
-        << "\nDTOKSElectronHeatFlux:\t" << HeatModels[10] 
-        << "\nSOMLNeutralRecomb:\t" << HeatModels[11]
-        << "\nSMOMLNeutralRecomb:\t" << HeatModels[12]
-        << "\nDTOKSNeutralRecomb:\t" << HeatModels[13]
-        << "\nPHLSEE:\t\t\t" << HeatModels[14] 
-        << "\nDTOKSSEE:\t\t" << HeatModels[15] 
-        << "\nPHLTEE:\t\t\t" << HeatModels[16]
-        << "\nDTOKSTEE:\t\t" << HeatModels[17]
-        << "\n\n#FORCING MODELS\n"
-        << "Gravity:\t\t" << ForceModels[0]
-        << "\nLorentz:\t\t" << ForceModels[1] 
-        << "\nSOMLIonDrag:\t\t" << ForceModels[2]
-        << "\nSMOMLIonDrag:\t\t" << ForceModels[3] 
-        << "\nDTOKSIonDrag:\t\t" << ForceModels[4]
-        << "\nDUSTTIonDrag:\t\t" << ForceModels[5] 
-        << "\nHybridDrag:\t\t" << ForceModels[6]
-        << "\nLloydDrag:\t\t" << ForceModels[7]
-        << "\nNeutralDrag:\t\t" << ForceModels[8]
-        << "\nRocketForce:\t\t" << ForceModels[9]
-        << "\n\n#CHARGING MODELS\n"
-        << "OMLe:\t\t" << ChargeModels[0]
-        << "\nPHLe:\t\t\t" << ChargeModels[1]
-        << "\nDTOKSe:\t\t\t" << ChargeModels[2]
-        << "\nTHSe:\t\t\t" << ChargeModels[3]
-        << "\nOMLi:\t\t\t" << ChargeModels[4]
-        << "\nMOMLi:\t\t\t" << ChargeModels[5]
-        << "\nSOMLi:\t\t\t" << ChargeModels[6]
-        << "\nSMOMLi:\t\t\t" << ChargeModels[7]
-        << "\nTHSi:\t\t\t" << ChargeModels[8]
-        << "\nDTOKSi:\t\t" << ChargeModels[9]
-        << "\nTEE:\t\t" << ChargeModels[10] 
-        << "\nTEESchottky:\t\t" << ChargeModels[11]
-        << "\nSEE:\t\t" << ChargeModels[12]
-        << "\nCW:\t\t" << ChargeModels[13]
-        << "\nMOMLWEM:\t\t" << ChargeModels[14] << "\n";
-    MetaDataFile.close();
-
-    Sim->OpenFiles(DataFilePrefix,0);
-    if( ConstModels[4] == 'n' || ConstModels[4] == 'e' ){
-        Config_Status = -3;
-    }else if( ConstModels[4] == 'r' || ConstModels[4] == 'b' ){
-        Config_Status = -2;
-    }else{
-        Config_Status = 5;
-    }
-    config_message();
-    Pause();
-    return Config_Status;
+    return run_status;
+    //config_message();
+    //return Config_Status;
 }
 
 //!< Function to configure plasma grid ready for simulation. 
@@ -867,9 +1007,10 @@ std::string filename, Boundary_Data& BD){
     BoundaryGrid_File.open(dirname+filename);
     assert( BoundaryGrid_File.is_open() );
 
+//    std::cout << "\n" << dirname+filename;
     while( BoundaryGrid_File >> R_temp >> Dummy >>  Z_temp ){
         BD.Grid_Pos.push_back( std::make_pair(R_temp,Z_temp) );
-//      std::cout << "\n" << R_temp << "\t" << Z_temp;
+//      std::cout << "\n" << R_temp << "\t" << Dummy << "\t" << Z_temp;
         if( R_temp <= 0.0 ){
             std::cerr << "\nError reading boundary data in DTOKSU_Manager::"
                 << "configure_boundary! R_temp < 0";
@@ -938,14 +1079,18 @@ int DTOKSU_Manager::read_data(std::string plasma_dirname){
         for(unsigned int k=0; k<=Pgrid.gridz-1; k++){
             for(unsigned int i=0; i<=Pgrid.gridx-1; i++){
                 //!< This is the read-in format without neutrals
-              scalars >> Pgrid.x[i][k] >> Pgrid.z[i][k] >> Pgrid.Te[i][k]
-                    >> Pgrid.Ti[i][k] >> Pgrid.na0[i][k] >> Pgrid.na1[i][k] 
-                    >> Pgrid.po[i][k] >> Pgrid.ua0[i][k] >> Pgrid.ua1[i][k];
+//              scalars >> Pgrid.x[i][k] >> Pgrid.z[i][k] >> Pgrid.Te[i][k]
+//                    >> Pgrid.Ti[i][k] >> Pgrid.na0[i][k] >> Pgrid.na1[i][k] 
+//                    >> Pgrid.po[i][k] >> Pgrid.ua0[i][k] >> Pgrid.ua1[i][k];
                 //!< This is the read-in format with neutrals
-/*                scalars >> Pgrid.x[i][k] >> Pgrid.z[i][k] >> Pgrid.Ti[i][k]
+                scalars >> Pgrid.x[i][k] >> Pgrid.z[i][k] >> Pgrid.Ti[i][k]
                     >> Pgrid.Te[i][k] >> Pgrid.Tn[i][k] >> Pgrid.na0[i][k] 
                     >> Pgrid.na1[i][k] >> Pgrid.na2[i][k] >> Pgrid.po[i][k] 
-                    >> Pgrid.ua0[i][k] >> Pgrid.ua1[i][k] >> dummy_dub;*/
+                    >> Pgrid.ua0[i][k] >> Pgrid.ua1[i][k] >> dummy_dub;
+//                std::cout << "\n" << Pgrid.x[i][k] << "\t" << Pgrid.z[i][k] << "\t" << Pgrid.Te[i][k]
+//                    << "\t" << Pgrid.Ti[i][k] << "\t" << Pgrid.na0[i][k] << "\t" << Pgrid.na1[i][k]
+//                    << "\t" << Pgrid.po[i][k] << "\t" << Pgrid.ua0[i][k] << "\t" << Pgrid.ua1[i][k];
+
                 threevectors >> dummy_dub >> dummy_dub >> Pgrid.bx[i][k] >>
                     Pgrid.bz[i][k] >> Pgrid.by[i][k];
                 gridflagfile >> dummy_dub >> dummy_dub >> Pgrid.gridflag[i][k];
@@ -1190,6 +1335,39 @@ int DTOKSU_Manager::Run(){
 
     return RunStatus;
 }
+
+// Run a DTOKS thread a single time
+int DTOKSU_Manager::Run_Local(DTOKSU* SimLocal, int Config_Status_Local){
+    DM_Debug("  In DTOKSU_Manager::Run_Local(int Config_Status_Local)\n\n");
+    if( Config_Status_Local != -2 && Config_Status_Local != -3 ){
+        std::cerr << "\nDTOKSU Is not configured! Please configure first.";
+        return 1;
+    }
+
+    clock_t begin = clock();    // Measure start time
+
+    // Actually running DTOKS
+    int RunStatus(-1);
+    if( Config_Status_Local == -3 ){
+        std::cout << "\n * RUNNING DTOKS * \n";
+        RunStatus = SimLocal->Run();
+    }else if( Config_Status_Local == -2 ){
+        std::cerr << "\n* Parallelised Breakup not currently Implemented! Running normally. *";
+        RunStatus = SimLocal->Run();
+    }else{
+        std::cerr << "\nBreakup Is not configured! Please configure correctly.";
+        return 1;
+    }
+    SimLocal->ImpurityPrint();
+
+    clock_t end = clock();      // Measure end time
+    double elapsd_secs = double(end-begin)/CLOCKS_PER_SEC;  
+    std::cout << "\n\n*****\n\nCompleted in " << elapsd_secs << "s\n";
+    std::cout << "\n\n * DTOKS COMPLETED SUCCESSFULLY * \n\n";
+
+    return RunStatus;
+}
+
 
 // Run DTOKS many times with breakup turned on
 void DTOKSU_Manager::Breakup(){

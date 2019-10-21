@@ -16,6 +16,27 @@
 
 #include "Functions.h"
 
+double cos2_cdf(double x){ //integral of pdf
+    return (2/PI)*(x/2 + sin(2*x)/4) + 0.5; //from Wolfram Alpha
+}
+
+double inverse_cos2_cdf(double u){   //bisection, not 100% accurate
+    double low  = LOW;
+    double high = HIGH;
+    double epsilon = 1e-10; //any small number, e.g. 1e-15
+    while (high - low > epsilon){
+        double mid = (low + high) / 2;
+        if (cos2_cdf(mid) == u) return mid;
+        if (cos2_cdf(mid) < u) low = mid; else high = mid;
+    }
+    return (low + high) / 2;
+}
+
+double custom_distribution(std::mt19937& rng){
+    double u = std::uniform_real_distribution<double>(0,1)(rng);
+    return inverse_cos2_cdf(u);
+}
+
 // Empirical fit to secondary electron emission equation as in Stangeby
 // Electron temperature is expected to be in units of electron volts!
 double sec(double Te, char material)
@@ -421,3 +442,5 @@ double LambertW(const double z) {
   fprintf(stderr,"LambertW: No convergence at z=%g, exiting.\n",z); 
   throw LambertWFailure();
 }
+
+

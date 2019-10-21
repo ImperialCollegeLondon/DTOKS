@@ -21,6 +21,36 @@
 #include <stdio.h>
 #include <exception>
 
+#include "Constants.h"
+#include <random>
+
+const double LOW = -PI/2;
+const double HIGH = PI/2;
+
+/** @brief Cumulative Distribution Function of cos^2(x)
+ *  
+ *  Function to return the cumulative distribution of cos^2(x)
+ *  @param x The variable of the function cos^2(x)
+ *  @return the cumulative distribution function of cos^2(x)
+ */
+double cos2_cdf(double x);
+
+/** @brief Inverse Cumulative Distribution Function of cos^2(x)
+ *  
+ *  Function to return the inverse cumulative distribution of cos^2(x)
+ *  @param u The variable of the function cos^2(x)
+ *  @return the inverse cumulative distribution function of cos^2(x)
+ */
+double inverse_cos2_cdf(double u);
+
+/** @brief A number randomly distributed over cos^2(x)
+ *  
+ *  Function to return a cos^2(x) distribution
+ *  @param rng reference to the mt19937 random number generator
+ *  @return a random number following from a cos^2(x) distribution
+ */
+double custom_distribution(std::mt19937& rng);
+
 /** @brief Warning Message to be printed only once
  *  
  *  Function to print warning message to the screen only once. This is 
@@ -30,6 +60,11 @@
  *  @param Message is the message to be displayed,
  */
 void WarnOnce(bool &MessageNotDisplayed, std::string Message);
+
+//!< Get the sign of a number
+template <typename T> int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
+}
 
 // Empirical fit to secondary electron emission equation as in Stangeby
 double sec(double Te, char material);

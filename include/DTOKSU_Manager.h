@@ -14,6 +14,7 @@
 #define __DTOKSU_Manager_H_INCLUDED__
 
 
+#include <omp.h>                      //!< for parallelisation
 #include <random>                     //!< for std::normal_distribution<> etc.
 #include <chrono>                     //!< for chrono::high_resolution_clock;
 #include <config4cpp/Configuration.h> //!< For Configuration
@@ -126,6 +127,13 @@ class DTOKSU_Manager{
         /** @brief called by DTOKSU_Manager::Run(), operates DTOKSU with breakup
          */
         void Breakup();
+
+        /** @brief If correctly configured, run DTOKSU 
+         *  @param Sim_Local Pointer to the local simulation
+         *  @param Config_Status_Local integer of local config_Status
+         *  @return the result of DTOKSU::Run_Local() or 1 if not configured.
+         */
+        int Run_Local(DTOKSU* Sim_Local, int Config_Status_Local);
 
     public:
 
