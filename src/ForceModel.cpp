@@ -173,7 +173,8 @@ void ForceModel::Force(double timestep){
     //std::cout << "\nRK4 dv = " << vi-Sample->get_velocity(); std::cin.get();
     
     //!< Assert change in absolute vel less than ten times accuracy
-    assert( ChangeInVelocity.mag3() < 0.1*Accuracy );
+//    assert( ChangeInVelocity.mag3() < 0.1*Accuracy );
+    assert( ChangeInVelocity.mag3() < Accuracy );
 
     // Krasheninnikov, S. I. (2006). On dust spin up in uniform magnetized plasma. Physics of Plasmas, 13(11), 2004–2007.
 //  double TimeOfSpinUp = Sample->get_radius()*sqrt(Pdata->mi/(Kb*Pdata->IonTemp))*Sample->get_density()/(Pdata->mi*Pdata->IonDensity);

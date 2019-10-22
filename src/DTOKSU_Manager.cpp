@@ -167,6 +167,7 @@ void DTOKSU_Manager::show_usage(std::string name)const{
     << "\t-h, --help\t\tShow this help message\n\n"
     << "\t-c, --config CONFIG\t\tSpecify the configuration file path\n\n"
     << "\t-i, --imax IMAX\t\t\t(int), Specify the number of grains\n\n"
+    << "\t-j, --jmax JMAX\t\t\t(int), Specify the number of cores\n\n"
     << "\t-se,--seed SEED\t\t\tSpecify the seed for simulations\n\n"
     << "\t-vd,--veldist VELDIST\t\tSpecify velocity dist:\n"
     << "\t\t\t\t\tuniform, lognormal, none\n\n"
@@ -253,6 +254,7 @@ std::string Config_Filename){
 
     // ------------------- PARALLELISATION VARIABLES ------------------- //
     unsigned long long imax = 1;
+    int core_numbers = 1;
     unsigned long long Seed = 0;
     double SizeParOne = 0;
     double SizeParTwo = 0;
@@ -616,6 +618,8 @@ std::string Config_Filename){
         std::string arg = argv[i];
         if( arg == "--imax"
             || arg == "-i"   ) input_function(argc,argv,i,ss0,imax);
+        else if( arg == "--jmax" 
+            || arg == "-j" )  input_function(argc,argv,i,ss0,core_numbers);
         else if( arg == "--seed" 
             || arg == "-se" )  input_function(argc,argv,i,ss0,Seed);
         else if( arg == "--veldist" 
@@ -669,7 +673,7 @@ std::string Config_Filename){
         randnumbers.push_back(std::mt19937(Seed+p));
     }
 
-    #pragma omp parallel for private(size)
+    #pragma omp parallel for private(size) num_threads(core_numbers)
     for( int i = 0; i < imax; i ++ ){
         //std::cout << "\n" << omp_get_thread_num() << "/" << omp_get_num_threads();
 
@@ -735,9 +739,9 @@ std::string Config_Filename){
 //        }
         
         // Change filenames
-        std::string FinalMetaDataFilename = MetaDataFilename + "_" + std::to_string(i) + ".txt";
+        std::string FinalMetaDataFilename = MetaDataFilename + "_077081_" + std::to_string(i) + ".txt";
 //        std::string FinalDataFilePrefix = DataFilePrefix + "_" + std::to_string(VelocityMag) + "ms_" + std::to_string(size) + "um";
-        std::string FinalDataFilePrefix = DataFilePrefix;
+        std::string FinalDataFilePrefix = DataFilePrefix + "_077081";
     
         // ------------------- INITIALISE META_DATA FILE ------------------- //
     

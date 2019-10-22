@@ -68,7 +68,8 @@ void ChargingModel::CreateFile(std::string filename){
     FileName = filename;
     ModelDataFile.open(FileName);
     ModelDataFile << std::scientific << std::setprecision(16) << std::endl;
-    ModelDataFile << "Time\tCharge\tSign\tDeltatot\tPotential\n";
+//    ModelDataFile << "Time\tCharge\tSign\tDeltatot\tPotential\n";
+    ModelDataFile << "Time\tCharge\tDeltatot\tPotential\n";
     ModelDataFile.close();
     ModelDataFile.clear();
     Print();
@@ -80,8 +81,8 @@ void ChargingModel::Print(){
     ModelDataFile << TotalTime << "\t" 
         << -(4.0*PI*epsilon0*Sample->get_radius()*Sample->get_potential()*Kb*
         Pdata->ElectronTemp)/(echarge*echarge);
-    if( Sample->is_positive() )  ModelDataFile << "\tPos";
-    if( !Sample->is_positive() ) ModelDataFile << "\tNeg";
+//    if( Sample->is_positive() )  ModelDataFile << "\t//Pos";
+//    if( !Sample->is_positive() ) ModelDataFile << "\t//Neg";
     ModelDataFile << "\t" << Sample->get_deltatot() << "\t" 
         << Sample->get_potential() << "\n";
 
