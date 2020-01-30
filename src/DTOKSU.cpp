@@ -338,14 +338,14 @@ int DTOKSU::Run(){
         
         D_Debug("\n\n***** DTOKSU::Run() :: Begin Global Step *****\n\n");
         if( HeatTime == 10 ){
-            D1_Debug("\nNo Net Power Region...");
+            D1_Debug("\n\tNo Net Power Region...\n");
             FM.Force(); 
             HM.AddTime(ForceTime);
             CM.Charge(ForceTime);
             TotalTime += ForceTime;
         }else if( MinTimeStep*2.0 > MaxTimeStep){
-            D1_Debug("\nComparable Timescales, taking time steps through both "
-                << "processes at shorter time scale");
+            D1_Debug("\n\tComparable Timescales, taking time steps through both "
+                << "processes at shorter time scale\n");
             CM.Charge(MinTimeStep);
             HM.Heat(MinTimeStep);
             FM.Force(MinTimeStep);
@@ -353,25 +353,25 @@ int DTOKSU::Run(){
         }else{ 
             //!< Else, we can take steps through the smaller one til the sum 
             //!< of the steps is the larger.
-            D1_Debug("\nDifferent Timescales, taking many time steps through "
-                << "quicker process at shorter time scale");
+            D1_Debug("\n\tDifferent Timescales, taking many time steps through "
+                << "quicker process at shorter time scale\n");
             unsigned int j(1);
             bool Loop(true);
             for( j =1; (j*MinTimeStep) < MaxTimeStep && Loop; j ++){
-                D1_Debug( "\nIntermediateStep/MaxTimeStep = " << j*MinTimeStep 
-                    << "/" << MaxTimeStep);
+                D1_Debug("\n\tIntermediateStep/MaxTimeStep = " << j*MinTimeStep 
+                    << "/" << MaxTimeStep << "\n");
 
                 //!< Take the time step in the faster time process
                 if( MinTimeStep == HeatTime ){
                     HM.Heat(MinTimeStep);
                     HM.Record_MassLoss(false);
                     if( Sample->is_gas() ){
-                        D1_Debug("\nSample is gaseous!");
+                        D1_Debug("\n\tSample is gaseous!\n");
                         Loop=false;
                     }
                     //!< This has to go here, Think break; statement
                     CM.Charge(MinTimeStep); 
-                    D1_Debug("\nHeat Step Taken.");
+                    D1_Debug("\n\tHeat Step Taken.\n");
                     //!< Check that time scales haven't changed significantly 
                     //!< whilst looping... 
                 }else if( MinTimeStep == ForceTime ){
@@ -379,10 +379,10 @@ int DTOKSU::Run(){
                     //!< This has to go here, Think break; statement
                     CM.Charge(MinTimeStep); 
                     if( FM.new_cell() ){
-                        D1_Debug("\nWe have stepped into a new cell!");
+                        D1_Debug("\n\tWe have stepped into a new cell!\n");
                         Loop=false;
                     }
-                    D1_Debug("\nForce Step Taken.");
+                    D1_Debug("\n\tForce Step Taken.\n");
                     //!< Check that time scales haven't changed significantly 
                     //!< whilst looping... 
                 }else{
@@ -399,16 +399,16 @@ int DTOKSU::Run(){
                 //!< faster right now
                 double HM_ProbeTime = HM.ProbeTimeStep();
                 if( ForceTime/FM.ProbeTimeStep() > 2 ){
-                    D1_Debug("\nForce TimeStep Has Changed Significantly whilst"
-                        << " taking small steps...");
+                    D1_Debug("\n\tForce TimeStep Has Changed Significantly whilst"
+                        << " taking small steps...\n");
                     j ++;
                     //!< Can't do this: MaxTimeStep = j*MinTimeStep; 
                     //!< as we change MaxTimeStep...
                     break; 
                 }
                 if( HeatTime/HM_ProbeTime > 2 ){
-                    D1_Debug("\nHeat TimeStep Has Changed Significantly whilst"
-                        << " taking small steps...");
+                    D1_Debug("\n\tHeat TimeStep Has Changed Significantly whilst"
+                        << " taking small steps...\n");
 
                     j ++;
                     //!< Can't do this: MaxTimeStep = j*MinTimeStep; 
@@ -420,9 +420,9 @@ int DTOKSU::Run(){
             }
 
             // Take a time step in the slower time process
-            D1_Debug("\n*STEP* = " << (j-1)*MinTimeStep << "\nMaxTimeStep = " 
+            D1_Debug("\n\t*STEP* = " << (j-1)*MinTimeStep << "\nMaxTimeStep = " 
                 << MaxTimeStep << "\nj = " << j << "\n");
-            D1_Debug("\nHeatTime == " << HeatTime << "\nForceTime == " 
+            D1_Debug("\n\tHeatTime == " << HeatTime << "\nForceTime == " 
                 << ForceTime << "\n");
             
             if( MaxTimeStep == HeatTime ){
@@ -454,6 +454,7 @@ int DTOKSU::Run(){
             << "\n\tHeatTime = " << HeatTime << "\n");
 
         //!< Update the plasma data from the plasma grid for all models...
+        D_Debug("\n\n***** DTOKSU::Run() :: Updating Plasma Data *****\n\n");
         cm_InGrid = CM.update_plasmadata();
         hm_InGrid = HM.update_plasmadata();
         fm_InGrid = FM.update_plasmadata();
@@ -462,6 +463,7 @@ int DTOKSU::Run(){
             && fm_InGrid == hm_InGrid 
             && hm_InGrid == cm_InGrid );
 
+        D_Debug("\n\n***** DTOKSU::Run() :: Record Plasma Data and Impurities *****\n\n");
         CM.RecordPlasmadata("pd.txt");
         HM.Record_MassLoss(false);
         //HM.RecordPlasmadata("hm_pd.txt");
@@ -469,6 +471,7 @@ int DTOKSU::Run(){
         print();
         Pause();
         // ***** START OF : DETERMINE IF END CONDITION HAS BEEN REACHED ***** //
+        D_Debug("\n\n***** DTOKSU::Run() :: Determine If End Conditions Satisfied *****\n\n");
         if( Sample->is_gas() 
             && Sample->get_superboilingtemp() <= Sample->get_temperature() ){
             HM.Record_MassLoss(true);
@@ -507,6 +510,8 @@ int DTOKSU::Run(){
         }
         // ***** END OF : DETERMINE IF END CONDITION HAS BEEN REACHED ***** //
     }
+
+    D_Debug("\n\n***** DTOKSU::Run() :: Determine Return and Termination Status *****\n\n");
     if( fabs(1 - (HM.get_totaltime()/FM.get_totaltime())) > 0.001  
         || fabs(1 - (FM.get_totaltime()/CM.get_totaltime())) > 0.001 ){
         std::cout << "\nWarning! Total Times recorded by processes don't "
