@@ -13,6 +13,9 @@
 #include "Model.h"
 #include "ForceTerms.h"
 
+//#define FORCE_DEBUG
+//#define FORCE_DEEP_DEBUG
+
 /** @class ForceModel
  *  @brief Defines the force models which affect the equation of motion of dust
  *  

@@ -13,6 +13,9 @@
 #include "Model.h"
 #include "HeatTerms.h"
 
+//#define HEATING_DEBUG
+//#define HEATING_DEEP_DEBUG
+
 /** @class Model
  *  @brief Defines the heating models which affect the temperature of dust
  *  

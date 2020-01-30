@@ -180,15 +180,15 @@ double ChargingModel::Bisection()const{
                     *CurrentTerms[0]->Evaluate(Sample,Pdata,a);
                 C_Debug( "\n\t\t" << (*iter)->PrintName() << " = " 
                     << (*iter)->Evaluate(Sample,Pdata,Potential)
-                    *CurrentTerms[0]->Evaluate(Sample,Pdata,Potential)  
-                    << "\n" );
+                    *CurrentTerms[0]->Evaluate(Sample,Pdata,Potential) );
             }else{
                 Current1 += (*iter)->Evaluate(Sample,Pdata,Potential);
                 Current2 += (*iter)->Evaluate(Sample,Pdata,a);
                 C_Debug( "\n\t\t" << (*iter)->PrintName() << " = " 
-                    << (*iter)->Evaluate(Sample,Pdata,Potential) << "\n");
+                    << (*iter)->Evaluate(Sample,Pdata,Potential) );
             }
         }
+        C_Debug("\n\n");
         //!< If the root is on the RHS of our midpoint
         if( Current1*Current2 > 0.0 )
             a = Potential;

@@ -208,8 +208,6 @@ void HeatingModel::Print(){
 
     //!< Loop over heat terms and print their values
     for(auto iter = HeatTerms.begin(); iter != HeatTerms.end(); ++iter) {
-        ModelDataFile << "\t" << (*iter)->
-            Evaluate(Sample, Pdata, Sample->get_temperature());
         if( (*iter)->PrintName() == "EmissivityModel" ){
             ModelDataFile << "\t" << (*iter)->
                 Evaluate(Sample, Pdata, Sample->get_temperature());
