@@ -400,27 +400,31 @@ const double Model::NeutralFlux()const{
 
 void Model::Record_MassLoss(bool Termination){
     H_Debug("\tIn Model::Record_MassLoss(bool Termination)\n\n");
-    if( Termination ){
-        PG_data->dm[i][k]=Sample->get_mass()-OldMass;
-    }else{
-        PG_data->dm[i][k]=Sample->get_mass();
+    if( !ContinuousPlasma ){
+    	if( Termination ){
+    	    PG_data->dm[i][k]=Sample->get_mass()-OldMass;
+    	}else{
+    	    PG_data->dm[i][k]=Sample->get_mass();
+    	}
     }
     OldMass=Sample->get_mass();
 }
 
 void Model::ImpurityPrint(){
     H_Debug("\tIn Model::ImpurityPrint()\n\n");
-    std::ofstream impurity;
-    impurity.open(FileName+"_ImpurityProfile.txt");
-    impurity << std::scientific << std::setprecision(16) << std::endl;
-    for(int s=0;s<=PG_data->gridz-1;s++){
-        for(int p=0;p<=PG_data->gridx-1;p++){
-            impurity << PG_data->dm[p][s] << "\t";
+    if( !ContinuousPlasma ){
+        std::ofstream impurity;
+        impurity.open(FileName+"_ImpurityProfile.txt");
+        impurity << std::scientific << std::setprecision(16) << std::endl;
+        for(int s=0;s<=PG_data->gridz-1;s++){
+            for(int p=0;p<=PG_data->gridx-1;p++){
+                impurity << PG_data->dm[p][s] << "\t";
+            }
+            impurity << std::endl;
         }
-        impurity << std::endl;
-    }
 
-    impurity.close();
+        impurity.close();
+    }
 }
 
 // *************************************** Unused Code *************************************** //
