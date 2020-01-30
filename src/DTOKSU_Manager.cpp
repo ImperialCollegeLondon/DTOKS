@@ -254,7 +254,7 @@ std::string Config_Filename){
 
     // ------------------- PARALLELISATION VARIABLES ------------------- //
     unsigned long long imax = 1;
-    int core_numbers = 1;
+    int core_numbers = omp_get_max_threads();
     unsigned long long Seed = 0;
     double SizeParOne = 0;
     double SizeParTwo = 0;
@@ -669,13 +669,16 @@ std::string Config_Filename){
 
     int run_status = 0;
     std::vector<std::mt19937> randnumbers;
-    for(int p = 0; p < omp_get_max_threads(); p ++){
+    #pragma omp critical
+    {
+    for(int p = 0; p < core_numbers; p ++){
         randnumbers.push_back(std::mt19937(Seed+p));
     }
+    }
 
-    #pragma omp parallel for private(size) num_threads(core_numbers)
+    #pragma omp parallel for num_threads(core_numbers) private(size,rvel,thetavel,zvel,rpos,thetapos,zpos)
     for( int i = 0; i < imax; i ++ ){
-        //std::cout << "\n" << omp_get_thread_num() << "/" << omp_get_num_threads();
+//        std::cout << "\n" << omp_get_thread_num() << "/" << omp_get_num_threads();
 
         int Config_Status_Local(0);
         if( SizeDistributionType == "lognormal" ){
@@ -687,8 +690,11 @@ std::string Config_Filename){
         }else if( SizeDistributionType == "exponential" ){
             std::exponential_distribution<double> size_distribution(SizeParTwo);
             size = SizeParOne*size_distribution(randnumbers[omp_get_thread_num()]);
+        }else if( SizeDistributionType == "power" ){
+            std::uniform_real_distribution<double> u(0.0,1.0); // Probe Head
+            size = SizeParOne/(std::pow(u(randnumbers[omp_get_thread_num()]),SizeParTwo));
         }else if( SizeDistributionType == "none" ){
-            
+            size = size;
         }else{
             Config_Status_Local = 4;
         }
@@ -701,19 +707,26 @@ std::string Config_Filename){
         }else if( VelDistributionType == "uniform" ){
             std::uniform_real_distribution<double> velocity_distribution(VelParOne,VelParTwo);
             VelocityMag = velocity_distribution(randnumbers[omp_get_thread_num()]);
+        }else if( VelDistributionType == "normallognormal" ){
+            std::normal_distribution<double> Gaussdist(-21.3326,15.5394);
+            std::lognormal_distribution<double> Lognormaldist(4.7598,0.538236);
+            rvel = Gaussdist(randnumbers[omp_get_thread_num()]);
+            thetavel = -Lognormaldist(randnumbers[omp_get_thread_num()]);
         }else if( VelDistributionType == "none" ){
 
         }else{
             Config_Status_Local = 4;
         }
+
+// DISTRIBUTIONS FOR EAST
     //    std::uniform_real_distribution<double> Velocity(0,20);
     //    std::uniform_real_distribution<double> Positions(0,0.1); // UPPER OUTER DIVERTOR
     //    std::uniform_real_distribution<double> Positions(0,1.0); // UPPER INNER DIVERTOR
     //    std::uniform_real_distribution<double> Positions(0,0.25); // LOWER OUTER DIVERTOR
-        std::uniform_real_distribution<double> Positions(0,0.03); // LOWER INNER DIVERTOR
+    //    std::uniform_real_distribution<double> Positions(0,0.03); // LOWER INNER DIVERTOR
     
-        double Angle = custom_distribution(randnumbers[omp_get_thread_num()]);
-        double DistanceAlongDivertor = Positions(randnumbers[omp_get_thread_num()]);
+    //    double Angle = custom_distribution(randnumbers[omp_get_thread_num()]);
+    //    double DistanceAlongDivertor = Positions(randnumbers[omp_get_thread_num()]);
     
     //    rpos = 1.70705+DistanceAlongDivertor*0.242535625; // UPPER OUTER DIVERTOR
     //    zpos = 1.15-DistanceAlongDivertor*0.9701425001;   // UPPER OUTER DIVERTOR
@@ -721,8 +734,8 @@ std::string Config_Filename){
     //    zpos = 0.873889876-DistanceAlongDivertor*0.04618117229; // UPPER INNER DIVERTOR
     //    rpos = 1.76377+DistanceAlongDivertor*0.2594386678;  // LOWER OUTER DIVERTOR
     //    zpos = -1.15+DistanceAlongDivertor*0.9657595858; // LOWER OUTER DIVERTOR
-        rpos = 1.423;  // LOWER INNER DIVERTOR
-        zpos = -0.7282415630550609-DistanceAlongDivertor; // LOWER INNER DIVERTOR
+    //    rpos = 1.423;  // LOWER INNER DIVERTOR
+    //    zpos = -0.7282415630550609-DistanceAlongDivertor; // LOWER INNER DIVERTOR
     
     //    rvel = -VelocityMag*std::cos(Angle-atan(1.0/4.0)); // UPPER OUTER DIVERTOR
     //    zvel = VelocityMag*std::sin(Angle-atan(1.0/4.0));  // UPPER OUTER DIVERTOR
@@ -730,21 +743,30 @@ std::string Config_Filename){
     //    zvel = VelocityMag*std::sin(Angle); // UPPER INNER DIVERTOR
     //    rvel = -VelocityMag*std::cos(Angle+atan(1.0/4.0)); // LOWER OUTER DIVERTOR
     //    zvel = VelocityMag*std::sin(Angle+atan(1.0/4.0)); // LOWER OUTER DIVERTOR
-        rvel = VelocityMag*std::cos(Angle); // LOWER INNER DIVERTOR
-        zvel = VelocityMag*std::sin(Angle); // LOWER INNER DIVERTOR
-//        #pragma omp critical
-//        {
-//        std::cout << "\n" << size << "\t" << VelocityMag << "\t" << rpos << "\t" << zpos 
+    //    rvel = VelocityMag*std::cos(Angle); // LOWER INNER DIVERTOR
+    //    zvel = VelocityMag*std::sin(Angle); // LOWER INNER DIVERTOR
+
+// DISTRIBUTIONS FOR DIII-D
+        std::uniform_real_distribution<double> Positions(0.0,0.4); // Probe Head
+        double DistanceAlongDivertor = Positions(randnumbers[omp_get_thread_num()]);
+        rpos = 1.1+DistanceAlongDivertor;
+        zpos = -1.24;
+        #pragma omp critical
+        {
+        std::cout << "\n" << size << "\t" << VelocityMag << "\t" << rpos << "\t" << zpos 
+            << "\t" << rvel << "\t" << thetavel << "\t" << zvel;
 //            << "\t" << rvel << "\t" << zvel << "\t" << Angle;
-//        }
+        }
         
         // Change filenames
-        std::string FinalMetaDataFilename = MetaDataFilename + "_077081_" + std::to_string(i) + ".txt";
+//        std::string FinalMetaDataFilename = MetaDataFilename + "_077081_" + std::to_string(i) + ".txt";
 //        std::string FinalDataFilePrefix = DataFilePrefix + "_" + std::to_string(VelocityMag) + "ms_" + std::to_string(size) + "um";
-        std::string FinalDataFilePrefix = DataFilePrefix + "_077081";
+//        std::string FinalDataFilePrefix = DataFilePrefix + "_077081";
     
         // ------------------- INITIALISE META_DATA FILE ------------------- //
-    
+
+        std::string FinalMetaDataFilename = MetaDataFilename + "_" + std::to_string(i) + ".txt";
+        std::string FinalDataFilePrefix = DataFilePrefix;   
         #pragma omp critical
         {
 //        std::cout << "* Creating MetaDataFile: " << FinalMetaDataFilename 
@@ -765,7 +787,7 @@ std::string Config_Filename){
         threevector vinit(rvel,thetavel,zvel);
         #pragma omp critical
         {
-        std::cout << "* Creating Matter object *\n\t* Element:\t" << Element;
+        std::cout << "* Creating Matter object *\n\t* Element:\t" << Element << "\tSize:\t" << size;
         }
         Matter *SampleLocal;
         if  (Element == 'W')     
@@ -1083,14 +1105,14 @@ int DTOKSU_Manager::read_data(std::string plasma_dirname){
         for(unsigned int k=0; k<=Pgrid.gridz-1; k++){
             for(unsigned int i=0; i<=Pgrid.gridx-1; i++){
                 //!< This is the read-in format without neutrals
-//              scalars >> Pgrid.x[i][k] >> Pgrid.z[i][k] >> Pgrid.Te[i][k]
-//                    >> Pgrid.Ti[i][k] >> Pgrid.na0[i][k] >> Pgrid.na1[i][k] 
-//                    >> Pgrid.po[i][k] >> Pgrid.ua0[i][k] >> Pgrid.ua1[i][k];
+              scalars >> Pgrid.x[i][k] >> Pgrid.z[i][k] >> Pgrid.Te[i][k]
+                    >> Pgrid.Ti[i][k] >> Pgrid.na0[i][k] >> Pgrid.na1[i][k] 
+                    >> Pgrid.po[i][k] >> Pgrid.ua0[i][k] >> Pgrid.ua1[i][k];
                 //!< This is the read-in format with neutrals
-                scalars >> Pgrid.x[i][k] >> Pgrid.z[i][k] >> Pgrid.Ti[i][k]
-                    >> Pgrid.Te[i][k] >> Pgrid.Tn[i][k] >> Pgrid.na0[i][k] 
-                    >> Pgrid.na1[i][k] >> Pgrid.na2[i][k] >> Pgrid.po[i][k] 
-                    >> Pgrid.ua0[i][k] >> Pgrid.ua1[i][k] >> dummy_dub;
+//                scalars >> Pgrid.x[i][k] >> Pgrid.z[i][k] >> Pgrid.Ti[i][k]
+//                    >> Pgrid.Te[i][k] >> Pgrid.Tn[i][k] >> Pgrid.na0[i][k] 
+//                    >> Pgrid.na1[i][k] >> Pgrid.na2[i][k] >> Pgrid.po[i][k] 
+//                    >> Pgrid.ua0[i][k] >> Pgrid.ua1[i][k] >> dummy_dub;
 //                std::cout << "\n" << Pgrid.x[i][k] << "\t" << Pgrid.z[i][k] << "\t" << Pgrid.Te[i][k]
 //                    << "\t" << Pgrid.Ti[i][k] << "\t" << Pgrid.na0[i][k] << "\t" << Pgrid.na1[i][k]
 //                    << "\t" << Pgrid.po[i][k] << "\t" << Pgrid.ua0[i][k] << "\t" << Pgrid.ua1[i][k];
@@ -1433,6 +1455,7 @@ void DTOKSU_Manager::Breakup(){
             //!< and heading off in negative direction
             //!< Rotation occurs in random direction perpendicular to magnetic
             //!< field and velocity as per theory
+            //!< A POSSIBLE FACTOR OF sqrt(2.0/5.0) IS MISSING. RECHECK THEORY!
             double VelocityMag = 2*PI*(Sample->get_radius())*
                 Sample->get_rotationalfreq();
             threevector Unit(2.0*rad(randnumber)-1.0,2.0*rad(randnumber)-
