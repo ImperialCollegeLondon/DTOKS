@@ -12,6 +12,7 @@
 #include "EvaporativeCoolingTest.h"
 #include "EvaporativeMassLossTest.h"
 #include "NeutralHeatingTest.h"
+#include "NeutralRecombTest.h"
 
 // CHARGING TESTS
 #include "ChargingTimescales.h"
@@ -51,6 +52,7 @@ static void show_usage(std::string name){
     << "ues of temperature and energy\n"
     << "\t\tEvapCooling    : heat loss due to evaporation\n"
     << "\t\tEvapMassLoss   : mass loss due to evaporation\n"
+    << "\t\tNeutralRecomb  : heat loss from neutral recombination\n"
     << "\t\tNeutralHeating : heat gained from neutral collisions\n"
     << "\t\tDTOKScharging  : output the potential as calculated by the DTOK"
     << "S solution to the OML equation\n"
@@ -165,6 +167,8 @@ int main(int argc, char* argv[]){
         EvaporativeCoolingTest();
     else if( Test_Mode == "EvapMassLoss" )
         EvaporativeMassLossTest();
+    else if( Test_Mode == "NeutralRecomb" )
+        NeutralRecombTest();
     else if( Test_Mode == "NeutralHeating" )
         NeutralHeatingTest();
 
