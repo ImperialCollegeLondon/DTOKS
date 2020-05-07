@@ -190,7 +190,7 @@ double DTOKSNeutralRecombination::Evaluate(const Matter* Sample, const std::shar
     // Neutral Recombination assuming Rn=0; fraction of backscattered 
     // ions/neutrals is zero.
     return Sample->get_surfacearea()*(1.0-Sample->get_rn())*
-        (14.7*echarge - 2.0*Kb*DustTemperature)*
+        (14.7*echarge - Kb*DustTemperature)*
         Flux::DTOKSIonFlux(Sample,Pdata,Sample->get_potential()); 
 }
 
