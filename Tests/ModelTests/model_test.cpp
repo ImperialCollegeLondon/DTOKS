@@ -42,18 +42,23 @@
 #include "EvaporativeCoolingTest.h"
 #include "VariableHeatCapacityTest.h"
 #include "VariableEmissivityTest.h"
+#include "VariableExpansivityTest.h"
+#include "VariableAllTest.h"
 #include "BeforeAfterHeatingTest.h"
 
 static void show_usage(std::string name){
     std::cerr << "Usage: int main(int argc, char* argv[]) <option(s)> SOURCES"
     << "\n\nOptions:\n"
     << "\t-h,--help\t\tShow this help message\n\n"
+    << "\t-e,--elements\t\tvariable defining number of elements for testing\n\n"
     << "\t-m,--mode MODE\tstring variable defining the Test. Available Options:\n"
     << "\t\tNeutralDragTest          : Test neutral drag force\n"
     << "\t\tNeutralHeatingTest       : Test neutral heating\n"
     << "\t\tEvaporativeCoolingTest   : Test effect of evaporative cooling\n"
     << "\t\tVariableHeatCapacityTest : Test impact of variable heat capacity\n"
     << "\t\tVariableEmissivityTest   : Test impact of variable emissivity \n"
+    << "\t\tVariableExpansivityTest  : Test impact of variable expansivity \n"
+    << "\t\tVariableAllTest          : Test impact of all variable values \n"
     << "\t\tBeforeAfterHeatingTest   : Test impact of heating\n\n";
 }
 
@@ -77,7 +82,8 @@ int main(int argc, char* argv[]){
         std::cout << "\nNo Mode Selected! Program Exiting\n\n";
         return 0;
     }
-    char Element[5]={'W','B','F','G','D'};// Element, (W) : Tungsten, (G) : Graphite, (B) : Beryllium, (F) : Iron or (D) : Deuterium.
+    int NumOfElements = 5;
+    char Element[NumOfElements]={'W','B','F','G','D'};// Element, (W) : Tungsten, (G) : Graphite, (B) : Beryllium, (F) : Iron or (D) : Deuterium.
     int out(0);
 
     // Determine user input for testing mode
@@ -91,12 +97,14 @@ int main(int argc, char* argv[]){
         }
         else if( arg == "--mode"    || arg == "-m" )    
             InputFunction(argc,argv,i,ss0,Test_Mode);
+        else if( arg == "--elements"|| arg == "-e" )    
+            InputFunction(argc,argv,i,ss0,NumOfElements);
         else{
             sources.push_back(argv[i]);
         }
     }
 
-    for(int i(0); i < 1; i ++){
+    for(int i(0); i < NumOfElements; i ++){
 
         std::cout << "\nElement["<<i<<"] is = ";
         std::cout << Element[i];
@@ -178,7 +186,24 @@ int main(int argc, char* argv[]){
             out = VariableEmissivityTest(Element[i],true);
         }
 
-//      Model Test 6, Before After Heating Test:
+//      Model Test 6, Variable Exapansivity:
+//      This test evaluates the effect of allowing the size to vary as a function of
+//      temperature. 
+//      These are compared to the 'default' constant value for expanisivty=1
+        else if( Test_Mode == "VariableExpansivityTest" ){
+            out = VariableExpansivityTest(Element[i],false);
+            out = VariableExpansivityTest(Element[i],true);
+        }
+
+//      Model Test 7, Variable All:
+//      Combine Test 4, 5 and 6 to test the effect of all the variable models
+//      These are compared to the 'default' constant values
+        else if( Test_Mode == "VariableAllTest" ){
+            out = VariableAllTest(Element[i],false);
+            out = VariableAllTest(Element[i],true);
+        }
+
+//      Model Test 8, Before After Heating Test:
 //      This test evaluates the total effect of the introduction of all four of the new models
 //      to the heating model. This includes the variational emissivity and heat capacity, plus the
 //      addition of the neutral heating and evaporative cooling terms. 
@@ -188,7 +213,7 @@ int main(int argc, char* argv[]){
             out = BeforeAfterHeatingTest(Element[i],false);
             out = BeforeAfterHeatingTest(Element[i],true);
         }else
-            std::cout << "\n\nInput not recognised! Exiting program.\n";
+        std::cout << "\n\nInput not recognised! Exiting program.\n";
         std::cout << "\n\n*****\n"; 
     }
     return 0;

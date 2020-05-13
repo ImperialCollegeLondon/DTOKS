@@ -1,6 +1,6 @@
 #include "HeatingModel.h"
 
-int EvaporativeCoolingTest(char Element, bool HeatSwitch){
+int VariableAllTest(char Element, bool VaryAll){
     clock_t begin = clock();
     // ********************************************************** //
     // FIRST, define program default behaviour
@@ -10,19 +10,25 @@ int EvaporativeCoolingTest(char Element, bool HeatSwitch){
     char ExpansionModel = 'c';  // Possible values 'c', 'v' and 's': Corresponding to (c)onstant, (v)ariable, (s)et 
                                                     // and (z)ero expansion
     char HeatCapacityModel = 'c';   // Possible values 'c', 'v' and 's': Corresponding to (c)onstant, (v)ariable and (s)et
+
+    if( VaryAll ){
+	    EmissivityModel = 'f';
+	    ExpansionModel = 'v';
+        HeatCapacityModel = 'v';
+	}
     char BoilingModel = 'y';    // Possible values 'y', 'n', 's' and 't': Corresponding to (y)es, (n)o, (s)uper 
                                                     // and (t)homson
     std::string Name="constant";    // Describes heating model
 
     // Parameters describing the heating model
-    double Radius=1e-6;     // m
+    double Radius=1e-6;         // m
     double Temp=280;        // K
-    double Potential = 2.5;
+    double Potential=2.5;
     Matter *Sample;         // Define the sample matter type
 
     // Set to true all heating models that are wanted
     bool RadiativeCooling = true;
-    bool EvaporativeCooling = HeatSwitch;
+    bool EvaporativeCooling = false;
     bool NewtonCooling = false;     // This model is equivalent to Electron and Ion heat flux terms
     
     // Plasma heating terms
@@ -50,7 +56,7 @@ int EvaporativeCoolingTest(char Element, bool HeatSwitch){
     PlasmaData *Pdata = new PlasmaData;
     Pdata->NeutralDensity   = 1e18;     // m^-3, Neutral Density
     Pdata->IonDensity   = 1e18;     // m^-3, Ion Density
-    Pdata->ElectronDensity = 1e18; // m^-3, Electron Density
+    Pdata->ElectronDensity  = 1e18; // m^-3, Electron Density
     Pdata->NeutralTemp  = 50*1.16e4;    // K, Neutral Temperature, convert from eV
     Pdata->IonTemp      = 50*1.16e4;    // K, Ion Temperature, convert from eV
     Pdata->ElectronTemp = 50*1.16e4;    // K, Electron Temperature, convert from eV
@@ -114,8 +120,8 @@ int EvaporativeCoolingTest(char Element, bool HeatSwitch){
     Sample->set_potential(Potential);
 
     std::string filename;
-    if( HeatSwitch )    filename = "Data/EvaporativeCoolingOn.txt";
-    else            filename = "Data/EvaporativeCoolingOff.txt";
+    if( VaryAll )    filename = "Data/AllNonConst.txt";
+    else             filename = "Data/AllConst.txt";
 
     HeatingModel MyModel(filename,1.0,HeatTerms,Sample,Pdata);
     MyModel.UpdateTimeStep();
@@ -124,7 +130,7 @@ int EvaporativeCoolingTest(char Element, bool HeatSwitch){
     clock_t end = clock();
     double elapsd_secs = double(end-begin)/CLOCKS_PER_SEC;
 
-    std::cout << "\n\n*****\n\nErrorEstimateTest 3 completed in " << elapsd_secs << "s\n";
+    std::cout << "\n\n*****\n\nErrorEstimateTest 5 completed in " << elapsd_secs << "s\n";
 
     return 0.0;
 }
