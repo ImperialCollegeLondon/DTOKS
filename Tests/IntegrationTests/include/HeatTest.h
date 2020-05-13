@@ -17,7 +17,7 @@ int HeatTest(char Element, std::string HeatType, double accuracy){
     std::string Name="constant";    // Describes heating model
 
     // Parameters describing the heating model
-    double Power=1e-11;     // Kilo-Watts power in addition to heating model powers
+    double Power=5e-11;     // Kilo-Watts power in addition to heating model powers
     double Radius=5e-8;     // m
     double Temp=300;        // K
     double TimeStep=1e-10;  // s
@@ -53,6 +53,7 @@ int HeatTest(char Element, std::string HeatType, double accuracy){
     Pdata->ElectronTemp = 10*1.16e4; // K, Electron Temperature, convert from eV
     Pdata->NeutralTemp = 10*1.16e4;  // K, Neutral Temperature, convert from eV
     Pdata->mi           = Mp;        // kg, Ion Mass
+    Pdata->Z           = 1.0;        // arb, Ion Charge
     Pdata->A            = 1.0;       // arb, Atomic Number
     Pdata->AmbientTemp = 0;
 
@@ -130,7 +131,7 @@ int HeatTest(char Element, std::string HeatType, double accuracy){
 
     double mass = Sample->get_mass();
     Sample->set_potential(Potential);
-    std::string filename = "Tests/IntegrationTests/Data/out_" + HeatType + "_Test.txt";
+    std::string filename = "Tests/IntegrationTests/Data/out_" + HeatType + "_" + Element + "_Test.txt";
     double SA = Sample->get_surfacearea();
     HeatingModel MyModel(filename,accuracy,HeatTerms,Sample,Pdata);
 
@@ -150,7 +151,11 @@ int HeatTest(char Element, std::string HeatType, double accuracy){
         
         double a = Power;
         double b = Sample->get_emissivity()*SA*Sigma/1000;
-    
+
+        double A = a/(mass*Sample->get_heatcapacity());
+        double B = b/(mass*Sample->get_heatcapacity());
+
+
         double FinalTemp = pow(a/b,1.0/4.0)-0.000000001;
     
         double ti(0), tf(0), t1(0), t2(0), t3(0), t4(0);
@@ -164,40 +169,45 @@ int HeatTest(char Element, std::string HeatType, double accuracy){
                             /(2*pow(pow(a,3)*b,1.0/4.0));
                 ti=(atan(Temp*pow(b/a,1.0/4.0))+atanh(Temp*pow(b/a,1.0/4.0)))
                             /(2*pow(pow(a,3)*b,1.0/4.0));
-                t1 = mass*Sample->get_heatcapacity()*(tf-ti);
+                //t1 = (-log(pow(A,0.25)-pow(B,0.25)*tf)+ log(pow(A,0.25)+pow(B,0.25)*tf)+2*atan(pow(B,0.25)*tf/pow(A,0.25)))/(4*pow(A,0.75)*pow(B,0.25));
+				t1 = mass*Sample->get_heatcapacity()*(tf-ti);
+
             }else{
                 tf=(atan(Sample->get_meltingtemp()*pow(b/a,1.0/4.0))+atanh(Sample->get_meltingtemp()*pow(b/a,1.0/4.0)))
                             /(2*pow(pow(a,3)*b,1.0/4.0));
                 ti=(atan(Temp*pow(b/a,1.0/4.0))+atanh(Temp*pow(b/a,1.0/4.0)))
                             /(2*pow(pow(a,3)*b,1.0/4.0));
-                t1 = mass*Sample->get_heatcapacity()*(tf-ti);
-        
-                t2 = Sample->get_latentfusion()*mass/(a-b*Sample->get_meltingtemp());
+                //t1 = (-log(pow(A,0.25)-pow(B,0.25)*tf)+ log(pow(A,0.25)+pow(B,0.25)*tf)+2*atan(pow(B,0.25)*tf/pow(A,0.25)))/(4*pow(A,0.75)*pow(B,0.25));
+				t1 = mass*Sample->get_heatcapacity()*(tf-ti);
+        		if( FinalTemp > Sample->get_meltingtemp() ){
+                    t2 = Sample->get_latentfusion()*mass/(a-b*Sample->get_meltingtemp());
     
-                tf=(atan(FinalTemp*pow(b/a,1.0/4.0))+atanh(FinalTemp*pow(b/a,1.0/4.0)))
-                            /(2*pow(pow(a,3)*b,1.0/4.0));
-                ti=(atan(Sample->get_meltingtemp()*pow(b/a,1.0/4.0))+atanh(Sample->get_meltingtemp()*pow(b/a,1.0/4.0)))
-                            /(2*pow(pow(a,3)*b,1.0/4.0));   
+                    tf=(atan(FinalTemp*pow(b/a,1.0/4.0))+atanh(FinalTemp*pow(b/a,1.0/4.0)))
+                                /(2*pow(pow(a,3)*b,1.0/4.0));
+                    ti=(atan(Sample->get_meltingtemp()*pow(b/a,1.0/4.0))+atanh(Sample->get_meltingtemp()*pow(b/a,1.0/4.0)))
+                                /(2*pow(pow(a,3)*b,1.0/4.0));   
         
-                t3 = mass*Sample->get_heatcapacity()*(tf-ti);
+                    //t3 = (-log(pow(A,0.25)-pow(B,0.25)*tf)+ log(pow(A,0.25)+pow(B,0.25)*tf)+2*atan(pow(B,0.25)*tf/pow(A,0.25)))/(4*pow(A,0.75)*pow(B,0.25));
+				    t3 = mass*Sample->get_heatcapacity()*(tf-ti);
+				}
             }
         }else{
             tf=(atan(FinalTemp*pow(b/a,1.0/4.0))+atanh(FinalTemp*pow(b/a,1.0/4.0)))
                         /(2*pow(pow(a,3)*b,1.0/4.0));
             ti=(atan(Temp*pow(b/a,1.0/4.0))+atanh(Temp*pow(b/a,1.0/4.0)))
                         /(2*pow(pow(a,3)*b,1.0/4.0));
+            //t1 = (-log(pow(A,0.25)-pow(B,0.25)*tf)+ log(pow(A,0.25)+pow(B,0.25)*tf)+2*atan(pow(B,0.25)*tf/pow(A,0.25)))/(4*pow(A,0.75)*pow(B,0.25));
             t1 = mass*Sample->get_heatcapacity()*(tf-ti);
         }
     
         if( t1 != t1 || t3 != t3 ){
             std::cout << "\nThermal Equilibrium reached before end of test!";
-            return -1;
+            //return -1;
         }
         AnalyticFinalTemp = pow(a/b,1.0/4.0);
-        //std::cout << "\n\nt1 = " << t1 << "\nt2 = " << t2 << "\nt3 = " << t3 << "\nt4 = " << t4;
+        std::cout << "\n\nt1 = " << t1 << "\nt2 = " << t2 << "\nt3 = " << t3 << "\nt4 = " << t4;
         
-        AnalyticTime = (t1 + t2 + t3 + t4)*(1.0/3.0);
-        std::cout << "\nWARNING! UNEXPLAINED FACTOR OF 1/3ADDED\n\n";
+        AnalyticTime = (t1 + t2 + t3 + t4);
 
     }else if( HeatType == "ElectronHeatingRadiation" ){
         double ElectronFlux = Pdata->ElectronDensity*exp(-Potential)*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
@@ -209,6 +219,9 @@ int HeatTest(char Element, std::string HeatType, double accuracy){
         double a = Power+ElectronFluxPower+NeutralFluxPower;
     
         double b = Sample->get_emissivity()*Sample->get_surfacearea()*Sigma/1000;
+        double A = a/(mass*Sample->get_heatcapacity());
+        double B = b/(mass*Sample->get_heatcapacity());
+
         double ti(0), tf(0), t1(0), t2(0), t3(0), t4(0);
         double FinalTemp = pow(a/b,0.25)-0.000000001;
     //  std::cout << "\nFinalTemp = " << FinalTemp; std::cin.get();
@@ -217,7 +230,8 @@ int HeatTest(char Element, std::string HeatType, double accuracy){
                         /(2*pow(pow(a,3)*b,0.25));
             ti=(atan(Temp*pow(b/a,0.25))+atanh(Temp*pow(b/a,0.25)))
                         /(2*pow(pow(a,3)*b,0.25));
-            t1 = mass*Sample->get_heatcapacity()*(tf-ti);
+            //t1 = (-log(pow(A,0.25)-pow(B,0.25)*tf)+ log(pow(A,0.25)+pow(B,0.25)*tf)+2*atan(pow(B,0.25)*tf/pow(A,0.25)))/(4*pow(A,0.75)*pow(B,0.25))-ti;
+			t1 = mass*Sample->get_heatcapacity()*(tf-ti);
         }else{
             if( FinalTemp > Sample->get_boilingtemp() )
                 FinalTemp = Sample->get_boilingtemp();
@@ -225,14 +239,19 @@ int HeatTest(char Element, std::string HeatType, double accuracy){
                         /(2*pow(pow(a,3)*b,0.25));
             ti=(atan(Temp*pow(b/a,0.25))+atanh(Temp*pow(b/a,0.25)))
                         /(2*pow(pow(a,3)*b,0.25));
-            t1 = mass*Sample->get_heatcapacity()*(tf-ti);
-            t2 = Sample->get_latentfusion()*mass/(a-b*Sample->get_meltingtemp()); 
-            tf=(atan(FinalTemp*pow(b/a,0.25))+atanh(FinalTemp*pow(b/a,0.25)))
-                        /(2*pow(pow(a,3)*b,0.25));
-            ti=(atan(Sample->get_meltingtemp()*pow(b/a,0.25))+atanh(Sample->get_meltingtemp()*pow(b/a,0.25)))
-                        /(2*pow(pow(a,3)*b,0.25));
-    //      std::cout << "\ntf is " << tf;
-            t3 = mass*Sample->get_heatcapacity()*(tf-ti);
+            //t1 = (-log(pow(A,0.25)-pow(B,0.25)*tf)+ log(pow(A,0.25)+pow(B,0.25)*tf)+2*atan(pow(B,0.25)*tf/pow(A,0.25)))/(4*pow(A,0.75)*pow(B,0.25))-ti;
+			t1 = mass*Sample->get_heatcapacity()*(tf-ti);
+        	
+			if( FinalTemp > Sample->get_meltingtemp() ){
+            	t2 = Sample->get_latentfusion()*mass/(a-b*Sample->get_meltingtemp()); 
+            	tf=(atan(FinalTemp*pow(b/a,0.25))+atanh(FinalTemp*pow(b/a,0.25)))
+            	            /(2*pow(pow(a,3)*b,0.25));
+            	ti=(atan(Sample->get_meltingtemp()*pow(b/a,0.25))+atanh(Sample->get_meltingtemp()*pow(b/a,0.25)))
+            	            /(2*pow(pow(a,3)*b,0.25));
+    //      	std::cout << "\ntf is " << tf;
+            	//t3 = (-log(pow(A,0.25)-pow(B,0.25)*tf)+ log(pow(A,0.25)+pow(B,0.25)*tf)+2*atan(pow(B,0.25)*tf/pow(A,0.25)))/(4*pow(A,0.75)*pow(B,0.25))-ti;
+	        	t3 = mass*Sample->get_heatcapacity()*(tf-ti);
+            }
             if( Sample->get_temperature() >= Sample->get_boilingtemp() ){
                 t4 = Sample->get_latentvapour()*mass/(a-b*Sample->get_boilingtemp());
             }
@@ -245,9 +264,10 @@ int HeatTest(char Element, std::string HeatType, double accuracy){
             FinalTemp = Sample->get_boilingtemp();
         
             // Only one phase transition
-                    tf = (atan(FinalTemp*pow(b/a,0.25)) + atanh(FinalTemp*pow(b/a,0.25)))/(2*pow(pow(a,3)*b,0.25));
+            tf = (atan(FinalTemp*pow(b/a,0.25)) + atanh(FinalTemp*pow(b/a,0.25)))/(2*pow(pow(a,3)*b,0.25));
             ti=(atan(Temp*pow(b/a,0.25))+atanh(Temp*pow(b/a,0.25)))/(2*pow(pow(a,3)*b,0.25));
-            t1 = mass*Sample->get_heatcapacity()*(tf-ti);
+            //t1 = (-log(pow(A,0.25)-pow(B,0.25)*tf)+ log(pow(A,0.25)+pow(B,0.25)*tf)+2*atan(pow(B,0.25)*tf/pow(A,0.25)))/(4*pow(A,0.75)*pow(B,0.25))-ti;
+			t1 = mass*Sample->get_heatcapacity()*(tf-ti);
     
             if( Sample->get_temperature() >= Sample->get_boilingtemp() ){
                             t4 = Sample->get_latentvapour()*mass/(a-b*Sample->get_boilingtemp());
@@ -260,6 +280,7 @@ int HeatTest(char Element, std::string HeatType, double accuracy){
     
         if( t1 != t1 && t3 != t3 ){
             std::cout << "\nt1 AND t3 are nan!";
+            std::cout << "\nThermal Equilibrium reached before end of test!";
             return -1;
         }else if( t1 != t1 ){
             std::cout << "\nt1 is a nan!";
@@ -284,6 +305,9 @@ int HeatTest(char Element, std::string HeatType, double accuracy){
         double a = Power+ElectronFluxPower+NeutralFluxPower+IonFluxPower;
     
         double b = Sample->get_emissivity()*SA*Sigma/1000;
+        double A = a/(mass*Sample->get_heatcapacity());
+        double B = b/(mass*Sample->get_heatcapacity());
+
         double ti(0), tf(0), t1(0), t2(0), t3(0), t4(0);
         double FinalTemp = pow(a/b,0.25)-0.000000001;
     //  std::cout << "\nFinalTemp = " << FinalTemp; std::cin.get();
@@ -292,7 +316,8 @@ int HeatTest(char Element, std::string HeatType, double accuracy){
                         /(2*pow(pow(a,3)*b,0.25));
             ti=(atan(Temp*pow(b/a,0.25))+atanh(Temp*pow(b/a,0.25)))
                         /(2*pow(pow(a,3)*b,0.25));
-            t1 = mass*Sample->get_heatcapacity()*(tf-ti);
+            //t1 = (-log(pow(A,0.25)-pow(B,0.25)*tf)+ log(pow(A,0.25)+pow(B,0.25)*tf)+2*atan(pow(B,0.25)*tf/pow(A,0.25)))/(4*pow(A,0.75)*pow(B,0.25))-ti;
+			t1 = mass*Sample->get_heatcapacity()*(tf-ti);
         }else{
             if( FinalTemp > Sample->get_boilingtemp() )
                 FinalTemp = Sample->get_boilingtemp();
@@ -300,14 +325,16 @@ int HeatTest(char Element, std::string HeatType, double accuracy){
                         /(2*pow(pow(a,3)*b,0.25));
             ti=(atan(Temp*pow(b/a,0.25))+atanh(Temp*pow(b/a,0.25)))
                         /(2*pow(pow(a,3)*b,0.25));
-            t1 = mass*Sample->get_heatcapacity()*(tf-ti);
+            //t1 = (-log(pow(A,0.25)-pow(B,0.25)*tf)+ log(pow(A,0.25)+pow(B,0.25)*tf)+2*atan(pow(B,0.25)*tf/pow(A,0.25)))/(4*pow(A,0.75)*pow(B,0.25))-ti;
+			t1 = mass*Sample->get_heatcapacity()*(tf-ti);
             t2 = Sample->get_latentfusion()*mass/(a-b*Sample->get_meltingtemp()); 
             tf=(atan(FinalTemp*pow(b/a,0.25))+atanh(FinalTemp*pow(b/a,0.25)))
                         /(2*pow(pow(a,3)*b,0.25));
             ti=(atan(Sample->get_meltingtemp()*pow(b/a,0.25))+atanh(Sample->get_meltingtemp()*pow(b/a,0.25)))
                         /(2*pow(pow(a,3)*b,0.25));
     //      std::cout << "\ntf is " << tf;
-            t3 = mass*Sample->get_heatcapacity()*(tf-ti);
+            //t1 = (-log(pow(A,0.25)-pow(B,0.25)*tf)+ log(pow(A,0.25)+pow(B,0.25)*tf)+2*atan(pow(B,0.25)*tf/pow(A,0.25)))/(4*pow(A,0.75)*pow(B,0.25))-ti;
+			t1 = mass*Sample->get_heatcapacity()*(tf-ti);
             if( Sample->get_temperature() >= Sample->get_boilingtemp() ){
                 t4 = Sample->get_latentvapour()*mass/(a-b*Sample->get_boilingtemp());
             }
@@ -325,7 +352,8 @@ int HeatTest(char Element, std::string HeatType, double accuracy){
             //double p3 = 2*pow(pow(a,3)*b,0.25);
                     tf = (atan(FinalTemp*pow(b/a,0.25)) + atanh(FinalTemp*pow(b/a,0.25)))/(2*pow(pow(a,3)*b,0.25));
             ti = (atan(Temp*pow(b/a,0.25))+atanh(Temp*pow(b/a,0.25)))/(2*pow(pow(a,3)*b,0.25));
-            t1 = mass*Sample->get_heatcapacity()*(tf-ti);
+            //t1 = (-log(pow(A,0.25)-pow(B,0.25)*tf)+ log(pow(A,0.25)+pow(B,0.25)*tf)+2*atan(pow(B,0.25)*tf/pow(A,0.25)))/(4*pow(A,0.75)*pow(B,0.25))-ti;
+			t1 = mass*Sample->get_heatcapacity()*(tf-ti);
     
             if( FinalTemp >= Sample->get_boilingtemp() ){
                             t4 = Sample->get_latentvapour()*mass/(a-b*Sample->get_boilingtemp());
@@ -338,6 +366,7 @@ int HeatTest(char Element, std::string HeatType, double accuracy){
     
         if( t1 != t1 && t3 != t3 ){
             std::cout << "\nt1 AND t3 are nan!";
+            std::cout << "\nThermal Equilibrium reached before end of test!";
             return -1;
         }else if( t1 != t1 ){
             std::cout << "\nt1 is a nan!";
@@ -365,6 +394,9 @@ int HeatTest(char Element, std::string HeatType, double accuracy){
     
         double a = Power+ElectronFluxPower+NeutralFluxPower+IonFluxPower+NeutralRecombPower;
         double b = Sample->get_surfacearea()*2*Kb*NeutralFlux/1000; // Convert from J to kJ
+
+        double A = a/(mass*Sample->get_heatcapacity());
+        double B = b/(mass*Sample->get_heatcapacity());
     
         double ti(0), tf(0), t1(0), t2(0), t3(0), t4(0);
         double FinalTemp = a/b;
@@ -372,19 +404,22 @@ int HeatTest(char Element, std::string HeatType, double accuracy){
         if( FinalTemp < Sample->get_meltingtemp() ){ 
             tf=-log(a-b*FinalTemp)/b;
             ti=-log(a-b*Temp)/b;
-            t1 = mass*Sample->get_heatcapacity()*(tf-ti);
+            //t1 = (-log(pow(A,0.25)-pow(B,0.25)*tf)+ log(pow(A,0.25)+pow(B,0.25)*tf)+2*atan(pow(B,0.25)*tf/pow(A,0.25)))/(4*pow(A,0.75)*pow(B,0.25))-ti;
+			t1 = mass*Sample->get_heatcapacity()*(tf-ti);
         }else{
             if( FinalTemp > Sample->get_boilingtemp() )
                 FinalTemp = Sample->get_boilingtemp()-0.000000001;
             tf=-log(a-b*Sample->get_meltingtemp())/b;
             ti=-log(a-b*Temp)/b;
     
-            t1 = mass*Sample->get_heatcapacity()*(tf-ti);
+            //t1 = (-log(pow(A,0.25)-pow(B,0.25)*tf)+ log(pow(A,0.25)+pow(B,0.25)*tf)+2*atan(pow(B,0.25)*tf/pow(A,0.25)))/(4*pow(A,0.75)*pow(B,0.25))-ti;
+			t1 = mass*Sample->get_heatcapacity()*(tf-ti);
             t2 = Sample->get_latentfusion()*mass/(a-b*Sample->get_meltingtemp()); 
             tf=-log(a-b*FinalTemp)/b;
             ti=-log(a-b*Sample->get_meltingtemp())/b;
     
-            t3 = mass*Sample->get_heatcapacity()*(tf-ti);
+            //t3 = (-log(pow(A,0.25)-pow(B,0.25)*tf)+ log(pow(A,0.25)+pow(B,0.25)*tf)+2*atan(pow(B,0.25)*tf/pow(A,0.25)))/(4*pow(A,0.75)*pow(B,0.25))-ti;
+			t3 = mass*Sample->get_heatcapacity()*(tf-ti);
             if( Sample->get_temperature() >= Sample->get_boilingtemp() ){
                 t4 = Sample->get_latentvapour()*mass/(a-b*Sample->get_boilingtemp());
             }
@@ -398,7 +433,8 @@ int HeatTest(char Element, std::string HeatType, double accuracy){
             // Only one phase transition
             tf=-log(a-b*FinalTemp)/b;
             ti=-log(a-b*Temp)/b;
-            t1 = mass*Sample->get_heatcapacity()*(tf-ti);
+            //t1 = (-log(pow(A,0.25)-pow(B,0.25)*tf)+ log(pow(A,0.25)+pow(B,0.25)*tf)+2*atan(pow(B,0.25)*tf/pow(A,0.25)))/(4*pow(A,0.75)*pow(B,0.25))-ti;
+			t1 = mass*Sample->get_heatcapacity()*(tf-ti);
     
             if( Sample->get_temperature() >= Sample->get_boilingtemp() ){
                             t4 = Sample->get_latentvapour()*mass/(a-b*Sample->get_boilingtemp());
@@ -411,6 +447,7 @@ int HeatTest(char Element, std::string HeatType, double accuracy){
     
         if( t1 != t1 && t3 != t3 ){
             std::cout << "\nt1 AND t3 are nan!";
+            std::cout << "\nThermal Equilibrium reached before end of test!";
             return -1;
         }else if( t1 != t1 ){
             std::cout << "\nt1 is a nan!";
@@ -426,6 +463,7 @@ int HeatTest(char Element, std::string HeatType, double accuracy){
 
     double ReturnVal = 0;
     if( ModelTime == AnalyticTime )             ReturnVal = 1;
+    else if( fabs(1-ModelTime/AnalyticTime) < 0.0001 )    ReturnVal = 3;
     else if( fabs(1-ModelTime/AnalyticTime) < 0.01 )    ReturnVal = 2;
     else                            ReturnVal = -1;
 

@@ -11,6 +11,7 @@ static void show_usage(std::string name){
     << "\n\nOptions:\n"
     << "\t-h,--help\t\tShow this help message\n\n"
     << "\t-a,--accuracy\t\tvariable defining accuracy of model when testing\n\n"
+    << "\t-e,--elements\t\tvariable defining number of elements for testing\n\n"
     << "\t-m,--mode MODE\tstring variable defining the Test to be run. Available Options:\n"
     << "\t\tDTOKSOML                   : Test the charging model is producing the expected result\n"
     << "\t\tGravity                    : Test constant gravitational force is reproduced by analytical model\n"
@@ -48,18 +49,21 @@ int main(int argc, char* argv[]){
     double accuracy(0.1);
     std::vector <std::string> sources;
     std::stringstream ss0;
+    int NumOfElements = 4;
+    char Element[NumOfElements]={'W','B','F','G'}; // Element, (W) : Tungsten, (G) : Graphite, (B) : Beryllium or (F) : Iron
     for (int i = 1; i < argc; ++i){ // Read command line input
         std::string arg = argv[i];
         if     ( arg == "--help"    || arg == "-h" ){   show_usage( argv[0]); return 0;         }
         else if( arg == "--mode"    || arg == "-m" )    InputFunction(argc,argv,i,ss0,Test_Mode);
         else if( arg == "--accuracy"|| arg == "-a" )    InputFunction(argc,argv,i,ss0,accuracy);
+        else if( arg == "--elements"|| arg == "-e" )    InputFunction(argc,argv,i,ss0,NumOfElements);
         else{
             sources.push_back(argv[i]);
         }
     }
 
-    int NumOfElements = 4;
-    char Element[NumOfElements]={'W','B','F','G'}; // Element, (W) : Tungsten, (G) : Graphite, (B) : Beryllium or (F) : Iron
+
+
     std::cout.precision(10);
     int out(0);
     for(int i(0); i < NumOfElements; i ++){
@@ -73,7 +77,7 @@ int main(int argc, char* argv[]){
             // Integration test one for all materials
             // Test if the charging model is producing the expected result
             // This test is very rudimentary and just checks that the charging model matches DTOKS's original format
-            out = ChargeTest(Element[i]);   
+            out = ChargeTest(Element[i],accuracy);
         }else if( Test_Mode == "Gravity" ){
             // Test bout 2,
             // Integration test two for all materials
@@ -148,7 +152,8 @@ int main(int argc, char* argv[]){
 
 
         if( out == 1 ) std::cout << "\n# PASSED!";
-        if( out == 2 ) std::cout << "\n# WARNING! DEVIATION OF < 1%";
+        if( out == 2 ) std::cout << "\n# SUCCESS! DEVIATION OF < 1%";
+        if( out == 3 ) std::cout << "\n# SUCCESS! DEVIATION OF < 0.01%";
         if( out == -1 ) std::cout << "\n# FAILED!";
 
         std::cout << "\n\n*****\n\n\n"; 
