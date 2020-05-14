@@ -195,27 +195,25 @@ void Model::update_fields(int i, int k){
     vp.setz(aveu*(B.getunit().getz()));
 
     //!< Calculate EField from potential at adjactentcells
-    if(PG_data->gridflag[i][k]==1){
-        if( (PG_data->gridflag[i+1][k]==1) && (PG_data->gridflag[i-1][k]==1) ){
-            E.setx(-(PG_data->po[i+1][k]-PG_data->po[i-1][k])
-                /(2.0*PG_data->dlx));
-        }else if(PG_data->gridflag[i+1][k]==1){
-            E.setx(-(PG_data->po[i+1][k]-PG_data->po[i][k])/PG_data->dlx);
-        }else if(PG_data->gridflag[i-1][k]==1){
-            E.setx(-(PG_data->po[i][k]-PG_data->po[i-1][k])/PG_data->dlx);
-        }else E.setx(0.0);
-        if((PG_data->gridflag[i][k+1]==1)&&(PG_data->gridflag[i][k-1]==1)){
-            E.setz(-(PG_data->po[i][k+1]-PG_data->po[i][k-1])
-                /(2.0*PG_data->dlz));
-        }else if(PG_data->gridflag[i][k+1]==1){
-            E.setz(-(PG_data->po[i][k+1]-PG_data->po[i][k])/PG_data->dlz);
-        }else if(PG_data->gridflag[i][k-1]==1){
-            E.setz(-(PG_data->po[i][k]-PG_data->po[i][k-1])/PG_data->dlz);
-        }else E.sety(0.0);
-    }else{
-        E.setx(0.0);
-        E.setz(0.0);
-    }
+    if( checkingrid(i+1,k) && checkingrid(i-1,k) ){
+        E.setx(-(PG_data->po[i+1][k]-PG_data->po[i-1][k])
+            /(2.0*PG_data->dlx));
+    }else if( checkingrid(i+1,k) ){
+        E.setx(-(PG_data->po[i+1][k]-PG_data->po[i][k])/PG_data->dlx);
+    }else if( checkingrid(i-1,k) ){
+        E.setx(-(PG_data->po[i][k]-PG_data->po[i-1][k])/PG_data->dlx);
+    }else 
+	   E.setx(0.0);
+
+    if( checkingrid(i,k+1) && checkingrid(i,k-1) ){
+        E.setz(-(PG_data->po[i][k+1]-PG_data->po[i][k-1])
+            /(2.0*PG_data->dlz));
+    }else if( checkingrid(i,k+1) ){
+        E.setz(-(PG_data->po[i][k+1]-PG_data->po[i][k])/PG_data->dlz);
+    }else if( checkingrid(i,k-1) ){
+        E.setz(-(PG_data->po[i][k]-PG_data->po[i][k-1])/PG_data->dlz);
+    }else 
+	    E.sety(0.0);
 
     //!< Setup for Magnum-PSI gravity
     //!< For Magnum PSI, Gravity is not in -z direction it is radial & Azimuthal

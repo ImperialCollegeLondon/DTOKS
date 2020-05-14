@@ -182,7 +182,7 @@ void DTOKSU_Manager::show_usage(std::string name)const{
     << "element, possible values 'w', 'g', 'b', 'd', 'l', 'm' and 'f'\n"
     << "\t\t\t\t\t(W): Tungsten, (G): Graphite, (B): Beryllium, (D): Deuterium "
     << "(L): Lithium, (M): Molybdenum or (F): Iron\n\n"
-    << "\t-s, --size SIZE\t\t\tdouble the radius of the grain\n\n"
+    << "\t-s, --size SIZE\t\t\tdouble the initial radius of the grain\n\n"
     << "\t-vr,--rvel RVEL\t\t\tfloat radial velocity\n\n"
     << "\t-vt,--thetavel THETAVEL\t\tfloat angular velocity\n\n"
     << "\t-vz,--zvel ZVEL\t\t\tfloat lognitudinal velocity\n\n"
@@ -254,7 +254,7 @@ std::string Config_Filename){
 
     // ------------------- PARALLELISATION VARIABLES ------------------- //
     unsigned long long imax = 1;
-    int core_numbers = omp_get_max_threads();
+	unsigned int core_numbers = 0;
     unsigned long long Seed = 0;
     double SizeParOne = 0;
     double SizeParTwo = 0;
@@ -269,15 +269,23 @@ std::string Config_Filename){
     // ------------------- DUST VARIABLE DEFAULTS ------------------- //
     char Element='W';
     char IonSpecies='h';
-    float size=0.5e-6;
+    float initsize=1.0e-6;
     float Temp=300;
     float InitRotationalFreq(0.0);
-    float rpos(0.147);
-    float thetapos(0.01);
-    float zpos(0.1575);
-    float rvel(-1.4);
+    float rposi(1.0);
+    float thetaposi(0.00);
+    float zposi(0.0);
+    float rveli(0.0);
+    float thetaveli(0.0);
+    float zveli(0.0);
+    float size(1.0e-6);
+    float rpos(1.0);
+    float thetapos(0.0);
+    float zpos(0.0);
+    float rvel(0.0);
     float thetavel(0.0);
     float zvel(0.0);
+
     bool ContinuousPlasma = false;
 
 
@@ -362,15 +370,15 @@ std::string Config_Filename){
             Pdata.MagneticField = threevector(std::stof(CfgStringVec[0]),
                 std::stof(CfgStringVec[1]),std::stof(CfgStringVec[2]));
         }
-        Element  = cfg->lookupString("dust", "Element")[0];
-        size     = cfg->lookupFloat("dust", "size");
-        Temp     = cfg->lookupFloat("dust", "Temp");
-        rpos     = cfg->lookupFloat("dust", "dynamics.rpos");
-        thetapos = cfg->lookupFloat("dust", "dynamics.thetapos");
-        zpos     = cfg->lookupFloat("dust", "dynamics.zpos");
-        rvel     = cfg->lookupFloat("dust", "dynamics.rvel");
-        thetavel = cfg->lookupFloat("dust", "dynamics.thetavel");
-        zvel     = cfg->lookupFloat("dust", "dynamics.zvel");
+        Element   = cfg->lookupString("dust", "Element")[0];
+        initsize  = cfg->lookupFloat("dust", "size");
+        Temp      = cfg->lookupFloat("dust", "Temp");
+        rposi     = cfg->lookupFloat("dust", "dynamics.rpos");
+        thetaposi = cfg->lookupFloat("dust", "dynamics.thetapos");
+        zposi     = cfg->lookupFloat("dust", "dynamics.zpos");
+        rveli     = cfg->lookupFloat("dust", "dynamics.rvel");
+        thetaveli = cfg->lookupFloat("dust", "dynamics.thetavel");
+        zveli     = cfg->lookupFloat("dust", "dynamics.zvel");
         InitRotationalFreq 
             = cfg->lookupFloat("dust", "dynamics.InitRotationalFreq");
         ConstModels = 
@@ -639,19 +647,19 @@ std::string Config_Filename){
         else if( arg == "--material"    
             || arg == "-m"   ) input_function(argc,argv,i,ss0,Element);
         else if( arg == "--size"        
-            || arg == "-s"   ) input_function(argc,argv,i,ss0,size);
+            || arg == "-s"   ) input_function(argc,argv,i,ss0,initsize);
         else if( arg == "--rvel"        
-            || arg == "-vr"  ) input_function(argc,argv,i,ss0,rvel);
+            || arg == "-vr"  ) input_function(argc,argv,i,ss0,rveli);
         else if( arg == "--thetavel"    
-            || arg == "-vt"  ) input_function(argc,argv,i,ss0,thetavel);
+            || arg == "-vt"  ) input_function(argc,argv,i,ss0,thetaveli);
         else if( arg == "--zvel"        
-            || arg == "-vz"  ) input_function(argc,argv,i,ss0,zvel);
+            || arg == "-vz"  ) input_function(argc,argv,i,ss0,zveli);
         else if( arg == "--rpos"        
-            || arg == "-rr"  ) input_function(argc,argv,i,ss0,rpos);
+            || arg == "-rr"  ) input_function(argc,argv,i,ss0,rposi);
         else if( arg == "--thetapos"    
-            || arg == "-rt"  ) input_function(argc,argv,i,ss0,thetapos);
+            || arg == "-rt"  ) input_function(argc,argv,i,ss0,thetaposi);
         else if( arg == "--zpos"        
-            || arg == "-rz"  ) input_function(argc,argv,i,ss0,zpos);
+            || arg == "-rz"  ) input_function(argc,argv,i,ss0,zposi);
         else if( arg == "--output"      
             || arg == "-op"  ) input_function(argc,argv,i,ss0,DataFilePrefix);
         else if( arg == "--MetaData"    
@@ -666,7 +674,15 @@ std::string Config_Filename){
 
     // ------------------- BEGIN PARALLELISATION ------------------- //
 
-
+    if( core_numbers == 0 ){
+	    // if core_numbers is set to default value
+        if( imax < omp_get_max_threads() )
+            // by deafult, use number of cores equal to number of dust grains
+            core_numbers = imax;
+    	else
+		    // if number of dust grains exceeds number of cores, use max cores
+    	    core_numbers=omp_get_max_threads();
+    }
     int run_status = 0;
     std::vector<std::mt19937> randnumbers;
     #pragma omp critical
@@ -694,11 +710,10 @@ std::string Config_Filename){
             std::uniform_real_distribution<double> u(0.0,1.0); // Probe Head
             size = SizeParOne/(std::pow(u(randnumbers[omp_get_thread_num()]),SizeParTwo));
         }else if( SizeDistributionType == "none" ){
-            size = size;
+            size = initsize;
         }else{
             Config_Status_Local = 4;
         }
-
 
         double VelocityMag(0.0);   
         if( VelDistributionType == "lognormal" ){
@@ -713,7 +728,9 @@ std::string Config_Filename){
             rvel = Gaussdist(randnumbers[omp_get_thread_num()]);
             thetavel = -Lognormaldist(randnumbers[omp_get_thread_num()]);
         }else if( VelDistributionType == "none" ){
-
+		    rvel=rveli;
+		    thetavel=thetaveli;
+		    zvel=zveli;
         }else{
             Config_Status_Local = 4;
         }
@@ -747,16 +764,14 @@ std::string Config_Filename){
     //    zvel = VelocityMag*std::sin(Angle); // LOWER INNER DIVERTOR
 
 // DISTRIBUTIONS FOR DIII-D
-        std::uniform_real_distribution<double> Positions(0.0,0.4); // Probe Head
-        double DistanceAlongDivertor = Positions(randnumbers[omp_get_thread_num()]);
-        rpos = 1.1+DistanceAlongDivertor;
-        zpos = -1.24;
-        #pragma omp critical
-        {
-        std::cout << "\n" << size << "\t" << VelocityMag << "\t" << rpos << "\t" << zpos 
-            << "\t" << rvel << "\t" << thetavel << "\t" << zvel;
-//            << "\t" << rvel << "\t" << zvel << "\t" << Angle;
-        }
+        //std::uniform_real_distribution<double> Positions(0.0,0.4); // Probe Head
+        //double DistanceAlongDivertor = Positions(randnumbers[omp_get_thread_num()]);
+        //rpos = 1.1+DistanceAlongDivertor;
+        //zpos = -1.24;
+		rpos = rposi;
+		thetapos = thetaposi;
+		zpos = zposi;
+
         
         // Change filenames
 //        std::string FinalMetaDataFilename = MetaDataFilename + "_077081_" + std::to_string(i) + ".txt";
@@ -769,9 +784,7 @@ std::string Config_Filename){
         std::string FinalDataFilePrefix = DataFilePrefix;   
         #pragma omp critical
         {
-//        std::cout << "* Creating MetaDataFile: " << FinalMetaDataFilename 
-//            << "_" << i << ".txt *\n\n";
-        std::cout << "* Creating MetaDataFile: " << FinalMetaDataFilename << " *\n\n";
+          std::cout << "* Creating MetaDataFile: " << FinalMetaDataFilename << " *\n\n";
         }
         //!< Data file for containing the run information
         std::ofstream MetaDataFile; 
@@ -787,7 +800,7 @@ std::string Config_Filename){
         threevector vinit(rvel,thetavel,zvel);
         #pragma omp critical
         {
-        std::cout << "* Creating Matter object *\n\t* Element:\t" << Element << "\tSize:\t" << size;
+            std::cout << "* Creating Matter object *\n\t* Element:\t" << Element << "\tSize:\t" << size;
         }
         Matter *SampleLocal;
         if  (Element == 'W')     
@@ -1069,8 +1082,6 @@ int DTOKSU_Manager::read_data(std::string plasma_dirname){
     Pgrid.x   = Pgrid.Te;
     Pgrid.z   = Pgrid.Te;
     Pgrid.dm  = Pgrid.Te;
-    Pgrid.gridflag  = std::vector<std::vector<int>>
-        (Pgrid.gridx,std::vector<int>(Pgrid.gridz));
     int ReStat = 0;
     if(Pgrid.device=='p'){ //!< Note, grid flags will be empty 
         #ifdef NETCDF_SWITCH
@@ -1082,16 +1093,14 @@ int DTOKSU_Manager::read_data(std::string plasma_dirname){
         return 2;
         #endif
     }else{
-        std::ifstream scalars,threevectors,gridflagfile;
-	std::cout << "\n* Reading plasma data from " << plasma_dirname << "b2processed.dat *\n\n";
-        scalars.open(plasma_dirname+"b2processed.dat");
-        threevectors.open(plasma_dirname+"b2processed2.dat");
-        gridflagfile.open(plasma_dirname+"locate.dat");
+        std::ifstream scalars,threevectors;
+	std::cout << "\n* Reading plasma data from " << plasma_dirname << "PlasmaData.dat *\n\n";
+        scalars.open(plasma_dirname+"PlasmaData.dat");
+        threevectors.open(plasma_dirname+"BFieldData.dat");
 
         //!< Open files to read
         assert( scalars.is_open() );
         assert( threevectors.is_open() );
-        assert( gridflagfile.is_open() );
 
         //!< Throw away variables which read in data which is unimportant.
         std::string dummy_line;
@@ -1119,7 +1128,6 @@ int DTOKSU_Manager::read_data(std::string plasma_dirname){
 
                 threevectors >> dummy_dub >> dummy_dub >> Pgrid.bx[i][k] >>
                     Pgrid.bz[i][k] >> Pgrid.by[i][k];
-                gridflagfile >> dummy_dub >> dummy_dub >> Pgrid.gridflag[i][k];
 
                 //!< For some reason, very small non-zero values are being 
                 //!< assigned to the 'zero' values being read in.
@@ -1161,7 +1169,6 @@ int DTOKSU_Manager::read_data(std::string plasma_dirname){
         }
         scalars.close();
         threevectors.close();
-        gridflagfile.close();
     }
     return ReStat; //!< return success!
 }
@@ -1263,8 +1270,6 @@ int DTOKSU_Manager::read_MPSIdata(std::string plasma_dirname){
             Pgrid.bz[i][k] = 0.4;
             Pgrid.x[i][k] = Pgrid.gridxmin+i*Pgrid.dlx;
             Pgrid.z[i][k] = Pgrid.gridzmin+k*Pgrid.dlz;
-            Pgrid.gridflag  = std::vector<std::vector<int>>
-                (Pgrid.gridx,std::vector<int>(Pgrid.gridz));
             Pgrid.dm[i][k] = 0.0;
         }
     }
@@ -1378,7 +1383,8 @@ int DTOKSU_Manager::Run_Local(DTOKSU* SimLocal, int Config_Status_Local){
         std::cout << "\n * RUNNING DTOKS * \n";
         RunStatus = SimLocal->Run();
     }else if( Config_Status_Local == -2 ){
-        std::cerr << "\n* Parallelised Breakup not currently Implemented! Running normally. *";
+        std::cerr << "\n* Parallelised Breakup not currently Implemented! *\n"
+		    << "* Running without breakup. *";
         RunStatus = SimLocal->Run();
     }else{
         std::cerr << "\nBreakup Is not configured! Please configure correctly.";
