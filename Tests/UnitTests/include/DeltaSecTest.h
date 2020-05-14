@@ -10,13 +10,15 @@
 // Page 2 & 3
 
 // Plot results using matlab
-void DeltaSecTest(){
-	clock_t begin = clock();
-	// Replicate results of Minas' paper:
-	for(double i(1); i < 10e3; i ++) 
-		std::cout << "\n" << i << ", " <<  sec(i,'w'); // Convert from K to ev
-	clock_t end = clock();
-	double elapsd_secs = double(end-begin)/CLOCKS_PER_SEC;
-		
-//	std::cout << "\n\n*****\n\nUnitTest 2 completed in " << elapsd_secs << "s\n";
+void DeltaSecTest(unsigned int Variables){
+    clock_t begin = clock();
+    std::cout << "\n#DeltaSecTest\t\tVariables : " << Variables;
+    // Replicate results of Minas' paper:
+    std::cout << "\n\n#Te (eV)\tdelta_sec\n";
+    for(double i(1); i < 10e3; i ++) 
+        std::cout << "\n" << i << ", " <<  sec(i,'w'); // Convert from K to ev
+    clock_t end = clock();
+    double elapsd_secs = double(end-begin)/CLOCKS_PER_SEC;
+        
+//    std::cout << "\n\n*****\n\nUnitTest 2 completed in " << elapsd_secs << "s\n";
 }

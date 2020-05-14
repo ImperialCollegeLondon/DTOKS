@@ -4,7 +4,7 @@
 // Test Shifted modified orbital motion limited theory
 void SMOMLTest(unsigned int Variables){
     clock_t begin = clock();
-    std::cout << "\nSMOMLTest\t\tVariables : " << Variables;
+    std::cout << "\n#SMOMLTest\t\tVariables : " << Variables;
     std::cout << "\n\nTiTe\tMi/Me\tZ\tU\tPotential";
 
     double Mi=Mp;

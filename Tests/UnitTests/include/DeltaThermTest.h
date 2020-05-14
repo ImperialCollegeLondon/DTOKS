@@ -10,19 +10,22 @@
 // Page 3
 
 // Plot results using matlab
-void DeltaThermTest(){
-	clock_t begin = clock();
-	double electronDensity = 1e15;	// Density in m^(-3)
-	double NormalisedPotential = 0.7591;
-	double WorkFunction = 2.9;	// Work function in eV
-	double Te = 1;			// Electron Temperature in eV
-	for(double T(280); T < 5.5e3; T ++){ // Loop over temperatures
-		double gammae = electronDensity*exp(-NormalisedPotential)*sqrt(echarge*Te/(2*PI*Me));
-		std::cout << "\n" << T << ", " 
-			<< Richardson*pow(T,2)*exp(-(WorkFunction*echarge)/(Kb*T))/(echarge*gammae);
-	}
-	clock_t end = clock();
-	double elapsd_secs = double(end-begin)/CLOCKS_PER_SEC;
-		
-//	std::cout << "\n\n*****\n\nUnitTest 3 completed in " << elapsd_secs << "s\n";
+void DeltaThermTest(unsigned int Variables){
+    clock_t begin = clock();
+    std::cout << "\n#DeltaThermTest\t\tVariables : " << Variables;
+
+    double electronDensity = 1e15;    // Density in m^(-3)
+    double NormalisedPotential = 0.7591;
+    double WorkFunction = 2.9;    // Work function in eV
+    double Te = 1;            // Electron Temperature in eV
+    std::cout << "\n\n#Td (K)\tdelta_tee\n";
+    for(double T(280); T < 5.5e3; T ++){ // Loop over temperatures
+        double gammae = electronDensity*exp(-NormalisedPotential)*sqrt(echarge*Te/(2*PI*Me));
+        std::cout << "\n" << T << ", " 
+            << Richardson*pow(T,2)*exp(-(WorkFunction*echarge)/(Kb*T))/(echarge*gammae);
+    }
+    clock_t end = clock();
+    double elapsd_secs = double(end-begin)/CLOCKS_PER_SEC;
+        
+//    std::cout << "\n\n*****\n\nUnitTest 3 completed in " << elapsd_secs << "s\n";
 }

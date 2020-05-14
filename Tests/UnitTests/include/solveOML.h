@@ -7,7 +7,7 @@
 // Thomas-D-2016-PhD-thesis.pdf
 double solveOML(double TemperatureRatio, double MassRatio, double Ionization){
 
-	return TemperatureRatio/Ionization-
+    return TemperatureRatio/Ionization-
         LambertW(sqrt(MassRatio*TemperatureRatio)*
         exp(TemperatureRatio/Ionization)/Ionization);
 }

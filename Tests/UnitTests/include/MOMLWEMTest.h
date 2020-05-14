@@ -2,9 +2,9 @@
 #include <iostream>
 
 // Test orbital motion limited theory
-void MOMLWEMTest(double Variables){
+void MOMLWEMTest(unsigned int Variables){
     clock_t begin = clock();
-    std::cout << "\nMOMLWEMTest\t\tVariables : " << Variables;
+    std::cout << "\n#MOMLWEMTest\t\tVariables : " << Variables;
     std::cout << "\n\nTiTe\tMi/Me\tZ\tDeltaTot\tPotential";
     
     double HeatCapacity = 5.0/3.0; // Ionization state of plasma

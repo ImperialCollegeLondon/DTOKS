@@ -8,7 +8,7 @@
 double solveMOML(double TemperatureRatio, double MassRatio, double Ionization,
     double HeatCapacityRatio ){
 
-	return TemperatureRatio/Ionization-
+    return TemperatureRatio/Ionization-
         LambertW(sqrt(2*PI*TemperatureRatio*
         (1+HeatCapacityRatio*TemperatureRatio))*
         exp(TemperatureRatio/Ionization))/Ionization+
@@ -18,9 +18,9 @@ double solveMOML(double TemperatureRatio, double MassRatio, double Ionization,
 double MOMLattractedCurrent(double Ti, double Te, double HeatCapacityRatio, 
     double MassRatio, double Potential){
 
-	double SheathPotential = -Potential*echarge*Te/echarge - (1.0/2.0)*
+    double SheathPotential = -Potential*echarge*Te/echarge - (1.0/2.0)*
         log((2.0*PI/MassRatio)*(1.0+HeatCapacityRatio*Ti/Te));
 
-	return 1-echarge*SheathPotential/(echarge*Ti);
+    return 1-echarge*SheathPotential/(echarge*Ti);
 }
 

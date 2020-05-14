@@ -5,13 +5,13 @@
 // WARNING: This is only valid for positively charged dust grains.
 double solvePosSchottkyOML(double DustTemperature, double Ti, double Te, double n0, double Dsec){
 
-	double Wf = 3.4*echarge;
-	double TemperatureRatio = Ti/Te;
-	double Z = 1.0; 		// Ionization
-	double vi = sqrt(Kb*Ti/(2*PI*Mp));
-	double ve = sqrt(Kb*Te/(2*PI*Me));
+    double Wf = 3.4*echarge;
+    double TemperatureRatio = Ti/Te;
+    double Z = 1.0;         // Ionization
+    double vi = sqrt(Kb*Ti/(2*PI*Mp));
+    double ve = sqrt(Kb*Te/(2*PI*Me));
 
-	double Arg = TemperatureRatio*exp(TemperatureRatio)*(vi+Richardson*pow(DustTemperature,2)*exp(-Wf/(Kb*DustTemperature))/(Z*echarge*n0))/(ve*(1-Dsec));
-	double Coeff = TemperatureRatio;
-	return -Coeff + LambertW(Arg);
+    double Arg = TemperatureRatio*exp(TemperatureRatio)*(vi+Richardson*pow(DustTemperature,2)*exp(-Wf/(Kb*DustTemperature))/(Z*echarge*n0))/(ve*(1-Dsec));
+    double Coeff = TemperatureRatio;
+    return -Coeff + LambertW(Arg);
 }
