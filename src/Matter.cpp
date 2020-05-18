@@ -152,6 +152,8 @@ void Matter::update_dim(){
         St.Density = Ec.RTDensity;              //!< Density is RT density
         //!< Set radius from Mass
         St.Radius = pow((3*St.Mass)/(4*PI*Ec.RTDensity),1./3.); 
+        St.Volume = (4*PI*pow(St.Radius,3))/3;
+        St.SurfaceArea = 4*PI*pow(St.Radius,2);
         //!< @bug THIS WHOLE PART NEEDS CHECKING...
     }else if(ConstModels[1] == 'v' || ConstModels[1] == 'V'){ 
         M_Debug("\t"); update_radius();
@@ -163,18 +165,21 @@ void Matter::update_dim(){
         St.UnheatedRadius = St.UnheatedRadius*
             (pow((3*St.Mass)/(4*PI*St.Density),1./3.)/St.Radius);
         M2_Debug("\nUnheatedRadius now = " << St.UnheatedRadius);
-
+        St.Volume = (4*PI*pow(St.Radius,3))/3;
+        St.SurfaceArea = 4*PI*pow(St.Radius,2);
+        St.Mass = St.Density*St.Volume; 
     }else if(ConstModels[1] == 's' || ConstModels[1] == 's'){
         St.Density = Ec.RTDensity; //!< Fix the density
+        St.Volume = (4*PI*pow(St.Radius,3))/3;
+        St.SurfaceArea = 4*PI*pow(St.Radius,2);
     }else{
         std::cout << "\nError! In Matter::update_dim(char ConstModels[1])\n"
                                 << "Invalid input for Expansion Model.";
         assert( strchr("vVcCsS",ConstModels[1]) );
+        St.Volume = (4*PI*pow(St.Radius,3))/3;
+        St.SurfaceArea = 4*PI*pow(St.Radius,2);
     }
-    St.Volume = (4*PI*pow(St.Radius,3))/3;
-    St.SurfaceArea = 4*PI*pow(St.Radius,2);
-    St.Mass = St.Density*St.Volume; 
-
+    
     // Sanity Check, this may be an issue
     //  assert( abs((St.Density - St.Mass/St.Volume)/St.Density) < 0.000001 ); 
     
