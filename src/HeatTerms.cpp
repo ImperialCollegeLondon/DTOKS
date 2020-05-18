@@ -69,7 +69,7 @@ double NeutralHeatFlux::Evaluate(const Matter* Sample, const std::shared_ptr<Pla
 double SEE::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double DustTemperature){
     H_Debug("\n\tIn HeatingModel::SEE():\n\n");
     double ConvertKtoev(8.6173303e-5);
-    return -Sample->get_surfacearea()*Flux::PHLElectronFlux(Sample,Pdata,Sample->get_potential())*
+    return -Sample->get_surfacearea()*Flux::OMLElectronFlux(Pdata,Sample->get_potential())*
         sec(Pdata->ElectronTemp*ConvertKtoev,Sample->get_elem())*echarge*
         (3.0+Sample->get_workfunction()); 
 }
