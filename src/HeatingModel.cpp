@@ -270,7 +270,7 @@ const int HeatingModel::Vapourise(){
 void HeatingModel::UpdateRERN(){
     //!< If it's positive, Ions aren't backscattered
     double RE(0.0), RN(0.0);
-    if( !Sample->is_positive() ){
+    if( Sample->get_potential() >= 0.0 ){
         backscatter(Pdata->ElectronTemp,Pdata->IonTemp,Pdata->mi,
             Sample->get_potential(),Sample->get_elem(),RE,RN);
     }
