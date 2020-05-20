@@ -32,7 +32,7 @@ namespace Term{
         return Flux::ThermFluxSchottky(Sample,Pdata,Potential);
     }
     double SEEcharge::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential){
-        return Flux::DeltaSec(Sample,Pdata);
+        return -Flux::DeltaSec(Sample,Pdata);
     }
     double THSe::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential){
         double TiTe = Pdata->IonTemp/Pdata->ElectronTemp;
