@@ -605,7 +605,7 @@ double ThermFluxSchottky(const Matter* Sample,
         ThermFlux = Richardson*Sample->get_temperature()*
             Sample->get_temperature()*(1.0-Potential
             *(Pdata->ElectronTemp/Sample->get_temperature()))
-            *exp((-echarge*Sample->get_workfunction()-
+            *exp((-echarge*Sample->get_workfunction()+
             Potential*Kb*Pdata->ElectronTemp)/(Kb*Sample->get_temperature()))/
             echarge;
     }
