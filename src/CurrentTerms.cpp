@@ -35,22 +35,32 @@ namespace Term{
         return -Flux::DeltaSec(Sample,Pdata);
     }
     double THSe::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential){
+        if( Potential < 0.0 ){
+		    //std::cerr << "\nWarning! CurrentTerm::THSe() not valid for Potential < 0.0!";
+			return -Flux::OMLElectronFlux(Pdata,Potential);
+	    }
         double TiTe = Pdata->IonTemp/Pdata->ElectronTemp;
         double MassRatio = Pdata->mi/Me;
-        double Betae=Sample->get_radius()/(sqrt(Kb*Pdata->ElectronTemp/
-            Me)/(echarge*Pdata->MagneticField.mag3()/Me));
+        double Betae=Sample->get_radius()/(Me*sqrt(Kb*Pdata->ElectronTemp/
+            Me)/(echarge*Pdata->MagneticField.mag3()));
 
         double a = 0.2293;
-        
-        double Repelled_Species_Flux=
-		    Pdata->ElectronDensity*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me))*(1.0+exp(-a*Betae));
+
+        double Repelled_Species_Flux =
+		    Pdata->ElectronDensity*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me))
+			*(1.0+exp(-a*Betae))*exp(-Potential)/2.0;
+
         return -Repelled_Species_Flux;
     }
     double THSi::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential){
+        if( Potential < 0.0 ){
+		    //std::cerr << "\nWarning! CurrentTerm::THSi not valid for Potential < 0.0!";
+			return Pdata->Z*Flux::OMLIonFlux(Sample,Pdata,Potential);
+	    }
         double TiTe = Pdata->IonTemp/Pdata->ElectronTemp;
         double MassRatio = Pdata->mi/Me;
-        double Betai=Sample->get_radius()/(sqrt(Kb*Pdata->IonTemp/
-            (Pdata->mi))/(Pdata->Z*echarge*Pdata->MagneticField.mag3()/Pdata->mi));
+        double Betai=Sample->get_radius()/(Pdata->mi*sqrt(Kb*Pdata->IonTemp/
+            (Pdata->mi))/(Pdata->Z*echarge*Pdata->MagneticField.mag3()));
 
         double b = 1.559;
         double c = 0.5636;
@@ -59,8 +69,17 @@ namespace Term{
         double Attacted_Species_Flux_T1=Coeff*(1+exp(-b*pow(Betai,c)));
         double Attacted_Species_Flux_T2=(Coeff*Pdata->Z/TiTe)*2.0*exp(-b*pow(Betai,c));
 
-        return Attacted_Species_Flux_T1+Attacted_Species_Flux_T2*Potential;
+        //std::cout << "\n\nTiTe = " << TiTe;
+        //std::cout << "\nMu = " << MassRatio;
+        //std::cout << "\nBetai = " << Betai;
+        //std::cout << "\nCoeff = " << Coeff;
+        //std::cout << "\nAttacted_Species_Flux_T1= " << Attacted_Species_Flux_T1;
+        //std::cout << "\nAttacted_Species_Flux_T2= " << Attacted_Species_Flux_T2;
+        //std::cout << "\nPotential= " << Potential;
+		//std::cout << "\nReturn = " << Attacted_Species_Flux_T1+Attacted_Species_Flux_T2*Potential;
+        //std::cin.get();
 
+        return fabs(Attacted_Species_Flux_T1+Attacted_Species_Flux_T2*Potential)/2.0;
     }
     double DTOKSi::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential){
         return Pdata->Z*Flux::DTOKSIonFlux(Sample,Pdata,Potential);
