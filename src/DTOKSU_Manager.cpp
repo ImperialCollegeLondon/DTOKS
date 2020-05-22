@@ -395,13 +395,13 @@ std::string Config_Filename){
                 cfg->lookupBoolean("heatingmodels","EvaporativeCooling"),
                 cfg->lookupBoolean("heatingmodels","NewtonCooling"),
                 cfg->lookupBoolean("heatingmodels","NeutralHeatFlux"),
+                cfg->lookupBoolean("heatingmodels","OMLElectronHeatFlux"),
+                cfg->lookupBoolean("heatingmodels","PHLElectronHeatFlux"),
+                cfg->lookupBoolean("heatingmodels","DTOKSElectronHeatFlux"),
                 cfg->lookupBoolean("heatingmodels","SOMLIonHeatFlux"),
                 cfg->lookupBoolean("heatingmodels","SMOMLIonHeatFlux"),
                 cfg->lookupBoolean("heatingmodels","DTOKSIonHeatFlux"),
                 cfg->lookupBoolean("heatingmodels","DUSTTIonHeatFlux"),
-                cfg->lookupBoolean("heatingmodels","OMLElectronHeatFlux"),
-                cfg->lookupBoolean("heatingmodels","PHLElectronHeatFlux"),
-                cfg->lookupBoolean("heatingmodels","DTOKSElectronHeatFlux"),
                 cfg->lookupBoolean("heatingmodels","SOMLNeutralRecombination"),
                 cfg->lookupBoolean("heatingmodels","SMOMLNeutralRecombination"),
                 cfg->lookupBoolean("heatingmodels","DTOKSNeutralRecombination"),
@@ -427,8 +427,8 @@ std::string Config_Filename){
             {
                 cfg->lookupBoolean("chargemodels","OMLe"), 
                 cfg->lookupBoolean("chargemodels","PHLe"), 
-                cfg->lookupBoolean("chargemodels","DTOKSe"),
                 cfg->lookupBoolean("chargemodels","THSe"), 
+                cfg->lookupBoolean("chargemodels","DTOKSe"),
                 cfg->lookupBoolean("chargemodels","OMLi"),  
                 cfg->lookupBoolean("chargemodels","MOMLi"), 
                 cfg->lookupBoolean("chargemodels","SOMLi"), 
@@ -537,7 +537,10 @@ std::string Config_Filename){
     else if( HeatModels[15] ) HeatTerms.push_back(new Term::DTOKSSEE());
     if( HeatModels[16] )  HeatTerms.push_back(new Term::TEE());
     else if( HeatModels[17] ) HeatTerms.push_back(new Term::DTOKSTEE());
-    
+   
+    for( unsigned int i(0); i < DTOKSU::MN; i ++ )
+        assert(AccuracyLevels[i]<=1.0);
+
     cfg->destroy();
     if( !check_pdata_range() ){
         Config_Status = 3;
@@ -606,9 +609,9 @@ std::string Config_Filename){
                     << "\n* Core_Boundary Structure created successfully! *\n";
             }
         }else if(Pgrid.device != 'p'){ //!< In case of magnum-PSI
-            std::cout << "\n* Trajectories pass through Core Boundary with "
-                << "interpolated plasma data!";
+            std::cout << "\n* No Core Boundary! Dust can pass through Core! *";
         }
+		
         
     }else{
         std::cout << "\n\n* ContinuousPlasma! *";
@@ -848,7 +851,7 @@ std::string Config_Filename){
                 <<PgridLocal.gridz<<"\t"<<PgridLocal.gridtheta<<"\t"<<PgridLocal.dlx<<"\t"
                 <<PgridLocal.dlz<<"\n"<<"\nxmin (m)\txmax (m)\tzmin (m)\tzmax (m)\n"
                 <<PgridLocal.gridxmin<<"\t\t"<<PgridLocal.gridxmax<<"\t\t"<<PgridLocal.gridzmin
-                <<"\t\t"<<PgridLocal.gridzmax << "\n";
+				<<"\t\t"<<PgridLocal.gridzmax << "\n";
             SimLocal = new DTOKSU(AccuracyLevels, SampleLocal, PgridLocal, PdataLocal, WallBound, 
                 CoreBound, HeatTerms, ForceTerms, CurrentTerms);
         }else{
@@ -1094,7 +1097,7 @@ int DTOKSU_Manager::read_data(std::string plasma_dirname){
         #endif
     }else{
         std::ifstream scalars,threevectors;
-	std::cout << "\n* Reading plasma data from " << plasma_dirname << "PlasmaData.dat *\n\n";
+	    std::cout << "\n* Reading plasma data from " << plasma_dirname << "PlasmaData.dat *\n\n";
         scalars.open(plasma_dirname+"PlasmaData.dat");
         threevectors.open(plasma_dirname+"BFieldData.dat");
 
@@ -1111,8 +1114,11 @@ int DTOKSU_Manager::read_data(std::string plasma_dirname){
         //!< Now loop over the grid and feed in the data into the vectors
         double convertJtoK = 7.242971666667e22;
         double converteVtoK = 11604.5250061657;
-        for(unsigned int k=0; k<=Pgrid.gridz-1; k++){
-            for(unsigned int i=0; i<=Pgrid.gridx-1; i++){
+
+        for(unsigned int i=0; i<=Pgrid.gridx-1; i++){
+            for(unsigned int k=0; k<=Pgrid.gridz-1; k++){
+
+
                 //!< This is the read-in format without neutrals
               scalars >> Pgrid.x[i][k] >> Pgrid.z[i][k] >> Pgrid.Te[i][k]
                     >> Pgrid.Ti[i][k] >> Pgrid.na0[i][k] >> Pgrid.na1[i][k] 
@@ -1122,9 +1128,10 @@ int DTOKSU_Manager::read_data(std::string plasma_dirname){
 //                    >> Pgrid.Te[i][k] >> Pgrid.Tn[i][k] >> Pgrid.na0[i][k] 
 //                    >> Pgrid.na1[i][k] >> Pgrid.na2[i][k] >> Pgrid.po[i][k] 
 //                    >> Pgrid.ua0[i][k] >> Pgrid.ua1[i][k] >> dummy_dub;
-//                std::cout << "\n" << Pgrid.x[i][k] << "\t" << Pgrid.z[i][k] << "\t" << Pgrid.Te[i][k]
-//                    << "\t" << Pgrid.Ti[i][k] << "\t" << Pgrid.na0[i][k] << "\t" << Pgrid.na1[i][k]
-//                    << "\t" << Pgrid.po[i][k] << "\t" << Pgrid.ua0[i][k] << "\t" << Pgrid.ua1[i][k];
+//                std::cout << "\n" << i << "\t" << k << "\t" << Pgrid.x[i][k] << "\t" << Pgrid.z[i][k]
+//                    << "\t" << Pgrid.Te[i][k] << "\t" << Pgrid.Ti[i][k] << "\t" << Pgrid.na0[i][k] 
+//					<< "\t" << Pgrid.na1[i][k] << "\t" << Pgrid.po[i][k] << "\t" << Pgrid.ua0[i][k] 
+//					<< "\t" << Pgrid.ua1[i][k];
 
                 threevectors >> dummy_dub >> dummy_dub >> Pgrid.bx[i][k] >>
                     Pgrid.bz[i][k] >> Pgrid.by[i][k];
@@ -1137,10 +1144,10 @@ int DTOKSU_Manager::read_data(std::string plasma_dirname){
         	        Pgrid.Ti[i][k] = convertJtoK*Pgrid.Ti[i][k];
                 	Pgrid.Tn[i][k] = convertJtoK*Pgrid.Tn[i][k];
                 }else{
-                        Pgrid.Te[i][k] = converteVtoK*Pgrid.Te[i][k];
-                        Pgrid.Ti[i][k] = converteVtoK*Pgrid.Ti[i][k];
-                        Pgrid.Tn[i][k] = converteVtoK*Pgrid.Tn[i][k];
-		}
+                    Pgrid.Te[i][k] = converteVtoK*Pgrid.Te[i][k];
+                    Pgrid.Ti[i][k] = converteVtoK*Pgrid.Ti[i][k];
+                    Pgrid.Tn[i][k] = converteVtoK*Pgrid.Tn[i][k];
+		        }
                 if( fabs(Pgrid.bx[i][k]) > Overflows::Field 
                     || fabs(Pgrid.bx[i][k]) < Underflows::Field ){ ReStat = 1; } 
                 if( fabs(Pgrid.by[i][k]) > Overflows::Field 
