@@ -69,7 +69,12 @@ void ChargingModel::CreateFile(std::string filename){
     ModelDataFile.open(FileName);
     ModelDataFile << std::scientific << std::setprecision(16) << std::endl;
 //    ModelDataFile << "Time\tCharge\tSign\tDeltatot\tPotential\n";
-    ModelDataFile << "Time\tCharge\tDeltatot\tPotential\n";
+    ModelDataFile << "Time\tCharge\tDeltatot\tPotential";
+
+    for(auto iter = CurrentTerms.begin(); iter != CurrentTerms.end(); ++iter)
+        ModelDataFile << "\t" << (*iter)->PrintName();
+ 
+	ModelDataFile << "\n";
     ModelDataFile.close();
     ModelDataFile.clear();
     Print();
@@ -78,14 +83,25 @@ void ChargingModel::CreateFile(std::string filename){
 void ChargingModel::Print(){
     C_Debug("\tIn ChargingModel::Print()\n\n");
     ModelDataFile.open(FileName,std::ofstream::app);
+    double Potential = Sample->get_potential();
     ModelDataFile << TotalTime << "\t" 
-        << -(4.0*PI*epsilon0*Sample->get_radius()*Sample->get_potential()*Kb*
+        << -(4.0*PI*epsilon0*Sample->get_radius()*Potential*Kb*
         Pdata->ElectronTemp)/(echarge*echarge);
 //    if( Sample->is_positive() )  ModelDataFile << "\t//Pos";
 //    if( !Sample->is_positive() ) ModelDataFile << "\t//Neg";
-    ModelDataFile << "\t" << Sample->get_deltatot() << "\t" 
-        << Sample->get_potential() << "\n";
 
+    ModelDataFile << "\t" << Sample->get_deltatot() << "\t" 
+        << Potential;
+    for(auto iter = CurrentTerms.begin(); iter != CurrentTerms.end(); 
+        ++iter) {
+        if( (*iter)->PrintName() == "SEEcharge" ){
+            ModelDataFile << "\t" << (*iter)->Evaluate(Sample,Pdata,Potential)
+                *CurrentTerms[0]->Evaluate(Sample,Pdata,Potential);
+        }else{
+            ModelDataFile << "\t" << (*iter)->Evaluate(Sample,Pdata,Potential);
+        }
+    }
+    ModelDataFile << "\n";
     ModelDataFile.close();
     ModelDataFile.clear();
 }
@@ -134,10 +150,10 @@ void ChargingModel::Charge(double timestep){
     }
 
     //!< Implement Bisection method to find root of current balance
-    double Potential = Bisection();
+    //double Potential = Bisection();
 
     //!< Implement regular falsi method to find root of current balance
-    //double Potential = RegulaFalsi();
+    double Potential = RegulaFalsi();
 
     //!< Have to calculate charge of grain here since it doesn't know about the 
     //!< Electron Temp and since potential is normalised.
@@ -145,7 +161,11 @@ void ChargingModel::Charge(double timestep){
         double charge = -(4.0*PI*epsilon0*Sample->get_radius()*Potential*Kb*
             Pdata->ElectronTemp)/echarge;
         Sample->update_charge(charge,Potential,DTherm,DSec);
-    }
+    }else{
+	    double charge = -(4.0*PI*epsilon0*Sample->get_radius()
+		    *Sample->get_potential()*Kb*Pdata->ElectronTemp)/echarge;
+        Sample->update_charge(charge,Sample->get_potential(),DTherm,DSec);
+	}
     //!< Increment total time recorded by the model
     TotalTime += timestep;
 
@@ -163,9 +183,20 @@ double ChargingModel::Bisection()const{
     //!< Initial range of normalised potential based on mostly negative dust
     //!< typically with low magntiudes of potential. This may fail in unusual
     //!< cases.
-    double a(-5.0), b(10.0);
+    double a(-500), b(10.0);
     double Current1(0.0), Current2(0.0), Potential(0.0);
-    int i(0), imax(1000);
+//	double MaxCurrent;
+    int i(0), imax(100000000);
+
+	//!< in this case, we are near to zero within accuracy
+    //if( Sample->get_deltatot() > 1.0 ){
+	//    a = -1000.0;
+	//	b = 0.0;
+	//}else if( Sample->get_deltatot() <= 1.0 ){
+	//    a = 0.0;
+	//	b = 10.0;
+	//}
+
     do{ //!< Do while difference in bounds is greater than accuracy
         //!< Take new x position as halfway between upper and lower bound
         Potential = (a+b)/2.0;
@@ -187,6 +218,8 @@ double ChargingModel::Bisection()const{
                 C_Debug( "\n\t\t" << (*iter)->PrintName() << " = " 
                     << (*iter)->Evaluate(Sample,Pdata,Potential) );
             }
+//			if( fabs((*iter)->Evaluate(Sample,Pdata,Potential)) > fabs(MaxCurrent) )
+//				MaxCurrent = (*iter)->Evaluate(Sample,Pdata,Potential);
         }
         C_Debug("\n\n");
         //!< If the root is on the RHS of our midpoint
@@ -198,12 +231,18 @@ double ChargingModel::Bisection()const{
         //!< Ensure we don't loop forever
         if( i > imax ){
             std::cerr << "ChargingModel::Bisection Root Finding failed to "
-                << "converge in " << imax << " steps! Setting Potential = 0.0\n";
-            Potential = 0.0;
+                << "converge in " << imax << " steps! Returning previous potential.\n";
             return Potential;
         }
         i ++; //!< Increment loop counter
+		std::cout << "\nCurrent1 = " << Current1 
+//		    << "\nMaxCurrent = " << MaxCurrent
+		    << "\nPotential = " << Potential
+//		    << "\nfabs(Current1/MaxCurrent) = " << fabs(Current1/MaxCurrent)
+			<< "\nAccuracy = " << Accuracy << "\n\n";
+//    }while( (fabs((b-a)/2.0) > Accuracy || (fabs(Current1/MaxCurrent) > Accuracy)) && Current1 != 0.0 );
     }while( fabs((b-a)/2.0) > Accuracy && Current1 != 0.0 );
+    //std::cin.get();
     return Potential;
 }
 
@@ -214,9 +253,10 @@ double ChargingModel::RegulaFalsi()const{
     //!< typically with low magntiudes of potential. This may fail in unusual
     //!< cases.
 
-    double Current1(0.0), Current2(0.0);
-    double a(-5.0), b(10.0);
-    double amin(-5.0), bmax(10.0);
+    double Current1(0.0), Current2(0.0), Current3(0.0);
+    double a(-20.0), b(5.0);
+    double amin(-20.0), bmax(5.0);
+//    std::cout << "\n\n*** BEGIN ROOT FINDING ***\n\n"; //std::cin.get();
     //!< Sum all the terms in the current balance
     for(auto iter = CurrentTerms.begin(); iter != CurrentTerms.end(); 
         ++iter) {
@@ -242,46 +282,75 @@ double ChargingModel::RegulaFalsi()const{
     //!< Loop until we reach imax iterations
     for (int i = 0; i < imax; i++){
         //!< following line is regula falsi method
+
+        Current3 = 0.0;
         Potential = (b*Current1-a*Current2)/(Current1-Current2);
+
         //!< If we're within accuracy, return result
-        if (fabs(b-a) < Accuracy*fabs(b+a) && b < bmax && a > amin )
+        if (fabs(b-a) < Accuracy*fabs(b+a) && b < bmax && a > amin ){
+			//std::cout << "\nPotential difference small, returning potential = " << Potential;
             return Potential;
-        double Current3(0.0);
+	    }
+
 
         //!< Sum all the terms in the current balance
+		C_Debug("\n* Summing Currents *\n");
+		C_Debug("* Potential = " << Potential << " *\n\n");
         for(auto iter = CurrentTerms.begin(); iter != CurrentTerms.end(); 
             ++iter){
             if( (*iter)->PrintName() == "SEEcharge" ){
-                Current1 += (*iter)->Evaluate(Sample,Pdata,Potential)
+                Current3 += (*iter)->Evaluate(Sample,Pdata,Potential)
                     *CurrentTerms[0]->Evaluate(Sample,Pdata,Potential);
                 C_Debug( "\n\t\t" << (*iter)->PrintName() << " = " 
                     << (*iter)->Evaluate(Sample,Pdata,Potential)
                     *CurrentTerms[0]->Evaluate(Sample,Pdata,Potential)  
                     << "\n" );
+//			    if( (*iter)->Evaluate(Sample,Pdata,Potential)
+//                    *CurrentTerms[0]->Evaluate(Sample,Pdata,Potential) == 0 ) {
+//		            std::cerr << "\nCurrent : " << (*iter)->PrintName();
+//			            << "Returned zero! Returning zero!\n";
+					//std::cin.get();
+//					return 0.0;
+//				}
             }else{
                 Current3 += (*iter)->Evaluate(Sample,Pdata,Potential);
                 C_Debug( "\n\t\t" << (*iter)->PrintName() << " = " 
                     << (*iter)->Evaluate(Sample,Pdata,Potential) << "\n");
+//				if( (*iter)->Evaluate(Sample,Pdata,Potential) == 0 ){
+//		            std::cerr << "\nCurrent : " << (*iter)->PrintName();
+//			            << "Returned zero! Returning zero!\n";
+					//std::cin.get();
+//				    return 0.0;
+//			    }
             }
         }
+
+//		std::cout << "\n\nPotential = " << Potential;
+//		std::cout << "\na = " << a;
+//		std::cout << "\nb = " << b;
+//		std::cout << "\nCurrent1 = " << Current1;
+//		std::cout << "\nCurrent2 = " << Current2;
+//		std::cout << "\nCurrent3 = " << Current3;
+//		std::cout << "\nCurrent1-Current2 = " << Current1-Current2;
+//		std::cout << "\nb*Current1-a*Current2 = " << b*Current1-a*Current2;
 
         if(Current3 * Current2 > 0){
             //!< Current3 and Current2 have same sign, copy Potential to b
             b = Potential; Current2 = Current3;
             if(side==-1){ 
-                Current1 /= 2;
+                Current1 /= 2.0;
             }
             side = -1;
         }else if(Current3 * Current1 > 0){
             //!< Current3 and Current1 have same sign, copy Potential to a
             a = Potential;  Current1 = Current3;
             if(side==+1){
-                Current2 /= 2;
+                Current2 /= 2.0;
             }
             side = +1;
         }else{
             //!< Current3 * Current is very small (looks like zero)
-            if( b < bmax && a > amin  )
+            if( b < bmax && a > amin && Potential > a && Potential < b )
                 return Potential;
         }
     }
