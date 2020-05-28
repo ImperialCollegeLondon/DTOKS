@@ -221,6 +221,7 @@ void DTOKSU::SpecularReflection(){
 //     << "\t" << ReflectedVel;
 //    std::cout << "\n" << WallBound.Grid_Pos[SecondMinIndex].first << "\t" 
 //     <<  WallBound.Grid_Pos[SecondMinIndex].second;
+    std::cout << "\n\nCollision with Wall!";
 
     Sample->update_motion(Zeroes,ReflectedVel-Sample->get_velocity(),0.0);
 }
@@ -238,16 +239,16 @@ bool DTOKSU::Boundary_Check(bool InOrOut){
     
     assert(Edge.Grid_Pos.size() > 2);
     int j=Edge.Grid_Pos.size()-1 ;
-    bool oddNodes=false;
+    bool Inside=false;
     double x = Sample->get_position().getx();
     double y = Sample->get_position().getz();
 
     for (int i=0; i<Edge.Grid_Pos.size(); i++) {
-        if ((Edge.Grid_Pos[i].second < y && Edge.Grid_Pos[j].second >= y
-            ||   Edge.Grid_Pos[j].second < y && Edge.Grid_Pos[i].second >= y)
+        if (((Edge.Grid_Pos[i].second < y && Edge.Grid_Pos[j].second >= y)
+            ||   (Edge.Grid_Pos[j].second < y && Edge.Grid_Pos[i].second >= y))
             &&  (Edge.Grid_Pos[i].first <= x || Edge.Grid_Pos[j].first <= x)) {
 
-            oddNodes^=(Edge.Grid_Pos[i].first+(y-Edge.Grid_Pos[i].second)
+            Inside^=(Edge.Grid_Pos[i].first+(y-Edge.Grid_Pos[i].second)
                     /(Edge.Grid_Pos[j].second-Edge.Grid_Pos[i].second)
                     *(Edge.Grid_Pos[j].first-Edge.Grid_Pos[i].first)<x);
         }
@@ -257,18 +258,18 @@ bool DTOKSU::Boundary_Check(bool InOrOut){
     //!< In this case, it's a wall and the particle has gone through it,
     //!< Here we implement specular refulection
     if( InOrOut ){
-        return oddNodes;
+        return Inside;
     }else{
-        if( !oddNodes && !ReflectedLastStep ){
+        if( !Inside && !ReflectedLastStep ){
             SpecularReflection();
             ReflectedLastStep = true;
-            return oddNodes; //!< Pretend we're still inside
-        }else if( !oddNodes && ReflectedLastStep ){
-            return oddNodes; //!< Pretend we're still inside
-        }else if( oddNodes ){
+            return Inside; //!< Pretend we're still inside
+        }else if( !Inside && ReflectedLastStep ){
+            return Inside; //!< Pretend we're still inside
+        }else if( Inside ){
             ReflectedLastStep = false;
         }
-        return !oddNodes;
+        return !Inside;
     }
 }
 
@@ -503,7 +504,6 @@ int DTOKSU::Run(){
             }
             if( WallBound.Grid_Pos.size() > 2 ){
                 if( Boundary_Check(false) ){
-                    std::cout << "\n\nCollision with Wall!";
                     break;
                 }
             }
