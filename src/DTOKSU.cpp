@@ -261,9 +261,14 @@ bool DTOKSU::Boundary_Check(bool InOrOut){
         return Inside;
     }else{
         if( !Inside && !ReflectedLastStep ){
-            SpecularReflection();
-            ReflectedLastStep = true;
-            return Inside; //!< Pretend we're still inside
+		    // In this case it hit the wall
+		    if( Sample->is_liquid() ){
+                std::cout << "\nSPLAT!";
+			}else{
+            	SpecularReflection();
+            	ReflectedLastStep = true;
+            	return Inside; //!< Pretend we're still inside
+			}
         }else if( !Inside && ReflectedLastStep ){
             return Inside; //!< Pretend we're still inside
         }else if( Inside ){
