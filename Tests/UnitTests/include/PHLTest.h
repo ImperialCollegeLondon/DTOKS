@@ -4,8 +4,9 @@
 // Test Patacchini, Hutchinson and Lapenta charging of a sphere in a collisionless magnetoplasma
 // L. Patacchini, I. H. Hutchinson, and G. Lapenta, Phys. Plasmas 14, (2007).
 // Assuming that Lambda_s >> r_p, i.e dust grain is small.
-void PHLTest(){
+void PHLTest(unsigned int Variables){
 	clock_t begin = clock();
+    std::cout << "\n#PHLTest\t\tVariables : " << Variables;
 
 	double Beta = 3.0; // Ionization state of plasma
 	double Ti = 1.0; // Ion Temperature in eV

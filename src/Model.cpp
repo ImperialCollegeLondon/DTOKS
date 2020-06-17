@@ -13,13 +13,13 @@ Model::Model():
 FileName("Data/default_0.txt"),Sample(new Tungsten),
 PG_data(std::make_shared<PlasmaGrid_Data>(PlasmaGrid_DataDefaults)),
 Pdata(&PlasmaDataDefaults),Accuracy(1.0),ContinuousPlasma(true),
-TimeStep(0.0),TotalTime(0.0){
+TimeStep(0.0),TotalTime(0.0),PrintInterval(1),PrintSteps(0){
     Mo_Debug("\n\nIn Model::Model():FileName(filename),Sample(new Tungsten),"
         << "PG_data(std::make_shared<PlasmaGrid_Data>"
         << "PlasmaGrid_DataDefaults)),"
         << "Pdata(&PlasmaDataDefaults),Accuracy(1.0),ContinuousPlasma(true),"
         << "TimeStep(0.0),TotalTime(0.0))\n\n");
-    i = 0; k = 0; OldMass = 0;
+    i = 0; k = 0; OldMass = 0; 
     PlasmaDataFile.open("Data/pd.txt");
     PlasmaDataFile << "#t\ti\tk\tNn\tNe\tNi\tTi\tTe\t"
         << "Tn\tT0\tPvel\tgravity\tE\tB";
@@ -33,7 +33,8 @@ Model::Model(std::string filename, Matter *&sample, PlasmaData &pdata,
 FileName(filename),Sample(sample),
 PG_data(std::make_shared<PlasmaGrid_Data>(PlasmaGrid_DataDefaults)),
 Pdata(std::make_shared<PlasmaData>(pdata)),Accuracy(accuracy),
-ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
+ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0),PrintInterval(1),
+PrintSteps(0){
     Mo_Debug("\n\nIn Model::Model( Matter *&sample, PlasmaData &pdata, "
         << "float accuracy ):FileName(filename),Sample(sample),"
         << "PG_data(std::make_shared<PlasmaGrid_Data>"
@@ -55,7 +56,8 @@ Model::Model(std::string filename, Matter *&sample, PlasmaGrid_Data &pgrid,
 FileName(filename),Sample(sample),
 PG_data(std::make_shared<PlasmaGrid_Data>(pgrid)),
 Pdata(&PlasmaDataDefaults),Accuracy(accuracy),
-ContinuousPlasma(false),TimeStep(0.0),TotalTime(0.0){
+ContinuousPlasma(false),TimeStep(0.0),TotalTime(0.0),PrintInterval(1),
+PrintSteps(0){
     Mo_Debug("\n\nIn Model::Model( Matter *&sample, PlasmaGrid_Data &pgrid, "
         << "float accuracy ):FileName(filename),Sample(sample),"
         << "PG_data(std::make_shared<PlasmaGrid_Data>(pgrid)),"
@@ -80,7 +82,31 @@ Model::Model( std::string filename, Matter *&sample, PlasmaGrid_Data &pgrid,
 FileName(filename),Sample(sample),
 PG_data(std::make_shared<PlasmaGrid_Data>(pgrid)),
 Pdata(std::make_shared<PlasmaData>(pdata)),Accuracy(accuracy),
-ContinuousPlasma(false),TimeStep(0.0),TotalTime(0.0){
+ContinuousPlasma(false),TimeStep(0.0),TotalTime(0.0),PrintInterval(1),
+PrintSteps(0){
+    Mo_Debug("\n\nIn Model::Model( Matter *&sample, PlasmaGrid_Data &pgrid, "
+        << "PlasmaData &pdata, float accuracy ):"
+        << "FileName(filename),Sample(sample), "
+        << "PG_data(std::make_shared<PlasmaGrid_Data>(pgrid)),"
+        << "Pdata(std::make_shared<PlasmaData>(pdata)),Accuracy(accuracy),"
+        << "ContinuousPlasma(false),TimeStep(0.0),TotalTime(0.0))\n\n");
+    assert(Accuracy > 0);
+    i = 0; k = 0; OldMass = 0;
+    PlasmaDataFile.open("Data/pd.txt");
+    PlasmaDataFile << "#t\ti\tk\tNn\tNe\tNi\tTi\tTe\t"
+        << "Tn\tT0\tPvel\tgravity\tE\tB";
+    PlasmaDataFile.close();
+    PlasmaDataFile.clear();
+    update_plasmadata();
+}
+
+Model::Model( std::string filename, Matter *&sample, PlasmaGrid_Data &pgrid, 
+    PlasmaData &pdata, float accuracy, unsigned int printinterval):
+FileName(filename),Sample(sample),
+PG_data(std::make_shared<PlasmaGrid_Data>(pgrid)),
+Pdata(std::make_shared<PlasmaData>(pdata)),Accuracy(accuracy),
+ContinuousPlasma(false),TimeStep(0.0),TotalTime(0.0),
+PrintInterval(printinterval),PrintSteps(0){
     Mo_Debug("\n\nIn Model::Model( Matter *&sample, PlasmaGrid_Data &pgrid, "
         << "PlasmaData &pdata, float accuracy ):"
         << "FileName(filename),Sample(sample), "
@@ -158,15 +184,15 @@ const bool Model::update_plasmadata(){
     //!< If not, particle has escaped simulation domain
     if( !InGrid ) return InGrid;
     if( ContinuousPlasma ) return InGrid;
-    update_fields(i,k); //!< Update the fields
-    Pdata->NeutralDensity   = PG_data->na2[i][k];  
-    Pdata->ElectronDensity  = PG_data->na1[i][k];  
-    Pdata->IonDensity       = PG_data->na0[i][k];
-    Pdata->IonTemp          = PG_data->Ti[i][k];
-    Pdata->ElectronTemp     = PG_data->Te[i][k];
-    Pdata->NeutralTemp      = PG_data->Tn[i][k];
-    Pdata->AmbientTemp      = PG_data->Ta[i][k];
-    //interpolatepdata(i,k);
+    //update_fields(i,k); //!< Update the fields
+    //Pdata->NeutralDensity   = PG_data->na2[i][k];  
+    //Pdata->ElectronDensity  = PG_data->na1[i][k];  
+    //Pdata->IonDensity       = PG_data->na0[i][k];
+    //Pdata->IonTemp          = PG_data->Ti[i][k];
+    //Pdata->ElectronTemp     = PG_data->Te[i][k];
+    //Pdata->NeutralTemp      = PG_data->Tn[i][k];
+    //Pdata->AmbientTemp      = PG_data->Ta[i][k];
+    interpolatepdata(i,k);
     return true;
 }
 
@@ -195,27 +221,25 @@ void Model::update_fields(int i, int k){
     vp.setz(aveu*(B.getunit().getz()));
 
     //!< Calculate EField from potential at adjactentcells
-    if(PG_data->gridflag[i][k]==1){
-        if( (PG_data->gridflag[i+1][k]==1) && (PG_data->gridflag[i-1][k]==1) ){
-            E.setx(-(PG_data->po[i+1][k]-PG_data->po[i-1][k])
-                /(2.0*PG_data->dlx));
-        }else if(PG_data->gridflag[i+1][k]==1){
-            E.setx(-(PG_data->po[i+1][k]-PG_data->po[i][k])/PG_data->dlx);
-        }else if(PG_data->gridflag[i-1][k]==1){
-            E.setx(-(PG_data->po[i][k]-PG_data->po[i-1][k])/PG_data->dlx);
-        }else E.setx(0.0);
-        if((PG_data->gridflag[i][k+1]==1)&&(PG_data->gridflag[i][k-1]==1)){
-            E.setz(-(PG_data->po[i][k+1]-PG_data->po[i][k-1])
-                /(2.0*PG_data->dlz));
-        }else if(PG_data->gridflag[i][k+1]==1){
-            E.setz(-(PG_data->po[i][k+1]-PG_data->po[i][k])/PG_data->dlz);
-        }else if(PG_data->gridflag[i][k-1]==1){
-            E.setz(-(PG_data->po[i][k]-PG_data->po[i][k-1])/PG_data->dlz);
-        }else E.sety(0.0);
-    }else{
-        E.setx(0.0);
-        E.setz(0.0);
-    }
+    if( checkingrid(i+1,k) && checkingrid(i-1,k) ){
+        E.setx(-(PG_data->po[i+1][k]-PG_data->po[i-1][k])
+            /(2.0*PG_data->dlx));
+    }else if( checkingrid(i+1,k) ){
+        E.setx(-(PG_data->po[i+1][k]-PG_data->po[i][k])/PG_data->dlx);
+    }else if( checkingrid(i-1,k) ){
+        E.setx(-(PG_data->po[i][k]-PG_data->po[i-1][k])/PG_data->dlx);
+    }else 
+	   E.setx(0.0);
+
+    if( checkingrid(i,k+1) && checkingrid(i,k-1) ){
+        E.setz(-(PG_data->po[i][k+1]-PG_data->po[i][k-1])
+            /(2.0*PG_data->dlz));
+    }else if( checkingrid(i,k+1) ){
+        E.setz(-(PG_data->po[i][k+1]-PG_data->po[i][k])/PG_data->dlz);
+    }else if( checkingrid(i,k-1) ){
+        E.setz(-(PG_data->po[i][k]-PG_data->po[i][k-1])/PG_data->dlz);
+    }else 
+	    E.sety(0.0);
 
     //!< Setup for Magnum-PSI gravity
     //!< For Magnum PSI, Gravity is not in -z direction it is radial & Azimuthal
@@ -459,106 +483,131 @@ const void Model::interpolatepdata(const int i,const int k)const{
     double dz_2 = PG_data->dlz*k_diff;
 
     // Calculate the normalisation
-    double Coeff = 1.0/(sqrt(dx_1*dx_1+dz_1*dz_1)+sqrt(dx_2*dx_2+dz_1*dz_1)+sqrt(dx_1*dx_1+dz_2*dz_2)+sqrt(dx_2*dx_2+dz_2*dz_2));
+//    double Coeff = (sqrt(dx_1*dx_1+dz_1*dz_1)+sqrt(dx_2*dx_2+dz_1*dz_1)+sqrt(dx_1*dx_1+dz_2*dz_2)+sqrt(dx_2*dx_2+dz_2*dz_2));
+    double Coeff = 1.0/(2.0*(dx_1+dx_2+dz_1+dz_2));
     
+    double w1 = (dx_1+dz_1)/(2.0*(dx_1+dx_2+dz_1+dz_2));
+    double w2 = (dx_2+dz_1)/(2.0*(dx_1+dx_2+dz_1+dz_2));
+    double w3 = (dx_1+dz_2)/(2.0*(dx_1+dx_2+dz_1+dz_2));
+    double w4 = (dx_2+dz_2)/(2.0*(dx_1+dx_2+dz_1+dz_2));
+
     // If it is not edge, in which case we aren't in a square
     if( PG_data->gridx >= i_pos && PG_data->gridz >= k_pos 
         && 0 <= i_pos && 0 <= k_pos ){
-        std::cout << "\n\nCoeff = " << Coeff;
-        std::cout << "\ni = " << i;
-        std::cout << "\nk = " << k;
-        std::cout << "\ni_pos = " << i_pos;
-        std::cout << "\nk_pos = " << k_pos; 
-        std::cout << "\ni_diff = " << i_diff;
-        std::cout << "\nk_diff = " << k_diff;
-        std::cout << "\ni+sgn(i_diff) = " << i+1*sgn(i_diff);
-        std::cout << "\nk+sgn(k_diff) = " << k+1*sgn(k_diff);
-        std::cout << "\nPG_data->na0[" << i << "][" << k << "] = " << PG_data->na0[i][k]; 
-        std::cout << "\nPG_data->na0[" << i+sgn(i_diff) << "][" << k << "] = " << PG_data->na0[i+1*sgn(i_diff)][k]; 
-        std::cout << "\nPG_data->na0[" << i << "][" << k+sgn(k_diff) << "] = " << PG_data->na0[i][k+1*sgn(k_diff)]; 
-        std::cout << "\nPG_data->na0[" << i+sgn(i_diff) << "][" << k+sgn(k_diff) << "] = " << PG_data->na0[i+1*sgn(i_diff)][k+1*sgn(k_diff)];
-        std::cout << "\nsqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->na0[" << i << "][" << k << "] = " << sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->na0[i][k]; 
-        std::cout << "\nsqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->na0[" << i+sgn(i_diff) << "][" << k << "] = " << sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->na0[i+1*sgn(i_diff)][k]; 
-        std::cout << "\nsqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->na0[" << i << "][" << k+sgn(k_diff) << "] = " << sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->na0[i][k+1*sgn(k_diff)]; 
-        std::cout << "\nsqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->na0[" << i+sgn(i_diff) << "][" << k+sgn(k_diff) << "] = " << sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->na0[i+1*sgn(i_diff)][k+1*sgn(k_diff)]; std::cin.get();
-        std::cout << "\nPdata->IonDensity = " << Pdata->IonDensity;
-        Pdata->NeutralDensity   = Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->na2[i][k]
-                                +sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->na2[i+1*sgn(i_diff)][k]
-                                +sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->na2[i][k+1*sgn(k_diff)]
-                                +sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->na2[i+1*sgn(i_diff)][k+1*sgn(k_diff)]);
+        Mo_Debug("\n\nCoeff = " << Coeff);
+        Mo_Debug("\ndx_1 = " << dx_1);
+        Mo_Debug("\ndz_1 = " << dz_1);
+        Mo_Debug("\ndx_2 = " << dx_2);
+        Mo_Debug("\ndz_2 = " << dz_2);
+        Mo_Debug("\ni = " << i);
+        Mo_Debug("\nk = " << k);
+        Mo_Debug("\ni_pos = " << i_pos);
+        Mo_Debug("\nk_pos = " << k_pos); 
+        Mo_Debug("\ni_diff = " << i_diff);
+        Mo_Debug("\nk_diff = " << k_diff);
+        Mo_Debug("\ni+sgn(i_diff) = " << i+1*sgn(i_diff));
+        Mo_Debug("\nk+sgn(k_diff) = " << k+1*sgn(k_diff));
+        Mo_Debug("\nPG_data->na0[" << i << "][" << k << "] = " << PG_data->na0[i][k]);
+        Mo_Debug("\nPG_data->na0[" << i+sgn(i_diff) << "][" << k << "] = " << PG_data->na0[i+1*sgn(i_diff)][k]); 
+        Mo_Debug("\nPG_data->na0[" << i << "][" << k+sgn(k_diff) << "] = " << PG_data->na0[i][k+1*sgn(k_diff)]); 
+        Mo_Debug("\nPG_data->na0[" << i+sgn(i_diff) << "][" << k+sgn(k_diff) << "] = " << PG_data->na0[i+1*sgn(i_diff)][k+1*sgn(k_diff)]);
+        Mo_Debug("\nw1*PG_data->na0[" << i << "][" << k << "] = " << w1*PG_data->na0[i][k]); 
+        Mo_Debug("\nw2*PG_data->na0[" << i+sgn(i_diff) << "][" << k << "] = " << w2*PG_data->na0[i+1*sgn(i_diff)][k]); 
+        Mo_Debug("\nw3*PG_data->na0[" << i << "][" << k+sgn(k_diff) << "] = " << w3*PG_data->na0[i][k+1*sgn(k_diff)]); 
+        Mo_Debug("\nw4*PG_data->na0[" << i+sgn(i_diff) << "][" << k+sgn(k_diff) << "] = " << w4*PG_data->na0[i+1*sgn(i_diff)][k+1*sgn(k_diff)]; std::cin.get());
+
+        Pdata->NeutralDensity   = (w1*PG_data->na2[i][k]
+                                +w2*PG_data->na2[i+1*sgn(i_diff)][k]
+                                +w3*PG_data->na2[i][k+1*sgn(k_diff)]
+                                +w4*PG_data->na2[i+1*sgn(i_diff)][k+1*sgn(k_diff)]);
         
-        Pdata->ElectronDensity  = Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->na1[i][k]
-                                +sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->na1[i+1*sgn(i_diff)][k]
-                                +sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->na1[i][k+1*sgn(k_diff)]
-                                +sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->na1[i+1*sgn(i_diff)][k+1*sgn(k_diff)]);
+        Pdata->ElectronDensity  = (w1*PG_data->na1[i][k]
+                                +w2*PG_data->na1[i+1*sgn(i_diff)][k]
+                                +w3*PG_data->na1[i][k+1*sgn(k_diff)]
+                                +w4*PG_data->na1[i+1*sgn(i_diff)][k+1*sgn(k_diff)]);
 
-        Pdata->IonDensity       = Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->na0[i][k]
-                                +sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->na0[i+1*sgn(i_diff)][k]
-                                +sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->na0[i][k+1*sgn(k_diff)]
-                                +sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->na0[i+1*sgn(i_diff)][k+1*sgn(k_diff)]);
-        
+        Pdata->IonDensity       = (w1*PG_data->na0[i][k]
+                                +w2*PG_data->na0[i+1*sgn(i_diff)][k]
+                                +w3*PG_data->na0[i][k+1*sgn(k_diff)]
+                                +w4*PG_data->na0[i+1*sgn(i_diff)][k+1*sgn(k_diff)]);
 
-        Pdata->IonTemp          = Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->Ti[i][k]
-                                +sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->Ti[i+1*sgn(i_diff)][k]
-                                +sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->Ti[i][k+1*sgn(k_diff)]
-                                +sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->Ti[i+1*sgn(i_diff)][k+1*sgn(k_diff)]);
+        Mo_Debug("\nPdata->IonDensity = " << Pdata->IonDensity);
+        Mo_Debug("\ndx_1 = " << dx_1);
+        Mo_Debug("\ndz_1 = " << dz_1);
+        Mo_Debug("\ndx_2 = " << dx_2);
+        Mo_Debug("\ndz_2 = " << dz_2);
+        Mo_Debug("\nw1 = " << w1);
+        Mo_Debug("\nw2 = " << w2);
+        Mo_Debug("\nw3 = " << w3);
+        Mo_Debug("\nw4 = " << w4);
 
-        Pdata->ElectronTemp     = Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->Te[i][k]
-                                +sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->Te[i+1*sgn(i_diff)][k]
-                                +sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->Te[i][k+1*sgn(k_diff)]
-                                +sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->Te[i+1*sgn(i_diff)][k+1*sgn(k_diff)]);
 
-        Pdata->NeutralTemp      = Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->Tn[i][k]
-                                +sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->Tn[i+1*sgn(i_diff)][k]
-                                +sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->Tn[i][k+1*sgn(k_diff)]
-                                +sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->Tn[i+1*sgn(i_diff)][k+1*sgn(k_diff)]);
+        Pdata->IonTemp          = (w1*PG_data->Ti[i][k]
+                                +w2*PG_data->Ti[i+1*sgn(i_diff)][k]
+                                +w3*PG_data->Ti[i][k+1*sgn(k_diff)]
+                                +w4*PG_data->Ti[i+1*sgn(i_diff)][k+1*sgn(k_diff)]);
 
-        Pdata->AmbientTemp      = Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->Ta[i][k]
-                                +sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->Ta[i+1*sgn(i_diff)][k]
-                                +sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->Ta[i][k+1*sgn(k_diff)]
-                                +sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->Ta[i+1*sgn(i_diff)][k+1*sgn(k_diff)]);
-        B.setx( Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->bx[i][k]
-                                +sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->bx[i+1*sgn(i_diff)][k]
-                                +sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->bx[i][k+1*sgn(k_diff)]
-                                +sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->bx[i+1*sgn(i_diff)][k+1*sgn(k_diff)]));
+        Pdata->ElectronTemp     = (w1*PG_data->Te[i][k]
+                                +w2*PG_data->Te[i+1*sgn(i_diff)][k]
+                                +w3*PG_data->Te[i][k+1*sgn(k_diff)]
+                                +w4*PG_data->Te[i+1*sgn(i_diff)][k+1*sgn(k_diff)]);
 
-        B.sety( Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->by[i][k]
-                                +sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->by[i+1*sgn(i_diff)][k]
-                                +sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->by[i][k+1*sgn(k_diff)]
-                                +sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->by[i+1*sgn(i_diff)][k+1*sgn(k_diff)]));
+        Pdata->NeutralTemp      = (w1*PG_data->Tn[i][k]
+                                +w2*PG_data->Tn[i+1*sgn(i_diff)][k]
+                                +w3*PG_data->Tn[i][k+1*sgn(k_diff)]
+                                +w4*PG_data->Tn[i+1*sgn(i_diff)][k+1*sgn(k_diff)]);
 
-        B.setz( Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->bz[i][k]
-                                +sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->bz[i+1*sgn(i_diff)][k]
-                                +sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->bz[i][k+1*sgn(k_diff)]
-                                +sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->bz[i+1*sgn(i_diff)][k+1*sgn(k_diff)]));
+        Pdata->AmbientTemp      = (w1*PG_data->Ta[i][k]
+                                +w2*PG_data->Ta[i+1*sgn(i_diff)][k]
+                                +w3*PG_data->Ta[i][k+1*sgn(k_diff)]
+                                +w4*PG_data->Ta[i+1*sgn(i_diff)][k+1*sgn(k_diff)]);
+
+        B.setx( (w1*PG_data->bx[i][k]
+            +w2*PG_data->bx[i+1*sgn(i_diff)][k]
+            +w3*PG_data->bx[i][k+1*sgn(k_diff)]
+            +w4*PG_data->bx[i+1*sgn(i_diff)][k+1*sgn(k_diff)]));
+
+        B.sety( (w1*PG_data->by[i][k]
+            +w2*PG_data->by[i+1*sgn(i_diff)][k]
+            +w3*PG_data->by[i][k+1*sgn(k_diff)]
+            +w4*PG_data->by[i+1*sgn(i_diff)][k+1*sgn(k_diff)]));
+
+        B.setz( (w1*PG_data->bz[i][k]
+            +w2*PG_data->bz[i+1*sgn(i_diff)][k]
+            +w3*PG_data->bz[i][k+1*sgn(k_diff)]
+            +w4*PG_data->bz[i+1*sgn(i_diff)][k+1*sgn(k_diff)]));
 
         // Ion Plasma velocity parallel to the B field
-        vp1.setx(Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->ua0[i][k]
-                                +sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->ua0[i+1*sgn(i_diff)][k]
-                                +sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->ua0[i][k+1*sgn(k_diff)]
-                                +sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->ua0[i+1*sgn(i_diff)][k+1*sgn(k_diff)])*(B.getunit().getx()));
-        vp1.sety(Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->ua0[i][k]
-                                +sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->ua0[i+1*sgn(i_diff)][k]
-                                +sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->ua0[i][k+1*sgn(k_diff)]
-                                +sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->ua0[i+1*sgn(i_diff)][k+1*sgn(k_diff)])*(B.getunit().gety()));
-        vp1.setz(Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->ua0[i][k]
-                                +sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->ua0[i+1*sgn(i_diff)][k]
-                                +sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->ua0[i][k+1*sgn(k_diff)]
-                                +sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->ua0[i+1*sgn(i_diff)][k+1*sgn(k_diff)])*(B.getunit().getz()));
+        vp1.setx((w1*PG_data->ua0[i][k]
+            +w2*PG_data->ua0[i+1*sgn(i_diff)][k]
+            +w3*PG_data->ua0[i][k+1*sgn(k_diff)]
+            +w4*PG_data->ua0[i+1*sgn(i_diff)][k+1*sgn(k_diff)])*(B.getunit().getx()));
+
+        vp1.sety((w1*PG_data->ua0[i][k]
+            +w2*PG_data->ua0[i+1*sgn(i_diff)][k]
+            +w3*PG_data->ua0[i][k+1*sgn(k_diff)]
+            +w4*PG_data->ua0[i+1*sgn(i_diff)][k+1*sgn(k_diff)])*(B.getunit().gety()));
+
+        vp1.setz((w1*PG_data->ua0[i][k]
+            +w2*PG_data->ua0[i+1*sgn(i_diff)][k]
+            +w3*PG_data->ua0[i][k+1*sgn(k_diff)]
+            +w4*PG_data->ua0[i+1*sgn(i_diff)][k+1*sgn(k_diff)])*(B.getunit().getz()));
 
         // Electron Plasma velocity parallel to the B field
-        vp2.setx(Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->ua1[i][k]
-                                +sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->ua1[i+1*sgn(i_diff)][k]
-                                +sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->ua1[i][k+1*sgn(k_diff)]
-                                +sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->ua1[i+1*sgn(i_diff)][k+1*sgn(k_diff)])*(B.getunit().getx()));
-        vp2.sety(Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->ua1[i][k]
-                                +sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->ua1[i+1*sgn(i_diff)][k]
-                                +sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->ua1[i][k+1*sgn(k_diff)]
-                                +sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->ua1[i+1*sgn(i_diff)][k+1*sgn(k_diff)])*(B.getunit().gety()));
-        vp2.setz(Coeff*(sqrt(dx_1*dx_1+dz_1*dz_1)*PG_data->ua1[i][k]
-                                +sqrt(dx_2*dx_2+dz_1*dz_1)*PG_data->ua1[i+1*sgn(i_diff)][k]
-                                +sqrt(dx_1*dx_1+dz_2*dz_2)*PG_data->ua1[i][k+1*sgn(k_diff)]
-                                +sqrt(dx_2*dx_2+dz_2*dz_2)*PG_data->ua1[i+1*sgn(i_diff)][k+1*sgn(k_diff)])*(B.getunit().getz()));
+        vp2.setx((w1*PG_data->ua1[i][k]
+            +w2*PG_data->ua1[i+1*sgn(i_diff)][k]
+            +w3*PG_data->ua1[i][k+1*sgn(k_diff)]
+            +w4*PG_data->ua1[i+1*sgn(i_diff)][k+1*sgn(k_diff)])*(B.getunit().getx()));
+
+        vp2.sety((w1*PG_data->ua1[i][k]
+            +w2*PG_data->ua1[i+1*sgn(i_diff)][k]
+            +w3*PG_data->ua1[i][k+1*sgn(k_diff)]
+            +w4*PG_data->ua1[i+1*sgn(i_diff)][k+1*sgn(k_diff)])*(B.getunit().gety()));
+
+        vp2.setz((w1*PG_data->ua1[i][k]
+            +w2*PG_data->ua1[i+1*sgn(i_diff)][k]
+            +w3*PG_data->ua1[i][k+1*sgn(k_diff)]
+            +w4*PG_data->ua1[i+1*sgn(i_diff)][k+1*sgn(k_diff)])*(B.getunit().getz()));
 
     }else{
         Pdata->NeutralDensity   = PG_data->na2[i][k];  
@@ -581,10 +630,26 @@ const void Model::interpolatepdata(const int i,const int k)const{
         vp2.sety(PG_data->ua1[i][k]*(B.getunit().gety()));
         vp2.setz(PG_data->ua1[i][k]*(B.getunit().getz()));
     }
+    //!< Calculate EField from potential at adjactentcells
+    if( checkingrid(i+1,k) && checkingrid(i-1,k) ){
+        E.setx(-(PG_data->po[i+1][k]-PG_data->po[i-1][k])
+            /(2.0*PG_data->dlx));
+    }else if( checkingrid(i+1,k) ){
+        E.setx(-(PG_data->po[i+1][k]-PG_data->po[i][k])/PG_data->dlx);
+    }else if( checkingrid(i-1,k) ){
+        E.setx(-(PG_data->po[i][k]-PG_data->po[i-1][k])/PG_data->dlx);
+    }else 
+	   E.setx(0.0);
 
-    E.setx(-(PG_data->po[i+1][k]-PG_data->po[i-1][k])/(2.0*PG_data->dlx));
-    E.sety(0.0);
-    E.setz(-(PG_data->po[i][k+1]-PG_data->po[i][k-1])/(2.0*PG_data->dlz));
+    if( checkingrid(i,k+1) && checkingrid(i,k-1) ){
+        E.setz(-(PG_data->po[i][k+1]-PG_data->po[i][k-1])
+            /(2.0*PG_data->dlz));
+    }else if( checkingrid(i,k+1) ){
+        E.setz(-(PG_data->po[i][k+1]-PG_data->po[i][k])/PG_data->dlz);
+    }else if( checkingrid(i,k-1) ){
+        E.setz(-(PG_data->po[i][k]-PG_data->po[i][k-1])/PG_data->dlz);
+    }else 
+	    E.setz(0.0);
 
     
     // Setup for Magnum-PSI

@@ -3,7 +3,7 @@
  *  
  *  @author Luke Simons (ls5115@ic.ac.uk)
  */
-//#define MODEL_DEBUG
+
 #include "PlasmaFluxes.h"
 
 namespace Flux{
@@ -31,6 +31,13 @@ double OMLIonFlux(const Matter* Sample,
         IonFlux = Pdata->IonDensity*sqrt(Kb*Pdata->IonTemp/(2*PI*Pdata->mi))
                 *exp(Potential*(Pdata->ElectronTemp/Pdata->IonTemp));
 
+    PF_Debug("\n\nOMLIonFlux() Return value: IonFlux = " << IonFlux);
+    PF_Debug("\nPotential = " << Potential);
+    PF_Debug("\nPdata->IonDensity*sqrt(Kb*Pdata->IonTemp/(2*PI*Pdata->mi))= " 
+        << Pdata->IonDensity*sqrt(Kb*Pdata->IonTemp/(2*PI*Pdata->mi)));
+    PF_Debug("\nPotential*(Pdata->ElectronTemp/Pdata->IonTemp)= " 
+        << Potential*(Pdata->ElectronTemp/Pdata->IonTemp));
+
     //!< Sanity check sensible return value
     if(IonFlux >= Underflows::Flux && IonFlux != INFINITY && IonFlux == IonFlux 
         && IonFlux < Overflows::Flux ){
@@ -42,11 +49,7 @@ double OMLIonFlux(const Matter* Sample,
     std::string Warning = "\nError in OMLIonFlux()!";
     Warning += " Return value badly specified\n";
     WarnOnce(runOnce,Warning);
-    PF_Debug("\n\nOMLIonFlux() Return value: IonFlux = " << IonFlux);
-    PF_Debug("\nPdata->IonDensity*sqrt(Kb*Pdata->IonTemp/(2*PI*Pdata->mi))= " 
-        << Pdata->IonDensity*sqrt(Kb*Pdata->IonTemp/(2*PI*Pdata->mi)));
-    PF_Debug("\nPotential*(Pdata->ElectronTemp/Pdata->IonTemp)= " 
-        << Potential*(Pdata->ElectronTemp/Pdata->IonTemp));
+
     PF_Debug("\nReturning zero!\n");
     return 0.0;
 }
@@ -75,16 +78,7 @@ double MOMLIonFlux(const Matter* Sample,
     }else
         //!< For positively charged dust, we resort to OML
         IonFlux = OMLIonFlux(Sample,Pdata,Potential);
-    //!< Sanity check sensible return value
-    if(IonFlux >= Underflows::Flux && IonFlux != INFINITY && IonFlux == IonFlux 
-        && IonFlux < Overflows::Flux ){
-        return IonFlux;
-    }
-    //!< If return value is not well defined, print error and return 0.
-    static bool runOnce = true;
-    std::string Warning = "\nError in MOMLIonFlux()!";
-    Warning += " Return value badly specified\n";
-    WarnOnce(runOnce,Warning);
+
     PF_Debug("\n\nMOMLIonFlux() Return value: IonFlux = " << IonFlux);
     PF_Debug("\nPdata->IonDensity*sqrt(Kb*Pdata->IonTemp/(2*PI*Pdata->mi))= " 
         << Pdata->IonDensity*sqrt(Kb*Pdata->IonTemp/(2*PI*Pdata->mi)));
@@ -95,6 +89,18 @@ double MOMLIonFlux(const Matter* Sample,
         (1.0+HeatCapacityRatio*Pdata->IonTemp/Pdata->ElectronTemp)));
     PF_Debug("\narg = " << (2.0*PI*Me/Pdata->mi)*
         (1.0+HeatCapacityRatio*Pdata->IonTemp/Pdata->ElectronTemp));
+
+    //!< Sanity check sensible return value
+    if(IonFlux >= Underflows::Flux && IonFlux != INFINITY && IonFlux == IonFlux 
+        && IonFlux < Overflows::Flux ){
+        return IonFlux;
+    }
+    //!< If return value is not well defined, print error and return 0.
+    static bool runOnce = true;
+    std::string Warning = "\nError in MOMLIonFlux()!";
+    Warning += " Return value badly specified\n";
+    WarnOnce(runOnce,Warning);
+
     PF_Debug("\nReturning zero!\n");
     return 0.0;
 }
@@ -162,6 +168,7 @@ double SOMLIonFlux(const Matter* Sample,
                 (uzp*exp(-uzm*uzm)+uzm*exp(-uzp*uzp)));
         }
     }
+    PF_Debug("\n\nSOMLIonFlux() Return value: IonFlux = " << IonFlux);
     PF_Debug("\nPdata->IonDensity = " << Pdata->IonDensity);
     PF_Debug("\nIonThermalVelocity = " << IonThermalVelocity);
     PF_Debug("\nuz = " << uz);
@@ -177,12 +184,7 @@ double SOMLIonFlux(const Matter* Sample,
     std::string Warning = "\nError in SOMLIonFlux()!";
     Warning += " Return value badly specified\n";
     WarnOnce(runOnce,Warning);
-    PF_Debug("\n\nSOMLIonFlux() Return value: IonFlux = " << IonFlux);
-    PF_Debug("\nPdata->IonDensity = " << Pdata->IonDensity);
-    PF_Debug("\nIonThermalVelocity = " << IonThermalVelocity);
-    PF_Debug("\nuz = " << uz);
-    PF_Debug("\nTau = " << Tau);
-    PF_Debug("\nPdata->Z*Potential = " << Pdata->Z*Potential);
+
     PF_Debug("\nReturning zero!\n");
     return 0.0;
 }
@@ -229,6 +231,15 @@ double SMOMLIonFlux(const Matter* Sample,
             IonFlux = Flux::SOMLIonFlux(Sample,Pdata,Potential);
         }
     }
+
+     PF_Debug("\n\nSMOMLIonFlux() Return value: IonFlux = " << IonFlux);
+    PF_Debug("\nPdata->IonDensity = " << Pdata->IonDensity);
+    PF_Debug("\nIonThermalVelocity = " << IonThermalVelocity);
+    PF_Debug("\nuz = " << uz);
+    PF_Debug("\nMassRatio = " << MassRatio);
+    PF_Debug("\nTau = " << Tau);
+    PF_Debug("\nPdata->Z*Potential = " << Pdata->Z*Potential);
+
     //!< Sanity check sensible return value
     if(IonFlux >= Underflows::Flux && IonFlux != INFINITY && IonFlux == IonFlux 
         && IonFlux < Overflows::Flux ){
@@ -239,13 +250,7 @@ double SMOMLIonFlux(const Matter* Sample,
     std::string Warning = "\nError in SMOMLIonFlux()!";
     Warning += " Return value badly specified\n";
     WarnOnce(runOnce,Warning);
-    PF_Debug("\n\nSMOMLIonFlux() Return value: IonFlux = " << IonFlux);
-    PF_Debug("\nPdata->IonDensity = " << Pdata->IonDensity);
-    PF_Debug("\nIonThermalVelocity = " << IonThermalVelocity);
-    PF_Debug("\nuz = " << uz);
-    PF_Debug("\nMassRatio = " << MassRatio);
-    PF_Debug("\nTau = " << Tau);
-    PF_Debug("\nPdata->Z*Potential = " << Pdata->Z*Potential);
+   
     PF_Debug("\nReturning zero!\n");
     return 0.0;
 }
@@ -343,6 +348,10 @@ double DTOKSIonFlux(const Matter* Sample,
         IonFlux = Flux::DTOKSElectronFlux(Pdata, Potential)*
             (1-Sample->get_deltatot());
 
+    PF_Debug("\n\nDTOKSIonFlux() Return value: IonFlux = " << IonFlux);
+    PF_Debug("\nSample->is_positive() = " << Sample->is_positive());
+    PF_Debug("\nSample->get_deltatot() = " << Sample->get_deltatot());
+
     //!< Sanity check sensible return value
     if(IonFlux >= Underflows::Flux && IonFlux != INFINITY && IonFlux == IonFlux 
         && IonFlux < Overflows::Flux ){
@@ -353,10 +362,8 @@ double DTOKSIonFlux(const Matter* Sample,
     std::string Warning = "\nError in DTOKSIonFlux()!";
     Warning += " Return value badly specified\n";
     WarnOnce(runOnce,Warning);
-    PF_Debug("\n\nDTOKSIonFlux() Return value: IonFlux = " << IonFlux);
-    PF_Debug("\nSample->is_positive() = " << Sample->is_positive());
-    PF_Debug("\nSample->get_deltatot() = " << Sample->get_deltatot());
-    PF_Debug("\nReturning zero!\n");
+    
+	PF_Debug("\nReturning zero!\n");
     return 0.0;
 }
 
@@ -372,6 +379,11 @@ double DTOKSElectronFlux(const std::shared_ptr<PlasmaData> Pdata,
     ElecFlux = Pdata->ElectronDensity*exp(-Potential)*
         sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
 
+    PF_Debug("\n\nDTOKSElectronFlux() Return value: ElecFlux = " << ElecFlux);
+    PF_Debug("\nElectronThermalVel = " << sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me)));
+    PF_Debug("\nPotential = " << Potential);
+    PF_Debug("\nDensity = " << Pdata->ElectronDensity);
+
     if(ElecFlux >= Underflows::Flux && ElecFlux != INFINITY 
         && ElecFlux == ElecFlux && ElecFlux < Overflows::Flux ){
         return ElecFlux;
@@ -381,10 +393,7 @@ double DTOKSElectronFlux(const std::shared_ptr<PlasmaData> Pdata,
     std::string Warning = "\nError in DTOKSElectronFlux()!";
     Warning += " Return value badly specified\n";
     WarnOnce(runOnce,Warning);
-    PF_Debug("\n\nDTOKSElectronFlux() Return value: ElecFlux = " << ElecFlux);
-    PF_Debug("\nElectronThermalVel = " << sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me)));
-    PF_Debug("\nPotential = " << Potential);
-    PF_Debug("\nDensity = " << Pdata->ElectronDensity);
+
     PF_Debug("\nReturning zero!\n");
     return 0.0;
 }
@@ -411,7 +420,13 @@ double OMLElectronFlux(const std::shared_ptr<PlasmaData> Pdata,
         //!< Equation (2.2.7).
         ElecFlux = Pdata->ElectronDensity*exp(-Potential)*
             sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me));
-    
+
+    PF_Debug("\n\nOMLElectronFlux() Return value: ElecFlux = " << ElecFlux);
+    PF_Debug("\nElectronThermalVel = " << sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me)));
+    PF_Debug("\nElectronTemp = " << Pdata->ElectronTemp);
+    PF_Debug("\nPotential = " << Potential);
+    PF_Debug("\nDensity = " << Pdata->ElectronDensity);
+
     //!< Sanity check sensible return value
     if(ElecFlux >= Underflows::Flux && ElecFlux != INFINITY 
         && ElecFlux == ElecFlux && ElecFlux < Overflows::Flux ){
@@ -422,11 +437,6 @@ double OMLElectronFlux(const std::shared_ptr<PlasmaData> Pdata,
     std::string Warning = "\nError in OMLElectronFlux()!";
     Warning += " Return value badly specified\n";
     WarnOnce(runOnce,Warning);
-    PF_Debug("\n\nOMLElectronFlux() Return value: ElecFlux = " << ElecFlux);
-    PF_Debug("\nElectronThermalVel = " << sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me)));
-    PF_Debug("\nElectronTemp = " << Pdata->ElectronTemp);
-    PF_Debug("\nPotential = " << Potential);
-    PF_Debug("\nDensity = " << Pdata->ElectronDensity);
     PF_Debug("\nReturning zero!\n");
     return 0.0;
 }
@@ -441,6 +451,9 @@ double NeutralFlux(const std::shared_ptr<PlasmaData> Pdata){
 
     double NeutFlux = Pdata->NeutralDensity*
             sqrt(Kb*Pdata->NeutralTemp/(2*PI*Pdata->mi));
+    PF_Debug("\n\nNeutralFlux() Return value: NeutFlux = " << NeutFlux);
+    PF_Debug("\nNeutralThermalVel = " << sqrt(Kb*Pdata->NeutralTemp/(2*PI*Pdata->mi)));
+    PF_Debug("\nDensity = " << Pdata->NeutralDensity);
 
     //!< Sanity check sensible return value
     if(NeutFlux >= Underflows::Flux && NeutFlux != INFINITY 
@@ -452,9 +465,6 @@ double NeutralFlux(const std::shared_ptr<PlasmaData> Pdata){
     std::string Warning = "\nError in NeutralFlux()!";
     Warning += " Return value badly specified\n";
     WarnOnce(runOnce,Warning);
-    PF_Debug("\n\nNeutralFlux() Return value: NeutFlux = " << NeutFlux);
-    PF_Debug("\nNeutralThermalVel = " << sqrt(Kb*Pdata->NeutralTemp/(2*PI*Pdata->mi)));
-    PF_Debug("\nDensity = " << Pdata->NeutralDensity);
     PF_Debug("\nReturning zero!\n");
     return 0.0;
 }
@@ -474,6 +484,16 @@ double EvaporationFlux(const Matter* Sample,
         (Sample->get_vapourpressure()-AmbientPressure))/
         sqrt(2*PI*Sample->get_atomicmass()*R*DustTemperature);
 
+    PF_Debug("\n\nEvaporationFlux() Return value: EvapFlux = " << EvapFlux);
+    PF_Debug("\nAmbientPressure = " << AmbientPressure);
+    PF_Debug("\nStickCoeff = " << StickCoeff);
+    PF_Debug("\nSample->get_vapourpressure() = " << Sample->get_vapourpressure());
+    PF_Debug("\nSample->get_surfacearea() = " << Sample->get_surfacearea());
+    PF_Debug("\nAmbientPressure = " << AmbientPressure;   ) 
+    PF_Debug("\nDustTemperature = " << DustTemperature;) 
+    PF_Debug("\nDenominator = "
+        << sqrt(2*PI*Sample->get_atomicmass()*R*DustTemperature)); 
+
     //!< Sanity check sensible return value
     //!< Missing "EvapFlux >= 0.0 &&" permits dust gaining mass from 
     //!< condensation of nearby cold nuclei.
@@ -485,15 +505,6 @@ double EvaporationFlux(const Matter* Sample,
     std::string Warning = "\nError in EvaporationFlux()!";
     Warning += " Return value badly specified\n";
     WarnOnce(runOnce,Warning);
-    PF_Debug("\n\nEvaporationFlux() Return value: EvapFlux = " << EvapFlux);
-    PF_Debug("\nAmbientPressure = " << AmbientPressure);
-    PF_Debug("\nStickCoeff = " << StickCoeff);
-    PF_Debug("\nSample->get_vapourpressure() = " << Sample->get_vapourpressure());
-    PF_Debug("\nSample->get_surfacearea() = " << Sample->get_surfacearea());
-    PF_Debug("\nAmbientPressure = " << AmbientPressure;   ) 
-    PF_Debug("\nDustTemperature = " << DustTemperature;) 
-    PF_Debug("\nDenominator = "
-        << sqrt(2*PI*Sample->get_atomicmass()*R*DustTemperature)); 
     PF_Debug("\nReturning zero!\n");
     return 0.0;
 }
@@ -510,15 +521,6 @@ double DeltaTherm(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata)
         (Kb*Sample->get_temperature())))/
         (echarge*OMLElectronFlux(Pdata, Sample->get_potential()));
 
-    //!< Sanity check sensible return value
-    if(dtherm >= 0.0 && dtherm == dtherm && dtherm != INFINITY ){
-        return dtherm;
-    }
-    //!< If return value is not well defined, print error and return 0.
-    static bool runOnce = true;
-    std::string Warning = "\nError in DeltaTherm()!";
-    Warning += " Return value badly specified\n";
-    WarnOnce(runOnce,Warning);
     PF_Debug("\n\nDeltaTherm() Return value: dtherm = " << dtherm);
     PF_Debug("\nRichardson = " << Richardson);
     PF_Debug("\nSample->get_temperature() = " << Sample->get_temperature());
@@ -530,6 +532,16 @@ double DeltaTherm(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata)
         (Kb*Sample->get_temperature()));
     PF_Debug("\necharge*OMLElectronFlux() = " 
         << (echarge*OMLElectronFlux(Pdata, Sample->get_potential()))); 
+
+    //!< Sanity check sensible return value
+    if(dtherm >= 0.0 && dtherm == dtherm && dtherm != INFINITY ){
+        return dtherm;
+    }
+    //!< If return value is not well defined, print error and return 0.
+    static bool runOnce = true;
+    std::string Warning = "\nError in DeltaTherm()!";
+    Warning += " Return value badly specified\n";
+    WarnOnce(runOnce,Warning);
     PF_Debug("\nReturning zero!\n");
     return 0.0;
 }
@@ -545,6 +557,16 @@ double ThermFlux(const Matter* Sample){
     double ThermFlux = (Richardson*Sample->get_temperature()*
         Sample->get_temperature()*exp(-(Sample->get_workfunction()*echarge)/
         (Kb*Sample->get_temperature())))/echarge;
+    PF_Debug("\n\nThermFlux() Return value: ThermFlux = " << ThermFlux);
+    PF_Debug("\nRichardson = " << Richardson);
+    PF_Debug("\nSample->get_temperature() = " << Sample->get_temperature());
+    PF_Debug("\nSample->get_workfunction() = " << Sample->get_workfunction());
+    PF_Debug("\nSample->get_temperature() = " << Sample->get_temperature());
+    PF_Debug("\nexp( arg ) = " << exp(-(Sample->get_workfunction()*echarge)/
+        (Kb*Sample->get_temperature())));
+    PF_Debug("\narg = " << -(Sample->get_workfunction()*echarge)/
+        (Kb*Sample->get_temperature()));
+
     //!< Sanity check sensible return value
     if(ThermFlux >= Underflows::Flux && ThermFlux == ThermFlux 
         && ThermFlux != INFINITY && ThermFlux < Overflows::Flux ){
@@ -555,15 +577,6 @@ double ThermFlux(const Matter* Sample){
     std::string Warning = "\nError in ThermFlux()!";
     Warning += " Return value badly specified\n";
     WarnOnce(runOnce,Warning);
-    PF_Debug("\n\nThermFlux() Return value: ThermFlux = " << ThermFlux);
-    PF_Debug("\nRichardson = " << Richardson);
-    PF_Debug("\nSample->get_temperature() = " << Sample->get_temperature());
-    PF_Debug("\nSample->get_workfunction() = " << Sample->get_workfunction());
-    PF_Debug("\nSample->get_temperature() = " << Sample->get_temperature());
-    PF_Debug("\nexp( arg ) = " << exp(-(Sample->get_workfunction()*echarge)/
-        (Kb*Sample->get_temperature())));
-    PF_Debug("\narg = " << -(Sample->get_workfunction()*echarge)/
-        (Kb*Sample->get_temperature()));
     PF_Debug("\nReturning zero!\n");
     return 0.0;
 }
@@ -592,20 +605,11 @@ double ThermFluxSchottky(const Matter* Sample,
         ThermFlux = Richardson*Sample->get_temperature()*
             Sample->get_temperature()*(1.0-Potential
             *(Pdata->ElectronTemp/Sample->get_temperature()))
-            *exp((-echarge*Sample->get_workfunction()-
+            *exp((-echarge*Sample->get_workfunction()+
             Potential*Kb*Pdata->ElectronTemp)/(Kb*Sample->get_temperature()))/
             echarge;
     }
-    //!< Sanity check sensible return value
-    if(ThermFlux >= Underflows::Flux && ThermFlux == ThermFlux 
-        && ThermFlux != INFINITY && ThermFlux < Overflows::Flux ){
-        return ThermFlux;
-    }
-    //!< If return value is not well defined, print error and return 0.
-    static bool runOnce = true;
-    std::string Warning = "\nError in ThermFluxSchottky()!";
-    Warning += " Return value badly specified\n";
-    WarnOnce(runOnce,Warning);
+
     PF_Debug("\n\nThermFluxSchottky() Return value: ThermFlux = " << ThermFlux);
     PF_Debug("\nRichardson = " << Richardson);
     PF_Debug("\nSample->get_temperature() = " << Sample->get_temperature());
@@ -617,6 +621,17 @@ double ThermFluxSchottky(const Matter* Sample,
             Potential*Kb*Pdata->ElectronTemp)/(Kb*Sample->get_temperature())));
     PF_Debug("\narg = " << (-echarge*Sample->get_workfunction()-
             Potential*Kb*Pdata->ElectronTemp)/(Kb*Sample->get_temperature()));
+
+    //!< Sanity check sensible return value
+    if(ThermFlux >= Underflows::Flux && ThermFlux == ThermFlux 
+        && ThermFlux != INFINITY && ThermFlux < Overflows::Flux ){
+        return ThermFlux;
+    }
+    //!< If return value is not well defined, print error and return 0.
+    static bool runOnce = true;
+    std::string Warning = "\nError in ThermFluxSchottky()!";
+    Warning += " Return value badly specified\n";
+    WarnOnce(runOnce,Warning);
     PF_Debug("\nReturning zero!\n");
     return 0.0;
 }
@@ -629,6 +644,14 @@ double DeltaSec(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata){
     C_Debug("\n\t\tIn DeltaSec:Term()\n\n");
     double ConvertKtoev(8.6173303e-5);
     double DeltaSec = sec(Pdata->ElectronTemp*ConvertKtoev,Sample->get_elem());
+
+    PF_Debug("\n\nDeltaSec() Return value: DeltaSec = " << DeltaSec);
+    PF_Debug("\nSample->get_elem() = " << Sample->get_elem());
+    PF_Debug("\nPdata->ElectronTemp*ConvertKtoev = " 
+        << Pdata->ElectronTemp*ConvertKtoev);
+    PF_Debug("\nsec(Pdata->ElectronTemp*ConvertKtoev,Sample->get_elem()) = " 
+        << sec(Pdata->ElectronTemp*ConvertKtoev,Sample->get_elem()));
+
     //!< Sanity check sensible return value
     if(DeltaSec >= 0.0 && DeltaSec == DeltaSec && DeltaSec != INFINITY ){
         return DeltaSec;
@@ -638,12 +661,6 @@ double DeltaSec(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata){
     std::string Warning = "\nError in DeltaSec()!";
     Warning += " Return value badly specified\nReturning zero!\n";
     WarnOnce(runOnce,Warning);
-    PF_Debug("\n\nDeltaSec() Return value: DeltaSec = " << DeltaSec);
-    PF_Debug("\nSample->get_elem() = " << Sample->get_elem());
-    PF_Debug("\nPdata->ElectronTemp*ConvertKtoev = " 
-        << Pdata->ElectronTemp*ConvertKtoev);
-    PF_Debug("\nsec(Pdata->ElectronTemp*ConvertKtoev,Sample->get_elem()) = " 
-        << sec(Pdata->ElectronTemp*ConvertKtoev,Sample->get_elem()));
     PF_Debug("\nReturning zero!\n");
     return 0.0;
 }

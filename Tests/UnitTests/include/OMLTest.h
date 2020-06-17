@@ -4,7 +4,7 @@
 // Test orbital motion limited theory
 void OMLTest(unsigned int Variables){
     clock_t begin = clock();
-    std::cout << "\nOMLTest\t\tVariables : " << Variables;
+    std::cout << "\n#OMLTest\t\tVariables : " << Variables;
     std::cout << "\n\nTiTe\tMi/Me\tZ\tPotential";
 
     double Mi=Mp;

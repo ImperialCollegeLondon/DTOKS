@@ -47,7 +47,6 @@ double sec(double Te, char material)
         double result(0.0),x=log10(Te);
         if(material=='c' || material=='C' || material == 'g' || material == 'G' ) // Graphite or Carbon
         {
-
             result = - 0.0849*x*x*x + 0.1149*x*x + 0.7428*x - 1.341;
         }
         else if(material=='w' || material == 'W')
@@ -77,8 +76,9 @@ double sec(double Te, char material)
             std::cout << "Error: Incorrect material information in sec" << std::endl;
             return 0.0;
         }
-        if((material=='c')||(material=='C')||(material=='W')||(material=='w')){return pow(10.0,result);}
-        else{return 0.0;}
+//        if((material=='c')||(material=='C')||(material=='W')||(material=='w')){return pow(10.0,result);}
+//        else{return result;}
+        return pow(10.0,result);
     }else return 0.0;
 }
 

@@ -2,10 +2,10 @@
 #include <iostream>
 
 // Test Shifted orbital motion limited theory
-void SOMLTest(double Variables){
+void SOMLTest(unsigned int Variables){
     clock_t begin = clock();
-    std::cout << "\nSOMLTest\t\tVariables : " << Variables;
-    std::cout << "\n\nTiTe\tMi/Me\tZ\tU\tPotential";
+    std::cout << "\n#SOMLTest\t\tVariables : " << Variables;
+    std::cout << "\n\n#TiTe\tMi/Me\tZ\tU\tPotential";
 
     double U = 1.0; // Plasma Flow speed
     double TiTe=1.0;

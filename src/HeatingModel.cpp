@@ -270,7 +270,7 @@ const int HeatingModel::Vapourise(){
 void HeatingModel::UpdateRERN(){
     //!< If it's positive, Ions aren't backscattered
     double RE(0.0), RN(0.0);
-    if( !Sample->is_positive() ){
+    if( Sample->get_potential() >= 0.0 ){
         backscatter(Pdata->ElectronTemp,Pdata->IonTemp,Pdata->mi,
             Sample->get_potential(),Sample->get_elem(),RE,RN);
     }
@@ -322,8 +322,13 @@ void HeatingModel::Heat(double timestep){
     if( !Sample->is_gas() )
         Sample->update();
 
-    Print();  //!< Print data to file
     H_Debug("\t"); 
+	if( PrintSteps >= PrintInterval ){
+	    Print();
+		PrintSteps = 1;
+	}else{
+        PrintSteps ++;
+	}
 
     TotalTime += timestep;
 }

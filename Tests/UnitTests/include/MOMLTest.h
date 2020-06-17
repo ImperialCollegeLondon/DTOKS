@@ -4,7 +4,7 @@
 // Test Modified orbital motion limited theory
 void MOMLTest(unsigned int Variables){
     clock_t begin = clock();
-    std::cout << "\nMOMLTest\t\tVariables : " << Variables;
+    std::cout << "\n#MOMLTest\t\tVariables : " << Variables;
     std::cout << "\n\nTiTe\tMi/Me\tZ\tGamma\tPotential";
 
 //  double Current0 = MOMLattractedCurrent(1.0,1.0,Gamma,Mp/Me,0.0);

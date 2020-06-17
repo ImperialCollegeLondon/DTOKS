@@ -10,12 +10,17 @@
 // electron emission yield approaches 1
 // Two different conditional formulations of the problem are made and their
 // differences highlighted by this test
-void DTOKSchargingTest(double Variables){
+void DTOKSchargingTest(unsigned int Variables){
     clock_t begin = clock();
-    std::cout << "\nOMLTest\t\tVariables : " << Variables;
-    std::cout << "\n\nTiTe\tMi/Me\tZ\tTd\tPotential";
+    std::cout << "\n#DTOKSchargingTest\t\tVariables : " << Variables;
+    std::cout << "\n\n#TiTe\tMi/Me\tZ\tTd\tPotential";
 
     double converteVtoK(11600);
+
+    if( Variables > 1 ){
+        std::cerr << "Error! Variables > 1!";
+        return;
+    }
 
     // TEST TO CALCULATE THE DTOKS FLOATING POTENTIAL FOR 
     // CONSTANT ELECTRON DENSITY AND ELECTRON TEMPERATURE

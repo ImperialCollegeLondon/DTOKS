@@ -26,7 +26,7 @@
 #include "SOMLTest.h"
 #include "SMOMLTest.h"
 #include "PHLTest.h"
-#include "THTest.h"
+#include "THSTest.h"
 #include "BIBHASTest.h"
 
 // FORCE TESTS
@@ -74,7 +74,7 @@ static void show_usage(std::string name){
     << "ky correction\n"
     << "\t\tPHL            : floating potential for small dust grains in co"
     << "llisionless weakly magnetised plasmas.\n"
-    << "\t\tTH             : floating potential for small dust grains magne"
+    << "\t\tTHS            : floating potential for small dust grains magne"
     << "tised plasmas semi-empirical from pot.\n"
     << "\t\tBIBHAS         : floating potential for arbitary sized dust gra"
     << "in.\n"
@@ -130,7 +130,7 @@ int main(int argc, char* argv[]){
     // readily compared to the results published in
     // the DTOKS papers
     if( Test_Mode == "Backscatter" )
-        BackscatterTest();
+        BackscatterTest(VariableNum);
 
     // Delta Sec Unit Test:
     // This test prints the value of the empirical function calculating the 
@@ -141,7 +141,7 @@ int main(int argc, char* argv[]){
     // Bacharis, Minas Coppins, Michael Allen, John E.
     // Page 2 & 3
     else if( Test_Mode == "DeltaSec" )
-        DeltaSecTest();
+        DeltaSecTest(VariableNum);
 
     // Delta Therm Unit Test:
     // This test prints the value of the 'effective yield' from the 
@@ -152,7 +152,7 @@ int main(int argc, char* argv[]){
     // Bacharis, Minas Coppins, Michael Allen, John E.
     // Page 2 & 3
     else if( Test_Mode == "DeltaTherm" )
-    DeltaThermTest();
+    DeltaThermTest(VariableNum);
 
     // Maxwellian Unit Test:
     // This test prints the value of the Maxwellian function for different 
@@ -160,17 +160,17 @@ int main(int argc, char* argv[]){
     // The results are plotted in 3D, with the expected maxwellian distribution
     // recovered for a fixed temperature or Energy
     else if( Test_Mode == "Maxwellian" )
-        MaxwellianTest();
+        MaxwellianTest(VariableNum);
 
     // *****    HEATING TESTS       ***** //
     else if( Test_Mode == "EvapCooling" )
-        EvaporativeCoolingTest();
+        EvaporativeCoolingTest(VariableNum);
     else if( Test_Mode == "EvapMassLoss" )
-        EvaporativeMassLossTest();
+        EvaporativeMassLossTest(VariableNum);
     else if( Test_Mode == "NeutralRecomb" )
-        NeutralRecombTest();
+        NeutralRecombTest(VariableNum);
     else if( Test_Mode == "NeutralHeating" )
-        NeutralHeatingTest();
+        NeutralHeatingTest(VariableNum);
 
 
     // *****    CHARGING TESTS      ***** //
@@ -205,7 +205,7 @@ int main(int argc, char* argv[]){
     // scenario with a potential well. This removes the discontinuities
     // observed in the previous model.
     else if( Test_Mode == "DTOKSWell" )
-        DTOKSwellchargingTest();
+        DTOKSwellchargingTest(VariableNum);
     
     // OML Charging Test:
     // This test is designed to find the floating potential for small dust
@@ -241,8 +241,7 @@ int main(int argc, char* argv[]){
     // N. Rizopoulou and M. Bacharis, Phys. Plasmas 25, (2018).
     // This employs a Newton Rhapson method to solve the equations of the two papers finding a kinetic potential well
     else if( Test_Mode == "MOMLEM" )
-        MOMLEMTest();
-
+        MOMLEMTest(VariableNum);
 
     // SOML Charging Test:
     // This test is designed to find the floating potential for small dust grains in a flowing plasma following SOML theory.
@@ -262,7 +261,7 @@ int main(int argc, char* argv[]){
     // answer. Switching to matlab minimisation function, some weird things happen but, in principle, I showed that the 
     // function could be minimised.
     else if( Test_Mode == "SchottkyOML" )
-        SchottkyOMLTest();
+        SchottkyOMLTest(VariableNum);
 
     // SchottkyMOML Charging Test: DOESN'T WORK!
     // This test is designed to find the floating potential for large negative dust grains with electron emission 
@@ -275,46 +274,46 @@ int main(int argc, char* argv[]){
     // The calculation follows the work by Patacchini et al and implements a semi-empirical model
     // see L. Patacchini, I. H. Hutchinson, and G. Lapenta, Phys. Plasmas 14, (2007). for details
     else if( Test_Mode == "PHL" )
-        PHLTest();
+        PHLTest(VariableNum);
 
-    // TH Charging Test:
+    // THS Charging Test:
     // This test is designed to find the floating potential for small dust grains in magnetised plasmas 
-    // The calculation follows the work by Drew Thomas and Josh Holgate and implements a semi-empirical model
-    // see D. M. Thomas and J. T. Holgate, ArXiv Prepr. (2016). for details
-    else if( Test_Mode == "TH" )
-        THTest();
+    // The calculation follows the work by Drew Thomas, Josh Holgate and Luke Simons and implements a semi-empirical model
+    // see D. M. Thomas, J. T. Holgate & L. Simons, ArXiv Prepr. (2016). for details
+    else if( Test_Mode == "THS" )
+        THSTest(VariableNum);
 
     // BIBHAS Charging Test:
     // This test is designed to find the floating potential for arbitary sized dust grain
     // The calculation follows the work by R. DE Bibhas,
     // see R. DE Bibhas, Astrophys. Space Sci. 30, (1974).
     else if( Test_Mode == "BIBHAS" )
-        BIBHASTest();
+        BIBHASTest(VariableNum);
 
 
 
 
     // *****    FORCE TESTS     ***** //
     // Hybrid Ion Drag Test
-    // This test is designed to test the magnitude of the HybridIonDrag force as formulated in the paper given below.
+    // This test prints the magnitude of the HybridIonDrag force as formulated in the paper given below.
     // The Hybrid Ion Drag model is a function of the plasma species temperature ratio, the ion mach number, ion density,
     // the dust grain potential and the dust grain radius
     // Khrapak, S. A., Ivlev, A. V., Zhdanov, S. K., & Morfill, G. E. (2005). Hybrid approach to the ion drag force. 
     // Physics of Plasmas, 12(4), 1–8. https://doi.org/10.1063/1.1867995 
     else if( Test_Mode == "HybridIonDrag" )
-        HybridIonDragTest();
+        HybridIonDragTest(VariableNum);
 
     // Fortov et al./DTOKS Ion Drag Test
-    // This test is designed to test the magnitude of the drag force as formulated in the paper given below by fortov.
+    // This test prints the magnitude of the drag force as formulated in the paper given below by fortov.
     // The Hybrid Ion Drag model is a function of the temperature of electrons and ions, the ion mach number, ion density,
     // the dust grain potential and the dust grain radius
     // Fortov, V. E., Ivlev, A. V., Khrapak, S. A., Khrapak, A. G., & Morfill, G. E. (2005).
     //  Complex (dusty) plasmas: Current status, open issues, perspectives. Physics Reports, 421(1–2), 1–103. 
     // https://doi.org/10.1016/j.physrep.2005.08.007
     else if( Test_Mode == "FortovIonDrag" )
-        FortovIonDragTest();
+        FortovIonDragTest(VariableNum);
     // Neutral Drag test
-    // This test is designed to test the magnitude of the neutral drag force relative to the Ion drag force.
+    // This test prints the magnitude of the neutral drag force relative to the Ion drag force.
     // This neutral drag force is formulated by the OML flux for uncharged species to a sphere
     else if( Test_Mode == "NeutralDrag" )
         IonNeutralDragTest();

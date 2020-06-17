@@ -184,6 +184,12 @@ class Model{
         /** @brief The total physics time for which simulation has been running
          */
         double TotalTime;
+        /** @brief The number of model steps to take between printing result
+		 */
+        unsigned int PrintInterval;
+        /** @brief The number of steps taken since last printing result
+		 */
+        unsigned int PrintSteps;
         /** @brief The filename to which the results are written to
          */
         std::string FileName;
@@ -317,6 +323,21 @@ class Model{
          */
         Model(std::string filename, Matter *& sample, PlasmaGrid_Data &pgrid, 
             PlasmaData &pdata, float accuracy );
+
+        /** @brief PlasmaData and PlasmaGrid constructor with print interval.
+         *
+         *  Set matter pointer to refer to \p sample, with plasma background 
+         *  given by the plasma grid specified by the \p pgrid structure with
+         *  \p accuracy and \p pdata used as the initial conditions
+         *  @param filename name of file to write model data to
+         *  @param sample the matter class which this model is acting on
+         *  @param pgrid the spatial grid over which plasma parameters are given
+         *  @param pdata the spatially continuous plasma paramater data
+         *  @param accuracy the accuracy to which the model is calculated
+         *  @param printinterval the number of steps a model takes before printing
+         */
+        Model(std::string filename, Matter *& sample, PlasmaGrid_Data &pgrid, 
+            PlasmaData &pdata, float accuracy, unsigned int printinterval );
         ///@}
 
         virtual ~Model(){};
@@ -381,6 +402,13 @@ class Model{
         /** @brief Function to print to file the total impurity deposition rate
          */
         void ImpurityPrint();
+
+        /** @brief Function to alter the print interval
+		 *  @param printinterval new value for the print interval
+         */
+        void UpdatePrintInterval(unsigned int printinterval){
+		    PrintInterval = printinterval;
+		};
 
         // Functions for printing, these haven't been validated yet
         // Print the inside and the outside of the tokamak 

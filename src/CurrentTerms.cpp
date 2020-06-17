@@ -32,65 +32,54 @@ namespace Term{
         return Flux::ThermFluxSchottky(Sample,Pdata,Potential);
     }
     double SEEcharge::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential){
-        return Flux::DeltaSec(Sample,Pdata);
+        return -Flux::DeltaSec(Sample,Pdata);
     }
     double THSe::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential){
-
+        if( Potential < 0.0 ){
+		    //std::cerr << "\nWarning! CurrentTerm::THSe() not valid for Potential < 0.0!";
+			return -Flux::OMLElectronFlux(Pdata,Potential);
+	    }
         double TiTe = Pdata->IonTemp/Pdata->ElectronTemp;
         double MassRatio = Pdata->mi/Me;
-        double DebyeLength=sqrt((epsilon0*Kb*Pdata->ElectronTemp)/
-            (Pdata->ElectronDensity*pow(echarge,2)));
-        double DebyeLength_Tilde = DebyeLength/Sample->get_radius();
-        double Betai=Sample->get_radius()/(sqrt(2.0*Kb*Pdata->IonTemp/
-            (PI*Pdata->mi))/(echarge*Pdata->MagneticField.mag3()/Pdata->mi));
-        double Betae=Betai*sqrt(TiTe*MassRatio);
+        double Betae=Sample->get_radius()/(Me*sqrt(Kb*Pdata->ElectronTemp/
+            Me)/(echarge*Pdata->MagneticField.mag3()));
 
-        double a = 1.522;
-        double b = -0.9321;
-        double c = 0.3333;
-        double d = 1.641;
+        double a = 0.2293;
 
-        double TDR=erf(a*pow(DebyeLength,b)*pow(TiTe,c));
+        double Repelled_Species_Flux =
+		    Pdata->ElectronDensity*sqrt(Kb*Pdata->ElectronTemp/(2*PI*Me))
+			*(1.0+exp(-a*Betae))*exp(-Potential)/2.0;
 
-        double e = 2.82;
-        double f = 0.4772;
-        double g = 0.1315;
-        double h = 0.7364;
-        
-        double Repelled_Species_Current=(exp(-g*Betae)+e*exp(-DebyeLength_Tilde)*
-            pow((Betai/(Betai+1)),h));
-        return -Repelled_Species_Current;
+        return -Repelled_Species_Flux;
     }
     double THSi::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential){
-
+        if( Potential < 0.0 ){
+		    //std::cerr << "\nWarning! CurrentTerm::THSi not valid for Potential < 0.0!";
+			return Pdata->Z*Flux::OMLIonFlux(Sample,Pdata,Potential);
+	    }
         double TiTe = Pdata->IonTemp/Pdata->ElectronTemp;
         double MassRatio = Pdata->mi/Me;
-        double DebyeLength=sqrt((epsilon0*Kb*Pdata->ElectronTemp)/
-            (Pdata->ElectronDensity*pow(echarge,2)));
-        double DebyeLength_Tilde = DebyeLength/Sample->get_radius();
-        double Betai=Sample->get_radius()/(sqrt(2.0*Kb*Pdata->IonTemp/
-            (PI*Pdata->mi))/(echarge*Pdata->MagneticField.mag3()/Pdata->mi));
-        double Betae=Betai*sqrt(TiTe*MassRatio);
+        double Betai=Sample->get_radius()/(Pdata->mi*sqrt(Kb*Pdata->IonTemp/
+            (Pdata->mi))/(Pdata->Z*echarge*Pdata->MagneticField.mag3()));
 
-        double a = 1.522;
-        double b = -0.9321;
-        double c = 0.3333;
-        double d = 1.641;
+        double b = 1.559;
+        double c = 0.5636;
 
-        double TDR=erf(a*pow(DebyeLength,b)*pow(TiTe,c));
+        double Coeff = Pdata->IonDensity*sqrt(Kb*Pdata->IonTemp/(2*PI*Pdata->mi));
+        double Attacted_Species_Flux_T1=Coeff*(1+exp(-b*pow(Betai,c)));
+        double Attacted_Species_Flux_T2=(Coeff*Pdata->Z/TiTe)*2.0*exp(-b*pow(Betai,c));
 
-        double e = 2.82;
-        double f = 0.4772;
-        double g = 0.1315;
-        double h = 0.7364;
+        //std::cout << "\n\nTiTe = " << TiTe;
+        //std::cout << "\nMu = " << MassRatio;
+        //std::cout << "\nBetai = " << Betai;
+        //std::cout << "\nCoeff = " << Coeff;
+        //std::cout << "\nAttacted_Species_Flux_T1= " << Attacted_Species_Flux_T1;
+        //std::cout << "\nAttacted_Species_Flux_T2= " << Attacted_Species_Flux_T2;
+        //std::cout << "\nPotential= " << Potential;
+		//std::cout << "\nReturn = " << Attacted_Species_Flux_T1+Attacted_Species_Flux_T2*Potential;
+        //std::cin.get();
 
-        double Coeff = Pdata->Z*sqrt(TiTe/MassRatio);
-        double Attacted_Species_Current_T1=Coeff*(exp(-f*Betai)*(TDR+(1-TDR)*d*
-            (1.0/sqrt(TiTe)+1.0/sqrt(DebyeLength_Tilde)))+
-            e*pow((Betai/(Betai+1)),h));
-        double Attacted_Species_Current_T2=(Coeff/TiTe)*exp(-f*Betai)*TDR;
-
-        return Attacted_Species_Current_T1+Attacted_Species_Current_T2*Potential;
+        return fabs(Attacted_Species_Flux_T1+Attacted_Species_Flux_T2*Potential)/2.0;
     }
     double DTOKSi::Evaluate(const Matter* Sample, const std::shared_ptr<PlasmaData> Pdata, const double Potential){
         return Pdata->Z*Flux::DTOKSIonFlux(Sample,Pdata,Potential);

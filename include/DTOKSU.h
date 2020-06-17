@@ -190,6 +190,15 @@ class DTOKSU{
         /** @brief Reset the time as recorded by each model if necessary
          */
         void ResetModelTime(double HMTime, double FMTime, double CMTime);
+        /** @brief Update the print intervals for all the models
+         */
+        void UpdatePrintIntervals(unsigned int HMinterval, 
+		    unsigned int FMinterval, unsigned int CMinterval){
+		    HM.UpdatePrintInterval(HMinterval);
+		    FM.UpdatePrintInterval(HMinterval);
+		    CM.UpdatePrintInterval(HMinterval);
+		};
+
     
         /** @brief Prints to a file the data accumulated about impurity
          *  deposition in plasma grid

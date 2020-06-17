@@ -15,15 +15,12 @@ int VariableHeatCapacityTest(char Element, bool VaryHeatCapacity){
 
     char BoilingModel = 'y';    // Possible values 'y', 'n', 's' and 't': Corresponding to (y)es, (n)o, (s)uper 
                                                     // and (t)homson
-    char TimeStepType = 'f';    // Possible values 'o', 's' and 'f': Corresponding to (o)ne degree steps, (s)mall steps 
-                                                    // and (f)ixed steps
     std::string Name="constant";    // Describes heating model
 
     // Parameters describing the heating model
     double Radius=1e-6;       // m
     double Temp=280;        // K
-    double TimeStep=1e-9;       // s
-    double Potential = 1;
+    double Potential = 2.5;
     Matter *Sample;         // Define the sample matter type
 
     // Set to true all heating models that are wanted
@@ -32,21 +29,21 @@ int VariableHeatCapacityTest(char Element, bool VaryHeatCapacity){
     bool NewtonCooling = false;     // This model is equivalent to Electron and Ion heat flux terms
 
     // Plasma heating terms
-    bool NeutralHeatFlux = true;
-    bool SOMLIonHeatFlux = true;
-    bool SOMLNeutralRecombination = true;
-    bool SMOMLIonHeatFlux = true;
-    bool SMOMLNeutralRecombination = true;
+    bool NeutralHeatFlux = false;
+    bool SOMLIonHeatFlux = false;
+    bool SOMLNeutralRecombination = false;
+    bool SMOMLIonHeatFlux = false;
+    bool SMOMLNeutralRecombination = false;
 
     // Electron Emission terms
     bool TEE = true;
     bool SEE = true;
 
-    bool PHLElectronHeatFlux = true;
-    bool OMLElectronHeatFlux = true;
-    bool DTOKSTEE = true;
-    bool DTOKSSEE = true;
-    bool DTOKSIonHeatFlux = true;
+    bool PHLElectronHeatFlux = false;
+    bool OMLElectronHeatFlux = false;
+    bool DTOKSTEE = false;
+    bool DTOKSSEE = false;
+    bool DTOKSIonHeatFlux = false;
     bool DTOKSNeutralRecomb = true;
     bool DTOKSElectronHeatFlux = true;
     bool DUSTTIonHeatFlux = true;
@@ -55,9 +52,9 @@ int VariableHeatCapacityTest(char Element, bool VaryHeatCapacity){
     Pdata->NeutralDensity   = 1e18;     // m^-3, Neutral Density
     Pdata->IonDensity   = 1e18;     // m^-3, Ion Density
     Pdata->ElectronDensity  = 1e18; // m^-3, Electron Density
-    Pdata->NeutralTemp  = 10*1.16e4;    // K, Neutral Temperature, convert from eV
-    Pdata->IonTemp      = 10*1.16e4;    // K, Ion Temperature, convert from eV
-    Pdata->ElectronTemp = 10*1.16e4;    // K, Electron Temperature, convert from eV
+    Pdata->NeutralTemp  = 50*1.16e4;    // K, Neutral Temperature, convert from eV
+    Pdata->IonTemp      = 50*1.16e4;    // K, Ion Temperature, convert from eV
+    Pdata->ElectronTemp = 50*1.16e4;    // K, Electron Temperature, convert from eV
     Pdata->mi           = Mp;        // kg, Ion Mass
     Pdata->A            = 1.0;       // arb, Atomic Number
     Pdata->AmbientTemp = 0;
@@ -111,7 +108,7 @@ int VariableHeatCapacityTest(char Element, bool VaryHeatCapacity){
         std::cerr << "\nInvalid Option entered";
         return -1;
     }
-    threevector xinit(1.15,0.0,-1.99);// default injection right hand side
+    threevector xinit(1.0,0.0,0.0);// default injection right hand side
     threevector vinit(0.0,0.0,0.0);
     Sample->update_motion(xinit,vinit,0.0);
 

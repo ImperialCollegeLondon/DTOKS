@@ -123,10 +123,12 @@ double ForceModel::ProbeTimeStep()const{
     //!< Check if the timestep is limited by the gyration of the particle in a
     //!< magnetic field.
     double GyromotionTimeStep = 
-        Accuracy*Sample->get_velocity().mag3()*Sample->get_mass()
-        *sqrt(1-(Pdata->MagneticField.getunit()*
-        Sample->get_velocity().getunit()))
-        /(echarge*Pdata->MagneticField.mag3());
+        Accuracy*Sample->get_mass()/(echarge*Pdata->MagneticField.mag3());
+//    double GyromotionTimeStep = 
+//        Accuracy*Sample->get_velocity().mag3()*Sample->get_mass()
+//        *sqrt(1-(Pdata->MagneticField.getunit()*
+//        Sample->get_velocity().getunit()))
+//        /(echarge*Pdata->MagneticField.mag3());
 
     if( GyromotionTimeStep < timestep && GyromotionTimeStep > 0.0 ){
         std::cout << "\ntimestep limited by magnetic field (Gyromotion)\n";
@@ -208,7 +210,13 @@ void ForceModel::Force(double timestep){
     F1_Debug( "\nChangeInPosition : " << ChangeInPosition 
         << "\nChangeInVelocity : " << ChangeInVelocity << "\nAcceleration : " 
         << Acceleration << "\nTimeStep : " << TimeStep << "\n");
-    F_Debug("\t"); Print();
+    F_Debug("\t"); 
+	if( PrintSteps >= PrintInterval ){
+	    Print();
+		PrintSteps = 1;
+	}else{
+        PrintSteps ++;
+	}
     TotalTime += timestep;
 }
 
