@@ -13,13 +13,13 @@ Model::Model():
 FileName("Data/default_0.txt"),Sample(new Tungsten),
 PG_data(std::make_shared<PlasmaGrid_Data>(PlasmaGrid_DataDefaults)),
 Pdata(&PlasmaDataDefaults),Accuracy(1.0),ContinuousPlasma(true),
-TimeStep(0.0),TotalTime(0.0){
+TimeStep(0.0),TotalTime(0.0),PrintInterval(1),PrintSteps(0){
     Mo_Debug("\n\nIn Model::Model():FileName(filename),Sample(new Tungsten),"
         << "PG_data(std::make_shared<PlasmaGrid_Data>"
         << "PlasmaGrid_DataDefaults)),"
         << "Pdata(&PlasmaDataDefaults),Accuracy(1.0),ContinuousPlasma(true),"
         << "TimeStep(0.0),TotalTime(0.0))\n\n");
-    i = 0; k = 0; OldMass = 0;
+    i = 0; k = 0; OldMass = 0; 
     PlasmaDataFile.open("Data/pd.txt");
     PlasmaDataFile << "#t\ti\tk\tNn\tNe\tNi\tTi\tTe\t"
         << "Tn\tT0\tPvel\tgravity\tE\tB";
@@ -33,7 +33,8 @@ Model::Model(std::string filename, Matter *&sample, PlasmaData &pdata,
 FileName(filename),Sample(sample),
 PG_data(std::make_shared<PlasmaGrid_Data>(PlasmaGrid_DataDefaults)),
 Pdata(std::make_shared<PlasmaData>(pdata)),Accuracy(accuracy),
-ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0){
+ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0),PrintInterval(1),
+PrintSteps(0){
     Mo_Debug("\n\nIn Model::Model( Matter *&sample, PlasmaData &pdata, "
         << "float accuracy ):FileName(filename),Sample(sample),"
         << "PG_data(std::make_shared<PlasmaGrid_Data>"
@@ -55,7 +56,8 @@ Model::Model(std::string filename, Matter *&sample, PlasmaGrid_Data &pgrid,
 FileName(filename),Sample(sample),
 PG_data(std::make_shared<PlasmaGrid_Data>(pgrid)),
 Pdata(&PlasmaDataDefaults),Accuracy(accuracy),
-ContinuousPlasma(false),TimeStep(0.0),TotalTime(0.0){
+ContinuousPlasma(false),TimeStep(0.0),TotalTime(0.0),PrintInterval(1),
+PrintSteps(0){
     Mo_Debug("\n\nIn Model::Model( Matter *&sample, PlasmaGrid_Data &pgrid, "
         << "float accuracy ):FileName(filename),Sample(sample),"
         << "PG_data(std::make_shared<PlasmaGrid_Data>(pgrid)),"
@@ -80,7 +82,31 @@ Model::Model( std::string filename, Matter *&sample, PlasmaGrid_Data &pgrid,
 FileName(filename),Sample(sample),
 PG_data(std::make_shared<PlasmaGrid_Data>(pgrid)),
 Pdata(std::make_shared<PlasmaData>(pdata)),Accuracy(accuracy),
-ContinuousPlasma(false),TimeStep(0.0),TotalTime(0.0){
+ContinuousPlasma(false),TimeStep(0.0),TotalTime(0.0),PrintInterval(1),
+PrintSteps(0){
+    Mo_Debug("\n\nIn Model::Model( Matter *&sample, PlasmaGrid_Data &pgrid, "
+        << "PlasmaData &pdata, float accuracy ):"
+        << "FileName(filename),Sample(sample), "
+        << "PG_data(std::make_shared<PlasmaGrid_Data>(pgrid)),"
+        << "Pdata(std::make_shared<PlasmaData>(pdata)),Accuracy(accuracy),"
+        << "ContinuousPlasma(false),TimeStep(0.0),TotalTime(0.0))\n\n");
+    assert(Accuracy > 0);
+    i = 0; k = 0; OldMass = 0;
+    PlasmaDataFile.open("Data/pd.txt");
+    PlasmaDataFile << "#t\ti\tk\tNn\tNe\tNi\tTi\tTe\t"
+        << "Tn\tT0\tPvel\tgravity\tE\tB";
+    PlasmaDataFile.close();
+    PlasmaDataFile.clear();
+    update_plasmadata();
+}
+
+Model::Model( std::string filename, Matter *&sample, PlasmaGrid_Data &pgrid, 
+    PlasmaData &pdata, float accuracy, unsigned int printinterval):
+FileName(filename),Sample(sample),
+PG_data(std::make_shared<PlasmaGrid_Data>(pgrid)),
+Pdata(std::make_shared<PlasmaData>(pdata)),Accuracy(accuracy),
+ContinuousPlasma(false),TimeStep(0.0),TotalTime(0.0),
+PrintInterval(printinterval),PrintSteps(0){
     Mo_Debug("\n\nIn Model::Model( Matter *&sample, PlasmaGrid_Data &pgrid, "
         << "PlasmaData &pdata, float accuracy ):"
         << "FileName(filename),Sample(sample), "
@@ -158,15 +184,15 @@ const bool Model::update_plasmadata(){
     //!< If not, particle has escaped simulation domain
     if( !InGrid ) return InGrid;
     if( ContinuousPlasma ) return InGrid;
-    update_fields(i,k); //!< Update the fields
-    Pdata->NeutralDensity   = PG_data->na2[i][k];  
-    Pdata->ElectronDensity  = PG_data->na1[i][k];  
-    Pdata->IonDensity       = PG_data->na0[i][k];
-    Pdata->IonTemp          = PG_data->Ti[i][k];
-    Pdata->ElectronTemp     = PG_data->Te[i][k];
-    Pdata->NeutralTemp      = PG_data->Tn[i][k];
-    Pdata->AmbientTemp      = PG_data->Ta[i][k];
-    //interpolatepdata(i,k);
+    //update_fields(i,k); //!< Update the fields
+    //Pdata->NeutralDensity   = PG_data->na2[i][k];  
+    //Pdata->ElectronDensity  = PG_data->na1[i][k];  
+    //Pdata->IonDensity       = PG_data->na0[i][k];
+    //Pdata->IonTemp          = PG_data->Ti[i][k];
+    //Pdata->ElectronTemp     = PG_data->Te[i][k];
+    //Pdata->NeutralTemp      = PG_data->Tn[i][k];
+    //Pdata->AmbientTemp      = PG_data->Ta[i][k];
+    interpolatepdata(i,k);
     return true;
 }
 

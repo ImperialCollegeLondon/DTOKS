@@ -322,8 +322,13 @@ void HeatingModel::Heat(double timestep){
     if( !Sample->is_gas() )
         Sample->update();
 
-    Print();  //!< Print data to file
     H_Debug("\t"); 
+	if( PrintSteps >= PrintInterval ){
+	    Print();
+		PrintSteps = 1;
+	}else{
+        PrintSteps ++;
+	}
 
     TotalTime += timestep;
 }

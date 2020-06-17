@@ -299,6 +299,10 @@ std::string Config_Filename){
     std::array<char,CM> ConstModels;
     std::array<float,DTOKSU::MN> AccuracyLevels;
 
+	unsigned int ChargeModelInterval(1);
+	unsigned int HeatModelInterval(1);
+	unsigned int ForceModelInterval(1);
+
     config4cpp::StringVector CfgStringVec;
 
 
@@ -440,8 +444,7 @@ std::string Config_Filename){
                 cfg->lookupBoolean("chargemodels","SEE"), 
                 cfg->lookupBoolean("chargemodels","CW"),
                 cfg->lookupBoolean("chargemodels","MOMLWEM")
-            };
-        
+            }; 
         AccuracyLevels = 
             {
                 cfg->lookupFloat("accuracylevels", "charge"), 
@@ -449,6 +452,9 @@ std::string Config_Filename){
                 cfg->lookupFloat("accuracylevels", "force")
                 
             };
+        ChargeModelInterval = cfg->lookupInt("printintervals", "charge");
+        HeatModelInterval = cfg->lookupInt("printintervals", "heat");
+        ForceModelInterval = cfg->lookupInt("printintervals", "force");
     } catch(const config4cpp::ConfigurationException & ex) {
         std::cerr << ex.c_str() << std::endl;
         cfg->destroy();
@@ -667,6 +673,12 @@ std::string Config_Filename){
             || arg == "-op"  ) input_function(argc,argv,i,ss0,DataFilePrefix);
         else if( arg == "--MetaData"    
             || arg == "-om"  ) input_function(argc,argv,i,ss0,MetaDataFilename);
+        else if( arg == "--ChargeModelInt"    
+            || arg == "-cmi"  ) input_function(argc,argv,i,ss0,ChargeModelInterval);
+        else if( arg == "--ForceModelInt"    
+            || arg == "-fmi"  ) input_function(argc,argv,i,ss0,ForceModelInterval);
+        else if( arg == "--HeatModelInt"    
+            || arg == "-hmi"  ) input_function(argc,argv,i,ss0,HeatModelInterval);
         else{
             sources.push_back(argv[i]);
         }
@@ -767,13 +779,13 @@ std::string Config_Filename){
     //    zvel = VelocityMag*std::sin(Angle); // LOWER INNER DIVERTOR
 
 // DISTRIBUTIONS FOR DIII-D
-        //std::uniform_real_distribution<double> Positions(0.0,0.4); // Probe Head
-        //double DistanceAlongDivertor = Positions(randnumbers[omp_get_thread_num()]);
-        //rpos = 1.1+DistanceAlongDivertor;
-        //zpos = -1.24;
-		rpos = rposi;
-		thetapos = thetaposi;
-		zpos = zposi;
+        std::uniform_real_distribution<double> Positions(0.0,0.4); // Probe Head
+        double DistanceAlongDivertor = Positions(randnumbers[omp_get_thread_num()]);
+        rpos = 1.1+DistanceAlongDivertor;
+        zpos = -1.24;
+		//rpos = rposi;
+		//thetapos = thetaposi;
+		//zpos = zposi;
 
         
         // Change filenames
@@ -868,6 +880,12 @@ std::string Config_Filename){
             SimLocal = new DTOKSU(AccuracyLevels, SampleLocal, PdataLocal, HeatTerms, ForceTerms,
                 CurrentTerms);
         }
+		SimLocal->UpdatePrintIntervals(ChargeModelInterval,HeatModelInterval,ForceModelInterval);
+		MetaDataFile << "\n\n#PRINT INTERVALS\n"
+		    << "Charging:\t" << ChargeModelInterval
+		    << "\nHeating:\t" << HeatModelInterval
+		    << "\nForcing:\t" << ForceModelInterval << "\n";
+
         MetaDataFile <<"\n\n##MODEL SWITHES\n#HEATING MODELS\n"
             << "RadiativeCooling:\t" << HeatModels[0] 
             << "\nEvaporativeCooling:\t" << HeatModels[1]
@@ -901,8 +919,8 @@ std::string Config_Filename){
             << "\n\n#CHARGING MODELS\n"
             << "OMLe:\t\t\t" << ChargeModels[0]
             << "\nPHLe:\t\t\t" << ChargeModels[1]
-            << "\nDTOKSe:\t\t\t" << ChargeModels[2]
-            << "\nTHSe:\t\t\t" << ChargeModels[3]
+            << "\nTHSe:\t\t\t" << ChargeModels[2]
+            << "\nDTOKSe:\t\t\t" << ChargeModels[3]
             << "\nOMLi:\t\t\t" << ChargeModels[4]
             << "\nMOMLi:\t\t\t" << ChargeModels[5]
             << "\nSOMLi:\t\t\t" << ChargeModels[6]
@@ -1116,22 +1134,21 @@ int DTOKSU_Manager::read_data(std::string plasma_dirname){
         double converteVtoK = 11604.5250061657;
 
         for(unsigned int i=0; i<=Pgrid.gridx-1; i++){
-            for(unsigned int k=0; k<=Pgrid.gridz-1; k++){
-
+            for(int k=Pgrid.gridz-1; k>=0; k=k-1){
 
                 //!< This is the read-in format without neutrals
-              scalars >> Pgrid.x[i][k] >> Pgrid.z[i][k] >> Pgrid.Te[i][k]
+                scalars >> Pgrid.x[i][k] >> Pgrid.z[i][k] >> Pgrid.Te[i][k]
                     >> Pgrid.Ti[i][k] >> Pgrid.na0[i][k] >> Pgrid.na1[i][k] 
                     >> Pgrid.po[i][k] >> Pgrid.ua0[i][k] >> Pgrid.ua1[i][k];
                 //!< This is the read-in format with neutrals
-//                scalars >> Pgrid.x[i][k] >> Pgrid.z[i][k] >> Pgrid.Ti[i][k]
-//                    >> Pgrid.Te[i][k] >> Pgrid.Tn[i][k] >> Pgrid.na0[i][k] 
-//                    >> Pgrid.na1[i][k] >> Pgrid.na2[i][k] >> Pgrid.po[i][k] 
-//                    >> Pgrid.ua0[i][k] >> Pgrid.ua1[i][k] >> dummy_dub;
+//            scalars >> Pgrid.x[i][k] >> Pgrid.z[i][k] >> Pgrid.Ti[i][k]
+//                >> Pgrid.Te[i][k] >> Pgrid.Tn[i][k] >> Pgrid.na0[i][k] 
+//                >> Pgrid.na1[i][k] >> Pgrid.na2[i][k] >> Pgrid.po[i][k] 
+//                >> Pgrid.ua0[i][k] >> Pgrid.ua1[i][k] >> dummy_dub;
 //                std::cout << "\n" << i << "\t" << k << "\t" << Pgrid.x[i][k] << "\t" << Pgrid.z[i][k]
 //                    << "\t" << Pgrid.Te[i][k] << "\t" << Pgrid.Ti[i][k] << "\t" << Pgrid.na0[i][k] 
-//					<< "\t" << Pgrid.na1[i][k] << "\t" << Pgrid.po[i][k] << "\t" << Pgrid.ua0[i][k] 
-//					<< "\t" << Pgrid.ua1[i][k];
+//				    << "\t" << Pgrid.na1[i][k] << "\t" << Pgrid.po[i][k] << "\t" << Pgrid.ua0[i][k] 
+//				    << "\t" << Pgrid.ua1[i][k];
 
                 threevectors >> dummy_dub >> dummy_dub >> Pgrid.bx[i][k] >>
                     Pgrid.bz[i][k] >> Pgrid.by[i][k];

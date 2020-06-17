@@ -169,7 +169,13 @@ void ChargingModel::Charge(double timestep){
     //!< Increment total time recorded by the model
     TotalTime += timestep;
 
-    C_Debug("\t"); Print();
+    C_Debug("\t"); 
+	if( PrintSteps >= PrintInterval ){
+	    Print();
+		PrintSteps = 1;
+	}else{
+        PrintSteps ++;
+	}
 }
 
 void ChargingModel::Charge(){
