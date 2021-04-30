@@ -229,7 +229,7 @@ threevector HybridIonDrag::Evaluate(const Matter* Sample,
     double IonThermalVelocity = sqrt(Kb*Pdata->IonTemp/Pdata->mi);
     //!< Normalised ion flow velocity
     double u = (Pdata->PlasmaVel-velocity).mag3()*(1.0/IonThermalVelocity);
-    double TauInv = Pdata->ElectronTemp/Pdata->IonTemp;
+    double Tau = Pdata->ElectronTemp/Pdata->IonTemp;
 
     if( u == 0.0 ){
         threevector Zero(0.0,0.0,0.0);
@@ -254,11 +254,11 @@ threevector HybridIonDrag::Evaluate(const Matter* Sample,
     double Coefficient = sqrt(2*PI)*Sample->get_radius()*
         Sample->get_radius()*Pdata->IonDensity*Pdata->mi*
         IonThermalVelocity*IonThermalVelocity;
-    double Collection = (1.0/u)*exp(-u*u/2.0)*(1.0+2.0*TauInv*z+u*u-4*z*z*TauInv*TauInv*
+    double Collection = (1.0/u)*exp(-u*u/2.0)*(1.0+2.0*Tau*z+u*u-4*z*z*Tau*Tau*
         CoulombLogarithm); 
     double Scattering = sqrt(PI/2.0)*erf(u/sqrt(2.0))*
-        (1.0+u*u+(1.0-(1.0/(u*u)))*(1.0+2.0*TauInv*z)+
-        4.0*z*z*TauInv*TauInv*CoulombLogarithm/(u*u));
+        (1.0+u*u+(1.0-(1.0/(u*u)))*(1.0+2.0*Tau*z)+
+        4.0*z*z*Tau*Tau*CoulombLogarithm/(u*u));
 
     //!< Equation (18)
     threevector HybridDrag = Coefficient*(Collection+Scattering)*(
@@ -267,7 +267,7 @@ threevector HybridIonDrag::Evaluate(const Matter* Sample,
 
     //std::cout << "\n\nni = " << Pdata->IonDensity;
     //std::cout << "\nTi = " << Pdata->IonTemp;
-    //std::cout << "\nTauInv = " << TauInv;
+    //std::cout << "\nTau = " << Tau;
     //std::cout << "\nz = " << z;
     //std::cout << "\nCoulombLogarithm = " << CoulombLogarithm;
     //std::cout << "\nmi = " << Pdata->mi;
@@ -298,7 +298,7 @@ threevector HybridIonDrag::Evaluate(const Matter* Sample,
 threevector LloydIonDrag::Evaluate(const Matter* Sample, 
         const std::shared_ptr<PlasmaData> Pdata, 
         const threevector velocity){
-    F_Debug("\tIn struct LloydIonDrag::Evaluate(const Matter* Sample, "
+    F_Debug("\tIn struct HybridIonDrag::Evaluate(const Matter* Sample, "
         << "const std::shared_ptr<PlasmaData> Pdata, "
         << "const threevector velocity)\n\n");
 
