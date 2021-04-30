@@ -58,9 +58,9 @@ class DTOKSU_Manager{
         PlasmaData Pdata;
         //!< FORCE MODEL NUMBER, the number of charge models
         const static unsigned int FMN = 10;
-        // HEATING MODEL NUMBER, the number of charge models
+        //!< HEATING MODEL NUMBER, the number of charge models
         const static unsigned int HMN = 18;
-        // CHARGE MODEL NUMBER, the number of charge models
+        //!< CHARGE MODEL NUMBER, the number of charge models
         const static unsigned int CMN = 15;
 
         /** @brief Defines the status of configuration
