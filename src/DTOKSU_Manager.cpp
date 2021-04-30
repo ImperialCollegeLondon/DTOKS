@@ -307,9 +307,6 @@ std::string Config_Filename){
 
 
     // ------------------- PROCESS CONFIGURATION FILE ------------------- //
-//  threevector PlasmaVelocity(501.33, 7268.5, 914.947); 
-//  threevector Efield(-13.673, 0, -27.925);
-//  threevector Bfield(0.0226868, 0.328923, 0.0414043);
     config4cpp::Configuration *  cfg = config4cpp::Configuration::create();
     std::cout << "\n* Reading configuration file: " << Config_Filename << " *";
     try {
@@ -462,23 +459,7 @@ std::string Config_Filename){
         return Config_Status;
     }
 
-    //!< Tell user if the simulation is self-consistent.
-    /*if( HeatModels[4] && HeatModels[5] && ForceModels[3] && ChargeModels[3] ){
-        std::cout << "\n* SOML Self-Consistent Simulation! *";
-    }else if( HeatModels[6] && HeatModels[7] && ForceModels[4] 
-        && ChargeModels[4] ){
-        std::cout << "\n* SMOML Self-Consistent Simulation! *";
-    }else if( HeatModels[8] && HeatModels[9] && HeatModels[10] 
-        && ChargeModels[8] ){
-        std::cout << "\n* PHL Self-Consistent Simulation! *";
-    }else if( HeatModels[12] && HeatModels[13] && HeatModels[14] 
-        && HeatModels[15] && HeatModels[16] && ForceModels[5] 
-        && (ChargeModels[7] || ChargeModels[8]) ){
-        std::cout << "\n* DTOKS Simulation! Non-self Consistent fluxes! *";
-    }else{
-        std::cout << "\n* Non-self Consistent fluxes! *";
-    }*/
-
+	// Select charging models correctly
     if( ChargeModels[0] )      CurrentTerms.push_back(new Term::OMLe());
     else if( ChargeModels[1] ) CurrentTerms.push_back(new Term::PHLe());
     else if( ChargeModels[2] ) CurrentTerms.push_back(new Term::THSe());
@@ -514,6 +495,7 @@ std::string Config_Filename){
         return Config_Status;
     }
 
+	// Select force models correctly
     if( ForceModels[0] ) ForceTerms.push_back(new Term::Gravity());
     if( ForceModels[1] ) ForceTerms.push_back(new Term::LorentzForce());
     if( ForceModels[2] ) ForceTerms.push_back(new Term::SOMLIonDrag());
@@ -525,6 +507,7 @@ std::string Config_Filename){
     if( ForceModels[8] ) ForceTerms.push_back(new Term::NeutralDrag());
     if( ForceModels[9] ) ForceTerms.push_back(new Term::RocketForce());
     
+	// Select heat models correctly
     if( HeatModels[0] )  HeatTerms.push_back(new Term::EmissivityModel());
     if( HeatModels[1] )  HeatTerms.push_back(new Term::EvaporationModel());
     if( HeatModels[2] )  HeatTerms.push_back(new Term::NewtonCooling());
@@ -543,16 +526,18 @@ std::string Config_Filename){
     else if( HeatModels[15] ) HeatTerms.push_back(new Term::DTOKSSEE());
     if( HeatModels[16] )  HeatTerms.push_back(new Term::TEE());
     else if( HeatModels[17] ) HeatTerms.push_back(new Term::DTOKSTEE());
-   
+  
+	// Check accuracy levels are in range
     for( unsigned int i(0); i < DTOKSU::MN; i ++ )
         assert(AccuracyLevels[i]<=1.0);
 
     cfg->destroy();
+
+	// Check plasma data overflows/underflows
     if( !check_pdata_range() ){
         Config_Status = 3;
         return Config_Status;
     }
-
     std::cout << "\n* Configuration file read successfully! *";
     Pause();
 
@@ -561,11 +546,21 @@ std::string Config_Filename){
         Pgrid.mi = Mp;
         Pdata.mi = Mp;
         Pdata.A = 1.0;
-        if( Pdata.Z > 1.0 ){
-            std::cout << "\nPdata.Z < 1.0 for Hydrogen! Assuming Pdata.Z = 1.0";
+        if( Pdata.Z != 1.0 ){
+            std::cout << "\nPdata.Z != 1.0 for Hydrogen! Assuming Pdata.Z = 1.0";
         }
         Pdata.Z = 1.0;
-    }else{
+	//!< For Deuterium plasma, we use Deuterium ion mass with mean ionisation Z=1.0
+    }else if( IonSpecies == 'd' ){
+		std::cout << "\nWarning! Assuming singly ionised deuterium, Z=1.0.";
+		Pgrid.mi = 2.0*Mp;
+		Pdata.mi = 2.0*Mp;
+		Pdata.A = 2.0;
+		if( Pdata.Z != 1.0 ){
+            std::cout << "\nPdata.Z != 1.0 for Hydrogen! Assuming Pdata.Z = 1.0";
+		}
+		Pdata.Z = 1.0;
+	}else{
         std::cout << "Invalid IonSpecies, IonSpecies = " << IonSpecies << "!\n";
         return 1;
     }
@@ -580,7 +575,7 @@ std::string Config_Filename){
             << Pgrid.device;
         std::cout << "\n\t* xSpacing:\t" << Pgrid.dlx << "\n\t* zSpacing:\t" 
             << Pgrid.dlz;
-        //!< Failed to configure plasma data
+        //!< Attempt to configure plasma data
         if( configure_plasmagrid(PlasmaData_dir) != 0 ){ 
             std::cerr << "\nFailed to configure plasma data!";
             Config_Status = 3;
@@ -588,9 +583,9 @@ std::string Config_Filename){
         }
         std::cout << "\n* PlasmaGrid_Data Structure created successfully! *";
         if( WallData_dir != ""){
-            //!< Failed to configure plasma data
+            //!< Attempt to configure plasma data
             if( configure_boundary(WallData_dir,"WallData.txt",WallBound) != 0 )
-            { 
+			{ 
                 std::cerr << "\nFailed to configure plasma data!";
                 Config_Status = 6;
                 return Config_Status;
@@ -710,9 +705,9 @@ std::string Config_Filename){
     #pragma omp parallel for num_threads(core_numbers) private(size,rvel,thetavel,zvel,rpos,thetapos,zpos)
     for( int i = 0; i < imax; i ++ ){
 //        std::cout << "\n" << omp_get_thread_num() << "/" << omp_get_num_threads();
-
         int Config_Status_Local(0);
-        if( SizeDistributionType == "lognormal" ){
+
+		if( SizeDistributionType == "lognormal" ){
             std::lognormal_distribution<double> size_distribution(log(SizeParOne),SizeParTwo);
             size = size_distribution(randnumbers[omp_get_thread_num()]);
         }else if( SizeDistributionType == "uniform" ){
@@ -738,10 +733,11 @@ std::string Config_Filename){
             std::uniform_real_distribution<double> velocity_distribution(VelParOne,VelParTwo);
             VelocityMag = velocity_distribution(randnumbers[omp_get_thread_num()]);
         }else if( VelDistributionType == "normallognormal" ){
-            std::normal_distribution<double> Gaussdist(-21.3326,15.5394);
-            std::lognormal_distribution<double> Lognormaldist(4.7598,0.538236);
-            rvel = Gaussdist(randnumbers[omp_get_thread_num()]);
-            thetavel = -Lognormaldist(randnumbers[omp_get_thread_num()]);
+//            std::normal_distribution<double> Gaussdist(-21.3326,15.5394);
+            std::normal_distribution<double> Gaussdist(20.0,15.0);
+            std::lognormal_distribution<double> Lognormaldist(5,0.5);
+            VelocityMag = Gaussdist(randnumbers[omp_get_thread_num()]);
+            thetavel = Lognormaldist(randnumbers[omp_get_thread_num()]);
         }else if( VelDistributionType == "none" ){
 		    rvel=rveli;
 		    thetavel=thetaveli;
@@ -751,19 +747,21 @@ std::string Config_Filename){
         }
 
 // DISTRIBUTIONS FOR EAST
+
+	// ./bin/dtoksu  -c Config_Files/DTOKSU_Config_EAST.cfg -i 20 -j 6 -se 1 -vd "normal" -sd "exponential" -spo 0.0000005 -spt 2.5 -t 300 -m "G" -op "Data/EAST_"  -om "Data/EAST_1.txt" 
     //    std::uniform_real_distribution<double> Velocity(0,20);
     //    std::uniform_real_distribution<double> Positions(0,0.1); // UPPER OUTER DIVERTOR
-    //    std::uniform_real_distribution<double> Positions(0,1.0); // UPPER INNER DIVERTOR
+        std::uniform_real_distribution<double> Positions(0,1.0); // UPPER INNER DIVERTOR
     //    std::uniform_real_distribution<double> Positions(0,0.25); // LOWER OUTER DIVERTOR
     //    std::uniform_real_distribution<double> Positions(0,0.03); // LOWER INNER DIVERTOR
     
-    //    double Angle = custom_distribution(randnumbers[omp_get_thread_num()]);
-    //    double DistanceAlongDivertor = Positions(randnumbers[omp_get_thread_num()]);
+        double Angle = custom_distribution(randnumbers[omp_get_thread_num()]);
+        double DistanceAlongDivertor = Positions(randnumbers[omp_get_thread_num()]);
     
     //    rpos = 1.70705+DistanceAlongDivertor*0.242535625; // UPPER OUTER DIVERTOR
     //    zpos = 1.15-DistanceAlongDivertor*0.9701425001;   // UPPER OUTER DIVERTOR
-    //    rpos = 1.4440497335701599;                              // UPPER INNER DIVERTOR
-    //    zpos = 0.873889876-DistanceAlongDivertor*0.04618117229; // UPPER INNER DIVERTOR
+        rpos = 1.4440497335701599;                              // UPPER INNER DIVERTOR
+        zpos = 0.873889876-DistanceAlongDivertor*0.04618117229; // UPPER INNER DIVERTOR
     //    rpos = 1.76377+DistanceAlongDivertor*0.2594386678;  // LOWER OUTER DIVERTOR
     //    zpos = -1.15+DistanceAlongDivertor*0.9657595858; // LOWER OUTER DIVERTOR
     //    rpos = 1.423;  // LOWER INNER DIVERTOR
@@ -771,18 +769,18 @@ std::string Config_Filename){
     
     //    rvel = -VelocityMag*std::cos(Angle-atan(1.0/4.0)); // UPPER OUTER DIVERTOR
     //    zvel = VelocityMag*std::sin(Angle-atan(1.0/4.0));  // UPPER OUTER DIVERTOR
-    //    rvel = VelocityMag*std::cos(Angle); // UPPER INNER DIVERTOR
-    //    zvel = VelocityMag*std::sin(Angle); // UPPER INNER DIVERTOR
+        rvel = VelocityMag*std::cos(Angle); // UPPER INNER DIVERTOR
+        zvel = VelocityMag*std::sin(Angle); // UPPER INNER DIVERTOR
     //    rvel = -VelocityMag*std::cos(Angle+atan(1.0/4.0)); // LOWER OUTER DIVERTOR
     //    zvel = VelocityMag*std::sin(Angle+atan(1.0/4.0)); // LOWER OUTER DIVERTOR
     //    rvel = VelocityMag*std::cos(Angle); // LOWER INNER DIVERTOR
     //    zvel = VelocityMag*std::sin(Angle); // LOWER INNER DIVERTOR
 
 // DISTRIBUTIONS FOR DIII-D
-        std::uniform_real_distribution<double> Positions(0.0,0.4); // Probe Head
-        double DistanceAlongDivertor = Positions(randnumbers[omp_get_thread_num()]);
-        rpos = 1.1+DistanceAlongDivertor;
-        zpos = -1.24;
+//        std::uniform_real_distribution<double> Positions(0.0,0.4); // Probe Head
+//        double DistanceAlongDivertor = Positions(randnumbers[omp_get_thread_num()]);
+        //rpos = 1.1+DistanceAlongDivertor;
+        //zpos = -1.24;
 		//rpos = rposi;
 		//thetapos = thetaposi;
 		//zpos = zposi;
@@ -1023,19 +1021,18 @@ int DTOKSU_Manager::configure_plasmagrid(std::string plasma_dirname){
         Pgrid.gridzmax = 1.5;
         std::cout << "\n\n\tCalculation for EAST" << std::endl;
     }else if(Pgrid.device=='t'){
-        Pgrid.gridx = 120;
-        Pgrid.gridz = 280;
+        Pgrid.gridx = 201;
+        Pgrid.gridz = 201;
         Pgrid.gridtheta=0;
-        Pgrid.gridxmin = 0.2;
-        Pgrid.gridzmin = -2.0;
-        Pgrid.gridxmax = 1.4;
-        Pgrid.gridzmax = 0.8;
+        Pgrid.gridxmin = 1.0;
+        Pgrid.gridzmin = -1.0;
+        Pgrid.gridxmax = 3.0;
+        Pgrid.gridzmax = 1.0;
         std::cout << "\n\n\tCalculation for TEST plasma" << std::endl;
     }else{ 
         std::cout << "Invalid tokamak" << std::endl;
     }
 
-    //impurity.open("output///impurity///impurity.vtk");
     int readstatus(-1);
     try{ //!< Read data
         readstatus = read_data(plasma_dirname);
@@ -1134,7 +1131,7 @@ int DTOKSU_Manager::read_data(std::string plasma_dirname){
         double converteVtoK = 11604.5250061657;
 
         for(unsigned int i=0; i<=Pgrid.gridx-1; i++){
-            for(int k=Pgrid.gridz-1; k>=0; k=k-1){
+            for(unsigned int k=0; k<=Pgrid.gridz-1; k++){
 
                 //!< This is the read-in format without neutrals
                 scalars >> Pgrid.x[i][k] >> Pgrid.z[i][k] >> Pgrid.Te[i][k]
