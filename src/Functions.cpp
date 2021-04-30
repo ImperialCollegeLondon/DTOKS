@@ -236,8 +236,9 @@ double ionback(double E, char isotope, char material, int flag)
     }
     return R;
 }
-// Scaling of particle reflection coefficients, Thomas et al. (1991)
-// https://ac.els-cdn.com/0168583X92952986/1-s2.0-0168583X92952986-main.pdf?_tid=0681b324-e2bf-4202-bda3-b80a891903d6&acdnat=1525860063_de8cb49792721d431e72a2c896c33bc7
+// E.W. Thomas, R.K. Janev, and J. Smith, Nucl. Inst. Methods Phys. Res. B 69, 427 (1992).
+// Scaling of particle reflection coefficients
+// DOI: 10.1016/0168-583X(92)95298-6 
 double backscatter(double Te, double Ti, double mi, double Vion, char material, 
                    double &RE, double &RN)
 {
