@@ -304,15 +304,18 @@ void HeatingModel::Heat(double timestep){
     H1_Debug( "\tTotalEnergy = " << TotalEnergy << "kJ\n");
     Sample->update_temperature(TotalEnergy);  //!< Update Temperature
 
+    double MassLost = 0;
     //!< Account for evaporative mass loss, if model is turned on, if it's a 
     //!< liquid and not boiling!
     for(auto iter = HeatTerms.begin(); iter != HeatTerms.end(); ++iter) {
         if( (*iter)->PrintName() == "EvaporationModel" )
             if( Sample->is_liquid()
                 && (Sample->get_temperature() != Sample->get_boilingtemp()) )
-                Sample->update_mass( 
-                    (timestep*Flux::EvaporationFlux(Sample,Pdata,Sample->get_temperature())*
-                    Sample->get_atomicmass())/AvNo );
+				MassLost = (timestep*Flux::EvaporationFlux(Sample,Pdata,Sample->get_temperature())
+				    *Sample->get_atomicmass())/AvNo;
+                Sample->update_mass( MassLost );
+				// Update Mass here
+				Record_MassLoss(MassLost,false);
     }
 
     H1_Debug("\n\t\tMass Loss = " 

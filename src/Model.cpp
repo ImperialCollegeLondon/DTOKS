@@ -19,7 +19,7 @@ TimeStep(0.0),TotalTime(0.0),PrintInterval(1),PrintSteps(0){
         << "PlasmaGrid_DataDefaults)),"
         << "Pdata(&PlasmaDataDefaults),Accuracy(1.0),ContinuousPlasma(true),"
         << "TimeStep(0.0),TotalTime(0.0))\n\n");
-    i = 0; k = 0; OldMass = 0; 
+    i = 0; k = 0; 
     PlasmaDataFile.open("Data/pd.txt");
     PlasmaDataFile << "#t\ti\tk\tNn\tNe\tNi\tTi\tTe\t"
         << "Tn\tT0\tPvel\tgravity\tE\tB";
@@ -42,7 +42,7 @@ PrintSteps(0){
         << "Pdata(std::make_shared<PlasmaData>(pdata)),Accuracy(accuracy),"
         << "ContinuousPlasma(true),TimeStep(0.0),TotalTime(0.0))\n\n");
     assert(Accuracy > 0);
-    i = 0; k = 0; OldMass = 0;
+    i = 0; k = 0; 
     PlasmaDataFile.open("Data/pd.txt");
     PlasmaDataFile << "#t\ti\tk\tNn\tNe\tNi\tTi\tTe\t"
         << "Tn\tT0\tPvel\tgravity\tE\tB";
@@ -64,7 +64,7 @@ PrintSteps(0){
         << "Pdata(&PlasmaDataDefaults),Accuracy(accuracy),"
         << "ContinuousPlasma(false), TimeStep(0.0),TotalTime(0.0))\n\n");
     assert(Accuracy > 0);
-    i = 0; k = 0; OldMass = 0;
+    i = 0; k = 0; 
     PlasmaDataFile.open("Data/pd.txt");
     PlasmaDataFile << "#t\ti\tk\tNn\tNe\tNi\tTi\tTe\t"
         << "Tn\tT0\tPvel\tgravity\tE\tB";
@@ -91,7 +91,7 @@ PrintSteps(0){
         << "Pdata(std::make_shared<PlasmaData>(pdata)),Accuracy(accuracy),"
         << "ContinuousPlasma(false),TimeStep(0.0),TotalTime(0.0))\n\n");
     assert(Accuracy > 0);
-    i = 0; k = 0; OldMass = 0;
+    i = 0; k = 0; 
     PlasmaDataFile.open("Data/pd.txt");
     PlasmaDataFile << "#t\ti\tk\tNn\tNe\tNi\tTi\tTe\t"
         << "Tn\tT0\tPvel\tgravity\tE\tB";
@@ -114,7 +114,7 @@ PrintInterval(printinterval),PrintSteps(0){
         << "Pdata(std::make_shared<PlasmaData>(pdata)),Accuracy(accuracy),"
         << "ContinuousPlasma(false),TimeStep(0.0),TotalTime(0.0))\n\n");
     assert(Accuracy > 0);
-    i = 0; k = 0; OldMass = 0;
+    i = 0; k = 0; 
     PlasmaDataFile.open("Data/pd.txt");
     PlasmaDataFile << "#t\ti\tk\tNn\tNe\tNi\tTi\tTe\t"
         << "Tn\tT0\tPvel\tgravity\tE\tB";
@@ -422,16 +422,15 @@ const double Model::NeutralFlux()const{
     return Pdata->NeutralDensity*sqrt(Kb*Pdata->NeutralTemp/(2*PI*Pdata->mi));
 }
 
-void Model::Record_MassLoss(bool Termination){
-    H_Debug("\tIn Model::Record_MassLoss(bool Termination)\n\n");
+void Model::Record_MassLoss(double MassLost, bool Termination){
+    H_Debug("\tIn Model::Record_MassLoss(double MassLost, bool Termination)\n\n");
     if( !ContinuousPlasma ){
     	if( Termination ){
-    	    PG_data->dm[i][k]=Sample->get_mass()-OldMass;
-    	}else{
     	    PG_data->dm[i][k]=Sample->get_mass();
+    	}else{
+    	    PG_data->dm[i][k]+=MassLost;
     	}
     }
-    OldMass=Sample->get_mass();
 }
 
 void Model::ImpurityPrint(){

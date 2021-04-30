@@ -32,7 +32,7 @@ CM("Data/default_cm_0.txt",acclvls[0],CurrentTerms,sample,pdata){
     MaxTime = 0.5;
     TotalTime = 0;
     ReflectedLastStep = false;
-    create_file("Data/df.txt");
+    //create_file("Data/df_0.txt");
 }
 
 DTOKSU::DTOKSU( std::array<float,MN> acclvls, Matter *& sample,
@@ -58,7 +58,7 @@ CM("Data/default_cm_0.txt",acclvls[0],CurrentTerms,sample,pgrid){
     MaxTime = 0.5;
     TotalTime = 0;
     ReflectedLastStep = false;
-    create_file("Data/df.txt");
+    //create_file("Data/df_0.txt");
 }
 
 DTOKSU::DTOKSU( std::array<float,MN> acclvls, Matter *& sample, 
@@ -84,7 +84,7 @@ CM("Data/default_cm_0.txt",acclvls[0],CurrentTerms,sample,pgrid,pdata){
     MaxTime = 0.5;
     TotalTime = 0;
     ReflectedLastStep = false;
-    create_file("Data/df.txt");
+    //create_file("Data/df_0.txt");
 }
 
 DTOKSU::DTOKSU( std::array<float,MN> acclvls, Matter *& sample, 
@@ -112,13 +112,14 @@ CM("Data/default_cm_0.txt",acclvls[0],CurrentTerms,sample,pgrid,pdata){
     MaxTime = 0.5;
     TotalTime = 0;
     ReflectedLastStep = false;
-    create_file("Data/df.txt");
+    //create_file("Data/df_0.txt");
 }
 
 void DTOKSU::create_file( std::string filename ){
     D_Debug("\n\nIn DTOKSU::create_file(std::string filename)\n\n");
     MyFile.open(filename);
-    MyFile << "TotalTime\n";
+	MyFile << "EndState\tSim Time\tCharge Time\tTd (K)\tx y z\tvx vy vz"
+		<< "\tLiquid\tGas\tSplit\n";
 }
 
 void DTOKSU::OpenFiles( std::string filename, unsigned int i ){
@@ -148,8 +149,11 @@ void DTOKSU::ResetModelTime(double HMTime, double FMTime, double CMTime){
 
 void DTOKSU::print(){
     D_Debug("\tIn DTOKSU::print()\n\n");
-    MyFile  << TotalTime;
-    MyFile << "\n";
+    MyFile << TotalTime << "\t" << CM.get_totaltime() << "\t" 
+		<< Sample->get_temperature() << "\t" << Sample->get_position() << "\t"
+		<< Sample->get_velocity() << "\t" 
+		<< Sample->is_liquid() << "\t" << Sample->is_gas() << "\t" 
+		<< Sample->is_split() <<"\n";
 }
 
 void DTOKSU::SpecularReflection(){
@@ -370,7 +374,6 @@ int DTOKSU::Run(){
                 //!< Take the time step in the faster time process
                 if( MinTimeStep == HeatTime ){
                     HM.Heat(MinTimeStep);
-                    HM.Record_MassLoss(false);
                     if( Sample->is_gas() ){
                         D1_Debug("\n\tSample is gaseous!\n");
                         Loop=false;
@@ -471,50 +474,58 @@ int DTOKSU::Run(){
 
         D_Debug("\n\n***** DTOKSU::Run() :: Record Plasma Data and Impurities *****\n\n");
         CM.RecordPlasmadata("pd.txt");
-        HM.Record_MassLoss(false);
-        //HM.RecordPlasmadata("hm_pd.txt");
-        //FM.RecordPlasmadata("fm_pd.txt");
-        print();
         Pause();
         // ***** START OF : DETERMINE IF END CONDITION HAS BEEN REACHED ***** //
         D_Debug("\n\n***** DTOKSU::Run() :: Determine If End Conditions Satisfied *****\n\n");
         if( Sample->is_gas() 
             && Sample->get_superboilingtemp() <= Sample->get_temperature() ){
-            HM.Record_MassLoss(true);
+            HM.Record_MassLoss(Sample->get_mass(),true);
             std::cout << "\n\nSample has Boiled!";
+			MyFile << 1 << "\t";
             break;
         }else if( Sample->is_gas() 
             && Sample->get_superboilingtemp() > Sample->get_temperature() ){
-            HM.Record_MassLoss(true);
+            HM.Record_MassLoss(Sample->get_mass(),true);
             std::cout << "\n\nSample has Evaporated!";
+			MyFile << 2 << "\t";
             break;
         }else if( Sample->is_split() ){
             std::cout << "\n\nSample has broken up into two large parts";
             //!< Could replace with return 3; and leave off the end check?...
+			MyFile << 3 << "\t";
             break; 
         }else if( Sample->is_gas() ){
-            HM.Record_MassLoss(true);
+            HM.Record_MassLoss(Sample->get_mass(),true);
             std::cout << "\n\nSample has vapourised";
+			MyFile << 4 << "\t";
             break;
         }else if( HeatTime == 1 ){
             std::cout << "\n\nThermal Equilibrium reached!";
+			MyFile << 5 << "\t";
             break;
         }else{
             if( CoreBound.Grid_Pos.size() > 2 ){
                 if( Boundary_Check(true) ){
-                    HM.Record_MassLoss(true);
+                    HM.Record_MassLoss(Sample->get_mass(),true);
                     std::cout << "\n\nCollision with Core!";
+					MyFile << 6 << "\t";
                     break;
                 }
             }
             if( WallBound.Grid_Pos.size() > 2 ){
                 if( Boundary_Check(false) ){
+                    HM.Record_MassLoss(Sample->get_mass(),true);
+                    std::cout << "\n\nLiquid impact with wall!";
+					MyFile << 7 << "\t";
                     break;
                 }
             }
         }
         // ***** END OF : DETERMINE IF END CONDITION HAS BEEN REACHED ***** //
     }
+
+    print();
+    CloseFiles();
 
     D_Debug("\n\n***** DTOKSU::Run() :: Determine Return and Termination Status *****\n\n");
     if( fabs(1 - (HM.get_totaltime()/FM.get_totaltime())) > 0.001  

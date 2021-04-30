@@ -108,7 +108,6 @@ class Model{
         ///@{
         int i; // r Position of dust
         int k; // z Position of dust
-        double OldMass; // Place Holder for old mass
         ///@}
 
         /** @name Private Member Functions
@@ -395,9 +394,10 @@ class Model{
         void AddTime(double T){ TotalTime = TotalTime + T;  }
 
         /** @brief Record in the PlasmaGrid the amount of mass lost
+         *  @param MassLoss value representing amount of mass lost
          *  @param Termination true if the particle has terminated in this step
          */
-        void Record_MassLoss(bool Termination);
+        void Record_MassLoss(double MassLost, bool Termination);
 
         /** @brief Function to print to file the total impurity deposition rate
          */
