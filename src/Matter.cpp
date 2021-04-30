@@ -523,7 +523,8 @@ void Matter::update_motion(const threevector &ChangeInPosition,
     
     //!< Calculate new position
     St.DustPosition = St.DustPosition + ChangeInPosition;
-    //!< For cylindrical coordinates, x position should be positive.
+    
+	//!< For cylindrical coordinates, x position should be positive.
     St.DustPosition.setx(fabs(St.DustPosition.getx()));
     
     //!< Check that position is sensible
