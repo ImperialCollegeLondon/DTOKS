@@ -29,7 +29,8 @@ const struct ElementConsts TungstenConsts = {
     774/0.18384,  //!< kJ/kg, Latent Vapour Energy From Wikipedia
     2.333,        //!< N/m, Surface Tension B. Keene, 1993, 
                   //!< Review of data for the surface tension of pure metals
-    19600,        //!< kg/m^3, from Wikipedia, Room temperature density
+    19211,        //!< kg/m^3, at 298.15K from: P. Hidnert and W.T. Sweeney, 
+                  //!< Sci. Pap. Bur. Stand. 20, 483 (1925). 
     0.163         //!< kW/m K, at 20 degrees celsius
 };
 
